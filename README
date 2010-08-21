@@ -13,7 +13,7 @@ can be bound to host and servicegroups.
 
 HOW DOES IT WORK
 ----------------
-When the broker module is loaded, it captures all servicecheck, 
+When the broker module is loaded, it captures all servicecheck,
 hostcheck and the eventhandler events. Eventhandler are sent to a
 generic 'eventhandler' queue. Checks for hosts which are in one of the
 specified hostgroups, are sent into a seperate hostgroup queue. All
@@ -102,11 +102,11 @@ NEB Module
 there are several module options:
 
 
-debug:         use debug to increase the verbosity of the module. 
+debug:         use debug to increase the verbosity of the module.
                Possible values are:
                  0 = only errors
                  1 = debug messages
-                 2 = trace messages
+                 2 = trace messages, this will also write logs to stdout.
 
                Example: debug=1
 

@@ -14,8 +14,10 @@ NEB Module
  - add tests
  - use the uniq identifier for new jobs
  - make number of result queue workers adjustable
+ - make server=server1:4000,server2:4000 work
 
 Worker
 ======
 
-  - add init scripts
+ - add init scripts
+ - make --server=server1:4000,server2:4000 work
