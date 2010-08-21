@@ -15,15 +15,10 @@
 #include <pthread.h>
 
 /* include some Nagios stuff as well */
-#include "nagios/config.h"
-#include "nagios/common.h"
 #include "nagios/nagios.h"
 #include "nagios/neberrors.h"
-#include "nagios/objects.h"
-#include "nagios/nebmodules.h"
 #include "nagios/nebstructs.h"
 #include "nagios/nebcallbacks.h"
-#include "nagios/neberrors.h"
 #include "nagios/broker.h"
 
 /* include the gearman libs */
