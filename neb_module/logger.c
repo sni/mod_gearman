@@ -17,7 +17,11 @@ void logger(int lvl, const char *text, ...) {
     }
 
     char buffer[8192];
-    snprintf(buffer, 14, "mod_gearman: ");
+    if(lvl == GM_ERROR) {
+        snprintf(buffer, 22, "mod_gearman: ERROR - ");
+    } else {
+        snprintf(buffer, 14, "mod_gearman: ");
+    }
     va_list ap;
     va_start(ap, text);
     vsnprintf(buffer + strlen(buffer), sizeof(buffer) - strlen(buffer), text, ap);

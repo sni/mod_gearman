@@ -38,7 +38,7 @@ void *result_worker(void * args) {
             logger(GM_ERROR, "%s\n", gearman_worker_error(&worker));
             return;
         }
-        logger(GM_DEBUG, "added gearman server %s:%i\n", host, port);
+        logger(GM_DEBUG, "worker added gearman server %s:%i\n", host, port);
     }
 
     logger(GM_DEBUG, "started result_worker thread for queue: %s\n", gearman_opt_result_queue);

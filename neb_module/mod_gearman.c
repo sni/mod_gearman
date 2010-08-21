@@ -43,7 +43,7 @@ int nebmodule_init(int flags, char *args, nebmodule *handle) {
     neb_set_module_info( gearman_module_handle, NEBMODULE_MODINFO_LICENSE, "GPL v3");
     neb_set_module_info( gearman_module_handle, NEBMODULE_MODINFO_DESC,    "distribute host/service checks and eventhandler via gearman");
 
-    logger(GM_INFO, "Version %s - Copyright (c) 2010 Sven Nierlein\n", MOD_GEARMAN_VERSION);
+    logger(GM_INFO, "Version %s\n", MOD_GEARMAN_VERSION);
 
     // parse arguments
     read_arguments(args);
@@ -104,6 +104,8 @@ static int handle_process_events(int event_type, void *data) {
     if (ps->type == NEBTYPE_PROCESS_EVENTLOOPSTART) {
         register_neb_callbacks();
         start_threads();
+
+        neb_deregister_callback(NEBCALLBACK_PROCESS_DATA, gearman_module_handle);
     }
     return OK;
 }
@@ -269,11 +271,17 @@ static void read_arguments(const char *args_orig) {
             logger(GM_DEBUG, "Setting timeout to %d\n", gearman_opt_timeout);
         }
         else if(!strcmp(key, "result_queue")) {
+            gearman_opt_result_queue = value;
             logger(GM_DEBUG, "set result queue to '%s'\n", gearman_opt_result_queue);
         }
         else if(!strcmp(key, "server")) {
-            gearman_opt_server[srv_ptr] = value;
-            srv_ptr++;
+            char *servername;
+            while(servername = strsep(&value, ",")) {
+                if(strcmp(servername, "")) {
+                    gearman_opt_server[srv_ptr] = servername;
+                    srv_ptr++;
+                }
+            }
         }
         else if(!strcmp(key, "eventhandler")) {
             if(!strcmp(value, "yes")) {
@@ -314,7 +322,7 @@ static void read_arguments(const char *args_orig) {
                 }
             }
         }
-        else if(!strcmp(key, "")) {
+        else  {
             logger(GM_ERROR, "unknown option: key: %s value: %s\n", key, value);
         }
     }
@@ -347,7 +355,7 @@ static int create_gearman_client() {
             logger(GM_ERROR, "client error: %s\n", gearman_client_error(&client));
             return ERROR;
         }
-        logger(GM_DEBUG, "added gearman server %s:%i\n", host, port);
+        logger(GM_DEBUG, "client added gearman server %s:%i\n", host, port);
         x++;
     }
 
