@@ -90,8 +90,8 @@ while(1) {
         eval {
             # print queues
             print "Functions on ".$server."\n";
-            my @functions = $session->status();
-            print_data(\@functions);
+            my @queue = $session->status();
+            print_queue(\@queue);
         };
         if($@) {
             warn $@;
@@ -111,26 +111,16 @@ for my $session (values %{$sessions}) {
 exit;
 
 #################################################################
-sub print_data {
+sub print_queue {
     my($data) = @_;;
     return unless defined $data;
     return unless @{$data} > 0;
-    my $table = Text::TabularDisplay->new(keys %{$data->[0]});
+    my $table = Text::TabularDisplay->new(qw/Name Worker Avail Queue Running/);
     for my $row (@{$data}) {
-        next if defined $row->{'functions'} and scalar @{$row->{'functions'}} == 0;
-        next if defined $row->{'free'} and $row->{'free'} == 0 and $row->{'queue'} == 0 and $row->{'running'} == 0 and $row->{'busy'} == 0;
-        my @data = values %{$row};
-        my @row;
-        for my $col (@data) {
-           my $value;
-           if(ref $col eq 'ARRAY') {
-               $value = join(", ", @{$col});
-           } else {
-               $value = $col;
-           }
-           push @row, $value;
-        }
-        $table->add(@row);
+        #next if defined $row->{'functions'} and scalar @{$row->{'functions'}} == 0;
+        #next if defined $row->{'free'} and $row->{'free'} == 0 and $row->{'queue'} == 0 and $row->{'running'} == 0 and $row->{'busy'} == 0;
+        my $result = [$row->{'name'}, $row->{'running'}, $row->{'free'}, $row->{'queue'}-$row->{'busy'}, $row->{'busy'}];
+        $table->add(@{$result});
     }
     print $table->render;
     print "\n";
