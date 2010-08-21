@@ -98,7 +98,7 @@ maximum age for scheduled checks before they get ignored, default is 120 seconds
 
 =head1 EXAMPLE
 
-  ./worker.pl -v --events --services --hosts --hostgroup=hostgroup1 --hostgroup=hostgroup2 --servicegroup=dmz
+  ./worker.pl --server=localhost:4730 --events --services --hosts --hostgroup=hostgroup1 --hostgroup=hostgroup2 --servicegroup=dmz
 
 =head1 AUTHOR
 
