@@ -1,0 +1,21 @@
+TODO LIST
+#########
+
+
+General
+=======
+
+ - add encryption
+
+
+NEB Module
+==========
+
+ - add tests
+ - use the uniq identifier for new jobs
+ - make number of result queue workers adjustable
+
+Worker
+======
+
+  - add init scripts

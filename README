@@ -1,0 +1,147 @@
+Gearman Module for Nagios
+=========================
+
+mod_gearman is a new way of distributing active nagios checks across
+your network. It consists of two parts.
+There is a NEB module which resides in the nagios core and adds
+Servicechecks, Hostchecks and Eventhandler to a gearman
+(http://gearman.org) queue. There can be multiple equal gearman
+servers.
+The other part is one or more worker clients, which do the work. They
+can be bound to host and servicegroups.
+
+
+HOW DOES IT WORK
+----------------
+When the broker module is loaded, it captures all servicecheck, 
+hostcheck and the eventhandler events. Eventhandler are sent to a
+generic 'eventhandler' queue. Checks for hosts which are in one of the
+specified hostgroups, are sent into a seperate hostgroup queue. All
+non matching hosts are sent to a generic hosts queue. Checks for
+services are first checked against the list of servicegroups, then
+against the hostgroups and if none matches they will be sent into a
+generic service queue.
+The NEB module starts a single thread, which monitors the result queue
+where all results resides.
+
+A simple example queue would look like:
+ +------+-----------------------------+-------+---------+------+
+ | free | name                        | queue | running | busy |
+ +------+-----------------------------+-------+---------+------+
+ | 1    | check_result_queue          | 0     | 1       | 0    |
+ | 5    | service                     | 0     | 5       | 0    |
+ | 5    | eventhandler                | 0     | 5       | 0    |
+ | 4    | host                        | 1     | 5       | 1    |
+ +------+-----------------------------+-------+---------+------+
+
+There is one queue for the results and two for the checks plus the
+eventhandler.
+
+
+If you specifiy some host or servicegroups. This example uses a
+seperate hostgroup for japan and a seperate servicegroup for
+"jmx4perlchecks".
+
+It would look like this:
+ +------+-----------------------------+-------+---------+------+
+ | free | name                        | queue | running | busy |
+ +------+-----------------------------+-------+---------+------+
+ | 1    | check_result_queue          | 0     | 1       | 0    |
+ | 5    | service                     | 0     | 5       | 0    |
+ | 5    | eventhandler                | 0     | 5       | 0    |
+ | 4    | host                        | 1     | 5       | 1    |
+ | 5    | servicegroup_jmx4perlchecks | 0     | 5       | 0    |
+ | 5    | hostgroup_japan             | 0     | 5       | 0    |
+ +------+-----------------------------+-------+---------+------+
+
+You still have the generic queues and in addition there are two queues
+for the specific groups.
+
+
+The worker processes will take jobs from the queues and put the result
+back into the check_result queue which will then be taken back by the
+neb module and put back into the nagios core. A worker can work on one
+or more queues. So you could start a worker which only handles the
+"hostgroup_japan" group.  One worker for the "jmx4perl" checks and one
+worker which covers the other queues. There can be more than one
+worker on each queue which would share the load.
+
+
+
+Installation
+------------
+Make sure you have libgearman library and header files installed.
+
+on debian this is done by:
+======
+ #> apt-get install libgearman2 libgearman-dev
+======
+
+Then download the tarball and do "make". Add the neb_module to you
+nagios installation and add a broker line to your nagios.cfg:
+
+======
+  broker_module=.../mod_gearman.o server=localhost:4730 eventhandler=yes services=yes hosts=yes
+======
+see <Configuration> for details on all parameters
+
+
+The last step is to start one or more worker. There is currently no
+init script. So just start it by hand.
+======
+./scripts/worker.pl --server=localhost:4730 --events --services --hosts --threads=15
+======
+
+
+Configuration
+-------------
+
+NEB Module
+++++++++++
+
+there are several module options:
+
+
+debug:         use debug to increase the verbosity of the module. 
+               Possible values are:
+                 0 = only errors
+                 1 = debug messages
+                 2 = trace messages
+
+               Example: debug=1
+
+
+server:        sets the addess of your gearman job server. Can be specified
+               more than once to add more server.
+
+               Example: server=localhost:4730,remote_host:4730
+
+
+eventhandler:  defines if the module should distribute execution of
+               eventhandlers.
+
+               Example: eventhandler=yes
+
+
+services:      defines if the module should distribute execution of
+               service checks.
+
+               Example: services=yes
+
+
+hosts:         defines if the module should distribute execution of
+               host checks.
+
+               Example: hosts=yes
+
+
+hostgroups:    sets a list of hostgroups which will go into seperate
+               queues.
+
+               Example: hostgroups=name1,name2,name3
+
+
+servicegroups: sets a list of servicegroups which will go into seperate
+               queues.
+
+               Example: servicegroups=name1,name2,name3
