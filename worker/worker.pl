@@ -223,7 +223,11 @@ sub exec_handler {
         die unless $@ eq "alarm\n"; # propagate unexpected errors
         $early_timeout = 1;
         $rc            = 2;
-        $erg           = "CRITICAL - killed after ".$timeout." seconds";
+        if(defined $data->{'service_description'}) {
+            $erg       = "(Service Check Timed Out After ".$timeout." Seconds)";
+        } else {
+            $erg       = "(Host Check Timed Out After ".$timeout." Seconds)";
+        }
         _out("job timed out after ".$timeout." seconds") if $opt_verbose;
     }
 

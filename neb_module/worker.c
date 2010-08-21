@@ -179,5 +179,8 @@ void *get_results(gearman_job_st *job, void *context, size_t *result_size, gearm
     // nagios internal function
     add_check_result_to_list(result);
 
+    /* reset pointer */
+    result = NULL;
+
     return GEARMAN_SUCCESS;
 }

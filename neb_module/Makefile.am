@@ -1,8 +1,17 @@
 
+###############################################################################
+#
+# mod_gearman - distribute checks with gearman
+#
+# Copyright (c) 2010 Sven Nierlein
+#
+###############################################################################
+
+
 pkglib_LIBRARIES = mod_gearman.so
 mod_gearman_so_SOURCES = utils.c logger.c worker.c mod_gearman.c
 
-mod_gearman_so_CXXFLAGS = -I$(top_srcdir)/nagios/include -fPIC
+mod_gearman_so_CXXFLAGS = $(CFLAGS) -Iincludes -fPIC
 mod_gearman_so_CFLAGS   = $(mod_gearman_so_CXXFLAGS)
 LDFLAGS=
 
@@ -12,5 +21,5 @@ mod_gearman.o: $(mod_gearman_so_OBJECTS) $(mod_gearman_so_DEPENDENCIES)
 
 all-local: mod_gearman.o
 
-distclean: clean
+distclean-local: clean
 	for file in .deps/ Makefile Makefile.in aclocal.m4 autom4te.cache config.* configure depcomp install-sh missing stamp-h1; do test -e $$file && rm -r $$file; done

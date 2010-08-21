@@ -32,9 +32,7 @@ int gearman_threads_running = 0;
 pthread_t result_thr;
 
 // this function gets initally called when loading the module
-int nebmodule_init(int flags, char *args, nebmodule *handle){
-
-    gearman_opt_debug_level = 0;
+int nebmodule_init(int flags, char *args, nebmodule *handle) {
 
     // save our handle
     gearman_module_handle=handle;
@@ -47,45 +45,44 @@ int nebmodule_init(int flags, char *args, nebmodule *handle){
     neb_set_module_info( gearman_module_handle, NEBMODULE_MODINFO_LICENSE, "GPL v3");
     neb_set_module_info( gearman_module_handle, NEBMODULE_MODINFO_DESC,    "distribute host/service checks and eventhandler via gearman");
 
-    logger(GM_INFO, "Copyright (c) 2010 Sven Nierlein");
+    logger(GM_INFO, "Version %s - Copyright (c) 2010 Sven Nierlein\n", MOD_GEARMAN_VERSION);
 
     // parse arguments
+    read_arguments(args);
     logger(GM_DEBUG, "args: %s\n", args);
-    if(read_arguments(args) != OK) {
+
+    if(create_gearman_client() != OK) {
+        logger(GM_ERROR, "could not create gearman client\n");
         return ERROR;
     }
 
-    if(create_gearman_client() != OK)
-        return ERROR;
+    // register callback for process event where everything else starts
+    neb_register_callback(NEBCALLBACK_PROCESS_DATA, gearman_module_handle, 0, handle_process_events);
 
-    register_neb_callbacks();
-
-    logger(GM_DEBUG, "finished initializing");
+    logger(GM_DEBUG, "finished initializing\n");
 
     return OK;
 }
 
 
 /* register eventhandler callback */
-void register_neb_callbacks() {
-
-    neb_register_callback(NEBCALLBACK_PROCESS_DATA,                gearman_module_handle, 0, handle_process_events);
+static void register_neb_callbacks() {
 
     if(gearman_opt_hosts == ENABLED)
-        neb_register_callback(NEBCALLBACK_HOST_CHECK_DATA,         gearman_module_handle, 0, handle_host_check);
+        neb_register_callback(NEBCALLBACK_HOST_CHECK_DATA,    gearman_module_handle, 0, handle_host_check);
 
     if(gearman_opt_services == ENABLED)
-        neb_register_callback(NEBCALLBACK_SERVICE_CHECK_DATA,      gearman_module_handle, 0, handle_svc_check);
+        neb_register_callback(NEBCALLBACK_SERVICE_CHECK_DATA, gearman_module_handle, 0, handle_svc_check);
 
     if(gearman_opt_events == ENABLED)
-        neb_register_callback(NEBCALLBACK_EVENT_HANDLER_DATA,      gearman_module_handle, 0, handle_eventhandler);
+        neb_register_callback(NEBCALLBACK_EVENT_HANDLER_DATA, gearman_module_handle, 0, handle_eventhandler);
 
     logger(GM_DEBUG, "registered neb callbacks\n");
 }
 
 
 /* deregister all events */
-int nebmodule_deinit(int flags, int reason){
+static int nebmodule_deinit(int flags, int reason){
 
     neb_deregister_callback(NEBCALLBACK_PROCESS_DATA, gearman_module_handle);
 
@@ -104,15 +101,18 @@ int nebmodule_deinit(int flags, int reason){
 
 
 /* handle process events */
-int handle_process_events(int event_type, void *data) {
+static int handle_process_events(int event_type, void *data) {
     struct nebstruct_process_struct *ps = (struct nebstruct_process_struct *)data;
-    if (ps->type == NEBTYPE_PROCESS_EVENTLOOPSTART)
+    if (ps->type == NEBTYPE_PROCESS_EVENTLOOPSTART) {
+        register_neb_callbacks();
         start_threads();
+    }
+    return OK;
 }
 
 
 /* handle eventhandler events */
-int handle_eventhandler(int event_type, void *data) {
+static int handle_eventhandler(int event_type, void *data) {
 
     logger(GM_DEBUG, "got eventhandler event\n");
 
@@ -138,9 +138,11 @@ int handle_eventhandler(int event_type, void *data) {
 
 
 /* handle host check events */
-int handle_host_check(int event_type, void *data){
+static int handle_host_check(int event_type, void *data){
 
     nebstruct_host_check_data * hostdata = (nebstruct_host_check_data *)data;
+
+    logger(GM_DEBUG, "---------------\nhost Job -> %i vs %i, %i vs %i\n", event_type, NEBCALLBACK_HOST_CHECK_DATA, hostdata->type, NEBTYPE_HOSTCHECK_INITIATE);
 
     if(event_type != NEBCALLBACK_HOST_CHECK_DATA)
         return OK;
@@ -151,7 +153,7 @@ int handle_host_check(int event_type, void *data){
 
     // shouldn't happen - internal Nagios error
     if(hostdata == 0) {
-      logger(GM_ERROR, "Host handler received NULL host data structure.");
+      logger(GM_ERROR, "Host handler received NULL host data structure.\n");
       return ERROR;
     }
 
@@ -192,7 +194,7 @@ int handle_host_check(int event_type, void *data){
 
 
 /* handle service check events */
-int handle_svc_check(int event_type, void *data){
+static int handle_svc_check(int event_type, void *data){
 
     nebstruct_service_check_data * svcdata = (nebstruct_service_check_data *)data;
 
@@ -205,7 +207,7 @@ int handle_svc_check(int event_type, void *data){
 
     // shouldn't happen - internal Nagios error
     if(svcdata == 0) {
-      logger(GM_ERROR, "Service handler received NULL service data structure.");
+      logger(GM_ERROR, "Service handler received NULL service data structure.\n");
       return ERROR;
     }
 
@@ -243,7 +245,7 @@ int handle_svc_check(int event_type, void *data){
 
 
 /* parse the module arguments */
-int read_arguments(const char *args_orig) {
+static void read_arguments(const char *args_orig) {
 
     // no arguments given
     if (!args_orig)
@@ -314,12 +316,12 @@ int read_arguments(const char *args_orig) {
         }
     }
 
-    return OK;
+    return;
 }
 
 
 /* create the gearman client */
-int create_gearman_client() {
+static int create_gearman_client() {
     gearman_return_t ret;
     if(gearman_client_create(&client) == NULL) {
         logger(GM_ERROR, "Memory allocation failure on client creation\n");
@@ -347,7 +349,7 @@ int create_gearman_client() {
 
 
 /* return the prefered target function for our worker */
-char *get_target_worker(host *host, service *svc) {
+static char *get_target_worker(host *host, service *svc) {
 
     static char target_worker[BUFFERSIZE];
     sprintf(target_worker, "");
@@ -389,7 +391,7 @@ char *get_target_worker(host *host, service *svc) {
 
 
 /* start our threads */
-void start_threads() {
+static void start_threads() {
     if (!gearman_threads_running) {
         // create result worker
         result_worker_arg args;

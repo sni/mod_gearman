@@ -10,22 +10,23 @@
 #include "logger.h"
 
 void logger(int lvl, const char *text, ...) {
-    char buffer[8192];
-    snprintf(buffer, 14, "mod_gearman: ");
 
     // check log level
     if(lvl != GM_ERROR && lvl > gearman_opt_debug_level) {
         return;
     }
 
+    char buffer[8192];
+    snprintf(buffer, 14, "mod_gearman: ");
     va_list ap;
     va_start(ap, text);
     vsnprintf(buffer + strlen(buffer), sizeof(buffer) - strlen(buffer), text, ap);
     va_end(ap);
 
-    // in case of debug, log to stdout too
-    if(lvl >= GM_DEBUG) {
+    // in case of stdout logging just print and return
+    if(gearman_opt_debug_level >= GM_STDOUT) {
         printf("%s", buffer);
+        return;
     }
 
     // send everything as info message to the core

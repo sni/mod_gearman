@@ -6,26 +6,25 @@
  *
  *****************************************************************************/
 
+#define  MOD_GEARMAN_VERSION     "0.1"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 #include <pthread.h>
 
-#include "nagios/include/nebmodules.h"
-#include "nagios/include/nebcallbacks.h"
-
 /* include some Nagios stuff as well */
-#include "nagios/include/config.h"
-#include "nagios/include/common.h"
-#include "nagios/include/nagios.h"
-#include "nagios/include/neberrors.h"
-#include "nagios/include/objects.h"
-#include "nagios/include/nebmodules.h"
-#include "nagios/include/nebstructs.h"
-#include "nagios/include/nebcallbacks.h"
-#include "nagios/include/neberrors.h"
-#include "nagios/include/broker.h"
+#include "nagios/config.h"
+#include "nagios/common.h"
+#include "nagios/nagios.h"
+#include "nagios/neberrors.h"
+#include "nagios/objects.h"
+#include "nagios/nebmodules.h"
+#include "nagios/nebstructs.h"
+#include "nagios/nebcallbacks.h"
+#include "nagios/neberrors.h"
+#include "nagios/broker.h"
 
 /* include the gearman libs */
 #include <libgearman/gearman.h>
@@ -35,15 +34,16 @@
 #define LISTSIZE     256
 
 /* functions */
+int nebmodule_init(int, char *, nebmodule *);
 static void register_neb_callbacks();
-int read_arguments(const char *);
-int handle_host_check(int,void *);
-int handle_svc_check(int,void *);
-int handle_eventhandler(int,void *);
-int create_gearman_client();
-char *get_target_worker(host *, service *);
-int handle_process_events(int, void *);
-void start_threads();
+static void read_arguments(const char *);
+static int handle_host_check(int,void *);
+static int handle_svc_check(int,void *);
+static int handle_eventhandler(int,void *);
+static int create_gearman_client();
+static char *get_target_worker(host *, service *);
+static int handle_process_events(int, void *);
+static void start_threads();
 
-static char * gearman_opt_server[LISTSIZE];
-static int gearman_opt_debug_level;
+char * gearman_opt_server[LISTSIZE];
+int gearman_opt_debug_level;
