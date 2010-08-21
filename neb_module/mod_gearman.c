@@ -27,7 +27,6 @@ int gearman_opt_services;
 int gearman_opt_hosts;
 int gearman_opt_events;
 
-char * result_queue_name = "check_result_queue";
 int gearman_threads_running = 0;
 pthread_t result_thr;
 
@@ -171,7 +170,7 @@ static int handle_host_check(int event_type, void *data){
     extern check_result check_result_info;
     char temp_buffer[BUFFERSIZE];
     snprintf(temp_buffer,sizeof(temp_buffer)-1,"{\"result_queue\":\"%s\",\"host_name\":\"%s\",\"start_time\":\"%i.%i\",\"timeout\":\"%d\",\"check_options\":\"%i\",\"scheduled_check\":\"%i\",\"reschedule_check\":\"%i\",\"command_line\":\"%s\"}\n",
-                result_queue_name,
+                gearman_opt_result_queue,
                 hostdata->host_name,
                 (int)hostdata->start_time.tv_sec,
                 (int)hostdata->start_time.tv_usec,
@@ -221,7 +220,7 @@ static int handle_svc_check(int event_type, void *data){
     extern check_result check_result_info;
     char temp_buffer[BUFFERSIZE];
     snprintf(temp_buffer,sizeof(temp_buffer)-1,"{\"result_queue\":\"%s\",\"host_name\":\"%s\",\"service_description\":\"%s\",\"start_time\":\"%i.%i\",\"timeout\":\"%d\",\"check_options\":\"%i\",\"scheduled_check\":\"%i\",\"reschedule_check\":\"%i\",\"command_line\":\"%s\"}\n",
-                result_queue_name,
+                gearman_opt_result_queue,
                 svcdata->host_name,
                 svcdata->service_description,
                 (int)svcdata->start_time.tv_sec,
@@ -247,6 +246,8 @@ static int handle_svc_check(int event_type, void *data){
 /* parse the module arguments */
 static void read_arguments(const char *args_orig) {
 
+    gearman_opt_result_queue = NULL;
+
     // no arguments given
     if (!args_orig)
         return;
@@ -267,6 +268,9 @@ static void read_arguments(const char *args_orig) {
         else if(!strcmp(key, "timeout")) {
             gearman_opt_timeout = atoi(value);
             logger(GM_DEBUG, "Setting timeout to %d\n", gearman_opt_timeout);
+        }
+        else if(!strcmp(key, "result_queue")) {
+            logger(GM_DEBUG, "set result queue to '%s'\n", gearman_opt_result_queue);
         }
         else if(!strcmp(key, "server")) {
             gearman_opt_server[srv_ptr] = value;
@@ -315,6 +319,9 @@ static void read_arguments(const char *args_orig) {
             logger(GM_ERROR, "unknown option: key: %s value: %s\n", key, value);
         }
     }
+
+    if(gearman_opt_result_queue == NULL)
+        gearman_opt_result_queue = "check_results";
 
     return;
 }
@@ -396,7 +403,6 @@ static void start_threads() {
         // create result worker
         result_worker_arg args;
         args.timeout = gearman_opt_timeout;
-        args.result_queue_name = strdup(result_queue_name);
         int x = 0;
         while(gearman_opt_server[x] != NULL) {
             args.server[x]  = strdup(gearman_opt_server[x]);

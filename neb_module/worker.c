@@ -44,14 +44,14 @@ void *result_worker(void * args) {
         logger(GM_DEBUG, "added gearman server %s:%i\n", host, port);
     }
 
-    logger(GM_DEBUG, "started result_worker thread for queue: %s\n", opt.result_queue_name);
+    logger(GM_DEBUG, "started result_worker thread for queue: %s\n", gearman_opt_result_queue);
 
-    if(opt.result_queue_name == NULL) {
+    if(gearman_opt_result_queue == NULL) {
         logger(GM_ERROR, "got no result queue!\n");
         exit(1);
     }
 
-    ret = gearman_worker_add_function(&worker, opt.result_queue_name, 0, get_results, NULL);
+    ret = gearman_worker_add_function(&worker, gearman_opt_result_queue, 0, get_results, NULL);
           gearman_worker_add_function(&worker, "blah", 0, get_results, NULL); // somehow the last function is ignored, so in order to set the first one active. Add a useless one
     if (ret != GEARMAN_SUCCESS) {
         logger(GM_ERROR, "worker error: %s\n", gearman_worker_error(&worker));

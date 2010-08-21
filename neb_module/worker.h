@@ -16,6 +16,5 @@ void *get_results(gearman_job_st *, void *, size_t *, gearman_return_t *);
 
 typedef struct result_worker_arg_struct {
     int      timeout;
-    char *   result_queue_name;
     char *   server[LISTSIZE];
 } result_worker_arg;
