@@ -19,17 +19,14 @@ void *result_worker(void * args) {
     gearman_return_t ret;
     gearman_worker_st worker;
 
-    result_worker_arg opt = *(result_worker_arg *) args;
-
-
     if (gearman_worker_create(&worker) == NULL) {
         logger(GM_ERROR, "Memory allocation failure on worker creation\n");
         return;
     }
 
     int x = 0;
-    while(opt.server[x] != NULL) {
-        char * server  = strdup(opt.server[x]);
+    while(gearman_opt_server[x] != NULL) {
+        char * server  = strdup(gearman_opt_server[x]);
         x++;
         if(strchr(server, ':') == NULL) {
             break;

@@ -21,7 +21,6 @@ gearman_client_st client;
 
 char *gearman_hostgroups_list[LISTSIZE];
 char *gearman_servicegroups_list[LISTSIZE];
-static int gearman_opt_timeout     = 3000;
 
 int gearman_opt_services;
 int gearman_opt_hosts;
@@ -323,6 +322,9 @@ static void read_arguments(const char *args_orig) {
     if(gearman_opt_result_queue == NULL)
         gearman_opt_result_queue = "check_results";
 
+    if(gearman_opt_timeout == 0)
+        gearman_opt_timeout     = 3000;
+
     return;
 }
 
@@ -401,15 +403,7 @@ static char *get_target_worker(host *host, service *svc) {
 static void start_threads() {
     if (!gearman_threads_running) {
         // create result worker
-        result_worker_arg args;
-        args.timeout = gearman_opt_timeout;
-        int x = 0;
-        while(gearman_opt_server[x] != NULL) {
-            args.server[x]  = strdup(gearman_opt_server[x]);
-            x++;
-        }
-        args.server[x] = NULL;
-        pthread_create (&result_thr, NULL, result_worker, &args);
+        pthread_create (&result_thr, NULL, result_worker, NULL);
         gearman_threads_running = 1;
     }
 }
