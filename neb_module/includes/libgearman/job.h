@@ -8,7 +8,7 @@
 
 /**
  * @file
- * @brief Job declarations
+ * @brief Job Declarations
  */
 
 #ifndef __GEARMAN_JOB_H__
@@ -19,12 +19,58 @@ extern "C" {
 #endif
 
 /**
- * @addtogroup gearman_job Job Management
+ * @addtogroup gearman_job Job Declarations
  * @ingroup gearman_worker
+ *
  * The job functions are used to manage jobs assigned to workers. It is most
  * commonly used with the worker interface.
+ *
  * @{
  */
+
+
+/**
+ * @ingroup gearman_job
+ */
+struct gearman_job_st
+{
+  struct {
+    bool allocated LIBGEARMAN_BITFIELD;
+    bool assigned_in_use LIBGEARMAN_BITFIELD;
+    bool work_in_use LIBGEARMAN_BITFIELD;
+    bool finished LIBGEARMAN_BITFIELD;
+  } options;
+  gearman_worker_st *worker;
+  gearman_job_st *next;
+  gearman_job_st *prev;
+  gearman_connection_st *con;
+  gearman_packet_st assigned;
+  gearman_packet_st work;
+};
+
+/**
+ * Initialize a job structure. Always check the return value even if passing
+ * in a pre-allocated structure. Some other initialization may have failed. It
+ * is not required to memset() a structure before providing it.
+ *
+ * @param[in] A valid gearman_worker_st.
+ * @param[in] gearman_job_st allocated structure, or NULL to allocate one.
+ * @return On success, a pointer to the (possibly allocated) structure. On
+ *  failure this will be NULL.
+ */
+GEARMAN_LOCAL
+gearman_job_st *gearman_job_create(gearman_worker_st *worker,
+                                   gearman_job_st *job);
+
+/**
+ * Free a job structure.
+ *
+ * @param[in] job Structure previously initialized with
+ *  gearman_worker_grab_job().
+ */
+GEARMAN_API
+void gearman_job_free(gearman_job_st *job);
+
 
 /**
  * Send data for a running job.
@@ -75,13 +121,13 @@ gearman_return_t gearman_job_send_fail(gearman_job_st *job);
  * Get job handle.
  */
 GEARMAN_API
-char *gearman_job_handle(const gearman_job_st *job);
+const char *gearman_job_handle(const gearman_job_st *job);
 
 /**
  * Get the function name associated with a job.
  */
 GEARMAN_API
-char *gearman_job_function_name(const gearman_job_st *job);
+const char *gearman_job_function_name(const gearman_job_st *job);
 
 /**
  * Get the unique ID associated with a job.

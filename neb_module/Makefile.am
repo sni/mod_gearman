@@ -13,7 +13,7 @@ mod_gearman_so_SOURCES = utils.c logger.c worker.c mod_gearman.c
 
 mod_gearman_so_CXXFLAGS = $(CFLAGS) -Iincludes -fPIC
 mod_gearman_so_CFLAGS   = $(mod_gearman_so_CXXFLAGS)
-LDFLAGS=
+LDFLAGS=-L/tmp/gearmand-0.14/libgearman/.libs
 
 mod_gearman.o: $(mod_gearman_so_OBJECTS) $(mod_gearman_so_DEPENDENCIES)
 	$(CXX) $(LDFLAGS) -s -fPIC -shared $(mod_gearman_so_OBJECTS) -o $@ -lpthread -lgearman

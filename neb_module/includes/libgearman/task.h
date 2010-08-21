@@ -8,7 +8,7 @@
 
 /**
  * @file
- * @brief Task declarations
+ * @brief Task Declarations
  */
 
 #ifndef __GEARMAN_TASK_H__
@@ -19,24 +19,88 @@ extern "C" {
 #endif
 
 /**
- * @addtogroup gearman_task Task Management
+ * @addtogroup gearman_task Task Declarations
  * @ingroup gearman_client
+ *
  * The task functions are used to manage tasks being run by clients. They are
  * most commonly used with the client interface.
+ *
  * @{
  */
+
+/**
+ * @ingroup gearman_task
+ */
+
+struct gearman_task_st
+{
+  struct {
+    bool allocated LIBGEARMAN_BITFIELD;
+    bool send_in_use LIBGEARMAN_BITFIELD;
+    bool is_known LIBGEARMAN_BITFIELD;
+    bool is_running LIBGEARMAN_BITFIELD;
+  } options;
+  enum {
+    GEARMAN_TASK_STATE_NEW,
+    GEARMAN_TASK_STATE_SUBMIT,
+    GEARMAN_TASK_STATE_WORKLOAD,
+    GEARMAN_TASK_STATE_WORK,
+    GEARMAN_TASK_STATE_CREATED,
+    GEARMAN_TASK_STATE_DATA,
+    GEARMAN_TASK_STATE_WARNING,
+    GEARMAN_TASK_STATE_STATUS,
+    GEARMAN_TASK_STATE_COMPLETE,
+    GEARMAN_TASK_STATE_EXCEPTION,
+    GEARMAN_TASK_STATE_FAIL,
+    GEARMAN_TASK_STATE_FINISHED
+  } state;
+  uint32_t created_id;
+  uint32_t numerator;
+  uint32_t denominator;
+  gearman_client_st *client;
+  gearman_task_st *next;
+  gearman_task_st *prev;
+  void *context;
+  gearman_connection_st *con;
+  gearman_packet_st *recv;
+  gearman_packet_st send;
+  char job_handle[GEARMAN_JOB_HANDLE_SIZE];
+};
+
+/**
+ * Initialize a task structure.
+ *
+ * @param[in] client Structure previously initialized with
+ *  gearman_client_create() or gearman_client_clone().
+ * @param[in] task Caller allocated structure, or NULL to allocate one.
+ * @return On success, a pointer to the (possibly allocated) structure. On
+ *  failure this will be NULL.
+ */
+GEARMAN_LOCAL
+gearman_task_st *gearman_task_create(gearman_client_st *client,
+                                     gearman_task_st *task);
+
+/**
+ * Free a task structure.
+ *
+ * @param[in] task Structure previously initialized with one of the
+ *  gearman_client_add_task() functions.
+ */
+GEARMAN_API
+void gearman_task_free(gearman_task_st *task);
+
 
 /**
  * Get context for a task.
  */
 GEARMAN_API
-void *gearman_task_context(const gearman_task_st *task);
+const void *gearman_task_context(const gearman_task_st *task);
 
 /**
  * Set context for a task.
  */
 GEARMAN_API
-void gearman_task_set_context(gearman_task_st *task, const void *context);
+void gearman_task_set_context(gearman_task_st *task, void *context);
 
 /**
  * Get function name associated with a task.

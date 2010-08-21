@@ -18,6 +18,7 @@ void *result_worker(void * args) {
 
     gearman_return_t ret;
     gearman_worker_st worker;
+    gm_worker_options_t options= GM_WORKER_OPTIONS_NONE;
 
     if (gearman_worker_create(&worker) == NULL) {
         logger(GM_ERROR, "Memory allocation failure on worker creation\n");
@@ -48,7 +49,7 @@ void *result_worker(void * args) {
         exit(1);
     }
 
-    ret = gearman_worker_add_function(&worker, gearman_opt_result_queue, 0, get_results, NULL);
+    ret = gearman_worker_add_function(&worker, gearman_opt_result_queue, 0, get_results, &options);
           gearman_worker_add_function(&worker, "blah", 0, get_results, NULL); // somehow the last function is ignored, so in order to set the first one active. Add a useless one
     if (ret != GEARMAN_SUCCESS) {
         logger(GM_ERROR, "worker error: %s\n", gearman_worker_error(&worker));
@@ -59,7 +60,7 @@ void *result_worker(void * args) {
         ret = gearman_worker_work(&worker);
         if (ret != GEARMAN_SUCCESS) {
             logger(GM_ERROR, "worker error: %s\n", gearman_worker_error(&worker));
-            break;
+            //break;
         }
         gearman_job_free_all(&worker);
     }
@@ -69,27 +70,51 @@ void *result_worker(void * args) {
     return;
 }
 
-
+/* put back the result into the core */
 void *get_results(gearman_job_st *job, void *context, size_t *result_size, gearman_return_t *ret_ptr) {
 
-    // always set result pointer to success
-    *ret_ptr= GEARMAN_SUCCESS;
+    gm_worker_options_t options= *((gm_worker_options_t *)context);
+    const uint8_t *workload;
+    char *result;
 
-    char *workload;
-    workload= strdup((char *)gearman_job_workload(job));
+    // get the data
+    workload= gearman_job_workload(job);
     *result_size= gearman_job_workload_size(job);
 
-    logger(GM_TRACE, "got result\n--->\n%s\n<---\n", workload);
+    result = malloc(*result_size);
+    if(result == NULL) {
+        fprintf(stderr, "malloc:%d\n", errno);
+        *ret_ptr= GEARMAN_WORK_FAIL;
+        return NULL;
+    }
+
+    snprintf(result, (int)*result_size, "%.*s", (int)*result_size, workload);
+    logger(GM_DEBUG, "got result %s%s%s\n", gearman_job_handle(job),
+        options & GM_WORKER_OPTIONS_UNIQUE ? " Unique=" : "",
+        options & GM_WORKER_OPTIONS_UNIQUE ? gearman_job_unique(job) : ""
+    );
+    logger(GM_TRACE, "--->\n%.*s\n<---\n", (int)*result_size, result);
+
+    // set result pointer to success
+    *ret_ptr= GEARMAN_SUCCESS;
+    if(options & GM_WORKER_OPTIONS_DATA) {
+        *result_size= 0;
+        return NULL;
+    }
 
     // nagios will free it after processing
-    check_result * result;
-    if ((result = (check_result *)malloc(sizeof *result)) == 0)
-        return GEARMAN_SUCCESS;
+    check_result * chk_result;
+    if ((chk_result = (check_result *)malloc(sizeof *chk_result)) == 0) {
+        *ret_ptr= GEARMAN_WORK_FAIL;
+        return NULL;
+    }
 
-    result->service_description = NULL;
+    chk_result->service_description = NULL;
+    chk_result->host_name           = NULL;
+    chk_result->output              = NULL;
 
     char *ptr;
-    while(ptr = strsep(&workload, "\n")) {
+    while(ptr = strsep(&result, "\n")) {
         char *key   = str_token(&ptr, '=');
         char *value = str_token(&ptr, 0);
 
@@ -106,78 +131,85 @@ void *get_results(gearman_job_st *job, void *context, size_t *result_size, gearm
         }
 
         if(!strcmp(key, "host_name")) {
-            result->host_name = strdup(value);
+            chk_result->host_name = strdup(value);
         }
         else if(!strcmp(key, "service_description")) {
-            result->service_description = strdup(value);
+            chk_result->service_description = strdup(value);
         }
         else if(!strcmp(key, "check_options")) {
-            result->check_options = atoi(value);
+            chk_result->check_options = atoi(value);
         }
         else if(!strcmp(key, "scheduled_check")) {
-            result->scheduled_check = atoi(value);
+            chk_result->scheduled_check = atoi(value);
         }
         else if(!strcmp(key, "reschedule_check")) {
-            result->reschedule_check = atoi(value);
+            chk_result->reschedule_check = atoi(value);
         }
         else if(!strcmp(key, "exited_ok")) {
-            result->exited_ok = atoi(value);
+            chk_result->exited_ok = atoi(value);
         }
         else if(!strcmp(key, "early_timeout")) {
-            result->early_timeout = atoi(value);
+            chk_result->early_timeout = atoi(value);
         }
         else if(!strcmp(key, "return_code")) {
-            result->return_code = atoi(value);
+            chk_result->return_code = atoi(value);
         }
         else if(!strcmp(key, "output")) {
-            result->output = strdup(value);
+            chk_result->output = strdup(value);
         }
         else if(!strcmp(key, "start_time")) {
             int sec   = atoi(str_token(&value, '.'));
             int usec  = atoi(str_token(&value, 0));
-            result->start_time.tv_sec    = sec;
-            result->start_time.tv_usec   = usec;
+            chk_result->start_time.tv_sec    = sec;
+            chk_result->start_time.tv_usec   = usec;
         }
         else if(!strcmp(key, "finish_time")) {
             int sec   = atoi(str_token(&value, '.'));
             int usec  = atoi(str_token(&value, 0));
-            result->finish_time.tv_sec    = sec;
-            result->finish_time.tv_usec   = usec;
+            chk_result->finish_time.tv_sec    = sec;
+            chk_result->finish_time.tv_usec   = usec;
         }
         else if(!strcmp(key, "latency")) {
-            result->latency = atof(value);
+            chk_result->latency = atof(value);
         }
     }
 
-    if(result == NULL)
-        return GEARMAN_SUCCESS;
+    if(chk_result == NULL) {
+        *ret_ptr= GEARMAN_WORK_FAIL;
+        return NULL;
+    }
 
-    if(result->host_name == NULL)
-        return GEARMAN_SUCCESS;
+    if(chk_result->host_name == NULL || chk_result->output == NULL) {
+        *ret_ptr= GEARMAN_WORK_FAIL;
+        return NULL;
+    }
 
-    if(result->service_description != NULL) {
-        result->object_check_type    = SERVICE_CHECK;
-        result->check_type           = SERVICE_CHECK_ACTIVE;
+    if(chk_result->service_description != NULL) {
+        chk_result->object_check_type    = SERVICE_CHECK;
+        chk_result->check_type           = SERVICE_CHECK_ACTIVE;
     } else {
-        result->object_check_type    = HOST_CHECK;
-        result->check_type           = HOST_CHECK_ACTIVE;
+        chk_result->object_check_type    = HOST_CHECK;
+        chk_result->check_type           = HOST_CHECK_ACTIVE;
     }
 
     // initialize and fill with result info
-    result->output_file    = 0;
-    result->output_file_fd = -1;
+    chk_result->output_file    = 0;
+    chk_result->output_file_fd = -1;
 
-    if(result->service_description != NULL) {
-        logger(GM_DEBUG, "service job completed: %s %s: %d\n", result->host_name, result->service_description, result->return_code);
+    if(chk_result->service_description != NULL) {
+        logger(GM_DEBUG, "service job completed: %s %s: %d\n", chk_result->host_name, chk_result->service_description, chk_result->return_code);
     } else {
-        logger(GM_DEBUG, "host job completed: %s: %d\n", result->host_name, result->return_code);
+        logger(GM_DEBUG, "host job completed: %s: %d\n", chk_result->host_name, chk_result->return_code);
     }
 
     // nagios internal function
-    add_check_result_to_list(result);
+    add_check_result_to_list(chk_result);
 
-    /* reset pointer */
-    result = NULL;
+    // reset pointer
+    chk_result = NULL;
 
-    return GEARMAN_SUCCESS;
+    // give gearman something to free
+    uint8_t *buffer;
+    buffer = malloc(1);
+    return buffer;
 }

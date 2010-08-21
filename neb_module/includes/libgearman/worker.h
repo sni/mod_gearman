@@ -8,7 +8,7 @@
 
 /**
  * @file
- * @brief Worker declarations
+ * @brief Worker Declarations
  */
 
 #ifndef __GEARMAN_WORKER_H__
@@ -19,7 +19,8 @@ extern "C" {
 #endif
 
 /**
- * @addtogroup gearman_worker Worker Interface
+ * @addtogroup gearman_worker Worker Declarations
+ *
  * This is the interface gearman workers should use.
  *
  * @ref main_page_worker "See Main Page for full details."
@@ -27,8 +28,57 @@ extern "C" {
  */
 
 /**
+ * @ingroup gearman_worker
+ */
+struct gearman_worker_st
+{
+  struct {
+    bool allocated LIBGEARMAN_BITFIELD;
+    bool non_blocking LIBGEARMAN_BITFIELD;
+    bool packet_init LIBGEARMAN_BITFIELD;
+    bool grab_job_in_use LIBGEARMAN_BITFIELD;
+    bool pre_sleep_in_use LIBGEARMAN_BITFIELD;
+    bool work_job_in_use LIBGEARMAN_BITFIELD;
+    bool change LIBGEARMAN_BITFIELD;
+    bool grab_uniq LIBGEARMAN_BITFIELD;
+    bool timeout_return LIBGEARMAN_BITFIELD;
+  } options;
+  enum {
+    GEARMAN_WORKER_STATE_START,
+    GEARMAN_WORKER_STATE_FUNCTION_SEND,
+    GEARMAN_WORKER_STATE_CONNECT,
+    GEARMAN_WORKER_STATE_GRAB_JOB_SEND,
+    GEARMAN_WORKER_STATE_GRAB_JOB_RECV,
+    GEARMAN_WORKER_STATE_PRE_SLEEP
+  } state;
+  enum {
+    GEARMAN_WORKER_WORK_UNIVERSAL_GRAB_JOB,
+    GEARMAN_WORKER_WORK_UNIVERSAL_FUNCTION,
+    GEARMAN_WORKER_WORK_UNIVERSAL_COMPLETE,
+    GEARMAN_WORKER_WORK_UNIVERSAL_FAIL
+  } work_state;
+  uint32_t function_count;
+  uint32_t job_count;
+  size_t work_result_size;
+  void *context;
+  gearman_connection_st *con;
+  gearman_job_st *job;
+  gearman_job_st *job_list;
+  struct _worker_function_st *function;
+  struct _worker_function_st *function_list;
+  struct _worker_function_st *work_function;
+  void *work_result;
+  gearman_universal_st universal;
+  gearman_packet_st grab_job;
+  gearman_packet_st pre_sleep;
+  gearman_job_st work_job;
+};
+
+
+/**
  * Initialize a worker structure. Always check the return value even if passing
- * in a pre-allocated structure. Some other initialization may have failed.
+ * in a pre-allocated structure. Some other initialization may have failed. It
+ * is not required to memset() a structure before providing it.
  *
  * @param[in] worker Caller allocated structure, or NULL to allocate one.
  * @return On success, a pointer to the (possibly allocated) structure. On
@@ -113,13 +163,13 @@ void gearman_worker_remove_options(gearman_worker_st *worker,
                                    gearman_worker_options_t options);
 
 /**
- * See gearman_timeout() for details.
+ * See gearman_universal_timeout() for details.
  */
 GEARMAN_API
 int gearman_worker_timeout(gearman_worker_st *worker);
 
 /**
- * See gearman_set_timeout() for details.
+ * See gearman_universal_set_timeout() for details.
  */
 GEARMAN_API
 void gearman_worker_set_timeout(gearman_worker_st *worker, int timeout);
@@ -142,23 +192,15 @@ void *gearman_worker_context(const gearman_worker_st *worker);
  * @param[in] context Application context to set.
  */
 GEARMAN_API
-void gearman_worker_set_context(gearman_worker_st *worker, const void *context);
+void gearman_worker_set_context(gearman_worker_st *worker, void *context);
 
 /**
  * See gearman_set_log_fn() for details.
  */
 GEARMAN_API
 void gearman_worker_set_log_fn(gearman_worker_st *worker,
-                               gearman_log_fn *function, const void *context,
+                               gearman_log_fn *function, void *context,
                                gearman_verbose_t verbose);
-
-/**
- * See gearman_set_event_watch_fn() for details.
- */
-GEARMAN_API
-void gearman_worker_set_event_watch_fn(gearman_worker_st *worker,
-                                       gearman_event_watch_fn *function,
-                                       const void *context);
 
 /**
  * See gearman_set_workload_malloc_fn() for details.
@@ -166,15 +208,22 @@ void gearman_worker_set_event_watch_fn(gearman_worker_st *worker,
 GEARMAN_API
 void gearman_worker_set_workload_malloc_fn(gearman_worker_st *worker,
                                            gearman_malloc_fn *function,
-                                           const void *context);
+                                           void *context);
 
 /**
- * See gearman_set_workload_free_fn() for details.
+ * Set custom memory free function for workloads. Normally gearman uses the
+ * standard system free to free memory used with workloads. The provided
+ * function will be used instead.
+ *
+ * @param[in] gearman Structure previously initialized with gearman_universal_create() or
+ *  gearman_clone().
+ * @param[in] function Memory free function to use instead of free().
+ * @param[in] context Argument to pass into the callback function.
  */
 GEARMAN_API
 void gearman_worker_set_workload_free_fn(gearman_worker_st *worker,
                                          gearman_free_fn *function,
-                                         const void *context);
+                                         void *context);
 
 /**
  * Add a job server to a worker. This goes into a list of servers that can be
@@ -195,7 +244,7 @@ gearman_return_t gearman_worker_add_server(gearman_worker_st *worker,
  * SERVER[:PORT][,SERVER[:PORT]]...
  * Some examples are:
  * 10.0.0.1,10.0.0.2,10.0.0.3
- * localhost:1234,jobserver2.domain.com:7003,10.0.0.3
+ * localhost LIBGEARMAN_BITFIELD234,jobserver2.domain.com:7003,10.0.0.3
  *
  * @param[in] worker Structure previously initialized with
  *  gearman_worker_create() or gearman_worker_clone().
@@ -284,15 +333,6 @@ gearman_job_st *gearman_worker_grab_job(gearman_worker_st *worker,
                                         gearman_return_t *ret_ptr);
 
 /**
- * Free a job structure.
- *
- * @param[in] job Structure previously initialized with
- *  gearman_worker_grab_job().
- */
-GEARMAN_API
-void gearman_job_free(gearman_job_st *job);
-
-/**
  * Free all jobs for a gearman structure.
  *
  * @param[in] worker Structure previously initialized with
@@ -300,6 +340,19 @@ void gearman_job_free(gearman_job_st *job);
  */
 GEARMAN_API
 void gearman_job_free_all(gearman_worker_st *worker);
+
+/**
+ * See if a function exists in the server. It will not return
+ * true if the function is currently being de-allocated.
+ * @param[in] worker gearman_worker_st that will be used.
+ * @param[in] function_name Function name for search.
+ * @param[in] function_length Length of function name.
+ * @return bool
+ */
+GEARMAN_API
+bool gearman_worker_function_exist(gearman_worker_st *worker,
+                                   const char *function_name,
+                                   size_t function_length);
 
 /**
  * Register and add callback function for worker. To remove functions that have
@@ -321,7 +374,7 @@ gearman_return_t gearman_worker_add_function(gearman_worker_st *worker,
                                              const char *function_name,
                                              uint32_t timeout,
                                              gearman_worker_fn *function,
-                                             const void *context);
+                                             void *context);
 
 /**
  * Wait for a job and call the appropriate callback function when it gets one.

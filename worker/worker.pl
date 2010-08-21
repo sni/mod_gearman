@@ -184,12 +184,15 @@ sub exec_handler {
         warn("got garbaged data: ".$@);
         return 1;
     }
-    my($latency, $age);
+    my($latency, $age) = (0);
+    if(defined $data->{'latency'}) {
+        $latency = $data->{'latency'};
+    }
 
     # check against max age
     if(defined $data->{'start_time'}) {
-        $latency = [split/\./, $data->{'start_time'}, 2];
-        $age = tv_interval( $latency, $t0);
+        my $start_time = [split(/\./, $data->{'start_time'}, 2)];
+        $age = tv_interval( $start_time, $t0);
         if($age > $opt_maxage) {
             _out("max age reached for this job: ".$age." sec");
             return 1;
@@ -206,7 +209,6 @@ sub exec_handler {
     } else {
         _out("got host job: ".$data->{'host_name'}.$age_str) if $opt_verbose;
     }
-
 
     my $timeout       = $data->{'timeout'} || $default_timeout;
     my $early_timeout = 0;
@@ -254,7 +256,7 @@ sub exec_handler {
     $result->{early_timeout}       = $early_timeout;
     $result->{return_code}         = $rc;
     $result->{output}              = $erg;
-    $result->{latency}             = tv_interval($latency, $t0) if defined $latency;
+    $result->{latency}             = $latency;
 
     $result->{service_description} = $data->{'service_description'};
 

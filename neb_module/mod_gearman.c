@@ -49,6 +49,8 @@ int nebmodule_init(int flags, char *args, nebmodule *handle) {
     read_arguments(args);
     logger(GM_DEBUG, "args: %s\n", args);
 
+    // create gearman client
+    logger(GM_DEBUG, "running on libgearman %s\n", gearman_version());
     if(create_gearman_client() != OK) {
         logger(GM_ERROR, "could not create gearman client\n");
         return ERROR;
@@ -170,7 +172,7 @@ static int handle_host_check(int event_type, void *data){
 
     extern check_result check_result_info;
     char temp_buffer[BUFFERSIZE];
-    snprintf(temp_buffer,sizeof(temp_buffer)-1,"{\"result_queue\":\"%s\",\"host_name\":\"%s\",\"start_time\":\"%i.%i\",\"timeout\":\"%d\",\"check_options\":\"%i\",\"scheduled_check\":\"%i\",\"reschedule_check\":\"%i\",\"command_line\":\"%s\"}\n",
+    snprintf(temp_buffer,sizeof(temp_buffer)-1,"{\"result_queue\":\"%s\",\"host_name\":\"%s\",\"start_time\":\"%i.%i\",\"timeout\":\"%d\",\"check_options\":\"%i\",\"scheduled_check\":\"%i\",\"reschedule_check\":\"%i\",\"latency\":\"%f\",\"command_line\":\"%s\"}\n",
                 gearman_opt_result_queue,
                 hostdata->host_name,
                 (int)hostdata->start_time.tv_sec,
@@ -179,6 +181,7 @@ static int handle_host_check(int event_type, void *data){
                 check_result_info.check_options,
                 check_result_info.scheduled_check,
                 check_result_info.reschedule_check,
+                check_result_info.latency,
                 hostdata->command_line
             );
     temp_buffer[sizeof(temp_buffer)-1]='\x0';
@@ -220,7 +223,7 @@ static int handle_svc_check(int event_type, void *data){
 
     extern check_result check_result_info;
     char temp_buffer[BUFFERSIZE];
-    snprintf(temp_buffer,sizeof(temp_buffer)-1,"{\"result_queue\":\"%s\",\"host_name\":\"%s\",\"service_description\":\"%s\",\"start_time\":\"%i.%i\",\"timeout\":\"%d\",\"check_options\":\"%i\",\"scheduled_check\":\"%i\",\"reschedule_check\":\"%i\",\"command_line\":\"%s\"}\n",
+    snprintf(temp_buffer,sizeof(temp_buffer)-1,"{\"result_queue\":\"%s\",\"host_name\":\"%s\",\"service_description\":\"%s\",\"start_time\":\"%i.%i\",\"timeout\":\"%d\",\"check_options\":\"%i\",\"scheduled_check\":\"%i\",\"reschedule_check\":\"%i\",\"latency\":\"%f\",\"command_line\":\"%s\"}\n",
                 gearman_opt_result_queue,
                 svcdata->host_name,
                 svcdata->service_description,
@@ -230,6 +233,7 @@ static int handle_svc_check(int event_type, void *data){
                 check_result_info.check_options,
                 check_result_info.scheduled_check,
                 check_result_info.reschedule_check,
+                check_result_info.latency,
                 svcdata->command_line
             );
     temp_buffer[sizeof(temp_buffer)-1]='\x0';
@@ -350,8 +354,8 @@ static int create_gearman_client() {
         char * server  = strdup(gearman_opt_server[x]);
         char * host    = str_token(&server, ':');
         in_port_t port = (in_port_t) atoi(str_token(&server, 0));
-        ret=gearman_client_add_server(&client, host, port);
-        if (ret != GEARMAN_SUCCESS) {
+        ret = gearman_client_add_server(&client, host, port);
+        if(ret != GEARMAN_SUCCESS) {
             logger(GM_ERROR, "client error: %s\n", gearman_client_error(&client));
             return ERROR;
         }
