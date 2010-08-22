@@ -18,5 +18,9 @@ typedef enum {
     GM_WORKER_OPTIONS_UNIQUE= ( 1 << 2 )
 } gm_worker_options_t;
 
-void *result_worker();
+typedef struct {
+    int id;
+} worker_parm;
+
+void *result_worker(void *);
 void *get_results( gearman_job_st *, void *, size_t *, gearman_return_t * );

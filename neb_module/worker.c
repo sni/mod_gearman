@@ -14,7 +14,10 @@
 #include "logger.h"
 
 /* callback for task completed */
-void *result_worker( void * args ) {
+void *result_worker( void * data ) {
+
+    worker_parm *p=(worker_parm *)data;
+    logger( GM_TRACE, "worker %i started\n", p->id );
 
     gearman_return_t ret;
     gearman_worker_st worker;
@@ -22,7 +25,7 @@ void *result_worker( void * args ) {
 
     if ( gearman_worker_create( &worker ) == NULL ) {
         logger( GM_ERROR, "Memory allocation failure on worker creation\n" );
-        return;
+        return NULL;
     }
 
     int x = 0;
@@ -37,7 +40,7 @@ void *result_worker( void * args ) {
         ret=gearman_worker_add_server( &worker, host, port );
         if ( ret != GEARMAN_SUCCESS ) {
             logger( GM_ERROR, "%s\n", gearman_worker_error( &worker ) );
-            return;
+            return NULL;
         }
         logger( GM_DEBUG, "worker added gearman server %s:%i\n", host, port );
     }
@@ -53,7 +56,7 @@ void *result_worker( void * args ) {
     gearman_worker_add_function( &worker, "blah", 0, get_results, NULL ); // somehow the last function is ignored, so in order to set the first one active. Add a useless one
     if ( ret != GEARMAN_SUCCESS ) {
         logger( GM_ERROR, "worker error: %s\n", gearman_worker_error( &worker ) );
-        return;
+        return NULL;
     }
 
     while ( 1 ) {
@@ -67,7 +70,7 @@ void *result_worker( void * args ) {
 
     gearman_worker_free( &worker );
 
-    return;
+    return NULL;
 }
 
 /* put back the result into the core */
@@ -114,7 +117,7 @@ void *get_results( gearman_job_st *job, void *context, size_t *result_size, gear
     chk_result->output              = NULL;
 
     char *ptr;
-    while ( ptr = strsep( &result, "\n" ) ) {
+    while ( (ptr = strsep( &result, "\n" )) != NULL ) {
         char *key   = str_token( &ptr, '=' );
         char *value = str_token( &ptr, 0 );
 
@@ -125,7 +128,7 @@ void *get_results( gearman_job_st *job, void *context, size_t *result_size, gear
             break;
         }
 
-        if ( value == "" ) {
+        if ( !strcmp( value, "") ) {
             logger( GM_ERROR, "got empty value for key %s\n", key );
             continue;
         }
