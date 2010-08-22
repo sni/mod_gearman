@@ -186,42 +186,31 @@ sub exec_handler {
 
     my $t0   = [gettimeofday];
     my $data;
-    eval {
-        $data = _decode_data($job->arg);
-    };
+    eval { $data = _decode_data($job->arg) };
     if($@ or !defined $data or !defined $data->{'command_line'} or !defined $data->{'type'}){
         warn("got garbaged data: ".$@);
         return 1;
     }
-    my($latency, $age) = (0);
-    if(defined $data->{'latency'}) {
-        $latency = $data->{'latency'};
-    }
 
     # check against max age
-    if(defined $data->{'start_time'}) {
-        my $start_time = [split(/\./, $data->{'start_time'}, 2)];
-        $age = tv_interval( $start_time, $t0);
-        if($age > $opt_maxage) {
-            _out("max age reached for this job: ".$age." sec");
-            return 1;
-        }
-    }
-
-    my $age_str = "";
-    $age_str = " age: ".$age."seconds" if defined $age;
-    if(!defined defined $data->{'host_name'}) {
-        _out("got eventhandler job") if $opt_verbose;
-    }
-    elsif(defined $data->{'service_description'}) {
-        _out("got service job: ".$data->{'host_name'}." - ".$data->{'service_description'}.$age_str) if $opt_verbose;
+    my $latency = $data->{'latency'} || 0;
+    my($start_time,$age);
+    if(!defined $data->{'start_time'}) {
+        $start_time = [gettimeofday];
     } else {
-        _out("got host job: ".$data->{'host_name'}.$age_str) if $opt_verbose;
+        $start_time = [split(/\./, $data->{'start_time'}, 2)];
     }
+    $age = tv_interval( $start_time, $t0);
+    if($age > $opt_maxage) {
+        _out("max age reached for this job: ".$age." sec");
+        return 1;
+    }
+    $latency += $age;
+
+    _out(sprintf("got %s job - age %02f: %s %s", $data->{'type'}, $age, $data->{'host_name'} || '', $data->{'service_description'} || '')) if $opt_verbose;
 
     my $timeout       = $data->{'timeout'} || $default_timeout;
     my $early_timeout = 0;
-    my $exited_ok     = 1;
     my($erg,$rc);
     eval {
         local $SIG{ALRM} = sub { die "alarm\n" };
@@ -234,12 +223,8 @@ sub exec_handler {
         die unless $@ eq "alarm\n"; # propagate unexpected errors
         $early_timeout = 1;
         $rc            = 2;
-        if(defined $data->{'service_description'}) {
-            $erg       = "(Service Check Timed Out After ".$timeout." Seconds)";
-        } else {
-            $erg       = "(Host Check Timed Out After ".$timeout." Seconds)";
-        }
-        _out("job timed out after ".$timeout." seconds") if $opt_verbose;
+        $erg       = sprintf("(%s Check Timed Out)", ucfirst($data->{'type'}));
+        _out($data->{'type'}." job timed out after ".$timeout." seconds") if $opt_verbose;
     }
 
     my $t1      = [gettimeofday];
@@ -253,10 +238,10 @@ sub exec_handler {
         check_options       => $data->{'check_options'},
         scheduled_check     => $data->{'scheduled_check'},
         reschedule_check    => $data->{'reschedule_check'},
-        start_time_tv_sec   => $t0->[0],
-        start_time_tv_usec  => $t0->[1],
+        start_time_tv_sec   => $start_time->[0],
+        start_time_tv_usec  => $start_time->[1],
         early_timeout       => $early_timeout,
-        exited_ok           => $exited_ok,
+        exited_ok           => 1,
     };
 
     $erg =~ s/\n/\\n/gmx;
@@ -266,8 +251,7 @@ sub exec_handler {
     $result->{return_code}         = $rc;
     $result->{output}              = $erg;
     $result->{latency}             = $latency;
-
-    $result->{service_description} = $data->{'service_description'};
+    $result->{service_description} = $data->{'service_description'} if defined $data->{'service_description'};
 
     _out("finished job with rc ".$rc) if $opt_verbose;
 
