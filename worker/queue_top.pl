@@ -39,9 +39,15 @@ display the help and exit
 
 connect to this gearman server to print the queue. Can be used multiple times to add more server.
 
+=head2 interval
+
+  -i=<interval>
+
+refresh page at this interval (seconds)
+
 =head1 EXAMPLE
 
-  ./queue_top.pl --server=localhost:4730
+  ./queue_top.pl --server=localhost:4730 -i 2
 
 =head1 AUTHOR
 
@@ -52,12 +58,13 @@ Sven Nierlein, <sven@consol.de>
 
 #################################################################
 # parse cmd line arguments
-my($opt_verbose, $opt_help, @opt_server);
+my($opt_verbose, $opt_help, $opt_interval, @opt_server);
 Getopt::Long::Configure('no_ignore_case');
 GetOptions (
     "h"               => \$opt_help,
     "v"               => \$opt_verbose,
     "server=s"        => \@opt_server,
+    "i=i"             => \$opt_interval,
 );
 
 if(defined $opt_help) {
@@ -69,6 +76,7 @@ if(scalar @opt_server == 0) {
     exit 3;
 }
 
+$opt_interval = 1 unless defined $opt_interval;
 
 #################################################################
 # make first connection outside eval, so if the server does not exist
@@ -99,7 +107,7 @@ while(1) {
             undef $sessions->{$server};
         }
     }
-    sleep(2);
+    sleep($opt_interval);
 }
 
 # stop all sessions

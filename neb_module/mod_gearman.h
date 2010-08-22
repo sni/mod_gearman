@@ -19,12 +19,16 @@
 #include <unistd.h>
 #include <pthread.h>
 
+#define NSCORE
+
 /* include some Nagios stuff as well */
 #include "nagios/nagios.h"
 #include "nagios/neberrors.h"
 #include "nagios/nebstructs.h"
 #include "nagios/nebcallbacks.h"
 #include "nagios/broker.h"
+#include "nagios/macros.h"
+
 
 /* include the gearman libs */
 #include <libgearman/gearman.h>

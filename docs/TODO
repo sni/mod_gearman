@@ -6,7 +6,6 @@ General
 =======
 
  - add encryption
- - make hostchecks work
 
 NEB Module
 ==========
@@ -21,4 +20,3 @@ Worker
 ======
 
  - add init scripts
- - add real latency

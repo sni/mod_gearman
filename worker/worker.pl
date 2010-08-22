@@ -235,9 +235,6 @@ sub exec_handler {
 
     my $result = {
         host_name           => $data->{'host_name'},
-        check_options       => $data->{'check_options'},
-        scheduled_check     => $data->{'scheduled_check'},
-        reschedule_check    => $data->{'reschedule_check'},
         start_time_tv_sec   => $start_time->[0],
         start_time_tv_usec  => $start_time->[1],
         early_timeout       => $early_timeout,
@@ -252,6 +249,10 @@ sub exec_handler {
     $result->{output}              = $erg;
     $result->{latency}             = $latency;
     $result->{service_description} = $data->{'service_description'} if defined $data->{'service_description'};
+
+    $result->{check_options}       = $data->{'check_options'}    || 0;
+    $result->{scheduled_check}     = $data->{'scheduled_check'}  || 1;
+    $result->{reschedule_check}    = $data->{'reschedule_check'} || 1;
 
     _out("finished job with rc ".$rc) if $opt_verbose;
 
@@ -269,24 +270,22 @@ return the output
 =cut
 sub _build_result {
     my $data = shift;
+    my $result = "";
 
-    my $service = "";
-    $service    = "\nservice_description=".$data->{'service_description'} if defined $data->{'service_description'};
+    for my $key (qw/host_name service_description early_timeout return_code latency exited_ok/) {
+        $result .= $key.'='.$data->{$key}."\n" if defined $data->{$key};
+    }
+    if(defined $data->{'start_time_tv_sec'} and defined $data->{'start_time_tv_usec'}) {
+        $result .= 'start_time='.$data->{'start_time_tv_sec'}.'.'.$data->{'start_time_tv_usec'}."\n";
+    }
+    if(defined $data->{'finish_time_tv_sec'} and defined $data->{'finish_time_tv_sec'}) {
+        $result .= 'finish_time='.$data->{'finish_time_tv_sec'}.'.'.$data->{'finish_time_tv_usec'}."\n";
+    }
+    for my $key (qw/output/) {
+        $result .= $key.'=GERMAN WORKER '.$data->{$key}."\n" if defined $data->{$key};
+    }
 
-    my $result =<<EOT;
-host_name=$data->{'host_name'}$service
-check_options=$data->{'check_options'}
-scheduled_check=$data->{'scheduled_check'}
-reschedule_check=$data->{'reschedule_check'}
-start_time=$data->{'start_time_tv_sec'}.$data->{'start_time_tv_usec'}
-latency=$data->{'latency'}
-early_timeout=$data->{'early_timeout'}
-exited_ok=$data->{'exited_ok'}
-finish_time=$data->{'finish_time_tv_sec'}.$data->{'finish_time_tv_usec'}
-return_code=$data->{'return_code'}
-output=GEARMAN WORKER $data->{'output'}
-
-EOT
+    $result .= "\n";
 
     _out("result:\n".$result) if $opt_verbose >= 3;
 

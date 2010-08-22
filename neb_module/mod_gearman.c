@@ -14,6 +14,7 @@
 
 /* specify event broker API version (required) */
 NEB_API_VERSION( CURRENT_NEB_API_VERSION );
+extern int currently_running_host_checks;
 
 /* global variables */
 void *gearman_module_handle=NULL;
@@ -170,13 +171,13 @@ static int handle_host_check( int event_type, void *data ) {
 
     nebstruct_host_check_data * hostdata = ( nebstruct_host_check_data * )data;
 
-    logger( GM_DEBUG, "---------------\nhost Job -> %i vs %i, %i vs %i\n", event_type, NEBCALLBACK_HOST_CHECK_DATA, hostdata->type, NEBTYPE_HOSTCHECK_INITIATE );
+    logger( GM_DEBUG, "---------------\nhost Job -> %i vs %i, %i vs %i\n", event_type, NEBCALLBACK_HOST_CHECK_DATA, hostdata->type, NEBTYPE_HOSTCHECK_ASYNC_PRECHECK );
 
     if ( event_type != NEBCALLBACK_HOST_CHECK_DATA )
         return OK;
 
     // ignore non-initiate service checks
-    if ( hostdata->type != NEBTYPE_HOSTCHECK_INITIATE )
+    if ( hostdata->type != NEBTYPE_HOSTCHECK_ASYNC_PRECHECK )
         return OK;
 
     // shouldn't happen - internal Nagios error
@@ -190,25 +191,72 @@ static int handle_host_check( int event_type, void *data ) {
         return ERROR;
     }
 
-    host * host         = find_host( hostdata->host_name );
-    char *target_worker = get_target_worker( host, NULL );
+    host * hst          = find_host( hostdata->host_name );
+    char *target_worker = get_target_worker( hst, NULL );
 
     logger( GM_DEBUG, "Received Job for queue %s: %s\n", target_worker, hostdata->host_name );
-    logger( GM_TRACE, "cmd_line: %s\n", hostdata->command_line );
 
-    extern check_result check_result_info;
+    // as we have to intercept host checks much earlier than service checks
+    // we have to do some host check logic here
+    // taken from checks.c:
+    char *raw_command=NULL;
+    char *processed_command=NULL;
+    //double old_latency=0.0;
+    struct timeval start_time;
+
+    //if(scheduled_check==TRUE)
+        hst->check_options=CHECK_OPTION_NONE;
+
+    // adjust host check attempt
+    adjust_host_check_attempt_3x(hst,TRUE);
+
+    /* set latency (temporarily) for macros and event broker */
+    //old_latency=hst->latency;
+    //hst->latency=latency;
+
+    /* grab the host macro variables */
+    clear_volatile_macros();
+    grab_host_macros(hst);
+
+    /* get the raw command line */
+    get_raw_command_line(hst->check_command_ptr,hst->host_check_command,&raw_command,0);
+    if(raw_command==NULL){
+        logger( GM_ERROR, "Raw check command for host '%s' was NULL - aborting.\n",hst->name );
+        return ERROR;
+    }
+
+    /* process any macros contained in the argument */
+    process_macros(raw_command,&processed_command,0);
+    if(processed_command==NULL){
+        logger( GM_ERROR, "Processed check command for host '%s' was NULL - aborting.\n",hst->name);
+        return ERROR;
+    }
+
+    /* get the command start time */
+    gettimeofday(&start_time,NULL);
+
+    /* set check time for on-demand checks, so they're not incorrectly detected as being orphaned - Luke Ross 5/16/08 */
+    /* NOTE: 06/23/08 EG not sure if there will be side effects to this or not.... */
+    //if(scheduled_check==FALSE)
+    //    hst->next_check=start_time.tv_sec;
+
+    /* increment number of host checks that are currently running... */
+    currently_running_host_checks++;
+
+    /* set the execution flag */
+    hst->is_executing=TRUE;
+
+    logger( GM_TRACE, "cmd_line: %s\n", processed_command );
+
+    //extern check_result check_result_info;
     char temp_buffer[BUFFERSIZE];
-    snprintf( temp_buffer,sizeof( temp_buffer )-1,"type=host\nresult_queue=%s\nhost_name=%s\nstart_time=%i.%i\ntimeout=%d\ncheck_options=%i\nscheduled_check=%i\nreschedule_check=%i\nlatency=%f\ncommand_line=%s\n",
+    snprintf( temp_buffer,sizeof( temp_buffer )-1,"type=host\nresult_queue=%s\nhost_name=%s\nstart_time=%i.%i\ntimeout=%d\ncommand_line=%s\n",
               gearman_opt_result_queue,
-              hostdata->host_name,
-              ( int )hostdata->start_time.tv_sec,
-              ( int )hostdata->start_time.tv_usec,
+              hst->name,
+              ( int )start_time.tv_sec,
+              ( int )start_time.tv_usec,
               hostdata->timeout,
-              check_result_info.check_options,
-              check_result_info.scheduled_check,
-              check_result_info.reschedule_check,
-              check_result_info.latency,
-              hostdata->command_line
+              processed_command
             );
     temp_buffer[sizeof( temp_buffer )-1]='\x0';
 
@@ -216,6 +264,10 @@ static int handle_host_check( int event_type, void *data ) {
     gearman_return_t ret;
     gearman_client_add_task_background( &client, task, NULL, target_worker, NULL, ( void * )temp_buffer, ( size_t )strlen( temp_buffer ), &ret );
     gearman_client_run_tasks( &client );
+
+    // clean up
+    my_free(raw_command);
+    my_free(processed_command);
 
     // tell nagios to not execute
     return NEBERROR_CALLBACKOVERRIDE;
