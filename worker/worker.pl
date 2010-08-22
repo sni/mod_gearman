@@ -353,6 +353,8 @@ sub start_worker {
     _register_function($worker, \@opt_hostgroups,    'hostgroup_');
     _register_function($worker, \@opt_servicegroups, 'servicegroup_');
 
+    local $SIG{INT}   = sub { exit; };
+
     while (1) {
         my $ret = $worker->work();
     }
