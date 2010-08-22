@@ -14,14 +14,11 @@ NEB Module
  - add tests
  - use the uniq identifier for new jobs
  - make number of result queue workers adjustable
- - core crashes when gearman server is shutdown
  - check the result queue blah in worker.c
- - reload does not set new parameters
  - add local host/servicegroup
 
 Worker
 ======
 
  - add init scripts
- - make --server=server1:4000,server2:4000 work
  - add real latency

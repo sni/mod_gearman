@@ -9,6 +9,7 @@
 /* constants */
 #define MOD_GEARMAN_VERSION     "0.1"
 #define ENABLED                     1
+#define DISABLED                    0
 #define BUFFERSIZE               4096
 #define LISTSIZE                  256
 

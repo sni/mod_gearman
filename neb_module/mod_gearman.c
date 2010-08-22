@@ -278,7 +278,11 @@ static int handle_svc_check( int event_type, void *data ) {
 /* parse the module arguments */
 static void read_arguments( const char *args_orig ) {
 
+    gearman_opt_timeout      = 0;
     gearman_opt_result_queue = NULL;
+    gearman_opt_events       = DISABLED;
+    gearman_opt_services     = DISABLED;
+    gearman_opt_hosts        = DISABLED;
 
     // no arguments given
     if ( !args_orig )
