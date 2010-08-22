@@ -25,34 +25,43 @@ The NEB module starts a single thread, which monitors the result queue
 where all results resides.
 
 A simple example queue would look like:
- +------+-----------------------------+-------+---------+------+
- | free | name                        | queue | running | busy |
- +------+-----------------------------+-------+---------+------+
- | 1    | check_result_queue          | 0     | 1       | 0    |
- | 5    | service                     | 0     | 5       | 0    |
- | 5    | eventhandler                | 0     | 5       | 0    |
- | 4    | host                        | 1     | 5       | 1    |
- +------+-----------------------------+-------+---------+------+
+ +---------------+--------+-------+-------+---------+
+ | Name          | Worker | Avail | Queue | Running |
+ +---------------+--------+-------+-------+---------+
+ | check_results | 1      | 1     | 0     | 0       |
+ | host          | 3      | 3     | 0     | 0       |
+ | service       | 3      | 3     | 0     | 0       |
+ | eventhandler  | 3      | 3     | 0     | 0       |
+ +---------------+--------+-------+-------+---------+
 
 There is one queue for the results and two for the checks plus the
 eventhandler.
 
+The workflow is simple:
+ 1. Nagios wants to execute a service check.
+ 2. The check is intercepted by the mod_gearman neb module.
+ 3. mod_gearman puts the job into the "service" queue.
+ 4. a worker grabs the job and puts back the result into the
+    "check_results" queue
+ 5. mod_gearman grabs the result job and puts back the result into the
+    core
+
 
 If you specifiy some host or servicegroups. This example uses a
 seperate hostgroup for japan and a seperate servicegroup for
-"jmx4perlchecks".
+"jmx4perl".
 
 It would look like this:
- +------+-----------------------------+-------+---------+------+
- | free | name                        | queue | running | busy |
- +------+-----------------------------+-------+---------+------+
- | 1    | check_result_queue          | 0     | 1       | 0    |
- | 5    | service                     | 0     | 5       | 0    |
- | 5    | eventhandler                | 0     | 5       | 0    |
- | 4    | host                        | 1     | 5       | 1    |
- | 5    | servicegroup_jmx4perlchecks | 0     | 5       | 0    |
- | 5    | hostgroup_japan             | 0     | 5       | 0    |
- +------+-----------------------------+-------+---------+------+
+ +-----------------------+--------+-------+-------+---------+
+ | Name                  | Worker | Avail | Queue | Running |
+ +-----------------------+--------+-------+-------+---------+
+ | check_results         | 1      | 1     | 0     | 0       |
+ | host                  | 3      | 3     | 0     | 0       |
+ | service               | 3      | 3     | 0     | 0       |
+ | eventhandler          | 3      | 3     | 0     | 0       |
+ | servicegroup_jmx4perl | 3      | 3     | 0     | 0       |
+ | hostgroup_japan       | 3      | 3     | 0     | 0       |
+ +-----------------------+--------+-------+-------+---------+
 
 You still have the generic queues and in addition there are two queues
 for the specific groups.
