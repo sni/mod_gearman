@@ -265,11 +265,11 @@ sub exec_handler {
     $result->{return_code}         = $rc;
     $result->{output}              = $erg;
     $result->{latency}             = $latency;
-    $result->{service_description} = $data->{'service_description'} if defined $data->{'service_description'};
 
-    $result->{check_options}       = $data->{'check_options'}    || 0;
-    $result->{scheduled_check}     = $data->{'scheduled_check'}  || 1;
-    $result->{reschedule_check}    = $data->{'reschedule_check'} || 1;
+    $result->{service_description} = $data->{'service_description'};
+    $result->{check_options}       = $data->{'check_options'};
+    $result->{scheduled_check}     = $data->{'scheduled_check'};
+    $result->{reschedule_check}    = $data->{'reschedule_check'};
 
     _out("finished job with rc ".$rc) if $opt_verbose;
 
@@ -289,7 +289,7 @@ sub _build_result {
     my $data   = shift;
     my $result = "";
 
-    for my $key (qw/host_name service_description early_timeout return_code latency exited_ok/) {
+    for my $key (qw/host_name service_description early_timeout return_code latency exited_ok check_options scheduled_check reschedule_check/) {
         $result .= $key.'='.$data->{$key}."\n" if defined $data->{$key};
     }
     if(defined $data->{'start_time_tv_sec'} and defined $data->{'start_time_tv_usec'}) {

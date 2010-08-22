@@ -201,7 +201,12 @@ void *get_results( gearman_job_st *job, void *context, size_t *result_size, gear
     } else {
         chk_result->object_check_type    = HOST_CHECK;
         chk_result->check_type           = HOST_CHECK_ACTIVE;
+        chk_result->scheduled_check      = TRUE;
+        chk_result->reschedule_check     = TRUE;
     }
+
+    // this check is not a freshnes check
+    chk_result->check_options    = chk_result->check_options & ! CHECK_OPTION_FRESHNESS_CHECK;
 
     // initialize and fill with result info
     chk_result->output_file    = 0;

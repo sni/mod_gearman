@@ -204,6 +204,8 @@ static int handle_host_check( int event_type, void *data ) {
     //double old_latency=0.0;
     struct timeval start_time;
 
+    /* clear check options - we don't want old check options retained */
+    /* only clear options if this was a scheduled check - on demand check options shouldn't affect retained info */
     //if(scheduled_check==TRUE)
         hst->check_options=CHECK_OPTION_NONE;
 
