@@ -11,7 +11,6 @@ NEB Module
 ==========
 
  - add tests
- - use the uniq identifier for new jobs
  - make number of result queue workers adjustable
  - check the result queue blah in worker.c
  - add local host/servicegroup

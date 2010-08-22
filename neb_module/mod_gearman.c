@@ -29,6 +29,7 @@ int gearman_opt_events;
 
 int gearman_threads_running = 0;
 pthread_t result_thr;
+char target_worker[BUFFERSIZE];
 
 static void  register_neb_callbacks(void);
 static void  read_arguments( const char * );
@@ -36,7 +37,7 @@ static int   handle_host_check( int,void * );
 static int   handle_svc_check( int,void * );
 static int   handle_eventhandler( int,void * );
 static int   create_gearman_client(void);
-static char *get_target_worker( host *, service * );
+static void  set_target_worker( host *, service * );
 static int   handle_process_events( int, void * );
 static void  start_threads(void);
 
@@ -191,8 +192,8 @@ static int handle_host_check( int event_type, void *data ) {
         return ERROR;
     }
 
-    host * hst          = find_host( hostdata->host_name );
-    char *target_worker = get_target_worker( hst, NULL );
+    host * hst = find_host( hostdata->host_name );
+    set_target_worker( hst, NULL );
 
     logger( GM_DEBUG, "Received Job for queue %s: %s\n", target_worker, hostdata->host_name );
 
@@ -207,7 +208,7 @@ static int handle_host_check( int event_type, void *data ) {
     /* clear check options - we don't want old check options retained */
     /* only clear options if this was a scheduled check - on demand check options shouldn't affect retained info */
     //if(scheduled_check==TRUE)
-        hst->check_options=CHECK_OPTION_NONE;
+        hst->check_options = CHECK_OPTION_NONE;
 
     // adjust host check attempt
     adjust_host_check_attempt_3x(hst,TRUE);
@@ -264,7 +265,7 @@ static int handle_host_check( int event_type, void *data ) {
 
     gearman_task_st  *task = NULL;
     gearman_return_t ret;
-    gearman_client_add_task_background( &client, task, NULL, target_worker, NULL, ( void * )temp_buffer, ( size_t )strlen( temp_buffer ), &ret );
+    gearman_client_add_task_background( &client, task, NULL, target_worker, hst->name, ( void * )temp_buffer, ( size_t )strlen( temp_buffer ), &ret );
     gearman_client_run_tasks( &client );
 
     // clean up
@@ -297,7 +298,7 @@ static int handle_svc_check( int event_type, void *data ) {
 
     service * svc = find_service( svcdata->host_name, svcdata->service_description );
     host * host   = find_host( svcdata->host_name );
-    char *target_worker = get_target_worker( host, svc );
+    set_target_worker( host, svc );
 
     logger( GM_DEBUG, "Received Job for queue %s: %s - %s\n", target_worker, svcdata->host_name, svcdata->service_description );
     logger( GM_TRACE, "cmd_line: %s\n", svcdata->command_line );
@@ -319,9 +320,11 @@ static int handle_svc_check( int event_type, void *data ) {
             );
     temp_buffer[sizeof( temp_buffer )-1]='\x0';
 
+    char uniq[BUFFERSIZE];
+    snprintf( uniq,sizeof( temp_buffer )-1,"%s-%s", svcdata->host_name, svcdata->service_description);
     gearman_task_st *task = NULL;
     gearman_return_t ret;
-    gearman_client_add_task_background( &client, task, NULL, target_worker, NULL, ( void * )temp_buffer, ( size_t )strlen( temp_buffer ), &ret );
+    gearman_client_add_task_background( &client, task, NULL, target_worker, uniq, ( void * )temp_buffer, ( size_t )strlen( temp_buffer ), &ret );
     gearman_client_run_tasks( &client );
 
     // tell nagios to not execute
@@ -446,9 +449,10 @@ static int create_gearman_client(void) {
 
 
 /* return the prefered target function for our worker */
-static char *get_target_worker( host *host, service *svc ) {
+static void set_target_worker( host *host, service *svc ) {
 
-    static char target_worker[BUFFERSIZE] = "";
+    // empty our target
+    target_worker[0] = '\x0';
 
     // look for matching servicegroups
     int x=0;
@@ -484,7 +488,7 @@ static char *get_target_worker( host *host, service *svc ) {
 
     target_worker[sizeof( target_worker )-1]='\x0';
 
-    return target_worker;
+    return;
 }
 
 
