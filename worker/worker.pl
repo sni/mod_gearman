@@ -11,6 +11,7 @@ use Data::Dumper;
 use Getopt::Long;
 use Pod::Usage;
 use Carp;
+use Sys::Hostname;
 
 =head1 NAME
 
@@ -20,6 +21,7 @@ worker.pl
 
 ./worker.pl [ -v ]
             [ -h ]
+            [ -d ]
             [ -threads=10 ]
             [ --server=<host>:<port> ]
             [ --events ]
@@ -47,6 +49,12 @@ display the help and exit
   -v
 
 enable verbose mode
+
+=head2 debug
+
+  -d
+
+enable hostname in output
 
 =head2 threads
 
@@ -108,11 +116,12 @@ Sven Nierlein, <sven@consol.de>
 
 ############################################################
 # parse cmd line arguments
-my(@opt_verbose, $opt_help, $opt_events, $opt_services, $opt_hosts, @opt_server, @opt_hostgroups, @opt_servicegroups, $opt_threads, $opt_maxage);
+my(@opt_verbose, $opt_help, $opt_debug, $opt_events, $opt_services, $opt_hosts, @opt_server, @opt_hostgroups, @opt_servicegroups, $opt_threads, $opt_maxage);
 Getopt::Long::Configure('no_ignore_case');
 GetOptions (
     "h"               => \$opt_help,
     "v"               => \@opt_verbose,
+    "d"               => \$opt_debug,
     "server=s"        => \@opt_server,
     "events"          => \$opt_events,
     "hosts"           => \$opt_hosts,
@@ -148,6 +157,14 @@ $opt_maxage      = 120 unless defined $opt_maxage;
 #################################################
 # settings
 my $default_timeout = 60; # normally set by the check itself
+
+#################################################
+# debug
+my $debug_workername = "";
+if(defined $opt_debug){
+    $debug_workername = hostname();
+    $debug_workername = hostname()." - ";
+}
 
 #################################################
 # split up possible defined csv servers
@@ -269,7 +286,7 @@ return the output
 
 =cut
 sub _build_result {
-    my $data = shift;
+    my $data   = shift;
     my $result = "";
 
     for my $key (qw/host_name service_description early_timeout return_code latency exited_ok/) {
@@ -282,7 +299,7 @@ sub _build_result {
         $result .= 'finish_time='.$data->{'finish_time_tv_sec'}.'.'.$data->{'finish_time_tv_usec'}."\n";
     }
     for my $key (qw/output/) {
-        $result .= $key.'=GERMAN WORKER '.$data->{$key}."\n" if defined $data->{$key};
+        $result .= $key.'='.$debug_workername.$data->{$key}."\n" if defined $data->{$key};
     }
 
     $result .= "\n";
