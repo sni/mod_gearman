@@ -16,6 +16,8 @@ NEB Module
  - make number of result queue workers adjustable
  - core crashes when gearman server is shutdown
  - check the result queue blah in worker.c
+ - reload adds another worker
+ - reload does not set new parameters
 
 Worker
 ======
