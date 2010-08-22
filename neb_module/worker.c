@@ -19,6 +19,10 @@ void *result_worker( void * data ) {
     worker_parm *p=(worker_parm *)data;
     logger( GM_TRACE, "worker %i started\n", p->id );
 
+    pthread_setcancelstate (PTHREAD_CANCEL_ENABLE, NULL);
+    pthread_setcanceltype (PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
+
+
     gearman_return_t ret;
     gearman_worker_st worker;
     gm_worker_options_t options= GM_WORKER_OPTIONS_NONE;
@@ -63,7 +67,6 @@ void *result_worker( void * data ) {
         ret = gearman_worker_work( &worker );
         if ( ret != GEARMAN_SUCCESS ) {
             logger( GM_ERROR, "worker error: %s\n", gearman_worker_error( &worker ) );
-            //break;
         }
         gearman_job_free_all( &worker );
     }

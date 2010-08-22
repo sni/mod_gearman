@@ -111,6 +111,11 @@ int nebmodule_deinit( int flags, int reason ) {
         neb_deregister_callback( NEBCALLBACK_EVENT_HANDLER_DATA, gearman_module_handle );
 
     logger( GM_DEBUG, "deregistered callbacks\n" );
+
+    // stop result thread
+    pthread_cancel (result_thr);
+    pthread_join (result_thr, NULL);
+
     return OK;
 }
 
