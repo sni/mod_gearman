@@ -159,6 +159,10 @@ static int handle_eventhandler( int event_type, void *data ) {
     gearman_return_t ret;
     gearman_client_add_task_background( &client, task, NULL, "service", NULL, ( void * )temp_buffer, ( size_t )strlen( temp_buffer ), &ret );
     gearman_client_run_tasks( &client );
+    if(gearman_client_error(&client) != NULL && strcmp(gearman_client_error(&client), "") != 0) { // errno is somehow empty, use error instead
+        gearman_client_free(&client);
+        create_gearman_client();
+    }
 
     // tell nagios to not execute
     return NEBERROR_CALLBACKOVERRIDE;
@@ -267,6 +271,10 @@ static int handle_host_check( int event_type, void *data ) {
     gearman_return_t ret;
     gearman_client_add_task_background( &client, task, NULL, target_worker, hst->name, ( void * )temp_buffer, ( size_t )strlen( temp_buffer ), &ret );
     gearman_client_run_tasks( &client );
+    if(gearman_client_error(&client) != NULL && strcmp(gearman_client_error(&client), "") != 0) { // errno is somehow empty, use error instead
+        gearman_client_free(&client);
+        create_gearman_client();
+    }
 
     // clean up
     my_free(raw_command);
@@ -324,8 +332,12 @@ static int handle_svc_check( int event_type, void *data ) {
     snprintf( uniq,sizeof( temp_buffer )-1,"%s-%s", svcdata->host_name, svcdata->service_description);
     gearman_task_st *task = NULL;
     gearman_return_t ret;
-    gearman_client_add_task_background( &client, task, NULL, target_worker, uniq, ( void * )temp_buffer, ( size_t )strlen( temp_buffer ), &ret );
+    gearman_client_add_task_low_background( &client, task, NULL, target_worker, uniq, ( void * )temp_buffer, ( size_t )strlen( temp_buffer ), &ret );
     gearman_client_run_tasks( &client );
+    if(gearman_client_error(&client) != NULL && strcmp(gearman_client_error(&client), "") != 0) { // errno is somehow empty, use error instead
+        gearman_client_free(&client);
+        create_gearman_client();
+    }
 
     // tell nagios to not execute
     return NEBERROR_CALLBACKOVERRIDE;
