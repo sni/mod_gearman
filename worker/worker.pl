@@ -150,6 +150,15 @@ $opt_maxage      = 120 unless defined $opt_maxage;
 my $default_timeout = 60; # normally set by the check itself
 
 #################################################
+# split up possible defined csv servers
+my @new_server;
+for my $server (@opt_server) {
+    my @serv = split/,/, $server;
+    @new_server = (@new_server, @serv);
+}
+@opt_server = @new_server;
+
+#################################################
 # start the worker
 if($opt_threads > 1) {
     for(my $nr = 0; $nr < $opt_threads; $nr++) {
@@ -364,8 +373,10 @@ sub _register_function {
         push @functions, $function;
     }
     for my $func (@functions) {
-        $worker->register_function($prefix.$func, 0, sub { return exec_handler(@_); });
-        _out("registered for ".$prefix.$func." check jobs") if $opt_verbose;
+        for my $f (split/,/, $func) {
+            $worker->register_function($prefix.$f, 0, sub { return exec_handler(@_); });
+            _out("registered for ".$prefix.$f." check jobs") if $opt_verbose;
+        }
     }
     return;
 }
