@@ -13,6 +13,21 @@
 #include "mod_gearman.h"
 #include "logger.h"
 
+gearman_worker_st worker;
+
+/* cleanup and exit this thread */
+static void cancel_worker_thread (void * data) {
+
+    gearman_worker_unregister_all(&worker);
+    gearman_worker_remove_servers(&worker);
+    gearman_worker_free(&worker);
+
+    worker_parm *p=(worker_parm *)data;
+    logger( GM_DEBUG, "worker thread %i finished\n", p->id );
+
+    return;
+}
+
 /* callback for task completed */
 void *result_worker( void * data ) {
 
@@ -24,13 +39,13 @@ void *result_worker( void * data ) {
 
 
     gearman_return_t ret;
-    gearman_worker_st worker;
     gm_worker_options_t options= GM_WORKER_OPTIONS_NONE;
 
     if ( gearman_worker_create( &worker ) == NULL ) {
         logger( GM_ERROR, "Memory allocation failure on worker creation\n" );
         return NULL;
     }
+    pthread_cleanup_push ( cancel_worker_thread, (void*) p);
 
     int x = 0;
     while ( gearman_opt_server[x] != NULL ) {
@@ -73,6 +88,7 @@ void *result_worker( void * data ) {
 
     gearman_worker_free( &worker );
 
+    pthread_cleanup_pop(0);
     return NULL;
 }
 
