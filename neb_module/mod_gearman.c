@@ -150,7 +150,7 @@ static int handle_eventhandler( int event_type, void *data ) {
     logger( GM_TRACE, "got eventhandler event: %s\n", ds->command_line );
 
     char temp_buffer[BUFFERSIZE];
-    snprintf( temp_buffer,sizeof( temp_buffer )-1,"{\"command_line\":\"%s\"}\n",ds->command_line );
+    snprintf( temp_buffer,sizeof( temp_buffer )-1,"type=eventhandler\ncommand_line=%s\n",ds->command_line );
     temp_buffer[sizeof( temp_buffer )-1]='\x0';
 
     gearman_task_st  *task = NULL;
@@ -198,7 +198,7 @@ static int handle_host_check( int event_type, void *data ) {
 
     extern check_result check_result_info;
     char temp_buffer[BUFFERSIZE];
-    snprintf( temp_buffer,sizeof( temp_buffer )-1,"{\"result_queue\":\"%s\",\"host_name\":\"%s\",\"start_time\":\"%i.%i\",\"timeout\":\"%d\",\"check_options\":\"%i\",\"scheduled_check\":\"%i\",\"reschedule_check\":\"%i\",\"latency\":\"%f\",\"command_line\":\"%s\"}\n",
+    snprintf( temp_buffer,sizeof( temp_buffer )-1,"type=host\nresult_queue=%s\nhost_name=%s\nstart_time=%i.%i\ntimeout=%d\ncheck_options=%i\nscheduled_check=%i\nreschedule_check=%i\nlatency=%f\ncommand_line=%s\n",
               gearman_opt_result_queue,
               hostdata->host_name,
               ( int )hostdata->start_time.tv_sec,
@@ -250,7 +250,7 @@ static int handle_svc_check( int event_type, void *data ) {
 
     extern check_result check_result_info;
     char temp_buffer[BUFFERSIZE];
-    snprintf( temp_buffer,sizeof( temp_buffer )-1,"{\"result_queue\":\"%s\",\"host_name\":\"%s\",\"service_description\":\"%s\",\"start_time\":\"%i.%i\",\"timeout\":\"%d\",\"check_options\":\"%i\",\"scheduled_check\":\"%i\",\"reschedule_check\":\"%i\",\"latency\":\"%f\",\"command_line\":\"%s\"}\n",
+    snprintf( temp_buffer,sizeof( temp_buffer )-1,"type=service\nresult_queue=%s\nhost_name=%s\nservice_description=%s\nstart_time=%i.%i\ntimeout=%d\ncheck_options=%i\nscheduled_check=%i\nreschedule_check=%i\nlatency=%f\ncommand_line=%s\n",
               gearman_opt_result_queue,
               svcdata->host_name,
               svcdata->service_description,

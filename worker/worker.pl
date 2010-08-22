@@ -3,10 +3,10 @@
 use forks;
 use strict;
 use warnings;
+use utf8;
 use Gearman::Worker;
 use Gearman::Client;
 use Time::HiRes qw/gettimeofday tv_interval/;
-use JSON::XS;
 use Data::Dumper;
 use Getopt::Long;
 use Pod::Usage;
@@ -187,9 +187,9 @@ sub exec_handler {
     my $t0   = [gettimeofday];
     my $data;
     eval {
-        $data = decode_json($job->arg);
+        $data = _decode_data($job->arg);
     };
-    if($@){
+    if($@ or !defined $data or !defined $data->{'command_line'} or !defined $data->{'type'}){
         warn("got garbaged data: ".$@);
         return 1;
     }
@@ -387,4 +387,18 @@ sub _out {
     chomp($msg);
     print "[".scalar(localtime)."][t".threads->tid."] ".$msg."\n";
     return;
+}
+
+#################################################
+sub _decode_data {
+    my $data   = shift;
+    my $result = {};
+    return unless defined $data;
+    for my $line (split/\n/, $data) {
+        my($key,$value) = split/=/,$line,2;
+        next unless defined $key;
+        next unless defined $value;
+        $result->{$key} = $value;
+    }
+    return $result;
 }
