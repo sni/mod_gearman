@@ -18,6 +18,7 @@ NEB Module
  - check the result queue blah in worker.c
  - reload adds another worker
  - reload does not set new parameters
+ - add local host/servicegroup
 
 Worker
 ======

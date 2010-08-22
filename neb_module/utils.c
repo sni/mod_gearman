@@ -7,20 +7,19 @@
  *****************************************************************************/
 
 /* return string until token */
-char *str_token(char **c, char delim) {
+char *str_token( char **c, char delim ) {
     char *begin = *c;
-    if (!*begin) {
+    if ( !*begin ) {
         *c = begin;
         return 0;
     }
 
     char *end = begin;
-    while (*end && *end != delim) end++;
-    if (*end) {
+    while ( *end && *end != delim ) end++;
+    if ( *end ) {
         *end = 0;
         *c = end + 1;
-    }
-    else
+    } else
         *c = end;
     return begin;
 }

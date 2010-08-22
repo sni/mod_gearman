@@ -15,4 +15,4 @@
 #define GM_TRACE     2
 #define GM_STDOUT    3
 
-void logger(int lvl, const char *text, ...);
+void logger( int lvl, const char *text, ... );

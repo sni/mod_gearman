@@ -29,15 +29,15 @@
 #define LISTSIZE     256
 
 /* functions */
-int nebmodule_init(int, char *, nebmodule *);
+int nebmodule_init( int, char *, nebmodule * );
 static void register_neb_callbacks();
-static void read_arguments(const char *);
-static int handle_host_check(int,void *);
-static int handle_svc_check(int,void *);
-static int handle_eventhandler(int,void *);
+static void read_arguments( const char * );
+static int handle_host_check( int,void * );
+static int handle_svc_check( int,void * );
+static int handle_eventhandler( int,void * );
 static int create_gearman_client();
-static char *get_target_worker(host *, service *);
-static int handle_process_events(int, void *);
+static char *get_target_worker( host *, service * );
+static int handle_process_events( int, void * );
 static void start_threads();
 
 char * gearman_opt_server[LISTSIZE];

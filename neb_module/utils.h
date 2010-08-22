@@ -6,4 +6,4 @@
  *
  *****************************************************************************/
 
-char *str_token(char **c, char delim);
+char *str_token( char **c, char delim );
