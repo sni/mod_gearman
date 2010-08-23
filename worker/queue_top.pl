@@ -17,6 +17,7 @@ queue_top.pl
 =head1 SYNOPSIS
 
 ./queue_top.pl [ -h ]
+               [ -q ]
                [ --server=<host>:<port> ]
 
 =head1 DESCRIPTION
@@ -32,6 +33,12 @@ script has the following arguments
   -h
 
 display the help and exit
+
+=head2 quiet
+
+  -q
+
+dont show empty queues without worker
 
 =head2 server
 
@@ -58,11 +65,12 @@ Sven Nierlein, <sven@consol.de>
 
 #################################################################
 # parse cmd line arguments
-my($opt_verbose, $opt_help, $opt_interval, @opt_server);
+my($opt_verbose, $opt_help, $opt_interval, @opt_server, $opt_quiet);
 Getopt::Long::Configure('no_ignore_case');
 GetOptions (
     "h"               => \$opt_help,
     "v"               => \$opt_verbose,
+    "q"               => \$opt_quiet,
     "server=s"        => \@opt_server,
     "i=i"             => \$opt_interval,
 );
@@ -125,8 +133,10 @@ sub print_queue {
     return unless @{$data} > 0;
     my $table = Text::TabularDisplay->new(qw/Name Worker Avail Queue Running/);
     for my $row (@{$data}) {
-        #next if defined $row->{'functions'} and scalar @{$row->{'functions'}} == 0;
-        #next if defined $row->{'free'} and $row->{'free'} == 0 and $row->{'queue'} == 0 and $row->{'running'} == 0 and $row->{'busy'} == 0;
+
+        # shall we skip empty queues?
+        next if defined $opt_quiet and ($row->{'queue'} == 0 and $row->{'running'} == 0);
+
         my $result = [$row->{'name'}, $row->{'running'}, $row->{'free'}, $row->{'queue'}-$row->{'busy'}, $row->{'busy'}];
         $table->add(@{$result});
     }
