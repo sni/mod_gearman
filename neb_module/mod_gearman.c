@@ -30,6 +30,8 @@ int gearman_opt_events;
 int gearman_threads_running = 0;
 pthread_t result_thr;
 char target_worker[BUFFERSIZE];
+char temp_buffer[BUFFERSIZE];
+char uniq[BUFFERSIZE];
 
 static void  register_neb_callbacks(void);
 static void  read_arguments( const char * );
@@ -151,7 +153,7 @@ static int handle_eventhandler( int event_type, void *data ) {
 
     logger( GM_TRACE, "got eventhandler event: %s\n", ds->command_line );
 
-    char temp_buffer[BUFFERSIZE];
+    temp_buffer[0]='\x0';
     snprintf( temp_buffer,sizeof( temp_buffer )-1,"type=eventhandler\ncommand_line=%s\n",ds->command_line );
     temp_buffer[sizeof( temp_buffer )-1]='\x0';
 
@@ -256,7 +258,7 @@ static int handle_host_check( int event_type, void *data ) {
     logger( GM_TRACE, "cmd_line: %s\n", processed_command );
 
     //extern check_result check_result_info;
-    char temp_buffer[BUFFERSIZE];
+    temp_buffer[0]='\x0';
     snprintf( temp_buffer,sizeof( temp_buffer )-1,"type=host\nresult_queue=%s\nhost_name=%s\nstart_time=%i.%i\ntimeout=%d\ncommand_line=%s\n",
               gearman_opt_result_queue,
               hst->name,
@@ -312,7 +314,7 @@ static int handle_svc_check( int event_type, void *data ) {
     logger( GM_TRACE, "cmd_line: %s\n", svcdata->command_line );
 
     extern check_result check_result_info;
-    char temp_buffer[BUFFERSIZE];
+    temp_buffer[0]='\x0';
     snprintf( temp_buffer,sizeof( temp_buffer )-1,"type=service\nresult_queue=%s\nhost_name=%s\nservice_description=%s\nstart_time=%i.%i\ntimeout=%d\ncheck_options=%i\nscheduled_check=%i\nreschedule_check=%i\nlatency=%f\ncommand_line=%s\n",
               gearman_opt_result_queue,
               svcdata->host_name,
@@ -328,7 +330,7 @@ static int handle_svc_check( int event_type, void *data ) {
             );
     temp_buffer[sizeof( temp_buffer )-1]='\x0';
 
-    char uniq[BUFFERSIZE];
+    uniq[0]='\x0';
     snprintf( uniq,sizeof( temp_buffer )-1,"%s-%s", svcdata->host_name, svcdata->service_description);
     gearman_task_st *task = NULL;
     gearman_return_t ret;
@@ -421,6 +423,7 @@ static void read_arguments( const char *args_orig ) {
             logger( GM_ERROR, "unknown option: key: %s value: %s\n", key, value );
         }
     }
+    //free(args);
 
     if ( gearman_opt_result_queue == NULL )
         gearman_opt_result_queue = "check_results";
@@ -442,15 +445,18 @@ static int create_gearman_client(void) {
 
     int x = 0;
     while ( gearman_opt_server[x] != NULL ) {
-        char * server  = strdup( gearman_opt_server[x] );
-        char * host    = str_token( &server, ':' );
-        in_port_t port = ( in_port_t ) atoi( str_token( &server, 0 ) );
+        char * server   = strdup( gearman_opt_server[x] );
+        char * server_c = server;
+        char * host     = str_token( &server, ':' );
+        in_port_t port  = ( in_port_t ) atoi( str_token( &server, 0 ) );
         ret = gearman_client_add_server( &client, host, port );
         if ( ret != GEARMAN_SUCCESS ) {
             logger( GM_ERROR, "client error: %s\n", gearman_client_error( &client ) );
+            free(server_c);
             return ERROR;
         }
         logger( GM_DEBUG, "client added gearman server %s:%i\n", host, port );
+        free(server_c);
         x++;
     }
 

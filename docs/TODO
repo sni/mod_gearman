@@ -6,6 +6,7 @@ General
 =======
 
  - add encryption
+ - remove debug symbols
 
 NEB Module
 ==========
@@ -14,6 +15,7 @@ NEB Module
  - make number of result queue workers adjustable
  - check the result queue blah in worker.c
  - add local host/servicegroup
+ - check for minimum version 0.14 of libgearman
 
 Worker
 ======

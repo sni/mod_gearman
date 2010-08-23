@@ -101,7 +101,7 @@ void *get_results( gearman_job_st *job, void *context, size_t *result_size, gear
     chk_result->output              = NULL;
 
     char *ptr;
-    while ( (ptr = strsep( &result, "\n" )) != NULL ) {
+    while ( (ptr = strsep(&result, "\n" )) != NULL ) {
         char *key   = str_token( &ptr, '=' );
         char *value = str_token( &ptr, 0 );
 
@@ -210,27 +210,26 @@ static int create_gearman_worker(void) {
 
     int x = 0;
     while ( gearman_opt_server[x] != NULL ) {
-        char * server  = strdup( gearman_opt_server[x] );
-        x++;
-        if ( strchr( server, ':' ) == NULL ) {
-            break;
-        };
-        char * host    = str_token( &server, ':' );
-        in_port_t port = ( in_port_t ) atoi( str_token( &server, 0 ) );
-        ret=gearman_worker_add_server( &worker, host, port );
+        char * server   = strdup( gearman_opt_server[x] );
+        char * server_c = server;
+        char * host     = str_token( &server, ':' );
+        in_port_t port  = ( in_port_t ) atoi( str_token( &server, 0 ) );
+        ret = gearman_worker_add_server( &worker, host, port );
         if ( ret != GEARMAN_SUCCESS ) {
-            logger( GM_ERROR, "%s\n", gearman_worker_error( &worker ) );
+            logger( GM_ERROR, "worker error: %s\n", gearman_worker_error( &worker ) );
+            free(server_c);
             return ERROR;
         }
         logger( GM_DEBUG, "worker added gearman server %s:%i\n", host, port );
+        free(server_c);
+        x++;
     }
-
-    logger( GM_DEBUG, "started result_worker thread for queue: %s\n", gearman_opt_result_queue );
 
     if ( gearman_opt_result_queue == NULL ) {
         logger( GM_ERROR, "got no result queue!\n" );
-        exit( 1 );
+        return ERROR;
     }
+    logger( GM_DEBUG, "started result_worker thread for queue: %s\n", gearman_opt_result_queue );
 
     ret = gearman_worker_add_function( &worker, gearman_opt_result_queue, 0, get_results, &options );
     gearman_worker_add_function( &worker, "blah", 0, get_results, NULL ); // somehow the last function is ignored, so in order to set the first one active. Add a useless one

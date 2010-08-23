@@ -12,12 +12,16 @@
 pkglib_LIBRARIES = mod_gearman.so
 mod_gearman_so_SOURCES = utils.c logger.c worker.c mod_gearman.c
 
-mod_gearman_so_CXXFLAGS = $(CFLAGS) -Iincludes -fPIC -Wall -W -Wstrict-prototypes -O
+# -g adds debug symbols
+#mod_gearman_so_CXXFLAGS = $(CFLAGS) -Iincludes -fPIC -Wall -W -Wstrict-prototypes -O
+mod_gearman_so_CXXFLAGS = $(CFLAGS) -Iincludes -fPIC -Wall -W -Wstrict-prototypes -O -g
 mod_gearman_so_CFLAGS   = $(mod_gearman_so_CXXFLAGS)
 LDFLAGS=-L/tmp/gearmand-0.14/libgearman/.libs
 
 mod_gearman.o: $(mod_gearman_so_OBJECTS) $(mod_gearman_so_DEPENDENCIES)
-	$(CXX) $(LDFLAGS) -s -fPIC -shared $(mod_gearman_so_OBJECTS) -o $@ -lpthread -lgearman
+	$(CXX) $(LDFLAGS)  -fPIC -shared $(mod_gearman_so_OBJECTS) -o $@ -lpthread -lgearman
+# -s strips the result file
+#	$(CXX) $(LDFLAGS) -s -fPIC -shared $(mod_gearman_so_OBJECTS) -o $@ -lpthread -lgearman
 	rm -f mod_gearman.so
 
 all-local: mod_gearman.o
