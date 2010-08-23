@@ -79,14 +79,14 @@ worker on each queue which would share the load.
 
 Installation
 ------------
-Make sure you have libgearman library and header files installed.
+Make sure you have libgearman library (>= 0.14) and header files installed.
 
 on debian this is done by:
 ======
  #> apt-get install libgearman2 libgearman-dev
 ======
 
-Then download the tarball and do "make". Add the neb_module to you
+Then download the tarball and do "make". Add the neb_module/mod_gearman.o to your
 nagios installation and add a broker line to your nagios.cfg:
 
 ======
@@ -111,47 +111,58 @@ NEB Module
 there are several module options:
 
 
-debug:         use debug to increase the verbosity of the module.
-               Possible values are:
-                 0 = only errors
-                 1 = debug messages
-                 2 = trace messages
-                 3 = trace and all gearman related logs are going to stdout.
+debug:              use debug to increase the verbosity of the module.
+                    Possible values are:
+                        0 = only errors
+                        1 = debug messages
+                        2 = trace messages
+                        3 = trace and all gearman related logs are going to stdout.
 
-               Example: debug=1
-
-
-server:        sets the addess of your gearman job server. Can be specified
-               more than once to add more server.
-
-               Example: server=localhost:4730,remote_host:4730
+                    Example: debug=1
 
 
-eventhandler:  defines if the module should distribute execution of
-               eventhandlers.
+server:             sets the addess of your gearman job server. Can be specified
+                    more than once to add more server.
 
-               Example: eventhandler=yes
-
-
-services:      defines if the module should distribute execution of
-               service checks.
-
-               Example: services=yes
+                    Example: server=localhost:4730,remote_host:4730
 
 
-hosts:         defines if the module should distribute execution of
-               host checks.
+eventhandler:       defines if the module should distribute execution of
+                    eventhandlers.
 
-               Example: hosts=yes
-
-
-hostgroups:    sets a list of hostgroups which will go into seperate
-               queues.
-
-               Example: hostgroups=name1,name2,name3
+                    Example: eventhandler=yes
 
 
-servicegroups: sets a list of servicegroups which will go into seperate
-               queues.
+services:           defines if the module should distribute execution of
+                    service checks.
 
-               Example: servicegroups=name1,name2,name3
+                    Example: services=yes
+
+
+hosts:              defines if the module should distribute execution of
+                    host checks.
+
+                    Example: hosts=yes
+
+
+hostgroups:         sets a list of hostgroups which will go into seperate
+                    queues.
+
+                    Example: hostgroups=name1,name2,name3
+
+
+servicegroups:      sets a list of servicegroups which will go into seperate
+                    queues.
+
+                    Example: servicegroups=name1,name2,name3
+
+
+localhostgroups:    sets a list of hostgroups which will not be executed
+                    by gearman. They are just passed through.
+
+                    Example: localhostgroups=name1,name2,name3
+
+localservicegroups: sets a list of servicegroups which will not be executed
+                    by gearman. They are just passed through.
+
+                    Example: localservicegroups=name1,name2,name3

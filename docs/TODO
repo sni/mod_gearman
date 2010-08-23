@@ -6,18 +6,17 @@ General
 =======
 
  - add encryption
- - remove debug symbols
+ - remove debug symbols (-g) and add strip (-s) again
 
 NEB Module
 ==========
 
- - add tests
- - make number of result queue workers adjustable
  - check the result queue blah in worker.c
- - add local host/servicegroup
  - check for minimum version 0.14 of libgearman
+
 
 Worker
 ======
 
  - add init scripts
+ - rewrite worker in C

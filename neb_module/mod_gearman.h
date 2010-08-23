@@ -10,8 +10,8 @@
 #define MOD_GEARMAN_VERSION     "0.1"
 #define ENABLED                     1
 #define DISABLED                    0
-#define BUFFERSIZE               4096
-#define LISTSIZE                  256
+#define BUFFERSIZE               8192
+#define LISTSIZE                  512
 
 #include <stdio.h>
 #include <stdlib.h>
