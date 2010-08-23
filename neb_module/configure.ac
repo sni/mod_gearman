@@ -15,29 +15,30 @@ AC_PROG_CC
 AC_PROG_RANLIB
 
 ##############################################
+# gearman wants this
+AC_C_INLINE
+AC_FUNC_MALLOC
+AC_HEADER_STDBOOL
+
+##############################################
 # Checks for libraries.
 AC_CHECK_LIB([pthread], [pthread_create])
 
 ##############################################
 # Checks for header files.
-AC_CHECK_HEADERS([stdlib.h string.h unistd.h pthread.h])
+AC_CHECK_HEADERS([stdlib.h string.h unistd.h pthread.h arpa/inet.h fcntl.h limits.h netdb.h netinet/in.h stddef.h sys/socket.h sys/time.h sys/timeb.h syslog.h])
 
 ##############################################
 # Check some functions
-AC_CHECK_FUNCS([neb_register_callback])
-AC_CHECK_FUNCS([neb_deregister_callback])
-AC_CHECK_FUNCS([add_check_result_to_list])
-AC_CHECK_FUNCS([find_host])
-AC_CHECK_FUNCS([find_service])
+AC_CHECK_FUNCS([neb_register_callback neb_deregister_callback add_check_result_to_list find_host find_service])
+AC_CHECK_FUNCS([gettimeofday strdup strchr])
 
 ##############################################
 # Checks for typedefs, structures, and compiler characteristics.
 AC_TYPE_SIZE_T
-
-##############################################
-# Checks for library functions.
-AC_FUNC_MALLOC
-AC_CHECK_FUNCS([strdup strchr])
+AC_TYPE_UINT8_T
+AC_TYPE_UINT32_T
+AC_TYPE_UINT64_T
 
 ##############################################
 # add a "make install" target
