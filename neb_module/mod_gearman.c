@@ -363,7 +363,7 @@ static void read_arguments( const char *args_orig ) {
     int  srv_ptr     = 0;
     int  srvgrp_ptr  = 0;
     int  hostgrp_ptr = 0;
-    char * args = strdup( args_orig );
+    char * args      = strdup( args_orig );
     while ( (ptr = strsep( &args, " " )) != NULL ) {
         char *key   = str_token( &ptr, '=' );
         char *value = str_token( &ptr, 0 );
@@ -423,7 +423,6 @@ static void read_arguments( const char *args_orig ) {
             logger( GM_ERROR, "unknown option: key: %s value: %s\n", key, value );
         }
     }
-    //free(args);
 
     if ( gearman_opt_result_queue == NULL )
         gearman_opt_result_queue = "check_results";

@@ -61,14 +61,15 @@ void *result_worker( void * data ) {
 void *get_results( gearman_job_st *job, void *context, size_t *result_size, gearman_return_t *ret_ptr ) {
 
     gm_worker_options_t options= *( ( gm_worker_options_t * )context );
-    const uint8_t *workload;
-    char *result;
 
     // get the data
+    const uint8_t *workload;
     workload= gearman_job_workload( job );
     *result_size= gearman_job_workload_size( job );
 
+    char *result;
     result = malloc( *result_size );
+    char *result_c = result;
     if ( result == NULL ) {
         logger( GM_ERROR, "malloc:%d\n", errno );
         *ret_ptr= GEARMAN_WORK_FAIL;
@@ -149,7 +150,7 @@ void *get_results( gearman_job_st *job, void *context, size_t *result_size, gear
             chk_result->latency = atof( value );
         }
     }
-    free(result);
+    free(result_c);
 
     if ( chk_result == NULL ) {
         *ret_ptr= GEARMAN_WORK_FAIL;
