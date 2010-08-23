@@ -166,3 +166,67 @@ localservicegroups: sets a list of servicegroups which will not be executed
                     by gearman. They are just passed through.
 
                     Example: localservicegroups=name1,name2,name3
+
+
+
+Queue Names
+-----------
+
+You may want to monitor your gearman server job queue. The shipped
+queue_top.pl does this. It polls the gearman server every second and
+displays the current queue statistics.
+
+ +-----------------------+--------+-------+-------+---------+
+ | Name                  | Worker | Avail | Queue | Running |
+ +-----------------------+--------+-------+-------+---------+
+ | check_results         | 1      | 1     | 0     | 0       |
+ | host                  | 3      | 3     | 0     | 0       |
+ | service               | 3      | 3     | 0     | 0       |
+ | eventhandler          | 3      | 3     | 0     | 0       |
+ | servicegroup_jmx4perl | 3      | 3     | 0     | 0       |
+ | hostgroup_japan       | 3      | 3     | 0     | 0       |
+ +-----------------------+--------+-------+-------+---------+
+
+
+check_results         this queue is monitored by the neb module to
+                      fetch results from the worker.
+                      You don't need an extra worker for this queue.
+
+
+host                  This is the queue for generic host checks. If
+                      you enable host checks with the hosts=yes switch.
+                      Before a host goes into this queue, it is
+                      checked if any of the local groups matches or a
+                      seperate hostgroup machtes. If nothing matches,
+                      then this queue is used.
+
+
+service               This is the queue for generic service checks. If
+                      you enable service checks with the services=yes
+                      switch. Before a service goes into this queue
+                      it is checked against the local host- and
+                      service-groups. Then the normal host- and
+                      servicegroups are checked and if none matches,
+                      this queue is used.
+
+
+hostgroup_<name>      This queue is created for every hostgroup which
+                      has been defined by the hostgroups=... option.
+                      Make sure you have at least one worker for every
+                      hostgroup you specify. Start the worker with
+                      --hostgroups=... to work on hostgroup queues.
+                      Note that this queue may also contain service
+                      checks if the hostgroup of a service matches.
+
+
+servicegroup_<name>   This queue is created for every servicegroup
+                      which has been defined by the servicegroup=...
+                      option.
+
+
+eventhandler          This is the generic queue for all eventhandler.
+                      Make sure you have a worker for this queue if
+                      you have eventhandler enabled. Start the worker
+                      with --events to work on this queue.
+
+
