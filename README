@@ -184,9 +184,9 @@ localservicegroups: sets a list of servicegroups which will not be executed
 Queue Names
 -----------
 
-You may want to monitor your gearman server job queue. The shipped
-queue_top.pl does this. It polls the gearman server every second and
-displays the current queue statistics.
+You may want to watch your gearman server job queue. The shipped
+tools/queue_top.pl does this. It polls the gearman server every second
+and displays the current queue statistics.
 
  +-----------------------+--------+-------+-------+---------+
  | Name                  | Worker | Avail | Queue | Running |

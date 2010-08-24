@@ -1,4 +1,9 @@
 This file documents the revision history for mod_gearman.
 
 0.1    Mon Aug 23 15:01:15 CEST 2010
+          - add warning if host/servicegroup does not exist
+          - added host/servicegroup affinity
+          - added exclusion by local host/servicegroups
+          - added distribution of eventhandlers
+          - added result queue worker
           - initial version

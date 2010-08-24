@@ -142,7 +142,50 @@ static int handle_process_events( int event_type, void *data ) {
         start_threads();
 
         neb_deregister_callback( NEBCALLBACK_PROCESS_DATA, gearman_module_handle );
+
+        // verify names of supplied groups
+        // this cannot be done befor nagios has finished reading his config
+        // verify local servicegroups names
+        int x=0;
+        while ( gearman_local_servicegroups_list[x] != NULL ) {
+            servicegroup * temp_servicegroup = find_servicegroup( gearman_local_servicegroups_list[x] );
+            if( temp_servicegroup == NULL ) {
+                logger( GM_INFO, "Warning: servicegroup '%s' does not exist, possible typo?\n", gearman_local_servicegroups_list[x] );
+            }
+            x++;
+        }
+
+        // verify local hostgroup names
+        x = 0;
+        while ( gearman_local_hostgroups_list[x] != NULL ) {
+            hostgroup * temp_hostgroup = find_hostgroup( gearman_local_hostgroups_list[x] );
+            if( temp_hostgroup == NULL ) {
+                logger( GM_INFO, "Warning: hostgroup '%s' does not exist, possible typo?\n", gearman_local_hostgroups_list[x] );
+            }
+            x++;
+        }
+
+        // verify servicegroups names
+        x = 0;
+        while ( gearman_servicegroups_list[x] != NULL ) {
+            servicegroup * temp_servicegroup = find_servicegroup( gearman_servicegroups_list[x] );
+            if( temp_servicegroup == NULL ) {
+                logger( GM_INFO, "Warning: servicegroup '%s' does not exist, possible typo?\n", gearman_servicegroups_list[x] );
+            }
+            x++;
+        }
+
+        // verify hostgroup names
+        x = 0;
+        while ( gearman_hostgroups_list[x] != NULL ) {
+            hostgroup * temp_hostgroup = find_hostgroup( gearman_hostgroups_list[x] );
+            if( temp_hostgroup == NULL ) {
+                logger( GM_INFO, "Warning: hostgroup '%s' does not exist, possible typo?\n", gearman_hostgroups_list[x] );
+            }
+            x++;
+        }
     }
+
     return OK;
 }
 
