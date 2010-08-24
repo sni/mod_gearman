@@ -10,8 +10,6 @@
 SUBDIRS = neb_module
 MAKE    = make
 
-.PHONY: clean distclean
-
 all: mod_gearman
 
 mod_gearman:
