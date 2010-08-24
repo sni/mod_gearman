@@ -12,6 +12,7 @@ use Getopt::Long;
 use Pod::Usage;
 use Carp;
 use Sys::Hostname;
+use POSIX;
 
 =head1 NAME
 
@@ -242,6 +243,7 @@ sub exec_handler {
         $rc            = 2;
         $erg       = sprintf("(%s Check Timed Out)", ucfirst($data->{'type'}));
         _out($data->{'type'}." job timed out after ".$timeout." seconds") if $opt_verbose;
+        _kill_child_procs();
     }
 
     my $t1      = [gettimeofday];
@@ -343,6 +345,10 @@ start the worker
 
 sub start_worker {
     my $nr = shift;
+
+    # become process group leader
+    setpgrp(0,0);
+
     my $worker = Gearman::Worker->new;
     _out("connecting to: ".join(', ',@opt_server)) if $opt_verbose;
     $worker->job_servers(@opt_server);
@@ -403,4 +409,12 @@ sub _decode_data {
         $result->{$key} = $value;
     }
     return $result;
+}
+
+#################################################
+# kill all childs
+sub _kill_child_procs {
+  $SIG{'INT'} = sub {};
+  kill - SIGINT, $$;
+  delete $SIG{'INT'};
 }
