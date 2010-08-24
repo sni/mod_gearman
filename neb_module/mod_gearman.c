@@ -30,7 +30,7 @@ int gearman_opt_hosts;
 int gearman_opt_events;
 
 int gearman_threads_running = 0;
-pthread_t result_thr;
+pthread_t result_thr[LISTSIZE];
 char target_worker[BUFFERSIZE];
 char temp_buffer[BUFFERSIZE];
 char uniq[BUFFERSIZE];
@@ -123,9 +123,12 @@ int nebmodule_deinit( int flags, int reason ) {
 
     logger( GM_DEBUG, "deregistered callbacks\n" );
 
-    // stop result thread
-    pthread_cancel (result_thr);
-    pthread_join (result_thr, NULL);
+    // stop result threads
+    int x;
+    for(x = 0; x < gearman_opt_result_workers; x++) {
+        pthread_cancel(result_thr[x]);
+        pthread_join(result_thr[x], NULL);
+    }
 
     return OK;
 }
@@ -411,11 +414,12 @@ static int handle_svc_check( int event_type, void *data ) {
 /* parse the module arguments */
 static void read_arguments( const char *args_orig ) {
 
-    gearman_opt_timeout      = 0;
-    gearman_opt_result_queue = NULL;
-    gearman_opt_events       = DISABLED;
-    gearman_opt_services     = DISABLED;
-    gearman_opt_hosts        = DISABLED;
+    gearman_opt_timeout        = 0;
+    gearman_opt_result_workers = 1;
+    gearman_opt_result_queue   = NULL;
+    gearman_opt_events         = DISABLED;
+    gearman_opt_services       = DISABLED;
+    gearman_opt_hosts          = DISABLED;
 
     // no arguments given
     if ( !args_orig )
@@ -445,6 +449,12 @@ static void read_arguments( const char *args_orig ) {
         else if ( !strcmp( key, "timeout" ) || !strcmp( key, "--timeout" ) ) {
             gearman_opt_timeout = atoi( value );
             logger( GM_DEBUG, "Setting timeout to %d\n", gearman_opt_timeout );
+        }
+        else if ( !strcmp( key, "result_workers" ) || !strcmp( key, "--result_workers" ) ) {
+            gearman_opt_result_workers = atoi( value );
+            if(gearman_opt_result_workers > LISTSIZE) { gearman_opt_result_workers = LISTSIZE; }
+            if(gearman_opt_result_workers <= 0)       { gearman_opt_result_workers = 1; }
+            logger( GM_DEBUG, "Setting result_workers to %d\n", gearman_opt_result_workers );
         }
         else if ( !strcmp( key, "result_queue" ) || !strcmp( key, "--result_queue" ) ) {
             gearman_opt_result_queue = value;
@@ -645,10 +655,13 @@ static void set_target_worker( host *host, service *svc ) {
 static void start_threads(void) {
     if ( !gearman_threads_running ) {
         // create result worker
-        gearman_threads_running++;
-        worker_parm *p;
-        p = (worker_parm *)malloc(sizeof(worker_parm));
-        p->id = gearman_threads_running;
-        pthread_create ( &result_thr, NULL, result_worker, (void *)p);
+        int x;
+        for(x = 0; x < gearman_opt_result_workers; x++) {
+            gearman_threads_running++;
+            worker_parm *p;
+            p = (worker_parm *)malloc(sizeof(worker_parm));
+            p->id = gearman_threads_running;
+            pthread_create ( &result_thr[x], NULL, result_worker, (void *)p);
+        }
     }
 }

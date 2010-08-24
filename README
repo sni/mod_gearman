@@ -179,6 +179,12 @@ localservicegroups: sets a list of servicegroups which will not be executed
 
                     Example: localservicegroups=name1,name2,name3
 
+result_workers      Number of result worker threads. Usually one is
+                    enough. You may increase the value if your
+                    result queue is not processed fast enough.
+
+                    Example: result_workers=3
+
 
 
 Queue Names
@@ -203,6 +209,10 @@ and displays the current queue statistics.
 check_results         this queue is monitored by the neb module to
                       fetch results from the worker.
                       You don't need an extra worker for this queue.
+                      The number of result workers can be set to a
+                      maximum of 256, but usually one is enough.
+                      One worker is capable of processing several
+                      thousand results per second.
 
 
 host                  This is the queue for generic host checks. If

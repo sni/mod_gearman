@@ -42,3 +42,4 @@ char * gearman_opt_server[LISTSIZE];
 int    gearman_opt_debug_level;
 char * gearman_opt_result_queue;
 int    gearman_opt_timeout;
+int    gearman_opt_result_workers;
