@@ -211,7 +211,8 @@ sub exec_handler {
     }
 
     # check against max age
-    my $latency = $data->{'latency'} || 0;
+    my $early_timeout = 0;
+    my $latency       = $data->{'latency'} || 0;
     my($start_time,$age);
     if(!defined $data->{'start_time'}) {
         $start_time = [gettimeofday];
@@ -219,8 +220,27 @@ sub exec_handler {
         $start_time = [split(/\./, $data->{'start_time'}, 2)];
     }
     $age = tv_interval( $start_time, $t0);
+
+    my $result = {
+        host_name           => $data->{'host_name'},
+        service_description => $data->{'service_description'},
+        start_time_tv_sec   => $start_time->[0],
+        start_time_tv_usec  => $start_time->[1],
+        early_timeout       => $early_timeout,
+        exited_ok           => 1,
+        check_options       => $data->{'check_options'},
+        scheduled_check     => $data->{'scheduled_check'},
+        reschedule_check    => $data->{'reschedule_check'},
+    };
+
+    # check too old
     if($age > $opt_maxage) {
+        # send a "unknown" result so nagios can reschedule this check
         _out("max age reached for this job: ".$age." sec");
+        $result->{return_code}  = 3;
+        $result->{output}       = "(Could Not Start Check In Time)";
+        my $result_string       = _build_result($result);
+        _send_result($data->{'result_queue'}, $result_string);
         return 1;
     }
     $latency += $age;
@@ -228,7 +248,6 @@ sub exec_handler {
     _out(sprintf("got %s job - age %02f: %s %s", $data->{'type'}, $age, $data->{'host_name'} || '', $data->{'service_description'} || '')) if $opt_verbose;
 
     my $timeout       = $data->{'timeout'} || $default_timeout;
-    my $early_timeout = 0;
     my($erg,$rc);
     eval {
         local $SIG{ALRM} = sub { die "alarm\n" };
@@ -252,14 +271,6 @@ sub exec_handler {
     # eventhandler are finished at this point
     return 1 unless defined $data->{'host_name'};
 
-    my $result = {
-        host_name           => $data->{'host_name'},
-        start_time_tv_sec   => $start_time->[0],
-        start_time_tv_usec  => $start_time->[1],
-        early_timeout       => $early_timeout,
-        exited_ok           => 1,
-    };
-
     $erg =~ s/\n/\\n/gmx;
     $result->{finish_time_tv_sec}  = $t1->[0];
     $result->{finish_time_tv_usec} = $t1->[1];
@@ -267,11 +278,6 @@ sub exec_handler {
     $result->{return_code}         = $rc;
     $result->{output}              = $erg;
     $result->{latency}             = $latency;
-
-    $result->{service_description} = $data->{'service_description'};
-    $result->{check_options}       = $data->{'check_options'};
-    $result->{scheduled_check}     = $data->{'scheduled_check'};
-    $result->{reschedule_check}    = $data->{'reschedule_check'};
 
     _out("finished job with rc ".$rc) if $opt_verbose;
 
