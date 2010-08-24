@@ -65,11 +65,15 @@ int nebmodule_init( int flags, char *args, nebmodule *handle ) {
     // parse arguments
     read_arguments( args );
     logger( GM_DEBUG, "args: %s\n", args );
-
     logger( GM_TRACE, "nebmodule_init(%i, %i)\n", flags );
+    logger( GM_DEBUG, "running on libgearman %s\n", gearman_version() );
+
+    if((float)atof(gearman_version()) < (float)MIN_LIB_GEARMAN_VERSION) {
+        logger( GM_ERROR, "minimum version of libgearman is %.2f, yours is %.2f\n", (float)MIN_LIB_GEARMAN_VERSION, (float)atof(gearman_version()) );
+        return ERROR;
+    }
 
     // create gearman client
-    logger( GM_DEBUG, "running on libgearman %s\n", gearman_version() );
     if ( create_gearman_client() != OK ) {
         logger( GM_ERROR, "could not create gearman client\n" );
         return ERROR;

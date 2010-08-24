@@ -13,6 +13,8 @@
 #define BUFFERSIZE               8192
 #define LISTSIZE                  512
 
+#define MIN_LIB_GEARMAN_VERSION  0.14
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

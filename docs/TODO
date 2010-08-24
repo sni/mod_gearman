@@ -12,7 +12,6 @@ NEB Module
 ==========
 
  - check the result queue blah in worker.c
- - check for minimum version 0.14 of libgearman
 
 
 Worker
