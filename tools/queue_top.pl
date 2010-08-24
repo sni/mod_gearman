@@ -149,6 +149,7 @@ sub set_sessions {
     for my $server (@opt_server) {
         next if defined $sessions->{$server};
         my($host,$port) = split/:/, $server, 2;
+        $port = 4730 unless defined $port;
         eval {
             my $session = Net::Telnet::Gearman->new(
                 Host => $host,
