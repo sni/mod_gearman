@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 ##############################################
-AC_PREREQ([2.65])
+AC_PREREQ([2.61])
 AC_INIT([mod_gearman], [0.1], [sven@nierlein.de])
 AM_INIT_AUTOMAKE([-Wall foreign])
 AC_CONFIG_SRCDIR([mod_gearman.c])
@@ -26,7 +26,7 @@ AC_CHECK_LIB([pthread], [pthread_create])
 
 ##############################################
 # Checks for header files.
-AC_CHECK_HEADERS([stdlib.h string.h unistd.h pthread.h arpa/inet.h fcntl.h limits.h netdb.h netinet/in.h stddef.h sys/socket.h sys/time.h sys/timeb.h syslog.h])
+AC_CHECK_HEADERS([stdlib.h string.h unistd.h pthread.h arpa/inet.h fcntl.h limits.h netdb.h netinet/in.h stddef.h sys/socket.h sys/time.h sys/timeb.h syslog.h ltdl.h])
 
 ##############################################
 # Check some functions

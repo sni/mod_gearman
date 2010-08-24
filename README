@@ -79,14 +79,15 @@ worker on each queue which would share the load.
 
 Installation
 ------------
-Make sure you have libgearman library (>= 0.14) and header files installed.
 
-on debian this is done by:
-======
- #> apt-get install libgearman2 libgearman-dev
-======
+Pre Requirements: 
+ - gcc / g++
+ - autoconf / automake / autoheader
+ - libtool
+ - libgearman (>= 0.14)
 
-Then download the tarball and do "make". Add the neb_module/mod_gearman.o to your
+
+Download the tarball and do "make". Add the neb_module/mod_gearman.o to your
 nagios installation and add a broker line to your nagios.cfg:
 
 ======
@@ -100,6 +101,17 @@ init script. So just start it by hand.
 ======
 ./scripts/worker.pl --server=localhost:4730 --events --services --hosts --threads=15
 ======
+
+
+Patch Nagios
+++++++++++++
+
+It is not possible to distribute Eventhandler without patching Nagios
+as the moment. So please apply the patch from the patches dir to your
+Nagios sources and build nagios again. You only need to replace the
+nagios binary. Nothing else has changed.
+If you plan to distribute only Host/Servicechecks, no patch is needed.
+
 
 
 Configuration
