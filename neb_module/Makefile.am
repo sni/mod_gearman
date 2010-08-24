@@ -25,6 +25,15 @@ mod_gearman.o: $(mod_gearman_so_OBJECTS) $(mod_gearman_so_DEPENDENCIES)
 	rm -f mod_gearman.so
 
 all-local: mod_gearman.o
+	@echo ""
+	@echo "################################################################"
+	@echo ""
+	@echo "  now copy the neb_module/mod_gearman.o to your nagios folder"
+	@echo "  and at the broker= line to your config."
+	@echo ""
+	@echo "  read the README for configuration details"
+	@echo ""
+	@echo "################################################################"
 
 distclean-local: clean
 	for file in .deps/ Makefile.in aclocal.m4 autom4te.cache config.* configure depcomp install-sh missing; do test -e $$file && rm -r $$file; done

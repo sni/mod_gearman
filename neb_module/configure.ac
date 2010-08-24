@@ -26,11 +26,11 @@ AC_CHECK_LIB([pthread], [pthread_create])
 
 ##############################################
 # Checks for header files.
-AC_CHECK_HEADERS([stdlib.h string.h unistd.h pthread.h arpa/inet.h fcntl.h limits.h netdb.h netinet/in.h stddef.h sys/socket.h sys/time.h sys/timeb.h syslog.h ltdl.h])
+AC_CHECK_HEADERS([stdlib.h string.h unistd.h pthread.h arpa/inet.h fcntl.h limits.h netdb.h netinet/in.h stddef.h sys/socket.h sys/time.h sys/timeb.h syslog.h],,AC_MSG_ERROR([Compiling mod_gearman requires standard unix headers files]))
+AC_CHECK_HEADERS([ltdl.h],,AC_MSG_ERROR([Compiling mod_gearman requires ltdl.h]))
 
 ##############################################
 # Check some functions
-AC_CHECK_FUNCS([neb_register_callback neb_deregister_callback add_check_result_to_list find_host find_service])
 AC_CHECK_FUNCS([gettimeofday strdup strchr])
 
 ##############################################
@@ -39,6 +39,10 @@ AC_TYPE_SIZE_T
 AC_TYPE_UINT8_T
 AC_TYPE_UINT32_T
 AC_TYPE_UINT64_T
+
+##############################################
+# Checks for additional libraries.
+AC_CHECK_LIB([gearman], [gearman_client_create],,AC_MSG_ERROR([Compiling mod_gearman requires libgearman]))
 
 ##############################################
 # add a "make install" target
