@@ -7,13 +7,13 @@
 #
 ###############################################################################
 
-SUBDIRS = neb_module
+SUBDIRS = src
 MAKE    = make
 
 all: mod_gearman
 
 mod_gearman:
-	cd neb_module && aclocal && autoheader && automake -a && autoconf && ./configure && make
+	cd src && aclocal && autoheader && automake -a && autoconf && ./configure && make
 
 all:
 	@for i in $(SUBDIRS); do \

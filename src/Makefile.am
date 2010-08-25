@@ -7,8 +7,13 @@
 #
 ###############################################################################
 
+#AM_CPPFLAGS=-Iincludes
+
 pkglib_LIBRARIES = mod_gearman.so
-mod_gearman_so_SOURCES = utils.c logger.c worker.c mod_gearman.c
+mod_gearman_so_SOURCES = utils.c logger.c result_thread.c mod_gearman.c
+
+#bin_PROGRAMS = worker
+#worker_SOURCES = common.c worker.c
 
 # -g adds debug symbols
 #mod_gearman_so_CXXFLAGS = $(CFLAGS) -Iincludes -fPIC -Wall -W -Wstrict-prototypes -O

@@ -8,7 +8,7 @@
 
 
 /* include header */
-#include "worker.h"
+#include "result_thread.h"
 #include "utils.h"
 #include "mod_gearman.h"
 #include "logger.h"
