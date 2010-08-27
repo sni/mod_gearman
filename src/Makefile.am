@@ -7,18 +7,21 @@
 #
 ###############################################################################
 
-#AM_CPPFLAGS=-Iincludes
+AM_CPPFLAGS=-Iincludes
 
 pkglib_LIBRARIES = mod_gearman.so
 mod_gearman_so_SOURCES = utils.c logger.c result_thread.c mod_gearman.c
 
-#bin_PROGRAMS = worker
-#worker_SOURCES = common.c worker.c
+bin_PROGRAMS = worker
+worker_SOURCES = worker_logger.c utils.c worker.c
 
 # -g adds debug symbols
-#mod_gearman_so_CXXFLAGS = $(CFLAGS) -Iincludes -fPIC -Wall -W -Wstrict-prototypes -O
-mod_gearman_so_CXXFLAGS = $(CFLAGS) -Iincludes -fPIC -Wall -W -Wstrict-prototypes -O -g
+#mod_gearman_so_CXXFLAGS = $(CFLAGS) -fPIC -Wall -W -Wstrict-prototypes -O
+mod_gearman_so_CXXFLAGS = $(CFLAGS) -fPIC -Wall -W -Wstrict-prototypes -O -g
 mod_gearman_so_CFLAGS   = $(mod_gearman_so_CXXFLAGS)
+
+#worker.o: $(worker_OBJECTS) $(worker_DEPENDENCIES)
+#	$(CXX) $(LDFLAGS)  -fPIC $(worker_OBJECTS) -o $@ -lpthread -lgearman
 
 mod_gearman.o: $(mod_gearman_so_OBJECTS) $(mod_gearman_so_DEPENDENCIES)
 	$(CXX) $(LDFLAGS)  -fPIC -shared $(mod_gearman_so_OBJECTS) -o $@ -lpthread -lgearman

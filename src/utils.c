@@ -6,6 +6,9 @@
  *
  *****************************************************************************/
 
+#include "utils.h"
+#include "logger.h"
+
 /* return string until token */
 char *str_token( char **c, char delim ) {
     char *begin = *c;
@@ -22,4 +25,23 @@ char *str_token( char **c, char delim ) {
     } else
         *c = end;
     return begin;
+}
+
+
+/* array push */
+void push(gm_array_t *ps, void * data) {
+    if (ps->size == GM_STACKSIZE) {
+        logger(GM_ERROR, "Error: stack overflow\n");
+        exit(1);
+    } else
+        ps->items[ps->size++] = data;
+}
+
+
+/* array pop */
+void * pop(gm_array_t *ps) {
+    if (ps->size == 0) {
+        return NULL;
+    } else
+        return ps->items[--ps->size];
 }
