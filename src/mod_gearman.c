@@ -20,20 +20,20 @@ extern int currently_running_host_checks;
 void *gearman_module_handle=NULL;
 gearman_client_st client;
 
-char *gearman_hostgroups_list[LISTSIZE];
-char *gearman_servicegroups_list[LISTSIZE];
-char *gearman_local_hostgroups_list[LISTSIZE];
-char *gearman_local_servicegroups_list[LISTSIZE];
+char *gearman_hostgroups_list[GM_LISTSIZE];
+char *gearman_servicegroups_list[GM_LISTSIZE];
+char *gearman_local_hostgroups_list[GM_LISTSIZE];
+char *gearman_local_servicegroups_list[GM_LISTSIZE];
 
 int gearman_opt_services;
 int gearman_opt_hosts;
 int gearman_opt_events;
 
 int gearman_threads_running = 0;
-pthread_t result_thr[LISTSIZE];
-char target_worker[BUFFERSIZE];
-char temp_buffer[BUFFERSIZE];
-char uniq[BUFFERSIZE];
+pthread_t result_thr[GM_LISTSIZE];
+char target_worker[GM_BUFFERSIZE];
+char temp_buffer[GM_BUFFERSIZE];
+char uniq[GM_BUFFERSIZE];
 
 static void  register_neb_callbacks(void);
 static void  read_arguments( const char * );
@@ -56,76 +56,76 @@ int nebmodule_init( int flags, char *args, nebmodule *handle ) {
     neb_set_module_info( gearman_module_handle, NEBMODULE_MODINFO_TITLE,   "mod_gearman" );
     neb_set_module_info( gearman_module_handle, NEBMODULE_MODINFO_AUTHOR,  "Sven Nierlein" );
     neb_set_module_info( gearman_module_handle, NEBMODULE_MODINFO_TITLE,   "Copyright (c) 2010 Sven Nierlein" );
-    neb_set_module_info( gearman_module_handle, NEBMODULE_MODINFO_VERSION, "0.1" );
+    neb_set_module_info( gearman_module_handle, NEBMODULE_MODINFO_VERSION, GM_VERSION );
     neb_set_module_info( gearman_module_handle, NEBMODULE_MODINFO_LICENSE, "GPL v3" );
     neb_set_module_info( gearman_module_handle, NEBMODULE_MODINFO_DESC,    "distribute host/service checks and eventhandler via gearman" );
 
-    logger( GM_INFO, "Version %s\n", MOD_GEARMAN_VERSION );
+    logger( GM_LOG_INFO, "Version %s\n", GM_VERSION );
 
     // parse arguments
     read_arguments( args );
-    logger( GM_DEBUG, "args: %s\n", args );
-    logger( GM_TRACE, "nebmodule_init(%i, %i)\n", flags );
-    logger( GM_DEBUG, "running on libgearman %s\n", gearman_version() );
+    logger( GM_LOG_DEBUG, "args: %s\n", args );
+    logger( GM_LOG_TRACE, "nebmodule_init(%i, %i)\n", flags );
+    logger( GM_LOG_DEBUG, "running on libgearman %s\n", gearman_version() );
 
-    if((float)atof(gearman_version()) < (float)MIN_LIB_GEARMAN_VERSION) {
-        logger( GM_ERROR, "minimum version of libgearman is %.2f, yours is %.2f\n", (float)MIN_LIB_GEARMAN_VERSION, (float)atof(gearman_version()) );
-        return ERROR;
+    if((float)atof(gearman_version()) < (float)GM_MIN_LIB_GEARMAN_VERSION) {
+        logger( GM_LOG_ERROR, "minimum version of libgearman is %.2f, yours is %.2f\n", (float)GM_MIN_LIB_GEARMAN_VERSION, (float)atof(gearman_version()) );
+        return GM_ERROR;
     }
 
     // create gearman client
-    if ( create_gearman_client() != OK ) {
-        logger( GM_ERROR, "could not create gearman client\n" );
-        return ERROR;
+    if ( create_gearman_client() != GM_OK ) {
+        logger( GM_LOG_ERROR, "could not create gearman client\n" );
+        return GM_ERROR;
     }
 
     // register callback for process event where everything else starts
     neb_register_callback( NEBCALLBACK_PROCESS_DATA, gearman_module_handle, 0, handle_process_events );
 
-    logger( GM_DEBUG, "finished initializing\n" );
+    logger( GM_LOG_DEBUG, "finished initializing\n" );
 
-    return OK;
+    return GM_OK;
 }
 
 
 /* register eventhandler callback */
 static void register_neb_callbacks(void) {
 
-    // only if we have hostgroups defined or general hosts enabled
-    if ( gearman_hostgroups_list[0] != NULL || gearman_opt_hosts == ENABLED )
+    // only if we have hostgroups defined or general hosts GM_ENABLED
+    if ( gearman_hostgroups_list[0] != NULL || gearman_opt_hosts == GM_ENABLED )
         neb_register_callback( NEBCALLBACK_HOST_CHECK_DATA,    gearman_module_handle, 0, handle_host_check );
 
-    // only if we have groups defined or general services enabled
-    if ( gearman_servicegroups_list[0] != NULL || gearman_hostgroups_list[0] != NULL || gearman_opt_services == ENABLED )
+    // only if we have groups defined or general services GM_ENABLED
+    if ( gearman_servicegroups_list[0] != NULL || gearman_hostgroups_list[0] != NULL || gearman_opt_services == GM_ENABLED )
         neb_register_callback( NEBCALLBACK_SERVICE_CHECK_DATA, gearman_module_handle, 0, handle_svc_check );
 
-    if ( gearman_opt_events == ENABLED )
+    if ( gearman_opt_events == GM_ENABLED )
         neb_register_callback( NEBCALLBACK_EVENT_HANDLER_DATA, gearman_module_handle, 0, handle_eventhandler );
 
-    logger( GM_DEBUG, "registered neb callbacks\n" );
+    logger( GM_LOG_DEBUG, "registered neb callbacks\n" );
 }
 
 
 /* deregister all events */
 int nebmodule_deinit( int flags, int reason ) {
 
-    logger( GM_TRACE, "nebmodule_deinit(%i, %i)\n", flags, reason );
+    logger( GM_LOG_TRACE, "nebmodule_deinit(%i, %i)\n", flags, reason );
 
     // should be removed already, but just for the case it wasn't
     neb_deregister_callback( NEBCALLBACK_PROCESS_DATA, gearman_module_handle );
 
-    // only if we have hostgroups defined or general hosts enabled
-    if ( gearman_hostgroups_list[0] != NULL || gearman_opt_hosts == ENABLED )
+    // only if we have hostgroups defined or general hosts GM_ENABLED
+    if ( gearman_hostgroups_list[0] != NULL || gearman_opt_hosts == GM_ENABLED )
         neb_deregister_callback( NEBCALLBACK_HOST_CHECK_DATA, gearman_module_handle );
 
-    // only if we have groups defined or general services enabled
-    if ( gearman_servicegroups_list[0] != NULL || gearman_hostgroups_list[0] != NULL || gearman_opt_services == ENABLED )
+    // only if we have groups defined or general services GM_ENABLED
+    if ( gearman_servicegroups_list[0] != NULL || gearman_hostgroups_list[0] != NULL || gearman_opt_services == GM_ENABLED )
         neb_deregister_callback( NEBCALLBACK_SERVICE_CHECK_DATA, gearman_module_handle );
 
-    if ( gearman_opt_events == ENABLED )
+    if ( gearman_opt_events == GM_ENABLED )
         neb_deregister_callback( NEBCALLBACK_EVENT_HANDLER_DATA, gearman_module_handle );
 
-    logger( GM_DEBUG, "deregistered callbacks\n" );
+    logger( GM_LOG_DEBUG, "deregistered callbacks\n" );
 
     // stop result threads
     int x;
@@ -134,14 +134,14 @@ int nebmodule_deinit( int flags, int reason ) {
         pthread_join(result_thr[x], NULL);
     }
 
-    return OK;
+    return GM_OK;
 }
 
 
 /* handle process events */
 static int handle_process_events( int event_type, void *data ) {
 
-    logger( GM_TRACE, "handle_process_events(%i, data)\n", event_type );
+    logger( GM_LOG_TRACE, "handle_process_events(%i, data)\n", event_type );
 
     struct nebstruct_process_struct *ps = ( struct nebstruct_process_struct * )data;
     if ( ps->type == NEBTYPE_PROCESS_EVENTLOOPSTART ) {
@@ -157,7 +157,7 @@ static int handle_process_events( int event_type, void *data ) {
         while ( gearman_local_servicegroups_list[x] != NULL ) {
             servicegroup * temp_servicegroup = find_servicegroup( gearman_local_servicegroups_list[x] );
             if( temp_servicegroup == NULL ) {
-                logger( GM_INFO, "Warning: servicegroup '%s' does not exist, possible typo?\n", gearman_local_servicegroups_list[x] );
+                logger( GM_LOG_INFO, "Warning: servicegroup '%s' does not exist, possible typo?\n", gearman_local_servicegroups_list[x] );
             }
             x++;
         }
@@ -167,7 +167,7 @@ static int handle_process_events( int event_type, void *data ) {
         while ( gearman_local_hostgroups_list[x] != NULL ) {
             hostgroup * temp_hostgroup = find_hostgroup( gearman_local_hostgroups_list[x] );
             if( temp_hostgroup == NULL ) {
-                logger( GM_INFO, "Warning: hostgroup '%s' does not exist, possible typo?\n", gearman_local_hostgroups_list[x] );
+                logger( GM_LOG_INFO, "Warning: hostgroup '%s' does not exist, possible typo?\n", gearman_local_hostgroups_list[x] );
             }
             x++;
         }
@@ -177,7 +177,7 @@ static int handle_process_events( int event_type, void *data ) {
         while ( gearman_servicegroups_list[x] != NULL ) {
             servicegroup * temp_servicegroup = find_servicegroup( gearman_servicegroups_list[x] );
             if( temp_servicegroup == NULL ) {
-                logger( GM_INFO, "Warning: servicegroup '%s' does not exist, possible typo?\n", gearman_servicegroups_list[x] );
+                logger( GM_LOG_INFO, "Warning: servicegroup '%s' does not exist, possible typo?\n", gearman_servicegroups_list[x] );
             }
             x++;
         }
@@ -187,28 +187,28 @@ static int handle_process_events( int event_type, void *data ) {
         while ( gearman_hostgroups_list[x] != NULL ) {
             hostgroup * temp_hostgroup = find_hostgroup( gearman_hostgroups_list[x] );
             if( temp_hostgroup == NULL ) {
-                logger( GM_INFO, "Warning: hostgroup '%s' does not exist, possible typo?\n", gearman_hostgroups_list[x] );
+                logger( GM_LOG_INFO, "Warning: hostgroup '%s' does not exist, possible typo?\n", gearman_hostgroups_list[x] );
             }
             x++;
         }
     }
 
-    return OK;
+    return GM_OK;
 }
 
 
 /* handle eventhandler events */
 static int handle_eventhandler( int event_type, void *data ) {
 
-    logger( GM_DEBUG, "got eventhandler event\n" );
-    logger( GM_TRACE, "handle_eventhandler(%i, data)\n", event_type );
+    logger( GM_LOG_DEBUG, "got eventhandler event\n" );
+    logger( GM_LOG_TRACE, "handle_eventhandler(%i, data)\n", event_type );
 
     if ( event_type != NEBTYPE_EVENTHANDLER_START )
-        return OK;
+        return GM_OK;
 
     nebstruct_event_handler_data * ds = ( nebstruct_event_handler_data * )data;
 
-    logger( GM_TRACE, "got eventhandler event: %s\n", ds->command_line );
+    logger( GM_LOG_TRACE, "got eventhandler event: %s\n", ds->command_line );
 
     temp_buffer[0]='\x0';
     snprintf( temp_buffer,sizeof( temp_buffer )-1,"type=eventhandler\ncommand_line=%s\n",ds->command_line );
@@ -231,28 +231,28 @@ static int handle_eventhandler( int event_type, void *data ) {
 /* handle host check events */
 static int handle_host_check( int event_type, void *data ) {
 
-    logger( GM_TRACE, "handle_host_check(%i, data)\n", event_type );
+    logger( GM_LOG_TRACE, "handle_host_check(%i, data)\n", event_type );
 
     nebstruct_host_check_data * hostdata = ( nebstruct_host_check_data * )data;
 
-    logger( GM_DEBUG, "---------------\nhost Job -> %i vs %i, %i vs %i\n", event_type, NEBCALLBACK_HOST_CHECK_DATA, hostdata->type, NEBTYPE_HOSTCHECK_ASYNC_PRECHECK );
+    logger( GM_LOG_DEBUG, "---------------\nhost Job -> %i vs %i, %i vs %i\n", event_type, NEBCALLBACK_HOST_CHECK_DATA, hostdata->type, NEBTYPE_HOSTCHECK_ASYNC_PRECHECK );
 
     if ( event_type != NEBCALLBACK_HOST_CHECK_DATA )
-        return OK;
+        return GM_OK;
 
     // ignore non-initiate service checks
     if ( hostdata->type != NEBTYPE_HOSTCHECK_ASYNC_PRECHECK )
-        return OK;
+        return GM_OK;
 
     // shouldn't happen - internal Nagios error
     if ( hostdata == 0 ) {
-        logger( GM_ERROR, "Host handler received NULL host data structure.\n" );
-        return ERROR;
+        logger( GM_LOG_ERROR, "Host handler received NULL host data structure.\n" );
+        return GM_ERROR;
     }
 
     if ( gearman_client_errno( &client ) != GEARMAN_SUCCESS ) {
-        logger( GM_ERROR, "client error %d: %s\n", gearman_client_errno( &client ), gearman_client_error( &client ) );
-        return ERROR;
+        logger( GM_LOG_ERROR, "client error %d: %s\n", gearman_client_errno( &client ), gearman_client_error( &client ) );
+        return GM_ERROR;
     }
 
     host * hst = find_host( hostdata->host_name );
@@ -260,11 +260,11 @@ static int handle_host_check( int event_type, void *data ) {
 
     // local check?
     if(!strcmp( target_worker, "" )) {
-        logger( GM_DEBUG, "passing by local hostcheck: %s\n", hostdata->host_name );
-        return OK;
+        logger( GM_LOG_DEBUG, "passing by local hostcheck: %s\n", hostdata->host_name );
+        return GM_OK;
     }
 
-    logger( GM_DEBUG, "Received Job for queue %s: %s\n", target_worker, hostdata->host_name );
+    logger( GM_LOG_DEBUG, "Received Job for queue %s: %s\n", target_worker, hostdata->host_name );
 
     // as we have to intercept host checks much earlier than service checks
     // we have to do some host check logic here
@@ -293,15 +293,15 @@ static int handle_host_check( int event_type, void *data ) {
     /* get the raw command line */
     get_raw_command_line(hst->check_command_ptr,hst->host_check_command,&raw_command,0);
     if(raw_command==NULL){
-        logger( GM_ERROR, "Raw check command for host '%s' was NULL - aborting.\n",hst->name );
-        return ERROR;
+        logger( GM_LOG_ERROR, "Raw check command for host '%s' was NULL - aborting.\n",hst->name );
+        return GM_ERROR;
     }
 
     /* process any macros contained in the argument */
     process_macros(raw_command,&processed_command,0);
     if(processed_command==NULL){
-        logger( GM_ERROR, "Processed check command for host '%s' was NULL - aborting.\n",hst->name);
-        return ERROR;
+        logger( GM_LOG_ERROR, "Processed check command for host '%s' was NULL - aborting.\n",hst->name);
+        return GM_ERROR;
     }
 
     /* get the command start time */
@@ -318,7 +318,7 @@ static int handle_host_check( int event_type, void *data ) {
     /* set the execution flag */
     hst->is_executing=TRUE;
 
-    logger( GM_TRACE, "cmd_line: %s\n", processed_command );
+    logger( GM_LOG_TRACE, "cmd_line: %s\n", processed_command );
 
     //extern check_result check_result_info;
     temp_buffer[0]='\x0';
@@ -353,20 +353,20 @@ static int handle_host_check( int event_type, void *data ) {
 /* handle service check events */
 static int handle_svc_check( int event_type, void *data ) {
 
-    logger( GM_TRACE, "handle_svc_check(%i, data)\n", event_type );
+    logger( GM_LOG_TRACE, "handle_svc_check(%i, data)\n", event_type );
     nebstruct_service_check_data * svcdata = ( nebstruct_service_check_data * )data;
 
     if ( event_type != NEBCALLBACK_SERVICE_CHECK_DATA )
-        return OK;
+        return GM_OK;
 
     // ignore non-initiate service checks
     if ( svcdata->type != NEBTYPE_SERVICECHECK_INITIATE )
-        return OK;
+        return GM_OK;
 
     // shouldn't happen - internal Nagios error
     if ( svcdata == 0 ) {
-        logger( GM_ERROR, "Service handler received NULL service data structure.\n" );
-        return ERROR;
+        logger( GM_LOG_ERROR, "Service handler received NULL service data structure.\n" );
+        return GM_ERROR;
     }
 
     service * svc = find_service( svcdata->host_name, svcdata->service_description );
@@ -375,12 +375,12 @@ static int handle_svc_check( int event_type, void *data ) {
 
     // local check?
     if(!strcmp( target_worker, "" )) {
-        logger( GM_DEBUG, "passing by local servicecheck: %s - %s\n", svcdata->host_name, svcdata->service_description);
-        return OK;
+        logger( GM_LOG_DEBUG, "passing by local servicecheck: %s - %s\n", svcdata->host_name, svcdata->service_description);
+        return GM_OK;
     }
 
-    logger( GM_DEBUG, "Received Job for queue %s: %s - %s\n", target_worker, svcdata->host_name, svcdata->service_description );
-    logger( GM_TRACE, "cmd_line: %s\n", svcdata->command_line );
+    logger( GM_LOG_DEBUG, "Received Job for queue %s: %s - %s\n", target_worker, svcdata->host_name, svcdata->service_description );
+    logger( GM_LOG_TRACE, "cmd_line: %s\n", svcdata->command_line );
 
     extern check_result check_result_info;
     temp_buffer[0]='\x0';
@@ -421,9 +421,9 @@ static void read_arguments( const char *args_orig ) {
     gearman_opt_timeout        = 0;
     gearman_opt_result_workers = 1;
     gearman_opt_result_queue   = NULL;
-    gearman_opt_events         = DISABLED;
-    gearman_opt_services       = DISABLED;
-    gearman_opt_hosts          = DISABLED;
+    gearman_opt_events         = GM_DISABLED;
+    gearman_opt_services       = GM_DISABLED;
+    gearman_opt_hosts          = GM_DISABLED;
 
     // no arguments given
     if ( !args_orig )
@@ -448,21 +448,21 @@ static void read_arguments( const char *args_orig ) {
 
         if ( !strcmp( key, "debug" ) || !strcmp( key, "--debug" ) ) {
             gearman_opt_debug_level = atoi( value );
-            logger( GM_DEBUG, "Setting debug level to %d\n", gearman_opt_debug_level );
+            logger( GM_LOG_DEBUG, "Setting debug level to %d\n", gearman_opt_debug_level );
         }
         else if ( !strcmp( key, "timeout" ) || !strcmp( key, "--timeout" ) ) {
             gearman_opt_timeout = atoi( value );
-            logger( GM_DEBUG, "Setting timeout to %d\n", gearman_opt_timeout );
+            logger( GM_LOG_DEBUG, "Setting timeout to %d\n", gearman_opt_timeout );
         }
         else if ( !strcmp( key, "result_workers" ) || !strcmp( key, "--result_workers" ) ) {
             gearman_opt_result_workers = atoi( value );
-            if(gearman_opt_result_workers > LISTSIZE) { gearman_opt_result_workers = LISTSIZE; }
+            if(gearman_opt_result_workers > GM_LISTSIZE) { gearman_opt_result_workers = GM_LISTSIZE; }
             if(gearman_opt_result_workers <= 0)       { gearman_opt_result_workers = 1; }
-            logger( GM_DEBUG, "Setting result_workers to %d\n", gearman_opt_result_workers );
+            logger( GM_LOG_DEBUG, "Setting result_workers to %d\n", gearman_opt_result_workers );
         }
         else if ( !strcmp( key, "result_queue" ) || !strcmp( key, "--result_queue" ) ) {
             gearman_opt_result_queue = value;
-            logger( GM_DEBUG, "set result queue to '%s'\n", gearman_opt_result_queue );
+            logger( GM_LOG_DEBUG, "set result queue to '%s'\n", gearman_opt_result_queue );
         }
         else if ( !strcmp( key, "server" ) || !strcmp( key, "--server" ) ) {
             char *servername;
@@ -475,20 +475,20 @@ static void read_arguments( const char *args_orig ) {
         }
         else if ( !strcmp( key, "eventhandler" ) || !strcmp( key, "--eventhandler" ) ) {
             if ( !strcmp( value, "yes" ) ) {
-                gearman_opt_events = ENABLED;
-                logger( GM_DEBUG, "enabled handling of eventhandlers\n" );
+                gearman_opt_events = GM_ENABLED;
+                logger( GM_LOG_DEBUG, "GM_ENABLED handling of eventhandlers\n" );
             }
         }
         else if ( !strcmp( key, "services" ) || !strcmp( key, "--services" ) ) {
             if ( !strcmp( value, "yes" ) ) {
-                gearman_opt_services = ENABLED;
-                logger( GM_DEBUG, "enabled handling of service checks\n" );
+                gearman_opt_services = GM_ENABLED;
+                logger( GM_LOG_DEBUG, "GM_ENABLED handling of service checks\n" );
             }
         }
         else if ( !strcmp( key, "hosts" ) || !strcmp( key, "--hosts" ) ) {
             if ( !strcmp( value, "yes" ) ) {
-                gearman_opt_hosts = ENABLED;
-                logger( GM_DEBUG, "enabled handling of hostchecks\n" );
+                gearman_opt_hosts = GM_ENABLED;
+                logger( GM_LOG_DEBUG, "GM_ENABLED handling of hostchecks\n" );
             }
         }
         else if ( !strcmp( key, "servicegroups" ) || !strcmp( key, "--servicegroups" ) ) {
@@ -497,7 +497,7 @@ static void read_arguments( const char *args_orig ) {
                 if ( strcmp( groupname, "" ) ) {
                     gearman_servicegroups_list[srvgrp_ptr] = groupname;
                     srvgrp_ptr++;
-                    logger( GM_DEBUG, "added seperate worker for servicegroup: %s\n", groupname );
+                    logger( GM_LOG_DEBUG, "added seperate worker for servicegroup: %s\n", groupname );
                 }
             }
         }
@@ -507,7 +507,7 @@ static void read_arguments( const char *args_orig ) {
                 if ( strcmp( groupname, "" ) ) {
                     gearman_hostgroups_list[hostgrp_ptr] = groupname;
                     hostgrp_ptr++;
-                    logger( GM_DEBUG, "added seperate worker for hostgroup: %s\n", groupname );
+                    logger( GM_LOG_DEBUG, "added seperate worker for hostgroup: %s\n", groupname );
                 }
             }
         }
@@ -517,7 +517,7 @@ static void read_arguments( const char *args_orig ) {
                 if ( strcmp( groupname, "" ) ) {
                     gearman_local_hostgroups_list[loc_hostgrp_ptr] = groupname;
                     loc_hostgrp_ptr++;
-                    logger( GM_DEBUG, "added local hostgroup for: %s\n", groupname );
+                    logger( GM_LOG_DEBUG, "added local hostgroup for: %s\n", groupname );
                 }
             }
         }
@@ -527,11 +527,11 @@ static void read_arguments( const char *args_orig ) {
                 if ( strcmp( groupname, "" ) ) {
                     gearman_local_servicegroups_list[loc_srvgrp_ptr] = groupname;
                     loc_srvgrp_ptr++;
-                    logger( GM_DEBUG, "added local servicegroup for: %s\n", groupname );
+                    logger( GM_LOG_DEBUG, "added local servicegroup for: %s\n", groupname );
                 }
             }
         } else  {
-            logger( GM_ERROR, "unknown option: key: %s value: %s\n", key, value );
+            logger( GM_LOG_ERROR, "unknown option: key: %s value: %s\n", key, value );
         }
     }
 
@@ -543,7 +543,7 @@ static void read_arguments( const char *args_orig ) {
 
     // did we get any server?
     if(srv_ptr == 0) {
-        logger( GM_ERROR, "please specify at least one server\n" );
+        logger( GM_LOG_ERROR, "please specify at least one server\n" );
         return;
     }
 
@@ -555,8 +555,8 @@ static void read_arguments( const char *args_orig ) {
 static int create_gearman_client(void) {
     gearman_return_t ret;
     if ( gearman_client_create( &client ) == NULL ) {
-        logger( GM_ERROR, "Memory allocation failure on client creation\n" );
-        return ERROR;
+        logger( GM_LOG_ERROR, "Memory allocation failure on client creation\n" );
+        return GM_ERROR;
     }
 
     int x = 0;
@@ -567,18 +567,18 @@ static int create_gearman_client(void) {
         in_port_t port  = ( in_port_t ) atoi( str_token( &server, 0 ) );
         ret = gearman_client_add_server( &client, host, port );
         if ( ret != GEARMAN_SUCCESS ) {
-            logger( GM_ERROR, "client error: %s\n", gearman_client_error( &client ) );
+            logger( GM_LOG_ERROR, "client error: %s\n", gearman_client_error( &client ) );
             free(server_c);
-            return ERROR;
+            return GM_ERROR;
         }
-        logger( GM_DEBUG, "client added gearman server %s:%i\n", host, port );
+        logger( GM_LOG_DEBUG, "client added gearman server %s:%i\n", host, port );
         free(server_c);
         x++;
     }
 
     gearman_client_set_timeout( &client, gearman_opt_timeout );
 
-    return OK;
+    return GM_OK;
 }
 
 
@@ -594,7 +594,7 @@ static void set_target_worker( host *host, service *svc ) {
         while ( gearman_local_servicegroups_list[x] != NULL ) {
             servicegroup * temp_servicegroup = find_servicegroup( gearman_local_servicegroups_list[x] );
             if ( is_service_member_of_servicegroup( temp_servicegroup,svc )==TRUE ) {
-                logger( GM_TRACE, "service is member of local servicegroup: %s\n", gearman_local_servicegroups_list[x] );
+                logger( GM_LOG_TRACE, "service is member of local servicegroup: %s\n", gearman_local_servicegroups_list[x] );
                 return;
             }
             x++;
@@ -606,7 +606,7 @@ static void set_target_worker( host *host, service *svc ) {
     while ( gearman_local_hostgroups_list[x] != NULL ) {
         hostgroup * temp_hostgroup = find_hostgroup( gearman_local_hostgroups_list[x] );
         if ( is_host_member_of_hostgroup( temp_hostgroup,host )==TRUE ) {
-            logger( GM_TRACE, "server is member of local hostgroup: %s\n", gearman_local_hostgroups_list[x] );
+            logger( GM_LOG_TRACE, "server is member of local hostgroup: %s\n", gearman_local_hostgroups_list[x] );
             return;
         }
         x++;
@@ -618,7 +618,7 @@ static void set_target_worker( host *host, service *svc ) {
         while ( gearman_servicegroups_list[x] != NULL ) {
             servicegroup * temp_servicegroup = find_servicegroup( gearman_servicegroups_list[x] );
             if ( is_service_member_of_servicegroup( temp_servicegroup,svc )==TRUE ) {
-                logger( GM_TRACE, "service is member of servicegroup: %s\n", gearman_servicegroups_list[x] );
+                logger( GM_LOG_TRACE, "service is member of servicegroup: %s\n", gearman_servicegroups_list[x] );
                 snprintf( target_worker, sizeof(target_worker)-1, "servicegroup_%s", gearman_servicegroups_list[x] );
                 target_worker[sizeof( target_worker )-1]='\x0';
                 return;
@@ -632,7 +632,7 @@ static void set_target_worker( host *host, service *svc ) {
     while ( gearman_hostgroups_list[x] != NULL ) {
         hostgroup * temp_hostgroup = find_hostgroup( gearman_hostgroups_list[x] );
         if ( is_host_member_of_hostgroup( temp_hostgroup,host )==TRUE ) {
-            logger( GM_TRACE, "server is member of hostgroup: %s\n", gearman_hostgroups_list[x] );
+            logger( GM_LOG_TRACE, "server is member of hostgroup: %s\n", gearman_hostgroups_list[x] );
             snprintf( target_worker, sizeof(target_worker)-1, "hostgroup_%s", gearman_hostgroups_list[x] );
             target_worker[sizeof( target_worker )-1]='\x0';
             return;
@@ -642,7 +642,7 @@ static void set_target_worker( host *host, service *svc ) {
 
     if ( svc ) {
         // pass into the general service queue
-        if ( gearman_opt_services == ENABLED && svc ) {
+        if ( gearman_opt_services == GM_ENABLED && svc ) {
             snprintf( target_worker, sizeof(target_worker)-1, "service" );
             target_worker[sizeof( target_worker )-1]='\x0';
             return;
@@ -650,7 +650,7 @@ static void set_target_worker( host *host, service *svc ) {
     }
     else {
         // pass into the general host queue
-        if ( gearman_opt_hosts == ENABLED ) {
+        if ( gearman_opt_hosts == GM_ENABLED ) {
             snprintf( target_worker, sizeof(target_worker)-1, "host" );
             target_worker[sizeof( target_worker )-1]='\x0';
             return;

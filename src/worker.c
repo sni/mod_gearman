@@ -20,10 +20,10 @@ int current_number_of_workers   = 0;
 /* work starts here */
 int main (int argc, char **argv) {
 
-gearman_opt_debug_level = GM_TRACE;
+gearman_opt_debug_level = GM_LOG_TRACE;
 
     parse_arguments(argv);
-    logger( GM_DEBUG, "main process started\n");
+    logger( GM_LOG_DEBUG, "main process started\n");
 
     // create initial childs
     int x;
@@ -40,7 +40,7 @@ gearman_opt_debug_level = GM_TRACE;
         int status;
         while(waitpid(-1, &status, WNOHANG) > 0) {
             current_number_of_workers--;
-            logger( GM_TRACE, "waitpid() %d\n", status);
+            logger( GM_LOG_TRACE, "waitpid() %d\n", status);
         }
 
         for (x = current_number_of_workers; x < gearman_opt_min_worker; x++) {
@@ -55,7 +55,7 @@ gearman_opt_debug_level = GM_TRACE;
 
 /* start up new worker */
 int make_new_child() {
-    logger( GM_TRACE, "make_new_child()\n");
+    logger( GM_LOG_TRACE, "make_new_child()\n");
     pid_t pid = 0;
 
     /* fork a child process */
@@ -63,18 +63,18 @@ int make_new_child() {
 
     /* an error occurred while trying to fork */
     if(pid==-1){
-        logger( GM_ERROR, "fork error\n" );
-        return ERROR;
+        logger( GM_LOG_ERROR, "fork error\n" );
+        return GM_ERROR;
     }
 
     /* we are in the child process */
     else if(pid==0){
-        logger( GM_DEBUG, "worker started with pid: %d\n", getpid() );
+        logger( GM_LOG_DEBUG, "worker started with pid: %d\n", getpid() );
 
         // do the real work
         worker_client();
 
-        logger( GM_DEBUG, "worker fin: %d\n", getpid() );
+        logger( GM_LOG_DEBUG, "worker fin: %d\n", getpid() );
         exit(EXIT_SUCCESS);
     }
 
@@ -83,7 +83,7 @@ int make_new_child() {
         current_number_of_workers++;
     }
 
-    return OK;
+    return GM_OK;
 }
 
 
@@ -108,30 +108,30 @@ void parse_arguments(char **argv) {
             if ( !strcmp( key, "debug" ) || !strcmp( key, "--debug" ) ) {
                 gearman_opt_debug_level = atoi( value );
                 if(gearman_opt_debug_level < 0) { gearman_opt_debug_level = 0; }
-                logger( GM_DEBUG, "Setting debug level to %d\n", gearman_opt_debug_level );
+                logger( GM_LOG_DEBUG, "Setting debug level to %d\n", gearman_opt_debug_level );
             }
             else if ( !strcmp( key, "min-worker" ) || !strcmp( key, "--min-worker" ) ) {
                 gearman_opt_min_worker = atoi( value );
                 if(gearman_opt_min_worker <= 0) { gearman_opt_min_worker = 1; }
-                logger( GM_DEBUG, "Setting min worker to %d\n", gearman_opt_min_worker );
+                logger( GM_LOG_DEBUG, "Setting min worker to %d\n", gearman_opt_min_worker );
             }
             else if ( !strcmp( key, "max-worker" ) || !strcmp( key, "--max-worker" ) ) {
                 gearman_opt_max_worker = atoi( value );
                 if(gearman_opt_max_worker <= 0) { gearman_opt_max_worker = 1; }
-                logger( GM_DEBUG, "Setting max worker to %d\n", gearman_opt_max_worker );
+                logger( GM_LOG_DEBUG, "Setting max worker to %d\n", gearman_opt_max_worker );
             }
             else if ( !strcmp( key, "server" ) || !strcmp( key, "--server" ) ) {
                 char *servername;
                 while ( (servername = strsep( &value, "," )) != NULL ) {
                     if ( strcmp( servername, "" ) ) {
-                        logger( GM_DEBUG, "Adding server %s\n", servername);
+                        logger( GM_LOG_DEBUG, "Adding server %s\n", servername);
                         gearman_opt_server[srv_ptr] = servername;
                         srv_ptr++;
                     }
                 }
             }
             else  {
-                logger( GM_ERROR, "unknown option: %s\n", key );
+                logger( GM_LOG_ERROR, "unknown option: %s\n", key );
             }
         }
         x++;
@@ -139,7 +139,7 @@ void parse_arguments(char **argv) {
 
     // did we get any server?
     if(srv_ptr == 0) {
-        logger( GM_ERROR, "please specify at least one server\n" );
+        logger( GM_LOG_ERROR, "please specify at least one server\n" );
         exit(EXIT_FAILURE);
     }
 

@@ -6,6 +6,7 @@
  *
  *****************************************************************************/
 
+#include "common.h"
 #include "utils.h"
 #include "logger.h"
 
@@ -31,7 +32,7 @@ char *str_token( char **c, char delim ) {
 /* array push */
 void push(gm_array_t *ps, void * data) {
     if (ps->size == GM_STACKSIZE) {
-        logger(GM_ERROR, "Error: stack overflow\n");
+        logger(GM_LOG_ERROR, "Error: stack overflow\n");
         exit(1);
     } else
         ps->items[ps->size++] = data;

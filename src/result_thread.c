@@ -24,7 +24,7 @@ static void cancel_worker_thread (void * data) {
     gearman_worker_remove_servers(worker);
     gearman_worker_free(worker);
 
-    logger( GM_DEBUG, "worker thread finished\n" );
+    logger( GM_LOG_DEBUG, "worker thread finished\n" );
 
     return;
 }
@@ -33,7 +33,7 @@ static void cancel_worker_thread (void * data) {
 void *result_worker( void * data ) {
 
     worker_parm *p=(worker_parm *)data;
-    logger( GM_TRACE, "worker %i started\n", p->id );
+    logger( GM_LOG_TRACE, "worker %i started\n", p->id );
 
     pthread_setcancelstate (PTHREAD_CANCEL_ENABLE, NULL);
     pthread_setcanceltype (PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
@@ -47,7 +47,7 @@ void *result_worker( void * data ) {
         gearman_return_t ret;
         ret = gearman_worker_work( &worker );
         if ( ret != GEARMAN_SUCCESS ) {
-            logger( GM_ERROR, "worker error: %s\n", gearman_worker_error( &worker ) );
+            logger( GM_LOG_ERROR, "worker error: %s\n", gearman_worker_error( &worker ) );
             gearman_job_free_all( &worker );
             gearman_worker_free( &worker );
             create_gearman_worker( &worker );
@@ -72,17 +72,17 @@ void *get_results( gearman_job_st *job, void *context, size_t *result_size, gear
     result = malloc( *result_size );
     char *result_c = result;
     if ( result == NULL ) {
-        logger( GM_ERROR, "malloc:%d\n", errno );
+        logger( GM_LOG_ERROR, "malloc:%d\n", errno );
         *ret_ptr= GEARMAN_WORK_FAIL;
         return NULL;
     }
 
     snprintf( result, ( int )*result_size, "%.*s", ( int )*result_size, workload );
-    logger( GM_DEBUG, "got result %s%s%s\n", gearman_job_handle( job ),
+    logger( GM_LOG_DEBUG, "got result %s%s%s\n", gearman_job_handle( job ),
             options & GM_WORKER_OPTIONS_UNIQUE ? " Unique=" : "",
             options & GM_WORKER_OPTIONS_UNIQUE ? gearman_job_unique( job ) : ""
           );
-    logger( GM_TRACE, "--->\n%.*s\n<---\n", ( int )*result_size, result );
+    logger( GM_LOG_TRACE, "--->\n%.*s\n<---\n", ( int )*result_size, result );
 
     // set result pointer to success
     *ret_ptr= GEARMAN_SUCCESS;
@@ -123,7 +123,7 @@ void *get_results( gearman_job_st *job, void *context, size_t *result_size, gear
         }
 
         if ( !strcmp( value, "") ) {
-            logger( GM_ERROR, "got empty value for key %s\n", key );
+            logger( GM_LOG_ERROR, "got empty value for key %s\n", key );
             continue;
         }
 
@@ -192,9 +192,9 @@ void *get_results( gearman_job_st *job, void *context, size_t *result_size, gear
     }
 
     if ( chk_result->service_description != NULL ) {
-        logger( GM_DEBUG, "service job completed: %s %s: %d\n", chk_result->host_name, chk_result->service_description, chk_result->return_code );
+        logger( GM_LOG_DEBUG, "service job completed: %s %s: %d\n", chk_result->host_name, chk_result->service_description, chk_result->return_code );
     } else {
-        logger( GM_DEBUG, "host job completed: %s: %d\n", chk_result->host_name, chk_result->return_code );
+        logger( GM_LOG_DEBUG, "host job completed: %s: %d\n", chk_result->host_name, chk_result->return_code );
     }
 
     // nagios internal function
@@ -217,8 +217,8 @@ static int create_gearman_worker( gearman_worker_st *worker ) {
     gm_worker_options_t options= GM_WORKER_OPTIONS_NONE;
 
     if ( gearman_worker_create( worker ) == NULL ) {
-        logger( GM_ERROR, "Memory allocation failure on worker creation\n" );
-        return ERROR;
+        logger( GM_LOG_ERROR, "Memory allocation failure on worker creation\n" );
+        return GM_ERROR;
     }
 
     int x = 0;
@@ -229,27 +229,27 @@ static int create_gearman_worker( gearman_worker_st *worker ) {
         in_port_t port  = ( in_port_t ) atoi( str_token( &server, 0 ) );
         ret = gearman_worker_add_server( worker, host, port );
         if ( ret != GEARMAN_SUCCESS ) {
-            logger( GM_ERROR, "worker error: %s\n", gearman_worker_error( worker ) );
+            logger( GM_LOG_ERROR, "worker error: %s\n", gearman_worker_error( worker ) );
             free(server_c);
-            return ERROR;
+            return GM_ERROR;
         }
-        logger( GM_DEBUG, "worker added gearman server %s:%i\n", host, port );
+        logger( GM_LOG_DEBUG, "worker added gearman server %s:%i\n", host, port );
         free(server_c);
         x++;
     }
 
     if ( gearman_opt_result_queue == NULL ) {
-        logger( GM_ERROR, "got no result queue!\n" );
-        return ERROR;
+        logger( GM_LOG_ERROR, "got no result queue!\n" );
+        return GM_ERROR;
     }
-    logger( GM_DEBUG, "started result_worker thread for queue: %s\n", gearman_opt_result_queue );
+    logger( GM_LOG_DEBUG, "started result_worker thread for queue: %s\n", gearman_opt_result_queue );
 
     ret = gearman_worker_add_function( worker, gearman_opt_result_queue, 0, get_results, &options );
     // somehow the last function is ignored, so in order to set the first one active. Add a useless one
-    //gearman_worker_add_function( worker, "blah", 0, get_results, NULL ); 
+    //gearman_worker_add_function( worker, "blah", 0, get_results, NULL );
     if ( ret != GEARMAN_SUCCESS ) {
-        logger( GM_ERROR, "worker error: %s\n", gearman_worker_error( worker ) );
-        return ERROR;
+        logger( GM_LOG_ERROR, "worker error: %s\n", gearman_worker_error( worker ) );
+        return GM_ERROR;
     }
     return OK;
 }

@@ -6,13 +6,14 @@
  *
  *****************************************************************************/
 
+#include "common.h"
 #include "worker.h"
 #include "worker_logger.h"
 
 void logger( int lvl, const char *text, ... ) {
 
     // check log level
-    if ( lvl != GM_ERROR && lvl > gearman_opt_debug_level ) {
+    if ( lvl != GM_LOG_ERROR && lvl > gearman_opt_debug_level ) {
         return;
     }
 
@@ -20,7 +21,7 @@ void logger( int lvl, const char *text, ... ) {
     time_t t = time(NULL);
     strftime(buffer, sizeof(buffer), "[%Y-%m-%d %H:%M:%S] ", localtime(&t) );
 
-    if ( lvl == GM_ERROR ) {
+    if ( lvl == GM_LOG_ERROR ) {
         strftime(buffer, sizeof(buffer), "[%Y-%m-%d %H:%M:%S] ERROR: ", localtime(&t) );
     } else {
         strftime(buffer, sizeof(buffer), "[%Y-%m-%d %H:%M:%S] ", localtime(&t) );
