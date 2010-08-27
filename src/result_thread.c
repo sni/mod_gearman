@@ -84,12 +84,17 @@ void *get_results( gearman_job_st *job, void *context, size_t *result_size, gear
           );
     logger( GM_LOG_TRACE, "--->\n%.*s\n<---\n", ( int )*result_size, result );
 
+    logger( GM_LOG_TRACE, "options none  : %s\n", options & GM_WORKER_OPTIONS_NONE ? "yes" : "no"),
+    logger( GM_LOG_TRACE, "options data  : %s\n", options & GM_WORKER_OPTIONS_DATA ? "yes" : "no"),
+    logger( GM_LOG_TRACE, "options status: %s\n", options & GM_WORKER_OPTIONS_STATUS ? "yes" : "no"),
+
     // set result pointer to success
     *ret_ptr= GEARMAN_SUCCESS;
-    if ( options & GM_WORKER_OPTIONS_DATA ) {
-        *result_size= 0;
-        return NULL;
-    }
+    //if ( ! options & GM_WORKER_OPTIONS_DATA ) {
+    //    logger( GM_LOG_TRACE, "discarding non data event\n" );
+    //    *result_size= 0;
+    //    return NULL;
+    //}
 
     // nagios will free it after processing
     check_result * chk_result;
@@ -226,7 +231,11 @@ static int create_gearman_worker( gearman_worker_st *worker ) {
         char * server   = strdup( gearman_opt_server[x] );
         char * server_c = server;
         char * host     = str_token( &server, ':' );
-        in_port_t port  = ( in_port_t ) atoi( str_token( &server, 0 ) );
+        char * port_val = str_token( &server, 0 );
+        in_port_t port  = GM_SERVER_DEFAULT_PORT;
+        if(port_val != NULL) {
+            port  = ( in_port_t ) atoi( port_val );
+        }
         ret = gearman_worker_add_server( worker, host, port );
         if ( ret != GEARMAN_SUCCESS ) {
             logger( GM_LOG_ERROR, "worker error: %s\n", gearman_worker_error( worker ) );

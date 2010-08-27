@@ -12,12 +12,14 @@
 #include "worker_logger.h"
 #include "worker_client.h"
 
-int gearman_opt_min_worker      = 3;
-int gearman_opt_max_worker      = 50;
+int gearman_opt_min_worker      = GM_DEFAULT_MIN_WORKER;
+int gearman_opt_max_worker      = GM_DEFAULT_MAX_WORKER;
+int gearman_opt_max_age         = GM_DEFAULT_JOB_MAX_AGE;
 
 int gearman_opt_hosts           = GM_DISABLED;
 int gearman_opt_services        = GM_DISABLED;
 int gearman_opt_events          = GM_DISABLED;
+int gearman_opt_debug_result    = GM_DISABLED;
 char *gearman_hostgroups_list[GM_LISTSIZE];
 char *gearman_servicegroups_list[GM_LISTSIZE];
 
@@ -118,6 +120,10 @@ void parse_arguments(char **argv) {
             if ( key == NULL )
                 continue;
 
+            if ( !strcmp( key, "help" ) || !strcmp( key, "--help" )  || !strcmp( key, "-h" ) ) {
+                print_usage();
+            }
+
             if ( !strcmp( key, "hosts" ) || !strcmp( key, "--hosts" ) ) {
                 set_by_hand++;
                 if( value == NULL || !strcmp( value, "yes" ) ) {
@@ -137,6 +143,12 @@ void parse_arguments(char **argv) {
                 if( value == NULL || !strcmp( value, "yes" ) ) {
                     gearman_opt_events = GM_ENABLED;
                     logger( GM_LOG_DEBUG, "enabling processing of events queue\n");
+                }
+            }
+            else if ( !strcmp( key, "debug-result" ) || !strcmp( key, "--debug-result" ) ) {
+                if( value == NULL || !strcmp( value, "yes" ) ) {
+                    gearman_opt_debug_result = GM_ENABLED;
+                    logger( GM_LOG_DEBUG, "adding debug output to check output\n");
                 }
             }
 
@@ -216,4 +228,29 @@ void parse_arguments(char **argv) {
         exit(EXIT_FAILURE);
     }
 
+}
+
+
+/* print usage */
+void print_usage() {
+    printf("usage:\n");
+    printf("\n");
+    printf("worker [ --debug=<lvl>         ]\n");
+    printf("       [ --debug-result        ]\n");
+    printf("       [ --help|-h             ]\n");
+    printf("\n");
+    printf("       [ --server=<server>     ]\n");
+    printf("\n");
+    printf("       [ --hosts               ]\n");
+    printf("       [ --services            ]\n");
+    printf("       [ --events              ]\n");
+    printf("       [ --hostgroup=<name>    ]\n");
+    printf("       [ --servicegroup=<name> ]\n");
+    printf("\n");
+    printf("       [ --min-worker=<nr>     ]\n");
+    printf("       [ --max-worker=<nr>     ]\n");
+    printf("\n");
+    printf("\n");
+
+    exit( EXIT_SUCCESS );
 }
