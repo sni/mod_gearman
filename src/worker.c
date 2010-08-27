@@ -15,6 +15,12 @@
 int gearman_opt_min_worker      = 3;
 int gearman_opt_max_worker      = 50;
 
+int gearman_opt_hosts           = GM_DISABLED;
+int gearman_opt_services        = GM_DISABLED;
+int gearman_opt_events          = GM_DISABLED;
+char *gearman_hostgroups_list[GM_LISTSIZE];
+char *gearman_servicegroups_list[GM_LISTSIZE];
+
 int current_number_of_workers   = 0;
 
 /* work starts here */
@@ -24,6 +30,12 @@ gearman_opt_debug_level = GM_LOG_TRACE;
 
     parse_arguments(argv);
     logger( GM_LOG_DEBUG, "main process started\n");
+
+    // standalone mode?
+    if(gearman_opt_min_worker == 1 && gearman_opt_max_worker == 1) {
+        worker_client();
+        exit( EXIT_SUCCESS );
+    }
 
     // create initial childs
     int x;
@@ -49,7 +61,7 @@ gearman_opt_debug_level = GM_LOG_TRACE;
         }
     }
 
-    return 0;
+    exit( EXIT_SUCCESS );
 }
 
 
@@ -89,8 +101,12 @@ int make_new_child() {
 
 /* parse command line arguments */
 void parse_arguments(char **argv) {
-    int x        = 1;
-    int  srv_ptr = 0;
+    int x           = 1;
+    int srv_ptr     = 0;
+    int srvgrp_ptr  = 0;
+    int hostgrp_ptr = 0;
+
+    int set_by_hand = 0;
 
     while(argv[x] != NULL) {
         char *ptr;
@@ -101,6 +117,28 @@ void parse_arguments(char **argv) {
 
             if ( key == NULL )
                 continue;
+
+            if ( !strcmp( key, "hosts" ) || !strcmp( key, "--hosts" ) ) {
+                set_by_hand++;
+                if( value == NULL || !strcmp( value, "yes" ) ) {
+                    gearman_opt_hosts = GM_ENABLED;
+                    logger( GM_LOG_DEBUG, "enabling processing of hosts queue\n");
+                }
+            }
+            else if ( !strcmp( key, "services" ) || !strcmp( key, "--services" ) ) {
+                set_by_hand++;
+                if( value == NULL || !strcmp( value, "yes" ) ) {
+                    gearman_opt_services = GM_ENABLED;
+                    logger( GM_LOG_DEBUG, "enabling processing of service queue\n");
+                }
+            }
+            else if ( !strcmp( key, "events" ) || !strcmp( key, "--events" ) ) {
+                set_by_hand++;
+                if( value == NULL || !strcmp( value, "yes" ) ) {
+                    gearman_opt_events = GM_ENABLED;
+                    logger( GM_LOG_DEBUG, "enabling processing of events queue\n");
+                }
+            }
 
             if ( value == NULL )
                 continue;
@@ -130,6 +168,28 @@ void parse_arguments(char **argv) {
                     }
                 }
             }
+
+        else if ( !strcmp( key, "servicegroups" ) || !strcmp( key, "--servicegroups" ) ) {
+            char *groupname;
+            while ( (groupname = strsep( &value, "," )) != NULL ) {
+                if ( strcmp( groupname, "" ) ) {
+                    gearman_servicegroups_list[srvgrp_ptr] = groupname;
+                    srvgrp_ptr++;
+                    logger( GM_LOG_DEBUG, "added seperate worker for servicegroup: %s\n", groupname );
+                }
+            }
+        }
+        else if ( !strcmp( key, "hostgroups" ) || !strcmp( key, "--hostgroups" ) ) {
+            char *groupname;
+            while ( (groupname = strsep( &value, "," )) != NULL ) {
+                if ( strcmp( groupname, "" ) ) {
+                    gearman_hostgroups_list[hostgrp_ptr] = groupname;
+                    hostgrp_ptr++;
+                    logger( GM_LOG_DEBUG, "added seperate worker for hostgroup: %s\n", groupname );
+                }
+            }
+        }
+
             else  {
                 logger( GM_LOG_ERROR, "unknown option: %s\n", key );
             }
@@ -140,6 +200,19 @@ void parse_arguments(char **argv) {
     // did we get any server?
     if(srv_ptr == 0) {
         logger( GM_LOG_ERROR, "please specify at least one server\n" );
+        exit(EXIT_FAILURE);
+    }
+
+    // nothing set by hand -> defaults
+    if(set_by_hand == 0 && srvgrp_ptr == 0 && hostgrp_ptr == 0) {
+        logger( GM_LOG_DEBUG, "starting client with default queues\n" );
+        gearman_opt_hosts    = GM_ENABLED;
+        gearman_opt_services = GM_ENABLED;
+        gearman_opt_events   = GM_ENABLED;
+    }
+
+    if(srvgrp_ptr == 0 && hostgrp_ptr == 0 && gearman_opt_hosts == GM_DISABLED && gearman_opt_services == GM_DISABLED && gearman_opt_events == GM_DISABLED) {
+        logger( GM_LOG_ERROR, "starting client without queues is useless\n" );
         exit(EXIT_FAILURE);
     }
 

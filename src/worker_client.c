@@ -20,7 +20,10 @@ void *worker_client( ) {
     logger( GM_LOG_TRACE, "worker client started\n" );
 
     gearman_worker_st worker;
-    create_gearman_worker(&worker);
+    if(create_gearman_worker(&worker) != GM_OK) {
+        logger( GM_LOG_ERROR, "cannot start worker\n" );
+        exit( EXIT_FAILURE );
+    }
 
     while ( 1 ) {
         gearman_return_t ret;
@@ -107,7 +110,7 @@ void *get_job( gearman_job_st *job, void *context, size_t *result_size, gearman_
 
 
 /* create the gearman worker */
-static int create_gearman_worker( gearman_worker_st *worker ) {
+int create_gearman_worker( gearman_worker_st *worker ) {
 
     gearman_return_t ret;
     gm_worker_options_t options= GM_WORKER_OPTIONS_NONE;
@@ -122,7 +125,11 @@ static int create_gearman_worker( gearman_worker_st *worker ) {
         char * server   = strdup( gearman_opt_server[x] );
         char * server_c = server;
         char * host     = str_token( &server, ':' );
-        in_port_t port  = ( in_port_t ) atoi( str_token( &server, 0 ) );
+        char * port_val = str_token( &server, 0 );
+        in_port_t port  = GM_SERVER_DEFAULT_PORT;
+        if(port_val != NULL) {
+            port  = ( in_port_t ) atoi( port_val );
+        }
         ret = gearman_worker_add_server( worker, host, port );
         if ( ret != GEARMAN_SUCCESS ) {
             logger( GM_LOG_ERROR, "worker error: %s\n", gearman_worker_error( worker ) );
@@ -133,13 +140,35 @@ static int create_gearman_worker( gearman_worker_st *worker ) {
         x++;
     }
 
-    ret = gearman_worker_add_function( worker, "hosts", 0, get_job, &options );
-    ret = gearman_worker_add_function( worker, "services", 0, get_job, &options );
-    ret = gearman_worker_add_function( worker, "events", 0, get_job, &options );
+    if(gearman_opt_hosts == GM_ENABLED)
+        ret = gearman_worker_add_function( worker, "host", 0, get_job, &options );
+
+    if(gearman_opt_services == GM_ENABLED)
+        ret = gearman_worker_add_function( worker, "service", 0, get_job, &options );
+
+    if(gearman_opt_events == GM_ENABLED)
+        ret = gearman_worker_add_function( worker, "eventhandler", 0, get_job, &options );
+
+    x = 0;
+    while ( gearman_hostgroups_list[x] != NULL ) {
+        char buffer[8192];
+        snprintf( buffer, (sizeof(buffer)-1), "hostgroup_%s", gearman_hostgroups_list[x] );
+        ret = gearman_worker_add_function( worker, buffer, 0, get_job, &options );
+        x++;
+    }
+
+    x = 0;
+    while ( gearman_servicegroups_list[x] != NULL ) {
+        char buffer[8192];
+        snprintf( buffer, (sizeof(buffer)-1), "servicegroup_%s", gearman_servicegroups_list[x] );
+        ret = gearman_worker_add_function( worker, buffer, 0, get_job, &options );
+        x++;
+    }
 
     if ( ret != GEARMAN_SUCCESS ) {
         logger( GM_LOG_ERROR, "worker error: %s\n", gearman_worker_error( worker ) );
         return GM_ERROR;
     }
+
     return GM_OK;
 }

@@ -21,4 +21,4 @@ typedef struct {
 
 void *client_worker();
 void *get_job( gearman_job_st *, void *, size_t *, gearman_return_t * );
-static int create_gearman_worker( gearman_worker_st *);
+int create_gearman_worker( gearman_worker_st *);

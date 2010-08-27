@@ -564,7 +564,11 @@ static int create_gearman_client(void) {
         char * server   = strdup( gearman_opt_server[x] );
         char * server_c = server;
         char * host     = str_token( &server, ':' );
-        in_port_t port  = ( in_port_t ) atoi( str_token( &server, 0 ) );
+        char * port_val = str_token( &server, 0 );
+        in_port_t port  = GM_SERVER_DEFAULT_PORT;
+        if(port_val != NULL) {
+            port  = ( in_port_t ) atoi( port_val );
+        }
         ret = gearman_client_add_server( &client, host, port );
         if ( ret != GEARMAN_SUCCESS ) {
             logger( GM_LOG_ERROR, "client error: %s\n", gearman_client_error( &client ) );
