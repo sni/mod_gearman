@@ -15,6 +15,7 @@
 int gearman_opt_min_worker      = GM_DEFAULT_MIN_WORKER;
 int gearman_opt_max_worker      = GM_DEFAULT_MAX_WORKER;
 int gearman_opt_max_age         = GM_DEFAULT_JOB_MAX_AGE;
+int gearman_opt_timeout         = GM_DEFAULT_TIMEOUT;
 
 int gearman_opt_hosts           = GM_DISABLED;
 int gearman_opt_services        = GM_DISABLED;
@@ -24,6 +25,7 @@ char *gearman_hostgroups_list[GM_LISTSIZE];
 char *gearman_servicegroups_list[GM_LISTSIZE];
 
 int current_number_of_workers   = 0;
+int current_number_of_jobs      = 0;
 
 /* work starts here */
 int main (int argc, char **argv) {
@@ -38,6 +40,21 @@ gearman_opt_debug_level = GM_LOG_TRACE;
         worker_client();
         exit( EXIT_SUCCESS );
     }
+
+    /* Establish the signal handler. */
+    struct sigaction usr_action1;
+    sigset_t block_mask;
+    sigfillset (&block_mask);
+    usr_action1.sa_handler = increase_jobs;
+    usr_action1.sa_mask = block_mask;
+    usr_action1.sa_flags = 0;
+    sigaction (SIGUSR1, &usr_action1, NULL);
+
+    struct sigaction usr_action2;
+    usr_action2.sa_handler = decrease_jobs;
+    usr_action2.sa_mask = block_mask;
+    usr_action2.sa_flags = 0;
+    sigaction (SIGUSR2, &usr_action2, NULL);
 
     // create initial childs
     int x;
@@ -56,6 +73,9 @@ gearman_opt_debug_level = GM_LOG_TRACE;
             current_number_of_workers--;
             logger( GM_LOG_TRACE, "waitpid() %d\n", status);
         }
+
+
+        logger( GM_LOG_TRACE, "worker: %d   running jobs: %d\n", current_number_of_workers, current_number_of_jobs/2);
 
         for (x = current_number_of_workers; x < gearman_opt_min_worker; x++) {
             // top up the worker pool
@@ -84,6 +104,9 @@ int make_new_child() {
     /* we are in the child process */
     else if(pid==0){
         logger( GM_LOG_DEBUG, "worker started with pid: %d\n", getpid() );
+
+        signal(SIGUSR1, SIG_IGN);
+        signal(SIGUSR2, SIG_IGN);
 
         // do the real work
         worker_client();
@@ -159,6 +182,11 @@ void parse_arguments(char **argv) {
                 gearman_opt_debug_level = atoi( value );
                 if(gearman_opt_debug_level < 0) { gearman_opt_debug_level = 0; }
                 logger( GM_LOG_DEBUG, "Setting debug level to %d\n", gearman_opt_debug_level );
+            }
+            else if ( !strcmp( key, "timeout" ) || !strcmp( key, "--timeout" ) ) {
+                gearman_opt_timeout = atoi( value );
+                if(gearman_opt_timeout < 1) { gearman_opt_timeout = 1; }
+                logger( GM_LOG_DEBUG, "Setting default timeout to %d\n", gearman_opt_timeout );
             }
             else if ( !strcmp( key, "min-worker" ) || !strcmp( key, "--min-worker" ) ) {
                 gearman_opt_min_worker = atoi( value );
@@ -250,7 +278,24 @@ void print_usage() {
     printf("       [ --min-worker=<nr>     ]\n");
     printf("       [ --max-worker=<nr>     ]\n");
     printf("\n");
+    printf("       [ --timeout             ]\n");
+    printf("\n");
     printf("\n");
 
     exit( EXIT_SUCCESS );
+}
+
+
+/* increase the number of jobs */
+void increase_jobs(int sig) {
+    logger( GM_LOG_TRACE, "increase_jobs(%i)\n", sig);
+    current_number_of_jobs++;
+    current_number_of_jobs++;
+}
+
+
+/* decrease the number of jobs */
+void decrease_jobs(int sig) {
+    logger( GM_LOG_TRACE, "decrease_jobs(%i)\n", sig);
+    current_number_of_jobs--;
 }

@@ -84,8 +84,8 @@ void *get_results( gearman_job_st *job, void *context, size_t *result_size, gear
           );
     logger( GM_LOG_TRACE, "--->\n%.*s\n<---\n", ( int )*result_size, result );
 
-    logger( GM_LOG_TRACE, "options none  : %s\n", options & GM_WORKER_OPTIONS_NONE ? "yes" : "no"),
-    logger( GM_LOG_TRACE, "options data  : %s\n", options & GM_WORKER_OPTIONS_DATA ? "yes" : "no"),
+    logger( GM_LOG_TRACE, "options none  : %s\n", options & GM_WORKER_OPTIONS_NONE   ? "yes" : "no"),
+    logger( GM_LOG_TRACE, "options data  : %s\n", options & GM_WORKER_OPTIONS_DATA   ? "yes" : "no"),
     logger( GM_LOG_TRACE, "options status: %s\n", options & GM_WORKER_OPTIONS_STATUS ? "yes" : "no"),
 
     // set result pointer to success

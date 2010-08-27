@@ -15,8 +15,12 @@
 
 char temp_buffer1[GM_BUFFERSIZE];
 char temp_buffer2[GM_BUFFERSIZE];
+char output_buffer[GM_BUFFERSIZE];
 char hostname[GM_BUFFERSIZE];
 gearman_client_st client;
+gearman_worker_st worker;
+
+gm_job_t * current_job;
 
 /* callback for task completed */
 void *worker_client( ) {
@@ -24,7 +28,6 @@ void *worker_client( ) {
     logger( GM_LOG_TRACE, "worker client started\n" );
 
     // create gearman worker
-    gearman_worker_st worker;
     if(create_gearman_worker(&worker) != GM_OK) {
         logger( GM_LOG_ERROR, "cannot start worker\n" );
         exit( EXIT_FAILURE );
@@ -38,6 +41,13 @@ void *worker_client( ) {
 
     gethostname(hostname, GM_BUFFERSIZE-1);
 
+    worker_loop();
+
+    return NULL;
+}
+
+/* main loop of jobs */
+void *worker_loop() {
 
     while ( 1 ) {
         gearman_return_t ret;
@@ -77,15 +87,18 @@ void *get_job( gearman_job_st *job, void *context, size_t *result_size, gearman_
         return NULL;
     }
 
+    // send start signal to parent
+    send_state_to_parent(GM_JOB_START);
+
     snprintf( result, ( int )*result_size, "%.*s", ( int )*result_size, workload );
-    logger( GM_LOG_DEBUG, "got result %s%s%s\n", gearman_job_handle( job ),
+    logger( GM_LOG_DEBUG, "got new job %s%s%s\n", gearman_job_handle( job ),
             options & GM_WORKER_OPTIONS_UNIQUE ? " Unique=" : "",
             options & GM_WORKER_OPTIONS_UNIQUE ? gearman_job_unique( job ) : ""
           );
     logger( GM_LOG_TRACE, "--->\n%.*s\n<---\n", ( int )*result_size, result );
 
-    logger( GM_LOG_TRACE, "options none  : %s\n", options & GM_WORKER_OPTIONS_NONE ? "yes" : "no"),
-    logger( GM_LOG_TRACE, "options data  : %s\n", options & GM_WORKER_OPTIONS_DATA ? "yes" : "no"),
+    logger( GM_LOG_TRACE, "options none  : %s\n", options & GM_WORKER_OPTIONS_NONE   ? "yes" : "no"),
+    logger( GM_LOG_TRACE, "options data  : %s\n", options & GM_WORKER_OPTIONS_DATA   ? "yes" : "no"),
     logger( GM_LOG_TRACE, "options status: %s\n", options & GM_WORKER_OPTIONS_STATUS ? "yes" : "no"),
 
     // set result pointer to success
@@ -98,9 +111,13 @@ void *get_job( gearman_job_st *job, void *context, size_t *result_size, gearman_
 
     gm_job_t * exec_job;
     if ( ( exec_job = ( gm_job_t * )malloc( sizeof *exec_job ) ) == 0 ) {
+        // send finish signal to parent
+        send_state_to_parent(GM_JOB_END);
+
         *ret_ptr= GEARMAN_WORK_FAIL;
         return NULL;
     }
+    current_job = exec_job;
     exec_job->type                = NULL;
     exec_job->host_name           = NULL;
     exec_job->service_description = NULL;
@@ -108,6 +125,10 @@ void *get_job( gearman_job_st *job, void *context, size_t *result_size, gearman_
     exec_job->exited_ok           = 1;
     exec_job->return_code         = 0;
     exec_job->latency             = 0;
+    exec_job->timeout             = gearman_opt_timeout;
+    exec_job->start_time.tv_sec   = 0L;
+    exec_job->start_time.tv_usec  = 0L;
+
     char *ptr;
     while ( (ptr = strsep(&result, "\n" )) != NULL ) {
         char *key   = str_token( &ptr, '=' );
@@ -136,9 +157,18 @@ void *get_job( gearman_job_st *job, void *context, size_t *result_size, gearman_
         } else if ( !strcmp( key, "latency" ) ) {
             exec_job->latency = atoi(value);
         } else if ( !strcmp( key, "start_time" ) ) {
-
+            char *ptr   = strdup(value);
+            char *ptr_c = ptr;
+            char *sec   = str_token( &ptr, '.' );
+            char *usec  = str_token( &ptr, 0 );
+            if(usec == NULL) { usec = 0; }
+            exec_job->start_time.tv_sec  = atoi(sec);
+            exec_job->start_time.tv_usec = atoi(usec);
+            free(ptr_c);
         } else if ( !strcmp( key, "timeout" ) ) {
             exec_job->timeout = atoi(value);
+        } else if ( !strcmp( key, "latency" ) ) {
+            exec_job->latency = atof(value);
         } else if ( !strcmp( key, "command_line" ) ) {
             exec_job->command_line = value;
         }
@@ -147,6 +177,9 @@ void *get_job( gearman_job_st *job, void *context, size_t *result_size, gearman_
     do_exec_job(exec_job);
 
     free(result_c);
+
+    // send finish signal to parent
+    send_state_to_parent(GM_JOB_END);
 
     // give gearman something to free
     uint8_t *buffer;
@@ -159,6 +192,12 @@ void *get_job( gearman_job_st *job, void *context, size_t *result_size, gearman_
 void *do_exec_job( gm_job_t *job ) {
     logger( GM_LOG_TRACE, "do_exec_job()\n" );
 
+    pid_t pid;
+    FILE *fp = NULL;
+    int pclose_result;
+    struct timeval start_time,end_time;
+    double latency = 0.0;
+
     if(job->type == NULL) {
         return;
     }
@@ -166,13 +205,139 @@ void *do_exec_job( gm_job_t *job ) {
         return;
     }
 
-    logger( GM_LOG_TRACE, "command_line: %s\n", job->command_line );
+    logger( GM_LOG_TRACE, "timeout %i\n", job->timeout);
 
-    job->output = "blah";
-
-    if ( !strcmp( job->type, "service" ) || !strcmp( job->type, "host" ) ) {
-        send_result_back(job);
+    // calculate real latency
+    // get the check start time
+    gettimeofday(&start_time,NULL);
+    if(job->start_time.tv_sec == 0) {
+        job->start_time = start_time;
     }
+    time_t real_start = time(&job->start_time.tv_sec);
+    logger( GM_LOG_TRACE, "real start_time: %i.%i\n", job->start_time.tv_sec, job->start_time.tv_usec);
+    logger( GM_LOG_TRACE, "real start_time: %s\n", asctime(localtime(&real_start)));
+
+    time_t start = time(&start_time.tv_sec);
+    logger( GM_LOG_TRACE, "job start_time: %i.%i\n", start_time.tv_sec, start_time.tv_usec);
+    logger( GM_LOG_TRACE, "job start_time: %s\n", asctime(localtime(&start)));
+
+    temp_buffer1[0]='\x0';
+    snprintf(temp_buffer1, (sizeof(temp_buffer1)), "%i.%i", start_time.tv_sec, start_time.tv_usec);
+    double start1_f = atof(temp_buffer1);
+    temp_buffer1[0]='\x0';
+    snprintf(temp_buffer1, (sizeof(temp_buffer1)), "%i.%i", job->start_time.tv_sec, job->start_time.tv_usec);
+    double start2_f = atof(temp_buffer1);
+    latency = start1_f - start2_f;
+    logger( GM_LOG_TRACE, "latency: %0.4f\n", latency);
+    job->latency = latency;
+    // job is too old
+    if((int)job->latency > gearman_opt_max_age) {
+        current_job->return_code   = 3;
+
+        logger( GM_LOG_INFO, "discarded too old %s job: %i > %i\n", job->type, (int)latency, gearman_opt_max_age);
+
+        gettimeofday(&end_time, NULL);
+        current_job->finish_time   = end_time;
+
+        if ( !strcmp( current_job->type, "service" ) || !strcmp( current_job->type, "host" ) ) {
+            current_job->output = "(Could Not Start Check In Time)";
+            send_result_back(current_job);
+        }
+
+        return;
+    }
+
+
+/*
+    // fork a child process
+    pid=fork();
+
+    //fork error
+    if( pid == -1 ) {
+        job->output      = "(Error On Fork)";
+        job->return_code = 3;
+        job->exited_ok   = 0;
+        if ( !strcmp( job->type, "service" ) || !strcmp( job->type, "host" ) ) {
+            send_result_back(job);
+        }
+        exit(EXIT_FAILURE);
+    }
+
+    // we are in the child process
+    else if(pid==0){
+*/
+        signal(SIGALRM, alarm_sighandler);
+        alarm(job->timeout);
+
+        // run the plugin check command
+        logger( GM_LOG_TRACE, "running cmd: %s\n", job->command_line);
+        fp = popen(job->command_line, "r");
+        if( fp == NULL ) {
+            job->output      = "(Error On Exec)";
+            job->return_code = 3;
+            job->exited_ok   = 0;
+            if ( !strcmp( job->type, "service" ) || !strcmp( job->type, "host" ) ) {
+                send_result_back(job);
+            }
+            return;
+        }
+
+        // initialize buffer
+        strcpy(output_buffer,"");
+
+        // get all lines of plugin output - escape newlines
+        fgets(output_buffer,sizeof(output_buffer)-1,fp);
+        job->output = escape_newlines(output_buffer);
+
+        // close the process
+        pclose_result = pclose(fp);
+
+        // reset the alarm
+        alarm(0);
+
+        // get the check start time
+
+        // record check result info
+        gettimeofday(&end_time, NULL);
+        job->finish_time   = end_time;
+        job->early_timeout = 0;
+
+        time_t end = time(&end_time.tv_sec);
+        logger( GM_LOG_TRACE, "finish_time: %i.%i\n", end_time.tv_sec, end_time.tv_usec);
+        logger( GM_LOG_TRACE, "finish_time: %s\n", asctime(localtime(&end)));
+
+        // test for execution error
+        if(pclose_result == -1){
+            pclose_result    = 3;
+            job->return_code = 2;
+            job->exited_ok   = 0;
+        }
+        else {
+            if(WEXITSTATUS(pclose_result)==0 && WIFSIGNALED(pclose_result))
+                job->return_code=128+WTERMSIG(pclose_result);
+            else
+                job->return_code=WEXITSTATUS(pclose_result);
+            }
+
+        if ( !strcmp( job->type, "service" ) || !strcmp( job->type, "host" ) ) {
+            send_result_back(job);
+        }
+
+        signal(SIGALRM, SIG_DFL);
+
+        //exit(EXIT_SUCCESS);
+/*
+    }
+    // we are the parent
+    else {
+        logger( GM_LOG_DEBUG, "started check with pid: %d\n", pid);
+        int status;
+        waitpid(pid, &status, 0);
+        logger( GM_LOG_DEBUG, "finished check from pid: %d with status: %d\n", pid, status);
+    }
+*/
+    // send finish signal to parent
+    kill(getppid(), SIGUSR2);
 
     return;
 }
@@ -190,12 +355,13 @@ void *send_result_back( gm_job_t *job ) {
     }
 
     logger( GM_LOG_TRACE, "queue: %s\n", job->result_queue );
-
     temp_buffer1[0]='\x0';
-    snprintf( temp_buffer1, sizeof( temp_buffer1 )-1, "host_name=%s\nstart_time=%i.%i\nlatency=%f\nreturn_code=%i\nexited_ok=%i\n",
+    snprintf( temp_buffer1, sizeof( temp_buffer1 )-1, "host_name=%s\nstart_time=%i.%i\nfinish_time=%i.%i\nlatency=%f\nreturn_code=%i\nexited_ok=%i\n",
               job->host_name,
               ( int )job->start_time.tv_sec,
               ( int )job->start_time.tv_usec,
+              ( int )job->finish_time.tv_sec,
+              ( int )job->finish_time.tv_usec,
               job->latency,
               job->return_code,
               job->exited_ok
@@ -339,4 +505,43 @@ int create_gearman_client( gearman_client_st *client ) {
     }
 
     return GM_OK;
+}
+
+/* called when check runs into timeout */
+void alarm_sighandler() {
+    logger( GM_LOG_TRACE, "alarm_sighandler()\n" );
+
+    struct timeval end_time;
+
+    if ( !strcmp( current_job->type, "service" ) || !strcmp( current_job->type, "host" ) ) {
+        current_job->early_timeout = 1;
+        current_job->return_code   = 2;
+
+        gettimeofday(&end_time, NULL);
+        current_job->finish_time   = end_time;
+
+        if ( !strcmp( current_job->type, "service" ) )
+            current_job->output = "(Service Check Timed Out)";
+
+        if ( !strcmp( current_job->type, "host" ) )
+            current_job->output = "(Host Check Timed Out)";
+
+        send_result_back(current_job);
+    }
+
+    // send finish signal to parent
+    send_state_to_parent(GM_JOB_END);
+
+    return;
+}
+
+/* tell parent our state */
+void send_state_to_parent(int status) {
+    logger( GM_LOG_TRACE, "send_state_to_parent(%d)\n", status );
+
+    if(status == GM_JOB_START) {
+        kill(getppid(), SIGUSR1);
+    } else {
+        kill(getppid(), SIGUSR2);
+    }
 }
