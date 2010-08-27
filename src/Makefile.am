@@ -13,7 +13,7 @@ pkglib_LIBRARIES = mod_gearman.so
 mod_gearman_so_SOURCES = utils.c logger.c result_thread.c mod_gearman.c
 
 bin_PROGRAMS = worker
-worker_SOURCES = worker_logger.c utils.c worker.c
+worker_SOURCES = worker_logger.c worker_client.c utils.c worker.c
 
 # -g adds debug symbols
 #mod_gearman_so_CXXFLAGS = $(CFLAGS) -fPIC -Wall -W -Wstrict-prototypes -O

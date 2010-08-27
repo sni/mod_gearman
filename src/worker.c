@@ -10,6 +10,7 @@
 #include "worker.h"
 #include "utils.h"
 #include "worker_logger.h"
+#include "worker_client.h"
 
 int gearman_opt_min_worker      = 3;
 int gearman_opt_max_worker      = 50;
@@ -19,7 +20,7 @@ int current_number_of_workers   = 0;
 /* work starts here */
 int main (int argc, char **argv) {
 
-//gearman_opt_debug_level = GM_TRACE;
+gearman_opt_debug_level = GM_TRACE;
 
     parse_arguments(argv);
     logger( GM_DEBUG, "main process started\n");
@@ -70,8 +71,8 @@ int make_new_child() {
     else if(pid==0){
         logger( GM_DEBUG, "worker started with pid: %d\n", getpid() );
 
-        // do stuff
-        sleep(10);
+        // do the real work
+        worker_client();
 
         logger( GM_DEBUG, "worker fin: %d\n", getpid() );
         exit(EXIT_SUCCESS);
@@ -88,7 +89,9 @@ int make_new_child() {
 
 /* parse command line arguments */
 void parse_arguments(char **argv) {
-    int x = 1;
+    int x        = 1;
+    int  srv_ptr = 0;
+
     while(argv[x] != NULL) {
         char *ptr;
         char * args = strdup( argv[x] );
@@ -117,10 +120,27 @@ void parse_arguments(char **argv) {
                 if(gearman_opt_max_worker <= 0) { gearman_opt_max_worker = 1; }
                 logger( GM_DEBUG, "Setting max worker to %d\n", gearman_opt_max_worker );
             }
+            else if ( !strcmp( key, "server" ) || !strcmp( key, "--server" ) ) {
+                char *servername;
+                while ( (servername = strsep( &value, "," )) != NULL ) {
+                    if ( strcmp( servername, "" ) ) {
+                        logger( GM_DEBUG, "Adding server %s\n", servername);
+                        gearman_opt_server[srv_ptr] = servername;
+                        srv_ptr++;
+                    }
+                }
+            }
             else  {
                 logger( GM_ERROR, "unknown option: %s\n", key );
             }
         }
         x++;
     }
+
+    // did we get any server?
+    if(srv_ptr == 0) {
+        logger( GM_ERROR, "please specify at least one server\n" );
+        exit(EXIT_FAILURE);
+    }
+
 }

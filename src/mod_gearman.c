@@ -541,6 +541,12 @@ static void read_arguments( const char *args_orig ) {
     if ( gearman_opt_timeout == 0 )
         gearman_opt_timeout     = 3000;
 
+    // did we get any server?
+    if(srv_ptr == 0) {
+        logger( GM_ERROR, "please specify at least one server\n" );
+        return;
+    }
+
     return;
 }
 
