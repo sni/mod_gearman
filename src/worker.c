@@ -14,22 +14,18 @@
 int gearman_opt_min_worker = 3;
 int gearman_opt_max_worker = 50;
 
-gm_array_t * worker_list;
-
 int current_number_of_workers = 0;
 
 /* work starts here */
 int main (int argc, char **argv) {
 
-gearman_opt_debug_level = GM_TRACE;
-    int x;
-
-    worker_list = (gm_array_t *)malloc(sizeof(worker)*GM_STACKSIZE);
+//gearman_opt_debug_level = GM_TRACE;
 
     parse_arguments(argv);
     logger( GM_DEBUG, "main process started\n");
 
     // create initial childs
+    int x;
     for(x=0; x < gearman_opt_min_worker; x++) {
         make_new_child();
     }
@@ -43,7 +39,7 @@ gearman_opt_debug_level = GM_TRACE;
         int status;
         while(waitpid(-1, &status, WNOHANG) > 0) {
             current_number_of_workers--;
-            logger( GM_DEBUG, "waitpid() %d\n", status);
+            logger( GM_TRACE, "waitpid() %d\n", status);
         }
 
         for (x = current_number_of_workers; x < gearman_opt_min_worker; x++) {
@@ -55,8 +51,10 @@ gearman_opt_debug_level = GM_TRACE;
     return 0;
 }
 
+
 /* start up new worker */
 int make_new_child() {
+    logger( GM_TRACE, "make_new_child()\n");
     pid_t pid = 0;
 
     /* fork a child process */
@@ -70,13 +68,12 @@ int make_new_child() {
 
     /* we are in the child process */
     else if(pid==0){
-        signal(SIGINT, SIG_DFL); // set sig int to default
         logger( GM_DEBUG, "worker started with pid: %d\n", getpid() );
 
         // do stuff
         sleep(10);
 
-        logger( GM_TRACE, "child fin: %d\n", getpid() );
+        logger( GM_DEBUG, "worker fin: %d\n", getpid() );
         exit(EXIT_SUCCESS);
     }
 
