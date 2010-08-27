@@ -11,10 +11,10 @@
 #include "utils.h"
 #include "worker_logger.h"
 
-int gearman_opt_min_worker = 3;
-int gearman_opt_max_worker = 50;
+int gearman_opt_min_worker      = 3;
+int gearman_opt_max_worker      = 50;
 
-int current_number_of_workers = 0;
+int current_number_of_workers   = 0;
 
 /* work starts here */
 int main (int argc, char **argv) {
@@ -30,12 +30,12 @@ int main (int argc, char **argv) {
         make_new_child();
     }
 
-    // And maintain the population.
+    // And maintain the population
     while (1) {
         // check number of workers every second
         sleep(1);
 
-        // collect dead childs
+        // collect finished workers
         int status;
         while(waitpid(-1, &status, WNOHANG) > 0) {
             current_number_of_workers--;
@@ -43,7 +43,7 @@ int main (int argc, char **argv) {
         }
 
         for (x = current_number_of_workers; x < gearman_opt_min_worker; x++) {
-            // top up the child pool
+            // top up the worker pool
             make_new_child();
         }
     }

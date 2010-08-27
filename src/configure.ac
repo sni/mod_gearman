@@ -18,6 +18,7 @@ AC_PROG_RANLIB
 # gearman wants this
 AC_C_INLINE
 AC_FUNC_MALLOC
+AC_FUNC_FORK
 AC_HEADER_STDBOOL
 
 ##############################################
@@ -45,6 +46,7 @@ AC_TYPE_SIZE_T
 AC_TYPE_UINT8_T
 AC_TYPE_UINT32_T
 AC_TYPE_UINT64_T
+AC_TYPE_PID_T
 
 ##############################################
 # Checks for additional libraries.
