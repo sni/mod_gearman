@@ -218,9 +218,22 @@ static int handle_eventhandler( int event_type, void *data ) {
     gearman_return_t ret;
     gearman_client_add_task_background( &client, task, NULL, "service", NULL, ( void * )temp_buffer, ( size_t )strlen( temp_buffer ), &ret );
     gearman_client_run_tasks( &client );
-    if(gearman_client_error(&client) != NULL && strcmp(gearman_client_error(&client), "") != 0) { // errno is somehow empty, use error instead
+    if(ret != GEARMAN_SUCCESS || (gearman_client_error(&client) != NULL && strcmp(gearman_client_error(&client), "") != 0)) { // errno is somehow empty, use error instead
+        logger( GM_LOG_ERROR, "client error: %s\n", gearman_client_error(&client));
         gearman_client_free(&client);
         create_gearman_client();
+
+        // try to resubmit once
+        gearman_client_add_task_background( &client, task, NULL, "service", NULL, ( void * )temp_buffer, ( size_t )strlen( temp_buffer ), &ret );
+        gearman_client_run_tasks( &client );
+        if(ret != GEARMAN_SUCCESS || (gearman_client_error(&client) != NULL && strcmp(gearman_client_error(&client), "") != 0)) { // errno is somehow empty, use error instead
+            logger( GM_LOG_DEBUG, "client error permanent: %s\n", gearman_client_error(&client));
+            gearman_client_free(&client);
+            create_gearman_client();
+        }
+        else {
+            logger( GM_LOG_DEBUG, "retransmission successful\n");
+        }
     }
 
     // tell nagios to not execute
@@ -336,9 +349,22 @@ static int handle_host_check( int event_type, void *data ) {
     gearman_return_t ret;
     gearman_client_add_task_background( &client, task, NULL, target_worker, hst->name, ( void * )temp_buffer, ( size_t )strlen( temp_buffer ), &ret );
     gearman_client_run_tasks( &client );
-    if(gearman_client_error(&client) != NULL && strcmp(gearman_client_error(&client), "") != 0) { // errno is somehow empty, use error instead
+    if(ret != GEARMAN_SUCCESS || (gearman_client_error(&client) != NULL && strcmp(gearman_client_error(&client), "") != 0)) { // errno is somehow empty, use error instead
+        logger( GM_LOG_ERROR, "client error: %s\n", gearman_client_error(&client));
         gearman_client_free(&client);
         create_gearman_client();
+
+        // try to resubmit once
+        gearman_client_add_task_background( &client, task, NULL, target_worker, hst->name, ( void * )temp_buffer, ( size_t )strlen( temp_buffer ), &ret );
+        gearman_client_run_tasks( &client );
+        if(ret != GEARMAN_SUCCESS || (gearman_client_error(&client) != NULL && strcmp(gearman_client_error(&client), "") != 0)) { // errno is somehow empty, use error instead
+            logger( GM_LOG_DEBUG, "client error permanent: %s\n", gearman_client_error(&client));
+            gearman_client_free(&client);
+            create_gearman_client();
+        }
+        else {
+            logger( GM_LOG_DEBUG, "retransmission successful\n");
+        }
     }
 
     // clean up
@@ -405,9 +431,22 @@ static int handle_svc_check( int event_type, void *data ) {
     gearman_return_t ret;
     gearman_client_add_task_low_background( &client, task, NULL, target_worker, uniq, ( void * )temp_buffer, ( size_t )strlen( temp_buffer ), &ret );
     gearman_client_run_tasks( &client );
-    if(gearman_client_error(&client) != NULL && strcmp(gearman_client_error(&client), "") != 0) { // errno is somehow empty, use error instead
+    if(ret != GEARMAN_SUCCESS || (gearman_client_error(&client) != NULL && strcmp(gearman_client_error(&client), "") != 0)) { // errno is somehow empty, use error instead
+        logger( GM_LOG_ERROR, "client error: %s\n", gearman_client_error(&client));
         gearman_client_free(&client);
         create_gearman_client();
+
+        // try to resubmit once
+        gearman_client_add_task_low_background( &client, task, NULL, target_worker, uniq, ( void * )temp_buffer, ( size_t )strlen( temp_buffer ), &ret );
+        gearman_client_run_tasks( &client );
+        if(ret != GEARMAN_SUCCESS || (gearman_client_error(&client) != NULL && strcmp(gearman_client_error(&client), "") != 0)) { // errno is somehow empty, use error instead
+            logger( GM_LOG_DEBUG, "client error permanent: %s\n", gearman_client_error(&client));
+            gearman_client_free(&client);
+            create_gearman_client();
+        }
+        else {
+            logger( GM_LOG_DEBUG, "retransmission successful\n");
+        }
     }
 
     // tell nagios to not execute
