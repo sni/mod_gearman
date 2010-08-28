@@ -221,6 +221,7 @@ static int handle_eventhandler( int event_type, void *data ) {
     if(ret != GEARMAN_SUCCESS || (gearman_client_error(&client) != NULL && strcmp(gearman_client_error(&client), "") != 0)) { // errno is somehow empty, use error instead
         logger( GM_LOG_ERROR, "client error: %s\n", gearman_client_error(&client));
         gearman_client_free(&client);
+        sleep(5);
         create_gearman_client();
 
         // try to resubmit once
@@ -352,6 +353,7 @@ static int handle_host_check( int event_type, void *data ) {
     if(ret != GEARMAN_SUCCESS || (gearman_client_error(&client) != NULL && strcmp(gearman_client_error(&client), "") != 0)) { // errno is somehow empty, use error instead
         logger( GM_LOG_ERROR, "client error: %s\n", gearman_client_error(&client));
         gearman_client_free(&client);
+        sleep(5);
         create_gearman_client();
 
         // try to resubmit once
@@ -434,6 +436,7 @@ static int handle_svc_check( int event_type, void *data ) {
     if(ret != GEARMAN_SUCCESS || (gearman_client_error(&client) != NULL && strcmp(gearman_client_error(&client), "") != 0)) { // errno is somehow empty, use error instead
         logger( GM_LOG_ERROR, "client error: %s\n", gearman_client_error(&client));
         gearman_client_free(&client);
+        sleep(5);
         create_gearman_client();
 
         // try to resubmit once

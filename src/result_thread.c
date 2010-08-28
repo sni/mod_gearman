@@ -90,6 +90,7 @@ void *get_results( gearman_job_st *job, void *context, size_t *result_size, gear
 
     // set result pointer to success
     *ret_ptr= GEARMAN_SUCCESS;
+    // TODO: verify this
     //if ( ! options & GM_WORKER_OPTIONS_DATA ) {
     //    logger( GM_LOG_TRACE, "discarding non data event\n" );
     //    *result_size= 0;

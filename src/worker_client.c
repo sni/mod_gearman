@@ -105,6 +105,7 @@ void *get_job( gearman_job_st *job, void *context, size_t *result_size, gearman_
 
     // set result pointer to success
     *ret_ptr= GEARMAN_SUCCESS;
+    // TODO: verify this
     //if ( ! options & GM_WORKER_OPTIONS_DATA ) {
     //    logger( GM_LOG_TRACE, "discarding non data request\n" );
     //    *result_size= 0;
@@ -300,8 +301,6 @@ void *do_exec_job( gm_job_t *job ) {
         // reset the alarm
         alarm(0);
 
-        // get the check start time
-
         // record check result info
         gettimeofday(&end_time, NULL);
         job->finish_time   = end_time;
@@ -341,8 +340,6 @@ void *do_exec_job( gm_job_t *job ) {
         logger( GM_LOG_DEBUG, "finished check from pid: %d with status: %d\n", pid, status);
     }
 */
-    // send finish signal to parent
-    kill(getppid(), SIGUSR2);
 
     return;
 }
@@ -399,10 +396,24 @@ void *send_result_back( gm_job_t *job ) {
     gearman_return_t ret;
     gearman_client_add_task_background( &client, task, NULL, job->result_queue, NULL, ( void * )temp_buffer1, ( size_t )strlen( temp_buffer1 ), &ret );
     gearman_client_run_tasks( &client );
-    if(gearman_client_error(&client) != NULL && strcmp(gearman_client_error(&client), "") != 0) { // errno is somehow empty, use error instead
+    if(ret != GEARMAN_SUCCESS || (gearman_client_error(&client) != NULL && strcmp(gearman_client_error(&client), "") != 0)) { // errno is somehow empty, use error instead
         logger( GM_LOG_ERROR, "send_result_back() finished with errors: %s\n", gearman_client_error(&client) );
         gearman_client_free(&client);
+        sleep(5);
         create_gearman_client( &client );
+
+        // try to resubmit once
+        gearman_client_add_task_background( &client, task, NULL, job->result_queue, NULL, ( void * )temp_buffer1, ( size_t )strlen( temp_buffer1 ), &ret );
+        gearman_client_run_tasks( &client );
+        if(ret != GEARMAN_SUCCESS || (gearman_client_error(&client) != NULL && strcmp(gearman_client_error(&client), "") != 0)) { // errno is somehow empty, use error instead
+            logger( GM_LOG_DEBUG, "client error permanent: %s\n", gearman_client_error(&client));
+            gearman_client_free(&client);
+            create_gearman_client(&client);
+        }
+        else {
+            logger( GM_LOG_DEBUG, "retransmission successful\n");
+        }
+
         return;
     }
 
@@ -534,20 +545,23 @@ void alarm_sighandler() {
         send_result_back(current_job);
     }
 
-    // become the process group leader
-    setpgid(0,0);
-    signal(SIGINT, SIG_IGN);
-    signal(SIGTERM, SIG_IGN);
-    pid_t pid = getpid();
-    kill((pid_t)(-pid),SIGTERM);
-    sleep(1);
-    kill((pid_t)(-pid),SIGINT);
-    signal(SIGINT, SIG_DFL);
-
     // send finish signal to parent
     send_state_to_parent(GM_JOB_END);
 
-    exit(EXIT_SUCCESS);
+    // become the process group leader and kill all childs
+    setpgid(0,0);
+    //signal(SIGINT, SIG_IGN);
+    //signal(SIGTERM, SIG_IGN);
+    kill((pid_t)0, SIGTERM);
+    logger( GM_LOG_TRACE, "send SIGTERM\n");
+    sleep(1);
+    kill((pid_t)0, SIGINT);
+    logger( GM_LOG_TRACE, "send SIGINT\n");
+
+    //signal(SIGINT, SIG_DFL);
+    //signal(SIGTERM, SIG_DFL);
+
+    _exit(EXIT_SUCCESS);
 }
 
 /* tell parent our state */

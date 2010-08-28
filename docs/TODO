@@ -16,3 +16,5 @@ Worker
  - add init scripts
  - verify if GM_WORKER_OPTIONS_DATA is working
  - kill all childs when worker exits
+ - add config file support
+ - check reschedule/schedule for services

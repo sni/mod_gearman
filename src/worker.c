@@ -24,8 +24,8 @@ int gearman_opt_debug_result    = GM_DISABLED;
 char *gearman_hostgroups_list[GM_LISTSIZE];
 char *gearman_servicegroups_list[GM_LISTSIZE];
 
-int current_number_of_workers   = 0;
-int current_number_of_jobs      = 0;
+int current_number_of_workers                = 0;
+volatile sig_atomic_t current_number_of_jobs = 0;  // must be signal safe
 
 /* work starts here */
 int main (int argc, char **argv) {
@@ -42,16 +42,16 @@ int main (int argc, char **argv) {
     /* Establish the signal handler. */
     struct sigaction usr_action1;
     sigset_t block_mask;
-    sigfillset (&block_mask);
+    sigfillset (&block_mask); // block all signals
     usr_action1.sa_handler = increase_jobs;
-    usr_action1.sa_mask = block_mask;
-    usr_action1.sa_flags = 0;
+    usr_action1.sa_mask    = block_mask;
+    usr_action1.sa_flags   = 0;
     sigaction (SIGUSR1, &usr_action1, NULL);
 
     struct sigaction usr_action2;
     usr_action2.sa_handler = decrease_jobs;
-    usr_action2.sa_mask = block_mask;
-    usr_action2.sa_flags = 0;
+    usr_action2.sa_mask    = block_mask;
+    usr_action2.sa_flags   = 0;
     sigaction (SIGUSR2, &usr_action2, NULL);
 
     // create initial childs
@@ -60,10 +60,13 @@ int main (int argc, char **argv) {
         make_new_child();
     }
 
+    time_t last_check = time(NULL);
+
     // And maintain the population
     while (1) {
-        // check number of workers every second
-        sleep(5);
+        // check number of workers every 30 seconds
+        // sleep gets cancelt anyway when receiving signals
+        sleep(30);
 
         // collect finished workers
         int status;
@@ -72,16 +75,20 @@ int main (int argc, char **argv) {
             logger( GM_LOG_TRACE, "waitpid() %d\n", status);
         }
 
-        // try to correct numbers
-        if(current_number_of_workers < current_number_of_jobs/2) { current_number_of_jobs = current_number_of_workers * 2; }
-        if(current_number_of_jobs < 0) { current_number_of_jobs = 0; }
-        logger( GM_LOG_TRACE, "worker: %d   running jobs: %d\n", current_number_of_workers, current_number_of_jobs/2);
-
-        int target_number_of_workers = adjust_number_of_worker(gearman_opt_min_worker, gearman_opt_max_worker, current_number_of_workers, current_number_of_jobs/2);
-
-        for (x = current_number_of_workers; x < target_number_of_workers; x++) {
-            // top up the worker pool
+        // keep up minimum population
+        for (x = current_number_of_workers; x < gearman_opt_min_worker; x++) {
             make_new_child();
+        }
+
+        // check if we need to increase out pool
+        time_t now = time(NULL);
+        if((int)now > (int)last_check + 5) {
+            int target_number_of_workers = adjust_number_of_worker(gearman_opt_min_worker, gearman_opt_max_worker, current_number_of_workers, current_number_of_jobs);
+            for (x = current_number_of_workers; x < target_number_of_workers; x++) {
+                // top up the worker pool
+                make_new_child();
+            }
+            last_check = time(NULL);
         }
     }
 
@@ -292,7 +299,6 @@ void print_usage() {
 void increase_jobs(int sig) {
     logger( GM_LOG_TRACE, "increase_jobs(%i)\n", sig);
     current_number_of_jobs++;
-    current_number_of_jobs++;
 }
 
 
@@ -305,11 +311,13 @@ void decrease_jobs(int sig) {
 
 /* set new number of workers */
 int adjust_number_of_worker(int min, int max, int cur_workers, int cur_jobs) {
-    logger( GM_LOG_TRACE, "adjust_number_of_worker(min %d, max %d, work %d, jobs %d)\n", min, max, cur_workers, cur_jobs);
+    logger( GM_LOG_TRACE, "adjust_number_of_worker(min %d, max %d, worker %d, jobs %d)\n", min, max, cur_workers, cur_jobs);
     int target = min;
 
     // > 90% workers running
-    if(cur_jobs > 0 && (double)cur_jobs/cur_workers > 0.9) {
+    int perc_running = (int)cur_jobs*100/cur_workers;
+    logger( GM_LOG_INFO, "percentage running: %d%%\n", perc_running);
+    if(cur_jobs > 0 && perc_running > 90) {
         // increase target number by 10% or minmimum 5
         int increase = (int) cur_workers / 10;
         if(increase < 5) {
