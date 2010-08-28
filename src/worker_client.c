@@ -125,6 +125,8 @@ void *get_job( gearman_job_st *job, void *context, size_t *result_size, gearman_
     exec_job->service_description = NULL;
     exec_job->result_queue        = NULL;
     exec_job->exited_ok           = 1;
+    exec_job->scheduled_check     = 1;
+    exec_job->reschedule_check    = 1;
     exec_job->return_code         = 0;
     exec_job->latency             = 0;
     exec_job->timeout             = gearman_opt_timeout;
