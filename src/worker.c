@@ -33,13 +33,7 @@ int main (int argc, char **argv) {
     parse_arguments(argv);
     logger( GM_LOG_DEBUG, "main process started\n");
 
-    // standalone mode?
-    if(gearman_opt_min_worker == 1 && gearman_opt_max_worker == 1) {
-        worker_client();
-        exit( EXIT_SUCCESS );
-    }
-
-    /* Establish the signal handler. */
+    // Establish the signal handler
     struct sigaction usr_action1;
     sigset_t block_mask;
     sigfillset (&block_mask); // block all signals
@@ -66,7 +60,7 @@ int main (int argc, char **argv) {
     while (1) {
         // check number of workers every 30 seconds
         // sleep gets cancelt anyway when receiving signals
-        sleep(30);
+        sleep(1);
 
         // collect finished workers
         int status;
@@ -311,19 +305,19 @@ void decrease_jobs(int sig) {
 
 /* set new number of workers */
 int adjust_number_of_worker(int min, int max, int cur_workers, int cur_jobs) {
-    logger( GM_LOG_TRACE, "adjust_number_of_worker(min %d, max %d, worker %d, jobs %d)\n", min, max, cur_workers, cur_jobs);
+    logger( GM_LOG_DEBUG, "adjust_number_of_worker(min %d, max %d, worker %d, jobs %d)\n", min, max, cur_workers, cur_jobs);
     int target = min;
 
     // > 90% workers running
     int perc_running = (int)cur_jobs*100/cur_workers;
-    logger( GM_LOG_TRACE, "percentage running: %d%%\n", perc_running);
+    logger( GM_LOG_DEBUG, "percentage running: %d%%\n", perc_running);
     if(cur_jobs > 0 && perc_running > 90) {
         // increase target number by 10% or minmimum 5
         int increase = (int) cur_workers / 10;
         if(increase < 5) {
             increase = 5;
         }
-        logger( GM_LOG_TRACE, "starting %d new worker\n", increase);
+        logger( GM_LOG_DEBUG, "starting %d new worker\n", increase);
         target = cur_workers + increase;
     }
 

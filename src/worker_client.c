@@ -15,7 +15,6 @@
 
 char temp_buffer1[GM_BUFFERSIZE];
 char temp_buffer2[GM_BUFFERSIZE];
-char output_buffer[GM_BUFFERSIZE];
 char hostname[GM_BUFFERSIZE];
 gearman_client_st client;
 gearman_worker_st worker;
@@ -23,6 +22,7 @@ gearman_worker_st worker;
 int number_jobs_done = 0;
 
 gm_job_t * current_job;
+pid_t current_child_pid;
 
 /* callback for task completed */
 void *worker_client( ) {
@@ -71,7 +71,17 @@ void *worker_loop() {
 
 /* get a job */
 void *get_job( gearman_job_st *job, void *context, size_t *result_size, gearman_return_t *ret_ptr ) {
+
     logger( GM_LOG_TRACE, "get_job()\n" );
+
+    /* Establish the signal handler. */
+    sigset_t block_mask;
+    sigset_t old_mask;
+    sigaddset(&block_mask, SIGTERM);
+    sigprocmask(SIG_BLOCK, &block_mask, &old_mask);
+
+    // start listening to SIGTERMs
+    signal(SIGTERM, SIG_IGN);
 
     gm_worker_options_t options= *( ( gm_worker_options_t * )context );
 
@@ -189,6 +199,10 @@ void *get_job( gearman_job_st *job, void *context, size_t *result_size, gearman_
     // give gearman something to free
     uint8_t *buffer;
     buffer = malloc( 1 );
+
+    // start listening to SIGTERMs
+    sigprocmask(SIG_SETMASK, &old_mask, NULL);
+
     return buffer;
 }
 
@@ -197,9 +211,6 @@ void *get_job( gearman_job_st *job, void *context, size_t *result_size, gearman_
 void *do_exec_job( gm_job_t *job ) {
     logger( GM_LOG_TRACE, "do_exec_job()\n" );
 
-    pid_t pid;
-    FILE *fp = NULL;
-    int pclose_result;
     struct timeval start_time,end_time;
     double latency = 0.0;
 
@@ -238,108 +249,126 @@ void *do_exec_job( gm_job_t *job ) {
 
     // job is too old
     if((int)job->latency > gearman_opt_max_age) {
-        current_job->return_code   = 3;
+        job->return_code   = 3;
 
         logger( GM_LOG_INFO, "discarded too old %s job: %i > %i\n", job->type, (int)latency, gearman_opt_max_age);
 
         gettimeofday(&end_time, NULL);
-        current_job->finish_time   = end_time;
+        job->finish_time   = end_time;
 
-        if ( !strcmp( current_job->type, "service" ) || !strcmp( current_job->type, "host" ) ) {
-            current_job->output = "(Could Not Start Check In Time)";
-            send_result_back(current_job);
+        if ( !strcmp( job->type, "service" ) || !strcmp( job->type, "host" ) ) {
+            job->output = "(Could Not Start Check In Time)";
+            send_result_back(job);
         }
 
         return;
     }
 
+    job->early_timeout = 0;
 
-/*
+    // run the command
+    execute_safe_command(&job->output, &current_job->return_code, job->command_line, job->timeout );
+
+    // record check result info
+    gettimeofday(&end_time, NULL);
+    job->finish_time   = end_time;
+
+    time_t end = time(&end_time.tv_sec);
+    logger( GM_LOG_TRACE, "finish_time: %i.%i\n", end_time.tv_sec, end_time.tv_usec);
+    logger( GM_LOG_TRACE, "finish_time: %s\n", asctime(localtime(&end)));
+
+    // did we have a timeout?
+    if(job->timeout < ((int)end_time.tv_sec - (int)start_time.tv_sec)) {
+        job->return_code   = 2;
+        job->early_timeout = 1;
+        if ( !strcmp( job->type, "service" ) )
+            job->output   = "(Service Check Timed Out)";
+        if ( !strcmp( job->type, "host" ) )
+            job->output   = "(Host Check Timed Out)";
+    }
+
+    if ( !strcmp( job->type, "service" ) || !strcmp( job->type, "host" ) ) {
+        send_result_back(job);
+    }
+
+    return;
+}
+
+
+/* execute this command with given timeout */
+void *execute_safe_command(char**output, int *return_code, char *command_line, int timeout ) {
+
+    // initialize return variables
+    if( *output != NULL )
+        *output=NULL;
+    *return_code   = 0;
+
+    int pdes[2];
+    pipe(pdes);
+
     // fork a child process
-    pid=fork();
+    current_child_pid=fork();
 
     //fork error
-    if( pid == -1 ) {
-        job->output      = "(Error On Fork)";
-        job->return_code = 3;
-        job->exited_ok   = 0;
-        if ( !strcmp( job->type, "service" ) || !strcmp( job->type, "host" ) ) {
-            send_result_back(job);
-        }
-        exit(EXIT_FAILURE);
+    if( current_child_pid == -1 ) {
+        *output      = "(Error On Fork)";
+        *return_code = 3;
+        return;
     }
 
     // we are in the child process
-    else if(pid==0){
-*/
+    else if( current_child_pid == 0 ){
+
+        // become the process group leader
+        setpgid(0,0);
+        current_child_pid = getpid();
+
+        close(pdes[0]);
         signal(SIGALRM, alarm_sighandler);
-        alarm(job->timeout);
+        alarm(timeout);
 
         // run the plugin check command
-        logger( GM_LOG_TRACE, "running cmd: %s\n", job->command_line);
-        fp = popen(job->command_line, "r");
+        logger( GM_LOG_TRACE, "running cmd: %s\n", command_line);
+        FILE *fp = NULL;
+        fp = popen(command_line, "r");
         if( fp == NULL ) {
-            job->output      = "(Error On Exec)";
-            job->return_code = 3;
-            job->exited_ok   = 0;
-            if ( !strcmp( job->type, "service" ) || !strcmp( job->type, "host" ) ) {
-                send_result_back(job);
-            }
-            return;
+            exit(3);
         }
-
-        // initialize buffer
-        strcpy(output_buffer,"");
 
         // get all lines of plugin output - escape newlines
-        fgets(output_buffer,sizeof(output_buffer)-1,fp);
-        job->output = escape_newlines(output_buffer);
+        char output_buffer[GM_BUFFERSIZE] = "";
+        strcpy(output_buffer,"");
+        char *temp_buffer;
+        while(fgets(output_buffer,sizeof(output_buffer)-1,fp)){
+            temp_buffer = escape_newlines(output_buffer);
+            write(pdes[1], temp_buffer, strlen(temp_buffer)+1);
+        }
 
         // close the process
+        int pclose_result;
         pclose_result = pclose(fp);
-
-        // reset the alarm
-        alarm(0);
-
-        // record check result info
-        gettimeofday(&end_time, NULL);
-        job->finish_time   = end_time;
-        job->early_timeout = 0;
-
-        time_t end = time(&end_time.tv_sec);
-        logger( GM_LOG_TRACE, "finish_time: %i.%i\n", end_time.tv_sec, end_time.tv_usec);
-        logger( GM_LOG_TRACE, "finish_time: %s\n", asctime(localtime(&end)));
-
-        // test for execution error
-        if(pclose_result == -1){
-            pclose_result    = 3;
-            job->return_code = 2;
-            job->exited_ok   = 0;
-        }
-        else {
-            if(WEXITSTATUS(pclose_result)==0 && WIFSIGNALED(pclose_result))
-                job->return_code=128+WTERMSIG(pclose_result);
-            else
-                job->return_code=WEXITSTATUS(pclose_result);
-            }
-
-        if ( !strcmp( job->type, "service" ) || !strcmp( job->type, "host" ) ) {
-            send_result_back(job);
-        }
-
-        signal(SIGALRM, SIG_DFL);
-
-        //exit(EXIT_SUCCESS);
-/*
+        int return_code = real_exit_code(pclose_result);
+        logger( GM_LOG_DEBUG, "child exit code: %d\n", return_code);
+        exit(return_code);
     }
+
     // we are the parent
     else {
-        logger( GM_LOG_DEBUG, "started check with pid: %d\n", pid);
+        close(pdes[1]);
+
+        logger( GM_LOG_DEBUG, "started check with pid: %d\n", current_child_pid);
+
         int status;
-        waitpid(pid, &status, 0);
-        logger( GM_LOG_DEBUG, "finished check from pid: %d with status: %d\n", pid, status);
+        waitpid(current_child_pid, &status, 0);
+        logger( GM_LOG_DEBUG, "finished check from pid: %d with status: %d\n", current_child_pid, status);
+
+        // read output of child
+        char client_msg[GM_BUFFERSIZE];
+        read(pdes[0], client_msg, sizeof(client_msg));
+        *output        = client_msg;
+        *return_code   = real_exit_code(status);
     }
-*/
+    current_child_pid = 0;
 
     return;
 }
@@ -527,39 +556,15 @@ int create_gearman_client( gearman_client_st *client ) {
 void alarm_sighandler() {
     logger( GM_LOG_TRACE, "alarm_sighandler()\n" );
 
-    struct timeval end_time;
-
-    if ( !strcmp( current_job->type, "service" ) || !strcmp( current_job->type, "host" ) ) {
-        current_job->early_timeout = 1;
-        current_job->return_code   = 2;
-
-        gettimeofday(&end_time, NULL);
-        current_job->finish_time   = end_time;
-
-        if ( !strcmp( current_job->type, "service" ) )
-            current_job->output = "(Service Check Timed Out)";
-
-        if ( !strcmp( current_job->type, "host" ) )
-            current_job->output = "(Host Check Timed Out)";
-
-        send_result_back(current_job);
+    if(current_child_pid != 0) {
+        signal(SIGINT, SIG_IGN);
+        logger( GM_LOG_TRACE, "send SIGINT to %d\n", current_child_pid);
+        kill(-current_child_pid, SIGINT);
+        signal(SIGINT, SIG_DFL);
+        sleep(1);
+        logger( GM_LOG_TRACE, "send SIGKILL to %d\n", current_child_pid);
+        kill(-current_child_pid, SIGKILL);
     }
-
-    // send finish signal to parent
-    send_state_to_parent(GM_JOB_END);
-
-    // become the process group leader and kill all childs
-    setpgid(0,0);
-    //signal(SIGINT, SIG_IGN);
-    //signal(SIGTERM, SIG_IGN);
-    kill((pid_t)0, SIGINT);
-    logger( GM_LOG_TRACE, "send SIGINT\n");
-    sleep(1);
-    kill((pid_t)0, SIGKILL);
-    logger( GM_LOG_TRACE, "send SIGKILL\n");
-
-    //signal(SIGINT, SIG_DFL);
-    //signal(SIGTERM, SIG_DFL);
 
     _exit(EXIT_SUCCESS);
 }

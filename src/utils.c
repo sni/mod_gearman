@@ -81,3 +81,17 @@ void * pop(gm_array_t *ps) {
     } else
         return ps->items[--ps->size];
 }
+
+/* convert exit code to int */
+int real_exit_code(int code) {
+    int return_code;
+    if( code == -1 ){
+        return_code   = 3;
+    } else {
+        if( WEXITSTATUS( code )== 0 && WIFSIGNALED( code) )
+            return_code = 128 + WTERMSIG( code );
+        else
+            return_code = WEXITSTATUS( code );
+    }
+    return(return_code);
+}

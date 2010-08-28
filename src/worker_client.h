@@ -48,3 +48,4 @@ void *do_exec_job( gm_job_t * job );
 void *send_result_back( gm_job_t * job );
 void alarm_sighandler();
 void send_state_to_parent(int status);
+void *execute_safe_command(char**output, int *return_code, char *command_line, int timeout );
