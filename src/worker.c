@@ -30,8 +30,6 @@ int current_number_of_jobs      = 0;
 /* work starts here */
 int main (int argc, char **argv) {
 
-gearman_opt_debug_level = GM_LOG_TRACE;
-
     parse_arguments(argv);
     logger( GM_LOG_DEBUG, "main process started\n");
 
@@ -65,7 +63,7 @@ gearman_opt_debug_level = GM_LOG_TRACE;
     // And maintain the population
     while (1) {
         // check number of workers every second
-        sleep(1);
+        sleep(5);
 
         // collect finished workers
         int status;
@@ -74,10 +72,14 @@ gearman_opt_debug_level = GM_LOG_TRACE;
             logger( GM_LOG_TRACE, "waitpid() %d\n", status);
         }
 
-
+        // try to correct numbers
+        if(current_number_of_workers < current_number_of_jobs/2) { current_number_of_jobs = current_number_of_workers * 2; }
+        if(current_number_of_jobs < 0) { current_number_of_jobs = 0; }
         logger( GM_LOG_TRACE, "worker: %d   running jobs: %d\n", current_number_of_workers, current_number_of_jobs/2);
 
-        for (x = current_number_of_workers; x < gearman_opt_min_worker; x++) {
+        int target_number_of_workers = adjust_number_of_worker(gearman_opt_min_worker, gearman_opt_max_worker, current_number_of_workers, current_number_of_jobs/2);
+
+        for (x = current_number_of_workers; x < target_number_of_workers; x++) {
             // top up the worker pool
             make_new_child();
         }
@@ -298,4 +300,27 @@ void increase_jobs(int sig) {
 void decrease_jobs(int sig) {
     logger( GM_LOG_TRACE, "decrease_jobs(%i)\n", sig);
     current_number_of_jobs--;
+}
+
+
+/* set new number of workers */
+int adjust_number_of_worker(int min, int max, int cur_workers, int cur_jobs) {
+    logger( GM_LOG_TRACE, "adjust_number_of_worker(min %d, max %d, work %d, jobs %d)\n", min, max, cur_workers, cur_jobs);
+    int target = min;
+
+    // > 90% workers running
+    if(cur_jobs > 0 && (double)cur_jobs/cur_workers > 0.9) {
+        // increase target number by 10% or minmimum 5
+        int increase = (int) cur_workers / 10;
+        if(increase < 5) {
+            increase = 5;
+        }
+        logger( GM_LOG_TRACE, "starting %d new worker\n", increase);
+        target = cur_workers + increase;
+    }
+
+    // dont go over the top
+    if(target > max) { target = max; }
+
+    return target;
 }

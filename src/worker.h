@@ -19,6 +19,7 @@
 #define GM_DEFAULT_MAX_WORKER          50
 #define GM_DEFAULT_JOB_MAX_AGE        120
 #define GM_DEFAULT_TIMEOUT             60
+#define GM_MAX_JOBS_PER_CLIENT         20
 
 
 int gearman_opt_debug_level;
@@ -38,3 +39,4 @@ int make_new_child();
 void print_usage();
 void increase_jobs(int sig);
 void decrease_jobs(int sig);
+int adjust_number_of_worker(int min, int max, int cur_workers, int cur_jobs);

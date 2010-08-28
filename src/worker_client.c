@@ -20,6 +20,8 @@ char hostname[GM_BUFFERSIZE];
 gearman_client_st client;
 gearman_worker_st worker;
 
+int number_jobs_done = 0;
+
 gm_job_t * current_job;
 
 /* callback for task completed */
@@ -84,8 +86,8 @@ void *get_job( gearman_job_st *job, void *context, size_t *result_size, gearman_
     if ( result == NULL ) {
         logger( GM_LOG_ERROR, "malloc error\n" );
         *ret_ptr= GEARMAN_WORK_FAIL;
-        return NULL;
-    }
+        exit(EXIT_FAILURE);
+     }
 
     // send start signal to parent
     send_state_to_parent(GM_JOB_START);
@@ -115,7 +117,7 @@ void *get_job( gearman_job_st *job, void *context, size_t *result_size, gearman_
         send_state_to_parent(GM_JOB_END);
 
         *ret_ptr= GEARMAN_WORK_FAIL;
-        return NULL;
+        exit(EXIT_FAILURE);
     }
     current_job = exec_job;
     exec_job->type                = NULL;
@@ -230,6 +232,7 @@ void *do_exec_job( gm_job_t *job ) {
     latency = start1_f - start2_f;
     logger( GM_LOG_TRACE, "latency: %0.4f\n", latency);
     job->latency = latency;
+    if(job->latency < 0) { job->latency = 0; }
     // job is too old
     if((int)job->latency > gearman_opt_max_age) {
         current_job->return_code   = 3;
@@ -529,10 +532,20 @@ void alarm_sighandler() {
         send_result_back(current_job);
     }
 
+    // become the process group leader
+    setpgid(0,0);
+    signal(SIGINT, SIG_IGN);
+    signal(SIGTERM, SIG_IGN);
+    pid_t pid = getpid();
+    kill((pid_t)(-pid),SIGTERM);
+    sleep(1);
+    kill((pid_t)(-pid),SIGINT);
+    signal(SIGINT, SIG_DFL);
+
     // send finish signal to parent
     send_state_to_parent(GM_JOB_END);
 
-    return;
+    exit(EXIT_SUCCESS);
 }
 
 /* tell parent our state */
@@ -540,8 +553,12 @@ void send_state_to_parent(int status) {
     logger( GM_LOG_TRACE, "send_state_to_parent(%d)\n", status );
 
     if(status == GM_JOB_START) {
+        number_jobs_done++;
         kill(getppid(), SIGUSR1);
     } else {
         kill(getppid(), SIGUSR2);
+        if(number_jobs_done >= GM_MAX_JOBS_PER_CLIENT) {
+            exit(EXIT_SUCCESS);
+        }
     }
 }
