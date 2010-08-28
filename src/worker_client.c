@@ -323,6 +323,11 @@ void *execute_safe_command(char**output, int *return_code, char *command_line, i
         setpgid(0,0);
         current_child_pid = getpid();
 
+        // remove all customn signal handler
+        sigset_t mask;
+        sigfillset(&mask);
+        sigprocmask(SIG_UNBLOCK, &mask, NULL);
+
         close(pdes[0]);
         signal(SIGALRM, alarm_sighandler);
         alarm(timeout);
@@ -367,7 +372,9 @@ void *execute_safe_command(char**output, int *return_code, char *command_line, i
         read(pdes[0], client_msg, sizeof(client_msg));
         *output        = client_msg;
         *return_code   = real_exit_code(status);
+        close(pdes[0]);
     }
+    alarm(0);
     current_child_pid = 0;
 
     return;
@@ -556,15 +563,14 @@ int create_gearman_client( gearman_client_st *client ) {
 void alarm_sighandler() {
     logger( GM_LOG_TRACE, "alarm_sighandler()\n" );
 
-    if(current_child_pid != 0) {
-        signal(SIGINT, SIG_IGN);
-        logger( GM_LOG_TRACE, "send SIGINT to %d\n", current_child_pid);
-        kill(-current_child_pid, SIGINT);
-        signal(SIGINT, SIG_DFL);
-        sleep(1);
-        logger( GM_LOG_TRACE, "send SIGKILL to %d\n", current_child_pid);
-        kill(-current_child_pid, SIGKILL);
-    }
+    pid_t pid = getpid();
+    signal(SIGINT, SIG_IGN);
+    logger( GM_LOG_TRACE, "send SIGINT to %d\n", pid);
+    kill(-pid, SIGINT);
+    signal(SIGINT, SIG_DFL);
+    sleep(1);
+    logger( GM_LOG_TRACE, "send SIGKILL to %d\n", pid);
+    kill(-pid, SIGKILL);
 
     _exit(EXIT_SUCCESS);
 }

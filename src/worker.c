@@ -69,6 +69,9 @@ int main (int argc, char **argv) {
             logger( GM_LOG_TRACE, "waitpid() %d\n", status);
         }
 
+        if(current_number_of_jobs < 0) { current_number_of_jobs = 0; }
+        if(current_number_of_jobs > current_number_of_workers) { current_number_of_jobs = current_number_of_workers; }
+
         // keep up minimum population
         for (x = current_number_of_workers; x < gearman_opt_min_worker; x++) {
             make_new_child();
