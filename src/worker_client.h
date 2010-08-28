@@ -10,8 +10,11 @@
 #include <signal.h>
 #include <libgearman/gearman.h>
 
-#define GM_JOB_START      0
-#define GM_JOB_END        1
+#define GM_JOB_START            0
+#define GM_JOB_END              1
+
+#define GM_WORKER_MULTI         0
+#define GM_WORKER_STANDALONE    1
 
 typedef enum {
     GM_WORKER_OPTIONS_NONE=   0,
@@ -39,7 +42,7 @@ typedef struct gm_job_struct {
     struct timeval finish_time;
 } gm_job_t;
 
-void *client_worker();
+void *client_worker(int worker_mode);
 void *worker_loop();
 void *get_job( gearman_job_st *, void *, size_t *, gearman_return_t * );
 int create_gearman_worker( gearman_worker_st *);

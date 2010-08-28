@@ -115,6 +115,8 @@ void *get_results( gearman_job_st *job, void *context, size_t *result_size, gear
     chk_result->start_time.tv_usec  = 0;
     chk_result->finish_time.tv_sec  = 0;
     chk_result->finish_time.tv_usec = 0;
+    chk_result->scheduled_check     = TRUE;
+    chk_result->reschedule_check    = TRUE;
 
     char *ptr;
     while ( (ptr = strsep(&result, "\n" )) != NULL ) {
@@ -178,8 +180,6 @@ void *get_results( gearman_job_st *job, void *context, size_t *result_size, gear
     } else {
         chk_result->object_check_type    = HOST_CHECK;
         chk_result->check_type           = HOST_CHECK_ACTIVE;
-        chk_result->scheduled_check      = TRUE;
-        chk_result->reschedule_check     = TRUE;
     }
 
     // this check is not a freshnes check

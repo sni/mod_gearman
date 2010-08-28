@@ -33,6 +33,11 @@ int main (int argc, char **argv) {
     parse_arguments(argv);
     logger( GM_LOG_DEBUG, "main process started\n");
 
+    if(gearman_opt_max_worker == 1) {
+        worker_client(GM_WORKER_STANDALONE);
+        exit( EXIT_SUCCESS );
+    }
+
     // Establish the signal handler
     struct sigaction usr_action1;
     sigset_t block_mask;
@@ -53,7 +58,6 @@ int main (int argc, char **argv) {
     for(x=0; x < gearman_opt_min_worker; x++) {
         make_new_child();
     }
-
     time_t last_check = time(NULL);
 
     // And maintain the population
@@ -79,7 +83,7 @@ int main (int argc, char **argv) {
 
         // check if we need to increase out pool
         time_t now = time(NULL);
-        if((int)now > (int)last_check + 5) {
+        if((int)now > (int)last_check + 1) {
             int target_number_of_workers = adjust_number_of_worker(gearman_opt_min_worker, gearman_opt_max_worker, current_number_of_workers, current_number_of_jobs);
             for (x = current_number_of_workers; x < target_number_of_workers; x++) {
                 // top up the worker pool
@@ -115,7 +119,7 @@ int make_new_child() {
         signal(SIGUSR2, SIG_IGN);
 
         // do the real work
-        worker_client();
+        worker_client(GM_WORKER_MULTI);
 
         logger( GM_LOG_DEBUG, "worker fin: %d\n", getpid() );
         exit(EXIT_SUCCESS);
@@ -141,7 +145,7 @@ void parse_arguments(char **argv) {
 
     while(argv[x] != NULL) {
         char *ptr;
-        char * args = strdup( argv[x] );
+        char * args   = strdup( argv[x] );
         while ( (ptr = strsep( &args, " " )) != NULL ) {
             char *key   = str_token( &ptr, '=' );
             char *value = str_token( &ptr, 0 );
@@ -215,26 +219,26 @@ void parse_arguments(char **argv) {
                 }
             }
 
-        else if ( !strcmp( key, "servicegroups" ) || !strcmp( key, "--servicegroups" ) ) {
-            char *groupname;
-            while ( (groupname = strsep( &value, "," )) != NULL ) {
-                if ( strcmp( groupname, "" ) ) {
-                    gearman_servicegroups_list[srvgrp_ptr] = groupname;
-                    srvgrp_ptr++;
-                    logger( GM_LOG_DEBUG, "added seperate worker for servicegroup: %s\n", groupname );
+            else if ( !strcmp( key, "servicegroups" ) || !strcmp( key, "--servicegroups" ) ) {
+                char *groupname;
+                while ( (groupname = strsep( &value, "," )) != NULL ) {
+                    if ( strcmp( groupname, "" ) ) {
+                        gearman_servicegroups_list[srvgrp_ptr] = groupname;
+                        srvgrp_ptr++;
+                        logger( GM_LOG_DEBUG, "added seperate worker for servicegroup: %s\n", groupname );
+                    }
                 }
             }
-        }
-        else if ( !strcmp( key, "hostgroups" ) || !strcmp( key, "--hostgroups" ) ) {
-            char *groupname;
-            while ( (groupname = strsep( &value, "," )) != NULL ) {
-                if ( strcmp( groupname, "" ) ) {
-                    gearman_hostgroups_list[hostgrp_ptr] = groupname;
-                    hostgrp_ptr++;
-                    logger( GM_LOG_DEBUG, "added seperate worker for hostgroup: %s\n", groupname );
+            else if ( !strcmp( key, "hostgroups" ) || !strcmp( key, "--hostgroups" ) ) {
+                char *groupname;
+                while ( (groupname = strsep( &value, "," )) != NULL ) {
+                    if ( strcmp( groupname, "" ) ) {
+                        gearman_hostgroups_list[hostgrp_ptr] = groupname;
+                        hostgrp_ptr++;
+                        logger( GM_LOG_DEBUG, "added seperate worker for hostgroup: %s\n", groupname );
+                    }
                 }
             }
-        }
 
             else  {
                 logger( GM_LOG_ERROR, "unknown option: %s\n", key );
@@ -261,6 +265,9 @@ void parse_arguments(char **argv) {
         logger( GM_LOG_ERROR, "starting client without queues is useless\n" );
         exit(EXIT_FAILURE);
     }
+
+    if(gearman_opt_min_worker > gearman_opt_max_worker)
+        gearman_opt_min_worker = gearman_opt_max_worker;
 
 }
 
@@ -308,19 +315,18 @@ void decrease_jobs(int sig) {
 
 /* set new number of workers */
 int adjust_number_of_worker(int min, int max, int cur_workers, int cur_jobs) {
-    logger( GM_LOG_DEBUG, "adjust_number_of_worker(min %d, max %d, worker %d, jobs %d)\n", min, max, cur_workers, cur_jobs);
+    int perc_running = (int)cur_jobs*100/cur_workers;
+    logger( GM_LOG_TRACE, "adjust_number_of_worker(min %d, max %d, worker %d, jobs %d) = %d% running\n", min, max, cur_workers, cur_jobs, perc_running);
     int target = min;
 
     // > 90% workers running
-    int perc_running = (int)cur_jobs*100/cur_workers;
-    logger( GM_LOG_DEBUG, "percentage running: %d%%\n", perc_running);
     if(cur_jobs > 0 && perc_running > 90) {
         // increase target number by 10% or minmimum 5
         int increase = (int) cur_workers / 10;
         if(increase < 5) {
             increase = 5;
         }
-        logger( GM_LOG_DEBUG, "starting %d new worker\n", increase);
+        logger( GM_LOG_TRACE, "starting %d new worker\n", increase);
         target = cur_workers + increase;
     }
 

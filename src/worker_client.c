@@ -24,10 +24,14 @@ int number_jobs_done = 0;
 gm_job_t * current_job;
 pid_t current_child_pid;
 
+int worker_run_mode;
+
 /* callback for task completed */
-void *worker_client( ) {
+void *worker_client(int worker_mode) {
 
     logger( GM_LOG_TRACE, "worker client started\n" );
+
+    worker_run_mode = worker_mode;
 
     // create gearman worker
     if(create_gearman_worker(&worker) != GM_OK) {
@@ -53,6 +57,10 @@ void *worker_loop() {
 
     while ( 1 ) {
         gearman_return_t ret;
+
+        // wait three minutes for a job, otherwise exit
+        alarm(180);
+
         ret = gearman_worker_work( &worker );
         if ( ret != GEARMAN_SUCCESS ) {
             logger( GM_LOG_ERROR, "worker error: %s\n", gearman_worker_error( &worker ) );
@@ -297,10 +305,10 @@ void *do_exec_job( gm_job_t *job ) {
 
 /* execute this command with given timeout */
 void *execute_safe_command(char**output, int *return_code, char *command_line, int timeout ) {
+    logger( GM_LOG_TRACE, "execute_safe_command()\n" );
 
     // initialize return variables
-    if( *output != NULL )
-        *output=NULL;
+    *output        = "\x0";
     *return_code   = 0;
 
     int pdes[2];
@@ -333,7 +341,6 @@ void *execute_safe_command(char**output, int *return_code, char *command_line, i
         alarm(timeout);
 
         // run the plugin check command
-        logger( GM_LOG_TRACE, "running cmd: %s\n", command_line);
         FILE *fp = NULL;
         fp = popen(command_line, "r");
         if( fp == NULL ) {
@@ -353,7 +360,6 @@ void *execute_safe_command(char**output, int *return_code, char *command_line, i
         int pclose_result;
         pclose_result = pclose(fp);
         int return_code = real_exit_code(pclose_result);
-        logger( GM_LOG_DEBUG, "child exit code: %d\n", return_code);
         exit(return_code);
     }
 
@@ -365,13 +371,15 @@ void *execute_safe_command(char**output, int *return_code, char *command_line, i
 
         int status;
         waitpid(current_child_pid, &status, 0);
+        status = real_exit_code(status);
         logger( GM_LOG_DEBUG, "finished check from pid: %d with status: %d\n", current_child_pid, status);
 
         // read output of child
         char client_msg[GM_BUFFERSIZE];
         read(pdes[0], client_msg, sizeof(client_msg));
+        logger( GM_LOG_DEBUG, "output: %s\n", client_msg);
         *output        = client_msg;
-        *return_code   = real_exit_code(status);
+        *return_code   = status;
         close(pdes[0]);
     }
     alarm(0);
@@ -577,7 +585,14 @@ void alarm_sighandler() {
 
 /* tell parent our state */
 void send_state_to_parent(int status) {
-    logger( GM_LOG_TRACE, "send_state_to_parent(%d)\n", status );
+    int ppid = getppid();
+    logger( GM_LOG_TRACE, "send_state_to_parent(%d) -> %d\n", status, ppid );
+
+    if(worker_run_mode == GM_WORKER_STANDALONE)
+        return;
+
+    if(ppid == 1)
+        return;
 
     if(status == GM_JOB_START) {
         number_jobs_done++;
