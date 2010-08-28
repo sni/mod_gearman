@@ -218,11 +218,11 @@ void *do_exec_job( gm_job_t *job ) {
     if(job->start_time.tv_sec == 0) {
         job->start_time = start_time;
     }
-    time_t real_start = time(&job->start_time.tv_sec);
+    time_t real_start = (time_t) job->start_time.tv_sec;
     logger( GM_LOG_TRACE, "real start_time: %i.%i\n", job->start_time.tv_sec, job->start_time.tv_usec);
     logger( GM_LOG_TRACE, "real start_time: %s\n", asctime(localtime(&real_start)));
 
-    time_t start = time(&start_time.tv_sec);
+    time_t start = (time_t) start_time.tv_sec;
     logger( GM_LOG_TRACE, "job start_time: %i.%i\n", start_time.tv_sec, start_time.tv_usec);
     logger( GM_LOG_TRACE, "job start_time: %s\n", asctime(localtime(&start)));
 
@@ -235,7 +235,7 @@ void *do_exec_job( gm_job_t *job ) {
     latency = start1_f - start2_f;
     logger( GM_LOG_TRACE, "latency: %0.4f\n", latency);
     job->latency = latency;
-    if(job->latency < 0) { job->latency = 0; }
+
     // job is too old
     if((int)job->latency > gearman_opt_max_age) {
         current_job->return_code   = 3;
