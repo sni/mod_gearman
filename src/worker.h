@@ -15,11 +15,11 @@
 #include <common.h>
 #include <libgearman/gearman.h>
 
-#define GM_DEFAULT_MIN_WORKER           3
-#define GM_DEFAULT_MAX_WORKER          50
-#define GM_DEFAULT_JOB_MAX_AGE        120
+#define GM_DEFAULT_MIN_WORKER           5      // minumum number of worker
+#define GM_DEFAULT_MAX_WORKER         100      // maximum number of concurrent worker
+#define GM_DEFAULT_JOB_MAX_AGE        600      // discard jobs older than that
 #define GM_DEFAULT_TIMEOUT             60
-#define GM_MAX_JOBS_PER_CLIENT         20
+#define GM_MAX_JOBS_PER_CLIENT        100
 
 
 int gearman_opt_debug_level;

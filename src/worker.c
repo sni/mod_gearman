@@ -58,13 +58,12 @@ int main (int argc, char **argv) {
     for(x=0; x < gearman_opt_min_worker; x++) {
         make_new_child();
     }
-    time_t last_check = time(NULL);
 
-    // And maintain the population
+    // maintain the population
     while (1) {
         // check number of workers every 30 seconds
         // sleep gets cancelt anyway when receiving signals
-        sleep(1);
+        sleep(30);
 
         // collect finished workers
         int status;
@@ -81,15 +80,10 @@ int main (int argc, char **argv) {
             make_new_child();
         }
 
-        // check if we need to increase out pool
-        time_t now = time(NULL);
-        if((int)now > (int)last_check + 1) {
-            int target_number_of_workers = adjust_number_of_worker(gearman_opt_min_worker, gearman_opt_max_worker, current_number_of_workers, current_number_of_jobs);
-            for (x = current_number_of_workers; x < target_number_of_workers; x++) {
-                // top up the worker pool
-                make_new_child();
-            }
-            last_check = time(NULL);
+        int target_number_of_workers = adjust_number_of_worker(gearman_opt_min_worker, gearman_opt_max_worker, current_number_of_workers, current_number_of_jobs);
+        for (x = current_number_of_workers; x < target_number_of_workers; x++) {
+            // top up the worker pool
+            make_new_child();
         }
     }
 
@@ -318,6 +312,9 @@ int adjust_number_of_worker(int min, int max, int cur_workers, int cur_jobs) {
     int perc_running = (int)cur_jobs*100/cur_workers;
     logger( GM_LOG_TRACE, "adjust_number_of_worker(min %d, max %d, worker %d, jobs %d) = %d% running\n", min, max, cur_workers, cur_jobs, perc_running);
     int target = min;
+
+    if(cur_workers == max)
+        return max;
 
     // > 90% workers running
     if(cur_jobs > 0 && perc_running > 90) {

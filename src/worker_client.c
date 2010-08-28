@@ -82,14 +82,11 @@ void *get_job( gearman_job_st *job, void *context, size_t *result_size, gearman_
 
     logger( GM_LOG_TRACE, "get_job()\n" );
 
-    /* Establish the signal handler. */
+    // ignore sigterms while running job
     sigset_t block_mask;
     sigset_t old_mask;
     sigaddset(&block_mask, SIGTERM);
     sigprocmask(SIG_BLOCK, &block_mask, &old_mask);
-
-    // start listening to SIGTERMs
-    signal(SIGTERM, SIG_IGN);
 
     gm_worker_options_t options= *( ( gm_worker_options_t * )context );
 
@@ -151,6 +148,8 @@ void *get_job( gearman_job_st *job, void *context, size_t *result_size, gearman_
     exec_job->timeout             = gearman_opt_timeout;
     exec_job->start_time.tv_sec   = 0L;
     exec_job->start_time.tv_usec  = 0L;
+    exec_job->output = malloc( sizeof *exec_job->output );
+    exec_job->output              = "\x0";
 
     char *ptr;
     while ( (ptr = strsep(&result, "\n" )) != NULL ) {
