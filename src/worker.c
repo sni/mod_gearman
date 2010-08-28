@@ -316,7 +316,7 @@ int adjust_number_of_worker(int min, int max, int cur_workers, int cur_jobs) {
 
     // > 90% workers running
     int perc_running = (int)cur_jobs*100/cur_workers;
-    logger( GM_LOG_INFO, "percentage running: %d%%\n", perc_running);
+    logger( GM_LOG_TRACE, "percentage running: %d%%\n", perc_running);
     if(cur_jobs > 0 && perc_running > 90) {
         // increase target number by 10% or minmimum 5
         int increase = (int) cur_workers / 10;

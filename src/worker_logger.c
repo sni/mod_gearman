@@ -17,15 +17,26 @@ void logger( int lvl, const char *text, ... ) {
         return;
     }
 
-    char buffer[8192];
+    char buffer[GM_BUFFERSIZE];
     time_t t = time(NULL);
-    strftime(buffer, sizeof(buffer), "[%Y-%m-%d %H:%M:%S] ", localtime(&t) );
 
-    if ( lvl == GM_LOG_ERROR ) {
-        strftime(buffer, sizeof(buffer), "[%Y-%m-%d %H:%M:%S] ERROR: ", localtime(&t) );
-    } else {
-        strftime(buffer, sizeof(buffer), "[%Y-%m-%d %H:%M:%S] ", localtime(&t) );
-    }
+    char * level;
+    if ( lvl == GM_LOG_ERROR )
+        level = "ERROR";
+    else if ( lvl == GM_LOG_INFO )
+        level = "INFO ";
+    else if ( lvl == GM_LOG_DEBUG )
+        level = "DEBUG";
+    else if ( lvl == GM_LOG_TRACE )
+        level = "TRACE";
+    else
+        level = "UNKNO";
+
+    strftime(buffer, sizeof(buffer), "[%Y-%m-%d %H:%M:%S]", localtime(&t) );
+
+    char buffer2[GM_BUFFERSIZE];
+    snprintf(buffer2, sizeof(buffer2), "[%i][%s] ", getpid(), level );
+    strncat(buffer, buffer2, (sizeof(buffer)-1));
 
     va_list ap;
     va_start( ap, text );

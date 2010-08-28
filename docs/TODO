@@ -18,3 +18,6 @@ Worker
  - kill all childs when worker exits
  - add config file support
  - check reschedule/schedule for services
+ - SIGTERM on client should finish after current job
+ - SIGINT on worker_client should sent result back
+ - autoclean idle worker after some time

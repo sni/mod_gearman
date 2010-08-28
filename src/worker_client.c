@@ -466,7 +466,7 @@ int create_gearman_worker( gearman_worker_st *worker ) {
 
     x = 0;
     while ( gearman_hostgroups_list[x] != NULL ) {
-        char buffer[8192];
+        char buffer[GM_BUFFERSIZE];
         snprintf( buffer, (sizeof(buffer)-1), "hostgroup_%s", gearman_hostgroups_list[x] );
         ret = gearman_worker_add_function( worker, buffer, 0, get_job, &options );
         x++;
@@ -474,7 +474,7 @@ int create_gearman_worker( gearman_worker_st *worker ) {
 
     x = 0;
     while ( gearman_servicegroups_list[x] != NULL ) {
-        char buffer[8192];
+        char buffer[GM_BUFFERSIZE];
         snprintf( buffer, (sizeof(buffer)-1), "servicegroup_%s", gearman_servicegroups_list[x] );
         ret = gearman_worker_add_function( worker, buffer, 0, get_job, &options );
         x++;
@@ -552,11 +552,11 @@ void alarm_sighandler() {
     setpgid(0,0);
     //signal(SIGINT, SIG_IGN);
     //signal(SIGTERM, SIG_IGN);
-    kill((pid_t)0, SIGTERM);
-    logger( GM_LOG_TRACE, "send SIGTERM\n");
-    sleep(1);
     kill((pid_t)0, SIGINT);
     logger( GM_LOG_TRACE, "send SIGINT\n");
+    sleep(1);
+    kill((pid_t)0, SIGKILL);
+    logger( GM_LOG_TRACE, "send SIGKILL\n");
 
     //signal(SIGINT, SIG_DFL);
     //signal(SIGTERM, SIG_DFL);
