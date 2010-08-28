@@ -131,13 +131,13 @@ sub print_queue {
     my($data) = @_;;
     return unless defined $data;
     return unless @{$data} > 0;
-    my $table = Text::TabularDisplay->new(qw/Name Worker Avail Queue Running/);
+    my $table = Text::TabularDisplay->new('Queue Name', 'Worker Available', 'Jobs Waiting', 'Jobs Running');
     for my $row (@{$data}) {
 
         # shall we skip empty queues?
         next if defined $opt_quiet and ($row->{'queue'} == 0 and $row->{'running'} == 0);
 
-        my $result = [$row->{'name'}, $row->{'running'}, $row->{'free'}, $row->{'queue'}-$row->{'busy'}, $row->{'busy'}];
+        my $result = [$row->{'name'}, $row->{'running'}, $row->{'queue'}-$row->{'busy'}, $row->{'busy'}];
         $table->add(@{$result});
     }
     print $table->render;

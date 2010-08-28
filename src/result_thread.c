@@ -255,6 +255,8 @@ static int create_gearman_worker( gearman_worker_st *worker ) {
     logger( GM_LOG_DEBUG, "started result_worker thread for queue: %s\n", gearman_opt_result_queue );
 
     ret = gearman_worker_add_function( worker, gearman_opt_result_queue, 0, get_results, &options );
+    // add it once again, sometime the first one cannot register
+    ret = gearman_worker_add_function( worker, gearman_opt_result_queue, 0, get_results, &options );
     if ( ret != GEARMAN_SUCCESS ) {
         logger( GM_LOG_ERROR, "worker error: %s\n", gearman_worker_error( worker ) );
         return GM_ERROR;
