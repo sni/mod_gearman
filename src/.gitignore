@@ -1,0 +1,13 @@
+*.o
+mod_gearman.so
+.deps
+stamp-h1
+Makefile
+Makefile.in
+aclocal.m4
+autom4te.cache
+config.*
+configure
+depcomp
+install-sh
+missing
