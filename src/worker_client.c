@@ -1,4 +1,4 @@
-/*****************************************************************************
+/******************************************************************************
  *
  * mod_gearman - distribute checks with gearman
  *
@@ -8,6 +8,7 @@
 
 
 /* include header */
+#include "common.h"
 #include "worker.h"
 #include "worker_client.h"
 #include "utils.h"
@@ -24,8 +25,8 @@ int number_jobs_done = 0;
 gm_job_t * current_job;
 pid_t current_child_pid;
 gm_job_t * exec_job;
-char exec_output[GM_BUFFERSIZE];
 
+int sleep_time_after_error = 1;
 int worker_run_mode;
 
 void * dummy() {};
@@ -37,7 +38,7 @@ void *worker_client(int worker_mode) {
     logger( GM_LOG_TRACE, "worker client started\n" );
 
     worker_run_mode = worker_mode;
-    exec_job = ( gm_job_t * )malloc( sizeof *exec_job );
+    exec_job    = ( gm_job_t * )malloc( sizeof *exec_job );
 
     // create gearman worker
     if(create_gearman_worker(&worker) != GM_OK) {
@@ -72,9 +73,16 @@ void *worker_loop() {
             logger( GM_LOG_ERROR, "worker error: %s\n", gearman_worker_error( &worker ) );
             gearman_job_free_all( &worker );
             gearman_worker_free( &worker );
-            create_gearman_worker( &worker );
-
             gearman_client_free( &client );
+
+            // sleep on error to avoid cpu intensive infinite loops
+            sleep(sleep_time_after_error);
+            sleep_time_after_error += 3;
+            if(sleep_time_after_error > 60)
+                sleep_time_after_error = 60;
+
+            // create new connections
+            create_gearman_worker( &worker );
             create_gearman_client( &client );
         }
     }
@@ -87,6 +95,12 @@ void *worker_loop() {
 void *get_job( gearman_job_st *job, void *context, size_t *result_size, gearman_return_t *ret_ptr ) {
 
     logger( GM_LOG_TRACE, "get_job()\n" );
+
+    // reset timeout for now, will be set befor execution again
+    alarm(0);
+
+    // reset sleep time
+    sleep_time_after_error = 1;
 
     // ignore sigterms while running job
     sigset_t block_mask;
@@ -137,16 +151,19 @@ void *get_job( gearman_job_st *job, void *context, size_t *result_size, gearman_
     exec_job->host_name           = NULL;
     exec_job->service_description = NULL;
     exec_job->result_queue        = NULL;
-    exec_job->exited_ok           = 1;
-    exec_job->scheduled_check     = 1;
-    exec_job->reschedule_check    = 1;
-    exec_job->return_code         = 0;
+    exec_job->command_line        = NULL;
+    exec_job->output[0]           = 0;
+    exec_job->exited_ok           = TRUE;
+    exec_job->scheduled_check     = TRUE;
+    exec_job->reschedule_check    = TRUE;
+    exec_job->return_code         = STATE_OK;
     exec_job->latency             = 0.0;
     exec_job->timeout             = gearman_opt_timeout;
     exec_job->start_time.tv_sec   = 0L;
     exec_job->start_time.tv_usec  = 0L;
 
     char *ptr;
+    char command[GM_BUFFERSIZE];
     while ( (ptr = strsep(&result, "\n" )) != NULL ) {
         char *key   = str_token( &ptr, '=' );
         char *value = str_token( &ptr, 0 );
@@ -185,7 +202,8 @@ void *get_job( gearman_job_st *job, void *context, size_t *result_size, gearman_
         } else if ( !strcmp( key, "timeout" ) ) {
             exec_job->timeout = atoi(value);
         } else if ( !strcmp( key, "command_line" ) ) {
-            exec_job->command_line = value;
+            snprintf(command, sizeof(command), "%s 2>&1", value);
+            exec_job->command_line = command;
         }
     }
 
@@ -259,9 +277,8 @@ void *do_exec_job( ) {
         exec_job->finish_time = end_time;
 
         if ( !strcmp( exec_job->type, "service" ) || !strcmp( exec_job->type, "host" ) ) {
-            exec_output[0]='\x0';
-            snprintf( exec_output, sizeof( exec_output )-1, "(Could Not Start Check In Time)");
-            exec_output[sizeof( exec_output )-1]='\x0';
+            strncpy( exec_job->output, "(Could Not Start Check In Time)", sizeof(exec_job->output));
+            exec_job->output[sizeof( exec_job->output )-1]='\x0';
             send_result_back();
         }
 
@@ -271,6 +288,7 @@ void *do_exec_job( ) {
     exec_job->early_timeout = 0;
 
     // run the command
+    logger( GM_LOG_TRACE, "command: %s\n", exec_job->command_line);
     execute_safe_command();
 
     // record check result info
@@ -285,12 +303,11 @@ void *do_exec_job( ) {
     if(exec_job->timeout < ((int)end_time.tv_sec - (int)start_time.tv_sec)) {
         exec_job->return_code   = 2;
         exec_job->early_timeout = 1;
-        exec_output[0]='\x0';
         if ( !strcmp( exec_job->type, "service" ) )
-            snprintf( exec_output,sizeof( exec_output )-1, "(Service Check Timed Out)");
+            strncpy( exec_job->output, "(Service Check Timed Out)", sizeof( exec_job->output ));
         if ( !strcmp( exec_job->type, "host" ) )
-            snprintf( exec_output,sizeof( exec_output )-1, "(Host Check Timed Out)");
-        exec_output[sizeof( exec_output )-1]='\x0';
+            strncpy( exec_job->output, "(Host Check Timed Out)", sizeof( exec_job->output ));
+        exec_job->output[sizeof( exec_job->output )-1]='\x0';
     }
 
     if ( !strcmp( exec_job->type, "service" ) || !strcmp( exec_job->type, "host" ) ) {
@@ -313,9 +330,8 @@ void *execute_safe_command() {
 
     //fork error
     if( current_child_pid == -1 ) {
-        exec_output[0]='\x0';
-        snprintf( exec_output,sizeof( exec_output )-1, "(Error On Fork)");
-        exec_output[sizeof( exec_output )-1]='\x0';
+        strncpy( exec_job->output, "(Error On Fork)", sizeof( exec_job->output ));
+        exec_job->output[sizeof( exec_job->output )-1]='\x0';
         exec_job->return_code = 3;
         return;
     }
@@ -355,6 +371,13 @@ void *execute_safe_command() {
         // close the process
         int pclose_result;
         pclose_result = pclose(fp);
+
+        if(pclose_result == -1) {
+            char error[GM_BUFFERSIZE];
+            snprintf(error, sizeof(error), "error: %i - %s", strerror(errno));
+            write(pdes[1], error, strlen(error)+1);
+        }
+
         int return_code = real_exit_code(pclose_result);
         exit(return_code);
     }
@@ -371,12 +394,19 @@ void *execute_safe_command() {
         logger( GM_LOG_DEBUG, "finished check from pid: %d with status: %d\n", current_child_pid, status);
 
         // read output of child
-        char client_msg[GM_BUFFERSIZE];
+        char client_msg[GM_BUFFERSIZE] = "";
+        strcpy(client_msg,"");
         read(pdes[0], client_msg, sizeof(client_msg));
         logger( GM_LOG_DEBUG, "output: %s\n", client_msg);
-        exec_output[0]='\x0';
-        snprintf( exec_output,sizeof( exec_output )-1, client_msg);
-        exec_output[sizeof( exec_output )-1]='\x0';
+        strncpy( exec_job->output, client_msg, sizeof( exec_job->output ));
+        exec_job->output[sizeof( exec_job->output )-1]='\x0';
+
+        // file not found errors?
+        if(status == 127) {
+            status = STATE_CRITICAL;
+            strncat( exec_job->output, "check was running on node ", sizeof( exec_job->output ));
+            strncat( exec_job->output, hostname, sizeof( exec_job->output ));
+        }
         exec_job->return_code = status;
         close(pdes[0]);
     }
@@ -394,7 +424,7 @@ void *send_result_back() {
     if(exec_job->result_queue == NULL) {
         return;
     }
-    if(exec_output == NULL) {
+    if(exec_job->output == NULL) {
         return;
     }
 
@@ -420,7 +450,7 @@ void *send_result_back() {
         strncat(temp_buffer1, temp_buffer2, (sizeof(temp_buffer1)-1));
     }
 
-    if(exec_output != NULL) {
+    if(exec_job->output != NULL) {
         temp_buffer2[0]='\x0';
         strncat(temp_buffer2, "output=", (sizeof(temp_buffer2)-1));
         if(gearman_opt_debug_result) {
@@ -428,7 +458,7 @@ void *send_result_back() {
             strncat(temp_buffer2, hostname, (sizeof(temp_buffer2)-1));
             strncat(temp_buffer2, ") - ", (sizeof(temp_buffer2)-1));
         }
-        strncat(temp_buffer2, exec_output, (sizeof(temp_buffer2)-1));
+        strncat(temp_buffer2, exec_job->output, (sizeof(temp_buffer2)-1));
         strncat(temp_buffer2, "\n", (sizeof(temp_buffer2)-1));
 
         strncat(temp_buffer1, temp_buffer2, (sizeof(temp_buffer1)-1));

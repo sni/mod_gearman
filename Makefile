@@ -13,7 +13,8 @@ MAKE    = make
 all: mod_gearman
 
 mod_gearman:
-	cd src && aclocal && autoheader && automake -a && autoconf && ./configure && make
+	cd src && aclocal && autoheader && automake -a && autoconf
+	cd src && ./configure
 
 all:
 	@for i in $(SUBDIRS); do \

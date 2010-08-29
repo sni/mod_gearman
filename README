@@ -7,7 +7,7 @@ There is a NEB module which resides in the nagios core and adds
 Servicechecks, Hostchecks and Eventhandler to a gearman
 (http://gearman.org) queue. There can be multiple equal gearman
 servers.
-The other part is one or more worker clients, which do the work. They
+The other part is one or more worker clients for the work. They
 can be bound to host and servicegroups.
 
 

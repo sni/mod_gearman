@@ -1,4 +1,4 @@
-/*****************************************************************************
+/******************************************************************************
  *
  * mod_gearman.c - distribute checks with gearman
  *
@@ -15,8 +15,8 @@
 #include <common.h>
 #include <libgearman/gearman.h>
 
-#define GM_DEFAULT_MIN_WORKER           5      // minumum number of worker
-#define GM_DEFAULT_MAX_WORKER         100      // maximum number of concurrent worker
+#define GM_DEFAULT_MIN_WORKER           1      // minumum number of worker
+#define GM_DEFAULT_MAX_WORKER         200      // maximum number of concurrent worker
 #define GM_DEFAULT_JOB_MAX_AGE        600      // discard jobs older than that
 #define GM_DEFAULT_TIMEOUT             60
 #define GM_MAX_JOBS_PER_CLIENT        100

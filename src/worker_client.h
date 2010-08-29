@@ -1,4 +1,4 @@
-/*****************************************************************************
+/******************************************************************************
  *
  * mod_gearman.c - distribute checks with gearman
  *
@@ -8,6 +8,7 @@
 
 #include <sys/time.h>
 #include <signal.h>
+#include <errno.h>
 #include <libgearman/gearman.h>
 
 #define GM_JOB_START            0
@@ -24,11 +25,12 @@ typedef enum {
 } gm_worker_options_t;
 
 typedef struct gm_job_struct {
-    char *         host_name;
-    char *         service_description;
-    char *         command_line;
-    char *         type;
-    char *         result_queue;
+    char         * host_name;
+    char         * service_description;
+    char         * command_line;
+    char         * type;
+    char         * result_queue;
+    char           output[GM_BUFFERSIZE];
     int            return_code;
     int            early_timeout;
     int            check_options;

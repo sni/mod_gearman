@@ -1,4 +1,4 @@
-/*****************************************************************************
+/******************************************************************************
  *
  * mod_gearman - distribute checks with gearman
  *
@@ -50,6 +50,8 @@ void *result_worker( void * data ) {
             logger( GM_LOG_ERROR, "worker error: %s\n", gearman_worker_error( &worker ) );
             gearman_job_free_all( &worker );
             gearman_worker_free( &worker );
+
+            sleep(1);
             create_gearman_worker( &worker );
         }
     }
