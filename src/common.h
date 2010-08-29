@@ -24,3 +24,20 @@
 #define GM_LOG_DEBUG                    1
 #define GM_LOG_TRACE                    2
 #define GM_LOG_STDOUT                   3
+
+
+#ifndef TRUE
+#define TRUE                            1
+#elif (TRUE!=1)
+#define TRUE                            1
+#endif
+#ifndef FALSE
+#define FALSE                           0
+#elif (FALSE!=0)
+#define FALSE                           0
+#endif
+
+#define STATE_OK                        0
+#define STATE_WARNING                   1
+#define STATE_CRITICAL                  2
+#define STATE_UNKNOWN                   3
