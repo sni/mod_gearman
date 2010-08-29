@@ -360,13 +360,13 @@ void *execute_safe_command() {
         }
 
         // get all lines of plugin output - escape newlines
-        char output_buffer[GM_BUFFERSIZE] = "";
-        strcpy(output_buffer,"");
-        char *temp_buffer;
-        while(fgets(output_buffer,sizeof(output_buffer)-1,fp)){
-            temp_buffer = escape_newlines(output_buffer);
-            write(pdes[1], temp_buffer, strlen(temp_buffer)+1);
+        char buffer[GM_BUFFERSIZE] = "";
+        strcpy(buffer,"");
+        char temp_buffer[GM_BUFFERSIZE];
+        while(fgets(buffer,sizeof(buffer)-1,fp)){
+            strncat(temp_buffer, escape_newlines(buffer), sizeof( temp_buffer ));
         }
+        write(pdes[1], temp_buffer, strlen(temp_buffer)+1);
 
         // close the process
         int pclose_result;
@@ -393,12 +393,10 @@ void *execute_safe_command() {
         status = real_exit_code(status);
         logger( GM_LOG_DEBUG, "finished check from pid: %d with status: %d\n", current_child_pid, status);
 
-        // read output of child
-        char client_msg[GM_BUFFERSIZE] = "";
-        strcpy(client_msg,"");
-        read(pdes[0], client_msg, sizeof(client_msg));
-        logger( GM_LOG_DEBUG, "output: %s\n", client_msg);
-        strncpy( exec_job->output, client_msg, sizeof( exec_job->output ));
+        // get all lines of plugin output
+        strcpy(exec_job->output,"");
+        read(pdes[0], exec_job->output, sizeof(exec_job->output)-1);
+        logger( GM_LOG_DEBUG, "output: %s\n", exec_job->output);
         exec_job->output[sizeof( exec_job->output )-1]='\x0';
 
         // file not found errors?
