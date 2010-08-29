@@ -150,7 +150,7 @@ void *get_job( gearman_job_st *job, void *context, size_t *result_size, gearman_
     exec_job->service_description = NULL;
     exec_job->result_queue        = NULL;
     exec_job->command_line        = NULL;
-    exec_job->output[0]           = 0;
+    exec_job->output              = NULL;
     exec_job->exited_ok           = TRUE;
     exec_job->scheduled_check     = TRUE;
     exec_job->reschedule_check    = TRUE;
@@ -275,8 +275,7 @@ void do_exec_job( ) {
         exec_job->finish_time = end_time;
 
         if ( !strcmp( exec_job->type, "service" ) || !strcmp( exec_job->type, "host" ) ) {
-            strncpy( exec_job->output, "(Could Not Start Check In Time)", sizeof(exec_job->output));
-            exec_job->output[sizeof( exec_job->output )-1]='\x0';
+            exec_job->output = "(Could Not Start Check In Time)";
             send_result_back();
         }
 
@@ -302,10 +301,9 @@ void do_exec_job( ) {
         exec_job->return_code   = 2;
         exec_job->early_timeout = 1;
         if ( !strcmp( exec_job->type, "service" ) )
-            strncpy( exec_job->output, "(Service Check Timed Out)", sizeof( exec_job->output ));
+            exec_job->output = "(Service Check Timed Out)";
         if ( !strcmp( exec_job->type, "host" ) )
-            strncpy( exec_job->output, "(Host Check Timed Out)", sizeof( exec_job->output ));
-        exec_job->output[sizeof( exec_job->output )-1]='\x0';
+            exec_job->output = "(Host Check Timed Out)";
     }
 
     if ( !strcmp( exec_job->type, "service" ) || !strcmp( exec_job->type, "host" ) ) {
@@ -328,8 +326,7 @@ void execute_safe_command() {
 
     //fork error
     if( current_child_pid == -1 ) {
-        strncpy( exec_job->output, "(Error On Fork)", sizeof( exec_job->output ));
-        exec_job->output[sizeof( exec_job->output )-1]='\x0';
+        exec_job->output      = "(Error On Fork)";
         exec_job->return_code = 3;
         return;
     }
@@ -361,6 +358,7 @@ void execute_safe_command() {
         char buffer[GM_BUFFERSIZE] = "";
         strcpy(buffer,"");
         char temp_buffer[GM_BUFFERSIZE];
+        strcpy(temp_buffer,"");
         while(fgets(buffer,sizeof(buffer)-1,fp)){
             strncat(temp_buffer, escape_newlines(buffer), sizeof( temp_buffer ));
         }
@@ -392,10 +390,12 @@ void execute_safe_command() {
         logger( GM_LOG_DEBUG, "finished check from pid: %d with status: %d\n", current_child_pid, status);
 
         // get all lines of plugin output
-        strcpy(exec_job->output,"");
-        read(pdes[0], exec_job->output, sizeof(exec_job->output)-1);
-        logger( GM_LOG_DEBUG, "output: %s\n", exec_job->output);
-        exec_job->output[sizeof( exec_job->output )-1]='\x0';
+        char buffer[GM_BUFFERSIZE];
+        logger( GM_LOG_DEBUG, "output1: %s\n", exec_job->output);
+        read(pdes[0], buffer, sizeof(buffer)-1);
+        logger( GM_LOG_DEBUG, "output2: %s\n", buffer);
+        exec_job->output = buffer;
+        logger( GM_LOG_DEBUG, "output3: %s\n", exec_job->output);
 
         // file not found errors?
         if(status == 127) {
@@ -614,7 +614,7 @@ void alarm_sighandler(int sig) {
 
 /* tell parent our state */
 void send_state_to_parent(int status) {
-    logger( GM_LOG_ERROR, "send_state_to_parent(%d)\n", status );
+    logger( GM_LOG_TRACE, "send_state_to_parent(%d)\n", status );
 
     if(worker_run_mode == GM_WORKER_STANDALONE)
         return;

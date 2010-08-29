@@ -32,7 +32,7 @@ typedef struct gm_job_struct {
     char         * command_line;
     char         * type;
     char         * result_queue;
-    char           output[GM_BUFFERSIZE];
+    char         * output;
     int            return_code;
     int            early_timeout;
     int            check_options;
