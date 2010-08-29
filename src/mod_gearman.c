@@ -431,7 +431,12 @@ static int handle_svc_check( int event_type, void *data ) {
     snprintf( uniq,sizeof( temp_buffer )-1,"%s-%s", svcdata->host_name, svcdata->service_description);
     gearman_task_st *task = NULL;
     gearman_return_t ret;
-    gearman_client_add_task_low_background( &client, task, NULL, target_worker, uniq, ( void * )temp_buffer, ( size_t )strlen( temp_buffer ), &ret );
+    // execute forced checks with high prio as they are propably user requested
+    if(check_result_info.check_options & CHECK_OPTION_FORCE_EXECUTION) {
+        gearman_client_add_task_high_background( &client, task, NULL, target_worker, uniq, ( void * )temp_buffer, ( size_t )strlen( temp_buffer ), &ret );
+    } else {
+        gearman_client_add_task_low_background( &client, task, NULL, target_worker, uniq, ( void * )temp_buffer, ( size_t )strlen( temp_buffer ), &ret );
+    }
     gearman_client_run_tasks( &client );
     if(ret != GEARMAN_SUCCESS || (gearman_client_error(&client) != NULL && strcmp(gearman_client_error(&client), "") != 0)) { // errno is somehow empty, use error instead
         logger( GM_LOG_ERROR, "client error: %s\n", gearman_client_error(&client));

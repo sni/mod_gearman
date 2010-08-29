@@ -88,10 +88,12 @@ int real_exit_code(int code) {
     if( code == -1 ){
         return_code   = 3;
     } else {
-        if( WEXITSTATUS( code )== 0 && WIFSIGNALED( code) )
-            return_code = 128 + WTERMSIG( code );
-        else
-            return_code = WEXITSTATUS( code );
+        if(WIFSIGNALED( code)) {
+            return(128 + WTERMSIG( code ));
+        }
+        if(WIFEXITED(code)) {
+            return(WEXITSTATUS(code));
+        }
     }
     return(return_code);
 }
