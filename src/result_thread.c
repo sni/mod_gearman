@@ -126,6 +126,15 @@ void *get_results( gearman_job_st *job, void *context, size_t *result_size, gear
         if ( key == NULL )
             continue;
 
+        if ( !strcmp( key, "output" ) ) {
+            if ( value == NULL ) {
+                chk_result->output = strdup("(null)");
+            }
+            else {
+                chk_result->output = strdup( value );
+            }
+        }
+
         if ( value == NULL ) {
             break;
         }
@@ -151,8 +160,6 @@ void *get_results( gearman_job_st *job, void *context, size_t *result_size, gear
             chk_result->early_timeout = atoi( value );
         } else if ( !strcmp( key, "return_code" ) ) {
             chk_result->return_code = atoi( value );
-        } else if ( !strcmp( key, "output" ) ) {
-            chk_result->output = strdup( value );
         } else if ( !strcmp( key, "start_time" ) ) {
             int sec   = atoi( str_token( &value, '.' ) );
             int usec  = atoi( str_token( &value, 0 ) );
