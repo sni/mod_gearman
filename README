@@ -25,14 +25,14 @@ The NEB module starts a single thread, which monitors the result queue
 where all results resides.
 
 A simple example queue would look like:
- +---------------+--------+-------+-------+---------+
- | Name          | Worker | Avail | Queue | Running |
- +---------------+--------+-------+-------+---------+
- | check_results | 1      | 1     | 0     | 0       |
- | host          | 3      | 3     | 0     | 0       |
- | service       | 3      | 3     | 0     | 0       |
- | eventhandler  | 3      | 3     | 0     | 0       |
- +---------------+--------+-------+-------+---------+
+ +---------------+------------------+--------------+--------------+
+ | Queue Name    | Worker Available | Jobs Waiting | Jobs Running |
+ +---------------+------------------+--------------+--------------+
+ | check_results | 1                | 0            | 0            |
+ | host          | 50               | 0            | 1            |
+ | service       | 50               | 0            | 13           |
+ | eventhandler  | 50               | 0            | 0            |
+ +---------------+------------------+--------------+--------------+
 
 There is one queue for the results and two for the checks plus the
 eventhandler.
@@ -52,16 +52,16 @@ seperate hostgroup for japan and a seperate servicegroup for
 "jmx4perl".
 
 It would look like this:
- +-----------------------+--------+-------+-------+---------+
- | Name                  | Worker | Avail | Queue | Running |
- +-----------------------+--------+-------+-------+---------+
- | check_results         | 1      | 1     | 0     | 0       |
- | host                  | 3      | 3     | 0     | 0       |
- | service               | 3      | 3     | 0     | 0       |
- | eventhandler          | 3      | 3     | 0     | 0       |
- | servicegroup_jmx4perl | 3      | 3     | 0     | 0       |
- | hostgroup_japan       | 3      | 3     | 0     | 0       |
- +-----------------------+--------+-------+-------+---------+
+ +-----------------------+------------------+--------------+--------------+
+ | Queue Name            | Worker Available | Jobs Waiting | Jobs Running |
+ +-----------------------+------------------+--------------+--------------+
+ | check_results         | 1                | 0            | 0            |
+ | host                  | 50               | 0            | 1            |
+ | service               | 50               | 0            | 13           |
+ | servicegroup_jmx4perl | 3                | 0            | 3            |
+ | hostgroup_japan       | 3                | 1            | 3            |
+ | eventhandler          | 50               | 0            | 0            |
+ +-----------------------+------------------+--------------+--------------+
 
 You still have the generic queues and in addition there are two queues
 for the specific groups.
