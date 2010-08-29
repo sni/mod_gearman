@@ -11,6 +11,8 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <sys/wait.h>
+#include <sys/ipc.h>
+#include <sys/shm.h>
 
 #include <common.h>
 #include <libgearman/gearman.h>
@@ -35,8 +37,8 @@ char *gearman_servicegroups_list[GM_LISTSIZE];
 
 int main (int argc, char **argv);
 void parse_arguments(char **argv);
-int make_new_child();
-void print_usage();
-void increase_jobs(int sig);
-void decrease_jobs(int sig);
+int make_new_child(void);
+void print_usage(void);
 int adjust_number_of_worker(int min, int max, int cur_workers, int cur_jobs);
+void check_signal(int sig);
+void setup_child_communicator(void);

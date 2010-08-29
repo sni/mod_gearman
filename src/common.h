@@ -41,3 +41,7 @@
 #define STATE_WARNING                   1
 #define STATE_CRITICAL                  2
 #define STATE_UNKNOWN                   3
+
+
+#define GM_SHM_SIZE                   300
+#define GM_SHM_KEY                   1234       // TODO: random key, verify if this makes problem with several independant worker on same host

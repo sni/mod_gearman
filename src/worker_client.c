@@ -29,11 +29,9 @@ gm_job_t * exec_job;
 int sleep_time_after_error = 1;
 int worker_run_mode;
 
-void * dummy() {};
-
 
 /* callback for task completed */
-void *worker_client(int worker_mode) {
+void worker_client(int worker_mode) {
 
     logger( GM_LOG_TRACE, "worker client started\n" );
 
@@ -56,11 +54,11 @@ void *worker_client(int worker_mode) {
 
     worker_loop();
 
-    return NULL;
+    return;
 }
 
 /* main loop of jobs */
-void *worker_loop() {
+void worker_loop() {
 
     while ( 1 ) {
         gearman_return_t ret;
@@ -87,7 +85,7 @@ void *worker_loop() {
         }
     }
 
-    return NULL;
+    return;
 }
 
 
@@ -226,7 +224,7 @@ void *get_job( gearman_job_st *job, void *context, size_t *result_size, gearman_
 
 
 /* do some job */
-void *do_exec_job( ) {
+void do_exec_job( ) {
     logger( GM_LOG_TRACE, "do_exec_job()\n" );
 
     struct timeval start_time,end_time;
@@ -319,7 +317,7 @@ void *do_exec_job( ) {
 
 
 /* execute this command with given timeout */
-void *execute_safe_command() {
+void execute_safe_command() {
     logger( GM_LOG_TRACE, "execute_safe_command()\n" );
 
     int pdes[2];
@@ -374,7 +372,7 @@ void *execute_safe_command() {
 
         if(pclose_result == -1) {
             char error[GM_BUFFERSIZE];
-            snprintf(error, sizeof(error), "error: %i - %s", strerror(errno));
+            snprintf(error, sizeof(error), "error: %s", strerror(errno));
             write(pdes[1], error, strlen(error)+1);
         }
 
@@ -416,7 +414,7 @@ void *execute_safe_command() {
 
 
 /* send results back */
-void *send_result_back() {
+void send_result_back() {
     logger( GM_LOG_TRACE, "send_result_back()\n" );
 
     if(exec_job->result_queue == NULL) {
@@ -599,8 +597,8 @@ int create_gearman_client( gearman_client_st *client ) {
 }
 
 /* called when check runs into timeout */
-void alarm_sighandler() {
-    logger( GM_LOG_TRACE, "alarm_sighandler()\n" );
+void alarm_sighandler(int sig) {
+    logger( GM_LOG_TRACE, "alarm_sighandler(%i)\n", sig );
 
     pid_t pid = getpid();
     signal(SIGINT, SIG_IGN);
@@ -616,22 +614,57 @@ void alarm_sighandler() {
 
 /* tell parent our state */
 void send_state_to_parent(int status) {
-    int ppid = getppid();
-    logger( GM_LOG_TRACE, "send_state_to_parent(%d) -> %d\n", status, ppid );
+    logger( GM_LOG_ERROR, "send_state_to_parent(%d)\n", status );
 
     if(worker_run_mode == GM_WORKER_STANDALONE)
         return;
 
-    if(ppid == 1)
-        return;
+    int shmid;
+    int *shm;
 
-    if(status == GM_JOB_START) {
-        number_jobs_done++;
-        kill(getppid(), SIGUSR1);
-    } else {
-        kill(getppid(), SIGUSR2);
-        if(number_jobs_done >= GM_MAX_JOBS_PER_CLIENT) {
-            exit(EXIT_SUCCESS);
-        }
+    // Locate the segment.
+    if ((shmid = shmget(GM_SHM_KEY, GM_SHM_SIZE, 0666)) < 0) {
+        perror("shmget");
+        exit(1);
     }
+
+    // Now we attach the segment to our data space.
+    if ((shm = shmat(shmid, NULL, 0)) == (int *) -1) {
+        perror("shmat");
+        exit(1);
+    }
+
+    // set our counter
+    if(status == GM_JOB_START)
+        shm[0]++;
+    if(status == GM_JOB_END)
+        shm[0]--;
+
+    // detach from shared memory
+    if(shmdt(shm) < 0)
+        perror("shmdt");
+
+    // wake up parent
+    kill(getppid(), SIGUSR1);
+
+    if(number_jobs_done >= GM_MAX_JOBS_PER_CLIENT) {
+        exit(EXIT_SUCCESS);
+    }
+
+    return;
+}
+
+
+void *dummy( gearman_job_st *job, void *context, size_t *result_size, gearman_return_t *ret_ptr ) {
+
+    // avoid "unused parameter" warning
+    job         = job;
+    context     = context;
+    result_size = result_size;
+    ret_ptr     = ret_ptr;
+
+    // give gearman something to free
+    uint8_t *buffer;
+    buffer = malloc( 1 );
+    return buffer;
 }

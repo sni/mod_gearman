@@ -27,8 +27,11 @@ char *gearman_servicegroups_list[GM_LISTSIZE];
 int current_number_of_workers                = 0;
 volatile sig_atomic_t current_number_of_jobs = 0;  // must be signal safe
 
+
 /* work starts here */
 int main (int argc, char **argv) {
+
+    argc = argc; // avoid warning about unused variable
 
     parse_arguments(argv);
     logger( GM_LOG_DEBUG, "main process started\n");
@@ -38,20 +41,7 @@ int main (int argc, char **argv) {
         exit( EXIT_SUCCESS );
     }
 
-    // Establish the signal handler
-    struct sigaction usr_action1;
-    sigset_t block_mask;
-    sigfillset (&block_mask); // block all signals
-    usr_action1.sa_handler = increase_jobs;
-    usr_action1.sa_mask    = block_mask;
-    usr_action1.sa_flags   = 0;
-    sigaction (SIGUSR1, &usr_action1, NULL);
-
-    struct sigaction usr_action2;
-    usr_action2.sa_handler = decrease_jobs;
-    usr_action2.sa_mask    = block_mask;
-    usr_action2.sa_flags   = 0;
-    sigaction (SIGUSR2, &usr_action2, NULL);
+    setup_child_communicator();
 
     // create initial childs
     int x;
@@ -110,7 +100,6 @@ int make_new_child() {
         logger( GM_LOG_DEBUG, "worker started with pid: %d\n", getpid() );
 
         signal(SIGUSR1, SIG_IGN);
-        signal(SIGUSR2, SIG_IGN);
 
         // do the real work
         worker_client(GM_WORKER_MULTI);
@@ -292,18 +281,70 @@ void print_usage() {
     exit( EXIT_SUCCESS );
 }
 
+/* check child signal pipe */
+void check_signal(int sig) {
+    logger( GM_LOG_ERROR, "check_signal(%i)\n", sig);
 
-/* increase the number of jobs */
-void increase_jobs(int sig) {
-    logger( GM_LOG_TRACE, "increase_jobs(%i)\n", sig);
-    current_number_of_jobs++;
+
+    int shmid;
+    int *shm;
+
+    // Locate the segment.
+    if ((shmid = shmget(GM_SHM_KEY, GM_SHM_SIZE, 0666)) < 0) {
+        perror("shmget");
+        exit(1);
+    }
+
+    // Now we attach the segment to our data space.
+    if ((shm = shmat(shmid, NULL, 0)) == (int *) -1) {
+        perror("shmat");
+        exit(1);
+    }
+
+    logger( GM_LOG_TRACE, "check_signal: %i\n", shm[0]);
+    current_number_of_jobs = shm[0];
+
+    // detach from shared memory
+    if(shmdt(shm) < 0)
+        perror("shmdt");
+
+    return;
 }
 
+void setup_child_communicator() {
+    logger( GM_LOG_TRACE, "setup_child_communicator()\n");
 
-/* decrease the number of jobs */
-void decrease_jobs(int sig) {
-    logger( GM_LOG_TRACE, "decrease_jobs(%i)\n", sig);
-    current_number_of_jobs--;
+    // setup signal handler
+    struct sigaction usr1_action;
+    sigset_t block_mask;
+    sigfillset (&block_mask); // block all signals
+    usr1_action.sa_handler = check_signal;
+    usr1_action.sa_mask    = block_mask;
+    usr1_action.sa_flags   = 0;
+    sigaction (SIGUSR1, &usr1_action, NULL);
+
+    int shmid;
+    int * shm;
+
+    // Create the segment.
+    if ((shmid = shmget(GM_SHM_KEY, GM_SHM_SIZE, IPC_CREAT | 0666)) < 0) {
+        perror("shmget");
+        exit(1);
+    }
+
+    // Now we attach the segment to our data space.
+    if ((shm = shmat(shmid, NULL, 0)) == (int *) -1) {
+        perror("shmat");
+        exit(1);
+    }
+    shm[0] = 0;
+    logger( GM_LOG_TRACE, "setup: %i\n", shm[0]);
+
+    // detach from shared memory
+    if(shmdt(shm) < 0)
+        perror("shmdt");
+
+    return;
 }
 
 

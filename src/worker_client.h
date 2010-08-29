@@ -9,6 +9,8 @@
 #include <sys/time.h>
 #include <signal.h>
 #include <errno.h>
+#include <sys/ipc.h>
+#include <sys/shm.h>
 #include <libgearman/gearman.h>
 
 #define GM_JOB_START            0
@@ -43,13 +45,14 @@ typedef struct gm_job_struct {
     struct timeval finish_time;
 } gm_job_t;
 
-void *client_worker(int worker_mode);
-void *worker_loop();
+void worker_client(int worker_mode);
+void worker_loop(void);
 void *get_job( gearman_job_st *, void *, size_t *, gearman_return_t * );
+void *dummy( gearman_job_st *, void *, size_t *, gearman_return_t * );
 int create_gearman_worker( gearman_worker_st *);
 int create_gearman_client( gearman_client_st *client );
-void *do_exec_job();
-void *send_result_back();
-void alarm_sighandler();
+void do_exec_job(void);
+void send_result_back(void);
+void alarm_sighandler(int sig);
 void send_state_to_parent(int status);
-void *execute_safe_command();
+void execute_safe_command(void);
