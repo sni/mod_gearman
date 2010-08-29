@@ -391,18 +391,15 @@ void execute_safe_command() {
 
         // get all lines of plugin output
         char buffer[GM_BUFFERSIZE];
-        logger( GM_LOG_DEBUG, "output1: %s\n", exec_job->output);
         read(pdes[0], buffer, sizeof(buffer)-1);
-        logger( GM_LOG_DEBUG, "output2: %s\n", buffer);
-        exec_job->output = buffer;
-        logger( GM_LOG_DEBUG, "output3: %s\n", exec_job->output);
 
         // file not found errors?
         if(status == 127) {
             status = STATE_CRITICAL;
-            strncat( exec_job->output, "check was running on node ", sizeof( exec_job->output ));
-            strncat( exec_job->output, hostname, sizeof( exec_job->output ));
+            strncat( buffer, "check was running on node ", sizeof( buffer ));
+            strncat( buffer, hostname, sizeof( buffer ));
         }
+        exec_job->output = buffer;
         exec_job->return_code = status;
         close(pdes[0]);
     }
