@@ -141,7 +141,7 @@ void *get_job( gearman_job_st *job, void *context, size_t *result_size, gearman_
     exec_job->scheduled_check     = 1;
     exec_job->reschedule_check    = 1;
     exec_job->return_code         = 0;
-    exec_job->latency             = 0;
+    exec_job->latency             = 0.0;
     exec_job->timeout             = gearman_opt_timeout;
     exec_job->start_time.tv_sec   = 0L;
     exec_job->start_time.tv_usec  = 0L;
@@ -172,7 +172,7 @@ void *get_job( gearman_job_st *job, void *context, size_t *result_size, gearman_
         } else if ( !strcmp( key, "reschedule_check" ) ) {
             exec_job->reschedule_check = atoi(value);
         } else if ( !strcmp( key, "latency" ) ) {
-            exec_job->latency = atoi(value);
+            exec_job->latency = atof(value);
         } else if ( !strcmp( key, "start_time" ) ) {
             char *ptr   = strdup(value);
             char *ptr_c = ptr;
@@ -184,8 +184,6 @@ void *get_job( gearman_job_st *job, void *context, size_t *result_size, gearman_
             free(ptr_c);
         } else if ( !strcmp( key, "timeout" ) ) {
             exec_job->timeout = atoi(value);
-        } else if ( !strcmp( key, "latency" ) ) {
-            exec_job->latency = atof(value);
         } else if ( !strcmp( key, "command_line" ) ) {
             exec_job->command_line = value;
         }
@@ -231,23 +229,29 @@ void *do_exec_job( ) {
     if(exec_job->start_time.tv_sec == 0) {
         exec_job->start_time = start_time;
     }
-    time_t real_start = (time_t) exec_job->start_time.tv_sec;
-    logger( GM_LOG_TRACE, "real start_time: %i.%i\n", exec_job->start_time.tv_sec, exec_job->start_time.tv_usec);
-    logger( GM_LOG_TRACE, "real start_time: %s\n", asctime(localtime(&real_start)));
 
-    time_t start = (time_t) start_time.tv_sec;
-    logger( GM_LOG_TRACE, "job start_time: %i.%i\n", start_time.tv_sec, start_time.tv_usec);
-    logger( GM_LOG_TRACE, "job start_time: %s\n", asctime(localtime(&start)));
-
+    // our gm start time
     temp_buffer1[0]='\x0';
     snprintf(temp_buffer1, (sizeof(temp_buffer1)), "%i.%i", start_time.tv_sec, start_time.tv_usec);
     double start1_f = atof(temp_buffer1);
+
+    // start time from core
     temp_buffer1[0]='\x0';
     snprintf(temp_buffer1, (sizeof(temp_buffer1)), "%i.%i", exec_job->start_time.tv_sec, exec_job->start_time.tv_usec);
     double start2_f = atof(temp_buffer1);
+
     latency = start1_f - start2_f;
     logger( GM_LOG_TRACE, "latency: %0.4f\n", latency);
-    exec_job->latency = latency;
+    exec_job->latency += latency;
+    if(latency < 0) {
+        logger( GM_LOG_ERROR, "latency: %0.4f\n", latency);
+        time_t real_start = (time_t) exec_job->start_time.tv_sec;
+        logger( GM_LOG_ERROR, "real start_time: %i.%i\n", exec_job->start_time.tv_sec, exec_job->start_time.tv_usec);
+        logger( GM_LOG_ERROR, "real start_time: %s\n", asctime(localtime(&real_start)));
+        time_t start = (time_t) start_time.tv_sec;
+        logger( GM_LOG_ERROR, "job start_time: %i.%i\n", start_time.tv_sec, start_time.tv_usec);
+        logger( GM_LOG_ERROR, "job start_time: %s\n", asctime(localtime(&start)));
+    }
 
     // job is too old
     if((int)exec_job->latency > gearman_opt_max_age) {

@@ -36,7 +36,7 @@ typedef struct gm_job_struct {
     int            reschedule_check;
     int            exited_ok;
     int            timeout;
-    float          latency;
+    double         latency;
     struct timeval start_time;
     struct timeval finish_time;
 } gm_job_t;
