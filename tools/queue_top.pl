@@ -135,6 +135,7 @@ sub print_queue {
     for my $row (@{$data}) {
 
         # shall we skip empty queues?
+        next if defined $opt_quiet and ($row->{'name'} eq "dummy");
         next if defined $opt_quiet and ($row->{'queue'} == 0 and $row->{'running'} == 0);
 
         my $result = [$row->{'name'}, $row->{'running'}, $row->{'queue'}-$row->{'busy'}, $row->{'busy'}];
