@@ -62,7 +62,7 @@ int main (int argc, char **argv) {
     // maintain the population
     while (1) {
         // check number of workers every 30 seconds
-        // sleep gets cancelt anyway when receiving signals
+        // sleep gets canceled anyway when receiving signals
         sleep(30);
 
         // collect finished workers
@@ -310,21 +310,18 @@ void decrease_jobs(int sig) {
 /* set new number of workers */
 int adjust_number_of_worker(int min, int max, int cur_workers, int cur_jobs) {
     int perc_running = (int)cur_jobs*100/cur_workers;
-    logger( GM_LOG_TRACE, "adjust_number_of_worker(min %d, max %d, worker %d, jobs %d) = %d%% running\n", min, max, cur_workers, cur_jobs, perc_running);
+    int idle         = (int)cur_workers - cur_jobs;
+    logger( GM_LOG_ERROR, "adjust_number_of_worker(min %d, max %d, worker %d, jobs %d) = %d%% running\n", min, max, cur_workers, cur_jobs, perc_running);
     int target = min;
 
     if(cur_workers == max)
         return max;
 
     // > 90% workers running
-    if(cur_jobs > 0 && perc_running > 90) {
-        // increase target number by 10% or minmimum 5
-        int increase = (int) cur_workers / 10;
-        if(increase < 5) {
-            increase = 5;
-        }
-        logger( GM_LOG_TRACE, "starting %d new worker\n", increase);
-        target = cur_workers + increase;
+    if(cur_jobs > 0 && ( perc_running > 90 || idle <= 2 )) {
+        // increase target number by 2
+        logger( GM_LOG_TRACE, "starting 2 new workers\n");
+        target = cur_workers + 2;
     }
 
     // dont go over the top
