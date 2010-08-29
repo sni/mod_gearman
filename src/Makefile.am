@@ -21,11 +21,11 @@ mod_gearman_so_CXXFLAGS = $(CFLAGS) -fPIC -Wall -W -Wstrict-prototypes -O -g
 mod_gearman_so_CFLAGS   = $(mod_gearman_so_CXXFLAGS)
 
 mod_gearman.o: $(mod_gearman_so_OBJECTS) $(mod_gearman_so_DEPENDENCIES)
-	$(CXX) $(LDFLAGS)  -fPIC -shared $(mod_gearman_so_OBJECTS) -o $@ -lpthread -lgearman
+#	$(CXX) $(LDFLAGS)  -fPIC -shared $(mod_gearman_so_OBJECTS) -o $@ -lpthread -lgearman
 # -s strips the result file
 #	$(CXX) $(LDFLAGS) -s -fPIC -shared $(mod_gearman_so_OBJECTS) -o $@ -lpthread -lgearman
 # on osx use the following, TODO: should be detected automatically
-#	g++ -dynamiclib -single_module -undefined dynamic_lookup $(mod_gearman_so_OBJECTS) -o $@ -lpthread -lgearman
+	g++ -dynamiclib -single_module -undefined dynamic_lookup $(mod_gearman_so_OBJECTS) -Iincludes -L/opt/local/lib -o $@ -lpthread -lgearman
 	rm -f mod_gearman.so
 
 all-local: mod_gearman.o

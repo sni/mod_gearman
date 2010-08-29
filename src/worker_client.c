@@ -1,4 +1,4 @@
-/*****************************************************************************
+/******************************************************************************
  *
  * mod_gearman - distribute checks with gearman
  *
@@ -26,6 +26,7 @@ pid_t current_child_pid;
 gm_job_t * exec_job;
 char exec_output[GM_BUFFERSIZE];
 
+int sleep_time_after_error = 1;
 int worker_run_mode;
 
 void * dummy() {};
@@ -72,9 +73,16 @@ void *worker_loop() {
             logger( GM_LOG_ERROR, "worker error: %s\n", gearman_worker_error( &worker ) );
             gearman_job_free_all( &worker );
             gearman_worker_free( &worker );
-            create_gearman_worker( &worker );
-
             gearman_client_free( &client );
+
+            // sleep on error to avoid cpu intensive infinite loops
+            sleep(sleep_time_after_error);
+            sleep_time_after_error += 3;
+            if(sleep_time_after_error > 60)
+                sleep_time_after_error = 60;
+
+            // create new connections
+            create_gearman_worker( &worker );
             create_gearman_client( &client );
         }
     }
@@ -87,6 +95,12 @@ void *worker_loop() {
 void *get_job( gearman_job_st *job, void *context, size_t *result_size, gearman_return_t *ret_ptr ) {
 
     logger( GM_LOG_TRACE, "get_job()\n" );
+
+    // reset timeout for now, will be set befor execution again
+    alarm(0);
+
+    // reset sleep time
+    sleep_time_after_error = 1;
 
     // ignore sigterms while running job
     sigset_t block_mask;
