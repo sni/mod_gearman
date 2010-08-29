@@ -310,7 +310,7 @@ void decrease_jobs(int sig) {
 /* set new number of workers */
 int adjust_number_of_worker(int min, int max, int cur_workers, int cur_jobs) {
     int perc_running = (int)cur_jobs*100/cur_workers;
-    logger( GM_LOG_TRACE, "adjust_number_of_worker(min %d, max %d, worker %d, jobs %d) = %d% running\n", min, max, cur_workers, cur_jobs, perc_running);
+    logger( GM_LOG_TRACE, "adjust_number_of_worker(min %d, max %d, worker %d, jobs %d) = %d%% running\n", min, max, cur_workers, cur_jobs, perc_running);
     int target = min;
 
     if(cur_workers == max)
