@@ -231,14 +231,10 @@ void *do_exec_job( ) {
     }
 
     // our gm start time
-    temp_buffer1[0]='\x0';
-    snprintf(temp_buffer1, (sizeof(temp_buffer1)), "%i.%i", start_time.tv_sec, start_time.tv_usec);
-    double start1_f = atof(temp_buffer1);
+    double start1_f = start_time.tv_sec + start_time.tv_usec/1000000;
 
     // start time from core
-    temp_buffer1[0]='\x0';
-    snprintf(temp_buffer1, (sizeof(temp_buffer1)), "%i.%i", exec_job->start_time.tv_sec, exec_job->start_time.tv_usec);
-    double start2_f = atof(temp_buffer1);
+    double start2_f = exec_job->start_time.tv_sec + exec_job->start_time.tv_usec / 1000000;
 
     latency = start1_f - start2_f;
     logger( GM_LOG_TRACE, "latency: %0.4f\n", latency);
