@@ -288,48 +288,37 @@ static int handle_host_check( int event_type, void *data ) {
     //double old_latency=0.0;
     struct timeval start_time;
 
-    /* clear check options - we don't want old check options retained */
-    /* only clear options if this was a scheduled check - on demand check options shouldn't affect retained info */
-    //if(scheduled_check==TRUE)
-        hst->check_options = CHECK_OPTION_NONE;
+    // clear check options - we don't want old check options retained
+    hst->check_options = CHECK_OPTION_NONE;
 
     // adjust host check attempt
     adjust_host_check_attempt_3x(hst,TRUE);
 
-    /* set latency (temporarily) for macros and event broker */
-    //old_latency=hst->latency;
-    //hst->latency=latency;
-
-    /* grab the host macro variables */
+    // grab the host macro variables
     clear_volatile_macros();
     grab_host_macros(hst);
 
-    /* get the raw command line */
+    // get the raw command line
     get_raw_command_line(hst->check_command_ptr,hst->host_check_command,&raw_command,0);
     if(raw_command==NULL){
         logger( GM_LOG_ERROR, "Raw check command for host '%s' was NULL - aborting.\n",hst->name );
         return GM_ERROR;
     }
 
-    /* process any macros contained in the argument */
+    // process any macros contained in the argument
     process_macros(raw_command,&processed_command,0);
     if(processed_command==NULL){
         logger( GM_LOG_ERROR, "Processed check command for host '%s' was NULL - aborting.\n",hst->name);
         return GM_ERROR;
     }
 
-    /* get the command start time */
+    // get the command start time
     gettimeofday(&start_time,NULL);
 
-    /* set check time for on-demand checks, so they're not incorrectly detected as being orphaned - Luke Ross 5/16/08 */
-    /* NOTE: 06/23/08 EG not sure if there will be side effects to this or not.... */
-    //if(scheduled_check==FALSE)
-    //    hst->next_check=start_time.tv_sec;
-
-    /* increment number of host checks that are currently running... */
+    // increment number of host checks that are currently running
     currently_running_host_checks++;
 
-    /* set the execution flag */
+    // set the execution flag
     hst->is_executing=TRUE;
 
     logger( GM_LOG_TRACE, "cmd_line: %s\n", processed_command );
