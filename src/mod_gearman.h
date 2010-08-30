@@ -14,6 +14,8 @@
 #include <unistd.h>
 #include <pthread.h>
 
+#define GM_PERFDATA_QUEUE    "perfdata"
+
 #define NSCORE
 
 /* include some Nagios stuff as well */

@@ -185,6 +185,17 @@ result_workers      Number of result worker threads. Usually one is
 
                     Example: result_workers=3
 
+perfdata:           defines if the module should distribute perfdata
+                    to gearman.
+                    Note: processing of perfdata is not part of
+                    mod_gearman. You will need additional worker for
+                    handling performance data. For example: pnp4nagios
+                    Performance data is just written to the gearman
+                    queue.
+
+                    Example: perfdata=yes
+
+
 
 
 Queue Names

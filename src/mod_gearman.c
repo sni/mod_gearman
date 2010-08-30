@@ -28,6 +28,7 @@ char *gearman_local_servicegroups_list[GM_LISTSIZE];
 int gearman_opt_services;
 int gearman_opt_hosts;
 int gearman_opt_events;
+int gearman_opt_perfdata;
 
 int gearman_threads_running = 0;
 pthread_t result_thr[GM_LISTSIZE];
@@ -40,6 +41,7 @@ static void  read_arguments( const char * );
 static int   handle_host_check( int,void * );
 static int   handle_svc_check( int,void * );
 static int   handle_eventhandler( int,void * );
+static int   handle_perfdata(int e, void *);
 static int   create_gearman_client(void);
 static void  set_target_worker( host *, service * );
 static int   handle_process_events( int, void * );
@@ -102,6 +104,11 @@ static void register_neb_callbacks(void) {
     if ( gearman_opt_events == GM_ENABLED )
         neb_register_callback( NEBCALLBACK_EVENT_HANDLER_DATA, gearman_module_handle, 0, handle_eventhandler );
 
+    if ( gearman_opt_perfdata == GM_ENABLED ) {
+        neb_register_callback( NEBCALLBACK_HOST_CHECK_DATA, gearman_module_handle, 0, handle_perfdata );
+        neb_register_callback( NEBCALLBACK_SERVICE_CHECK_DATA, gearman_module_handle, 0, handle_perfdata );
+    }
+
     logger( GM_LOG_DEBUG, "registered neb callbacks\n" );
 }
 
@@ -124,6 +131,11 @@ int nebmodule_deinit( int flags, int reason ) {
 
     if ( gearman_opt_events == GM_ENABLED )
         neb_deregister_callback( NEBCALLBACK_EVENT_HANDLER_DATA, gearman_module_handle );
+
+    if ( gearman_opt_perfdata == GM_ENABLED ) {
+        neb_deregister_callback( NEBCALLBACK_HOST_CHECK_DATA, gearman_module_handle );
+        neb_deregister_callback( NEBCALLBACK_SERVICE_CHECK_DATA, gearman_module_handle );
+    }
 
     logger( GM_LOG_DEBUG, "deregistered callbacks\n" );
 
@@ -460,6 +472,7 @@ static void read_arguments( const char *args_orig ) {
     gearman_opt_events         = GM_DISABLED;
     gearman_opt_services       = GM_DISABLED;
     gearman_opt_hosts          = GM_DISABLED;
+    gearman_opt_perfdata       = GM_DISABLED;
 
     // no arguments given
     if ( !args_orig )
@@ -512,19 +525,25 @@ static void read_arguments( const char *args_orig ) {
         else if ( !strcmp( key, "eventhandler" ) || !strcmp( key, "--eventhandler" ) ) {
             if ( !strcmp( value, "yes" ) ) {
                 gearman_opt_events = GM_ENABLED;
-                logger( GM_LOG_DEBUG, "GM_ENABLED handling of eventhandlers\n" );
+                logger( GM_LOG_DEBUG, "enabled handling of eventhandlers\n" );
+            }
+        }
+        else if ( !strcmp( key, "perfdata" ) || !strcmp( key, "--perfdata" ) ) {
+            if ( !strcmp( value, "yes" ) ) {
+                gearman_opt_perfdata = GM_ENABLED;
+                logger( GM_LOG_DEBUG, "enabled handling of perfdata\n" );
             }
         }
         else if ( !strcmp( key, "services" ) || !strcmp( key, "--services" ) ) {
             if ( !strcmp( value, "yes" ) ) {
                 gearman_opt_services = GM_ENABLED;
-                logger( GM_LOG_DEBUG, "GM_ENABLED handling of service checks\n" );
+                logger( GM_LOG_DEBUG, "enabled handling of service checks\n" );
             }
         }
         else if ( !strcmp( key, "hosts" ) || !strcmp( key, "--hosts" ) ) {
             if ( !strcmp( value, "yes" ) ) {
                 gearman_opt_hosts = GM_ENABLED;
-                logger( GM_LOG_DEBUG, "GM_ENABLED handling of hostchecks\n" );
+                logger( GM_LOG_DEBUG, "enabled handling of hostchecks\n" );
             }
         }
         else if ( !strcmp( key, "servicegroups" ) || !strcmp( key, "--servicegroups" ) ) {
@@ -714,4 +733,110 @@ static void start_threads(void) {
             pthread_create ( &result_thr[x], NULL, result_worker, (void *)p);
         }
     }
+}
+
+
+/* handle performance data */
+int handle_perfdata(int event_type, void *data) {
+    nebstruct_host_check_data *hostchkdata   = NULL;
+    nebstruct_service_check_data *srvchkdata = NULL;
+
+    host *host       = NULL;
+    service *service = NULL;
+
+    char perfdatafile_template[GM_BUFFERSIZE];
+    int has_perfdata = FALSE;
+
+    // what type of event/data do we have?
+    switch (event_type) {
+
+        case NEBCALLBACK_HOST_CHECK_DATA:
+            // an aggregated status data dump just started or ended
+            if ((hostchkdata = (nebstruct_host_check_data *) data)) {
+
+                host = find_host(hostchkdata->host_name);
+
+                if (hostchkdata->type == NEBTYPE_HOSTCHECK_PROCESSED
+                    && hostchkdata->perf_data != NULL) {
+
+                    snprintf(perfdatafile_template, sizeof(perfdatafile_template) - 1,
+                                "DATATYPE::HOSTPERFDATA\t"
+                                "TIMET::%d\t"
+                                "HOSTNAME::%s\t"
+                                "HOSTPERFDATA::%s\t"
+                                "HOSTCHECKCOMMAND::%s!%s\t"
+                                "HOSTSTATE::%d\t"
+                                "HOSTSTATETYPE::%d\n",
+                                (int)hostchkdata->timestamp.tv_sec,
+                                hostchkdata->host_name, hostchkdata->perf_data,
+                                hostchkdata->command_name, hostchkdata->command_args,
+                                hostchkdata->state, hostchkdata->state_type);
+
+                    perfdatafile_template[sizeof(perfdatafile_template) - 1] = '\x0';
+                    has_perfdata = TRUE;
+                }
+            }
+            break;
+
+        case NEBCALLBACK_SERVICE_CHECK_DATA:
+            // an aggregated status data dump just started or ended
+            if ((srvchkdata = (nebstruct_service_check_data *) data)) {
+
+                if (srvchkdata->type == NEBTYPE_SERVICECHECK_PROCESSED
+                    && srvchkdata->perf_data != NULL) {
+
+                    // find the nagios service object for this service
+                    service = find_service(srvchkdata->host_name, srvchkdata->service_description);
+
+                    snprintf(perfdatafile_template, sizeof(perfdatafile_template) - 1,
+                                "DATATYPE::SERVICEPERFDATA\t"
+                                "TIMET::%d\t"
+                                "HOSTNAME::%s\t"
+                                "SERVICEDESC::%s\t"
+                                "SERVICEPERFDATA::%s\t"
+                                "SERVICECHECKCOMMAND::%s\t"
+                                "SERVICESTATE::%d\t"
+                                "SERVICESTATETYPE::%d\n",
+                                (int)srvchkdata->timestamp.tv_sec,
+                                srvchkdata->host_name, srvchkdata->service_description,
+                                srvchkdata->perf_data, service->service_check_command,
+                                srvchkdata->state, srvchkdata->state_type);
+                    perfdatafile_template[sizeof(perfdatafile_template) - 1] = '\x0';
+                    has_perfdata = TRUE;
+                }
+            }
+            break;
+
+        default:
+            break;
+    }
+
+    if(has_perfdata == TRUE) {
+        // create gearman task
+        gearman_task_st  *task = NULL;
+        gearman_return_t ret;
+        gearman_client_add_task_background( &client, task, NULL, GM_PERFDATA_QUEUE, NULL, ( void * )perfdatafile_template, ( size_t )strlen( perfdatafile_template ), &ret );
+        gearman_client_run_tasks( &client );
+        if(ret != GEARMAN_SUCCESS || (gearman_client_error(&client) != NULL && strcmp(gearman_client_error(&client), "") != 0)) { // errno is somehow empty, use error instead
+            logger( GM_LOG_ERROR, "client error: %s\n", gearman_client_error(&client));
+            gearman_client_free(&client);
+            sleep(5);
+            create_gearman_client();
+
+            // try to resubmit once
+            gearman_client_add_task_background( &client, task, NULL, "service", NULL, ( void * )perfdatafile_template, ( size_t )strlen( perfdatafile_template ), &ret );
+            gearman_client_run_tasks( &client );
+            if(ret != GEARMAN_SUCCESS || (gearman_client_error(&client) != NULL && strcmp(gearman_client_error(&client), "") != 0)) { // errno is somehow empty, use error instead
+                logger( GM_LOG_DEBUG, "client error permanent: %s\n", gearman_client_error(&client));
+                gearman_client_free(&client);
+                create_gearman_client();
+            }
+            else {
+                logger( GM_LOG_DEBUG, "retransmission successful\n");
+            }
+        }
+    }
+
+
+    return 0;
 }
