@@ -602,6 +602,12 @@ static void read_arguments( const char *args_orig ) {
         return;
     }
 
+    // do we need a result thread?
+    if(srvgrp_ptr == 0 && hostgrp_ptr == 0 && gearman_opt_hosts == GM_DISABLED && gearman_opt_services == GM_DISABLED) {
+        logger( GM_LOG_DEBUG, "disabled unused result threads\n" );
+        gearman_opt_result_workers = 0;
+    }
+
     return;
 }
 
