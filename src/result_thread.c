@@ -63,46 +63,27 @@ void *result_worker( void * data ) {
 /* put back the result into the core */
 void *get_results( gearman_job_st *job, void *context, size_t *result_size, gearman_return_t *ret_ptr ) {
 
-    gm_worker_options_t options= *( ( gm_worker_options_t * )context );
+    // contect is unused
+    context = context;
 
-    // get the data
-    const uint8_t *workload;
-    workload= gearman_job_workload( job );
-    *result_size= gearman_job_workload_size( job );
-
-    char *result;
-    result = malloc( *result_size );
-    char *result_c = result;
-    if ( result == NULL ) {
-        logger( GM_LOG_ERROR, "malloc:%d\n", errno );
-        *ret_ptr= GEARMAN_WORK_FAIL;
-        return NULL;
-    }
-
-    snprintf( result, ( int )*result_size, "%.*s", ( int )*result_size, workload );
-    logger( GM_LOG_DEBUG, "got result %s%s%s\n", gearman_job_handle( job ),
-            options & GM_WORKER_OPTIONS_UNIQUE ? " Unique=" : "",
-            options & GM_WORKER_OPTIONS_UNIQUE ? gearman_job_unique( job ) : ""
-          );
-    logger( GM_LOG_TRACE, "--->\n%.*s\n<---\n", ( int )*result_size, result );
-
-    logger( GM_LOG_TRACE, "options none  : %s\n", options & GM_WORKER_OPTIONS_NONE   ? "yes" : "no"),
-    logger( GM_LOG_TRACE, "options data  : %s\n", options & GM_WORKER_OPTIONS_DATA   ? "yes" : "no"),
-    logger( GM_LOG_TRACE, "options status: %s\n", options & GM_WORKER_OPTIONS_STATUS ? "yes" : "no"),
+    // set size of result
+    *result_size = 0;
 
     // set result pointer to success
-    *ret_ptr= GEARMAN_SUCCESS;
-    // TODO: verify this
-    //if ( ! options & GM_WORKER_OPTIONS_DATA ) {
-    //    logger( GM_LOG_TRACE, "discarding non data event\n" );
-    //    *result_size= 0;
-    //    return NULL;
-    //}
+    *ret_ptr = GEARMAN_SUCCESS;
+
+    // get the data
+    char * workload;
+    workload = strdup((char *)gearman_job_workload(job));
+    char * workload_c = workload;
+
+    logger( GM_LOG_DEBUG, "got result %s\n", gearman_job_handle( job ));
+    logger( GM_LOG_TRACE, "--->\n%s\n<---\n", workload );
 
     // nagios will free it after processing
     check_result * chk_result;
     if ( ( chk_result = ( check_result * )malloc( sizeof *chk_result ) ) == 0 ) {
-        *ret_ptr= GEARMAN_WORK_FAIL;
+        *ret_ptr = GEARMAN_WORK_FAIL;
         return NULL;
     }
 
@@ -121,7 +102,7 @@ void *get_results( gearman_job_st *job, void *context, size_t *result_size, gear
     chk_result->reschedule_check    = TRUE;
 
     char *ptr;
-    while ( (ptr = strsep(&result, "\n" )) != NULL ) {
+    while ( (ptr = strsep(&workload, "\n" )) != NULL ) {
         char *key   = str_token( &ptr, '=' );
         char *value = str_token( &ptr, 0 );
 
@@ -176,7 +157,7 @@ void *get_results( gearman_job_st *job, void *context, size_t *result_size, gear
             chk_result->latency = atof( value );
         }
     }
-    free(result_c);
+    free(workload_c);
 
     if ( chk_result->host_name == NULL || chk_result->output == NULL ) {
         *ret_ptr= GEARMAN_WORK_FAIL;
@@ -218,10 +199,7 @@ void *get_results( gearman_job_st *job, void *context, size_t *result_size, gear
     // reset pointer
     chk_result = NULL;
 
-    // give gearman something to free
-    uint8_t *buffer;
-    buffer = malloc( 1 );
-    return buffer;
+    return NULL;
 }
 
 
@@ -229,7 +207,6 @@ void *get_results( gearman_job_st *job, void *context, size_t *result_size, gear
 static int create_gearman_worker( gearman_worker_st *worker ) {
 
     gearman_return_t ret;
-    gm_worker_options_t options= GM_WORKER_OPTIONS_NONE;
 
     if ( gearman_worker_create( worker ) == NULL ) {
         logger( GM_LOG_ERROR, "Memory allocation failure on worker creation\n" );
@@ -263,9 +240,9 @@ static int create_gearman_worker( gearman_worker_st *worker ) {
     }
     logger( GM_LOG_DEBUG, "started result_worker thread for queue: %s\n", gearman_opt_result_queue );
 
-    ret = gearman_worker_add_function( worker, gearman_opt_result_queue, 0, get_results, &options );
+    ret = gearman_worker_add_function( worker, gearman_opt_result_queue, 0, get_results, NULL );
     // add it once again, sometime the first one cannot register
-    ret = gearman_worker_add_function( worker, gearman_opt_result_queue, 0, get_results, &options );
+    ret = gearman_worker_add_function( worker, gearman_opt_result_queue, 0, get_results, NULL );
     if ( ret != GEARMAN_SUCCESS ) {
         logger( GM_LOG_ERROR, "worker error: %s\n", gearman_worker_error( worker ) );
         return GM_ERROR;
