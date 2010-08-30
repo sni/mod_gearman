@@ -50,7 +50,7 @@ AC_TYPE_PID_T
 
 ##############################################
 # Checks for additional libraries.
-AC_CHECK_LIB([gearman], [gearman_client_create],,AC_MSG_ERROR([Compiling mod_gearman requires libgearman]))
+AC_CHECK_LIB([gearman], [gearman_client_create],,AC_MSG_ERROR([Compiling mod_gearman requires libgearman. You may specify the path by --with-gearman=path...]))
 
 ##############################################
 # add a "make install" target

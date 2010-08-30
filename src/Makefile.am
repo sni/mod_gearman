@@ -36,12 +36,24 @@ all-local: mod_gearman.o
 	@echo ""
 	@echo "################################################################"
 	@echo ""
-	@echo "  now copy the neb_module/mod_gearman.o to your nagios folder"
+	@echo "  now copy the src/mod_gearman.o to your nagios folder"
 	@echo "  and at the broker= line to your config."
 	@echo ""
 	@echo "  read the README for configuration details"
 	@echo ""
+	@echo " for static worker continue with"
+	@echo " make static-worker"
+	@echo ""
 	@echo "################################################################"
 
 distclean-local: clean
-	for file in .deps/ Makefile.in aclocal.m4 autom4te.cache config.* configure depcomp install-sh missing; do test -e $$file && rm -r $$file; done
+	for file in .deps/ Makefile.in aclocal.m4 autom4te.cache config.* configure depcomp install-sh missing; do test -e $$file && rm -fr $$file; done
+
+clean-local:
+	rm -f worker.static
+
+static-worker: worker
+	gcc -Wall -W -Wstrict-prototypes -g -static -o worker.static worker_logger.o worker_client.o utils.o worker.o -lgearman -lpthread -luuid
+	@echo ""
+	@echo " worker.static created."
+	@echo ""

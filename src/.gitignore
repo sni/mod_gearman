@@ -1,4 +1,5 @@
 worker
+worker.static
 *.o
 mod_gearman.so
 .deps
