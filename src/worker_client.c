@@ -92,10 +92,16 @@ void worker_loop() {
 /* get a job */
 void *get_job( gearman_job_st *job, void *context, size_t *result_size, gearman_return_t *ret_ptr ) {
 
-    logger( GM_LOG_TRACE, "get_job()\n" );
-
     // reset timeout for now, will be set befor execution again
     alarm(0);
+
+    logger( GM_LOG_TRACE, "get_job()\n" );
+
+    // contect is unused
+    context = context;
+
+    // set size of result
+    *result_size = 0;
 
     // reset sleep time
     sleep_time_after_error = 1;
@@ -106,44 +112,19 @@ void *get_job( gearman_job_st *job, void *context, size_t *result_size, gearman_
     sigaddset(&block_mask, SIGTERM);
     sigprocmask(SIG_BLOCK, &block_mask, &old_mask);
 
-    gm_worker_options_t options= *( ( gm_worker_options_t * )context );
-
-    // get the data
-    const uint8_t *workload;
-    workload= gearman_job_workload( job );
-    *result_size= gearman_job_workload_size( job );
-
-    char *result;
-    result = malloc( *result_size );
-    char *result_c = result;
-    if ( result == NULL ) {
-        logger( GM_LOG_ERROR, "malloc error\n" );
-        *ret_ptr= GEARMAN_WORK_FAIL;
-        exit(EXIT_FAILURE);
-     }
-
     // send start signal to parent
     send_state_to_parent(GM_JOB_START);
 
-    snprintf( result, ( int )*result_size, "%.*s", ( int )*result_size, workload );
-    logger( GM_LOG_DEBUG, "got new job %s%s%s\n", gearman_job_handle( job ),
-            options & GM_WORKER_OPTIONS_UNIQUE ? " Unique=" : "",
-            options & GM_WORKER_OPTIONS_UNIQUE ? gearman_job_unique( job ) : ""
-          );
-    logger( GM_LOG_TRACE, "--->\n%.*s\n<---\n", ( int )*result_size, result );
+    // get the data
+    char * workload;
+    workload = strdup((char *)gearman_job_workload(job));
+    char * workload_c = workload;
 
-    logger( GM_LOG_TRACE, "options none  : %s\n", options & GM_WORKER_OPTIONS_NONE   ? "yes" : "no"),
-    logger( GM_LOG_TRACE, "options data  : %s\n", options & GM_WORKER_OPTIONS_DATA   ? "yes" : "no"),
-    logger( GM_LOG_TRACE, "options status: %s\n", options & GM_WORKER_OPTIONS_STATUS ? "yes" : "no"),
+    logger( GM_LOG_DEBUG, "got new job %s\n", gearman_job_handle( job ) );
+    logger( GM_LOG_TRACE, "--->\n%s\n<---\n", workload );
 
     // set result pointer to success
     *ret_ptr= GEARMAN_SUCCESS;
-    // TODO: verify this
-    //if ( ! options & GM_WORKER_OPTIONS_DATA ) {
-    //    logger( GM_LOG_TRACE, "discarding non data request\n" );
-    //    *result_size= 0;
-    //    return NULL;
-    //}
 
     exec_job->type                = NULL;
     exec_job->host_name           = NULL;
@@ -162,7 +143,7 @@ void *get_job( gearman_job_st *job, void *context, size_t *result_size, gearman_
 
     char *ptr;
     char command[GM_BUFFERSIZE];
-    while ( (ptr = strsep(&result, "\n" )) != NULL ) {
+    while ( (ptr = strsep(&workload, "\n" )) != NULL ) {
         char *key   = str_token( &ptr, '=' );
         char *value = str_token( &ptr, 0 );
 
@@ -207,19 +188,15 @@ void *get_job( gearman_job_st *job, void *context, size_t *result_size, gearman_
 
     do_exec_job();
 
-    free(result_c);
+    free(workload_c);
 
     // send finish signal to parent
     send_state_to_parent(GM_JOB_END);
 
-    // give gearman something to free
-    uint8_t *buffer;
-    buffer = malloc( 1 );
-
     // start listening to SIGTERMs
     sigprocmask(SIG_SETMASK, &old_mask, NULL);
 
-    return buffer;
+    return NULL;
 }
 
 
@@ -495,7 +472,6 @@ int create_gearman_worker( gearman_worker_st *worker ) {
     logger( GM_LOG_TRACE, "create_gearman_worker()\n" );
 
     gearman_return_t ret;
-    gm_worker_options_t options= GM_WORKER_OPTIONS_NONE;
 
     if ( gearman_worker_create( worker ) == NULL ) {
         logger( GM_LOG_ERROR, "Memory allocation failure on worker creation\n" );
@@ -523,19 +499,19 @@ int create_gearman_worker( gearman_worker_st *worker ) {
     }
 
     if(gearman_opt_hosts == GM_ENABLED)
-        ret = gearman_worker_add_function( worker, "host", 0, get_job, &options );
+        ret = gearman_worker_add_function( worker, "host", 0, get_job, NULL );
 
     if(gearman_opt_services == GM_ENABLED)
-        ret = gearman_worker_add_function( worker, "service", 0, get_job, &options );
+        ret = gearman_worker_add_function( worker, "service", 0, get_job, NULL );
 
     if(gearman_opt_events == GM_ENABLED)
-        ret = gearman_worker_add_function( worker, "eventhandler", 0, get_job, &options );
+        ret = gearman_worker_add_function( worker, "eventhandler", 0, get_job, NULL );
 
     x = 0;
     while ( gearman_hostgroups_list[x] != NULL ) {
         char buffer[GM_BUFFERSIZE];
         snprintf( buffer, (sizeof(buffer)-1), "hostgroup_%s", gearman_hostgroups_list[x] );
-        ret = gearman_worker_add_function( worker, buffer, 0, get_job, &options );
+        ret = gearman_worker_add_function( worker, buffer, 0, get_job, NULL );
         x++;
     }
 
@@ -543,7 +519,7 @@ int create_gearman_worker( gearman_worker_st *worker ) {
     while ( gearman_servicegroups_list[x] != NULL ) {
         char buffer[GM_BUFFERSIZE];
         snprintf( buffer, (sizeof(buffer)-1), "servicegroup_%s", gearman_servicegroups_list[x] );
-        ret = gearman_worker_add_function( worker, buffer, 0, get_job, &options );
+        ret = gearman_worker_add_function( worker, buffer, 0, get_job, NULL );
         x++;
     }
 
@@ -553,7 +529,7 @@ int create_gearman_worker( gearman_worker_st *worker ) {
     }
 
     // sometimes the last queue does not register, so add a dummy
-    ret = gearman_worker_add_function( worker, "dummy", 0, dummy, &options );
+    ret = gearman_worker_add_function( worker, "dummy", 0, dummy, NULL );
 
     return GM_OK;
 }
@@ -657,11 +633,8 @@ void *dummy( gearman_job_st *job, void *context, size_t *result_size, gearman_re
     // avoid "unused parameter" warning
     job         = job;
     context     = context;
-    result_size = result_size;
+    result_size = 0;
     ret_ptr     = ret_ptr;
 
-    // give gearman something to free
-    uint8_t *buffer;
-    buffer = malloc( 1 );
-    return buffer;
+    return NULL;
 }

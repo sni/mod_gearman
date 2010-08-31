@@ -19,13 +19,6 @@
 #define GM_WORKER_MULTI         0
 #define GM_WORKER_STANDALONE    1
 
-typedef enum {
-    GM_WORKER_OPTIONS_NONE=   0,
-    GM_WORKER_OPTIONS_DATA=   ( 1 << 0 ),
-    GM_WORKER_OPTIONS_STATUS= ( 1 << 1 ),
-    GM_WORKER_OPTIONS_UNIQUE= ( 1 << 2 )
-} gm_worker_options_t;
-
 typedef struct gm_job_struct {
     char         * host_name;
     char         * service_description;
