@@ -35,8 +35,8 @@ int nebmodule_init( int, char *, nebmodule * );
 int nebmodule_deinit( int, int );
 
 /* global variables */
-char * gearman_opt_server[GM_LISTSIZE];
-int    gearman_opt_debug_level;
-char * gearman_opt_result_queue;
-int    gearman_opt_timeout;
-int    gearman_opt_result_workers;
+char * mod_gm_opt_server[GM_LISTSIZE];
+int    mod_gm_opt_debug_level;
+char * mod_gm_opt_result_queue;
+int    mod_gm_opt_timeout;
+int    mod_gm_opt_result_workers;

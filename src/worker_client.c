@@ -47,7 +47,7 @@ void worker_client(int worker_mode) {
     }
 
     // create client
-    if ( create_gearman_client( gearman_opt_server, &client ) != GM_OK ) {
+    if ( create_gearman_client( mod_gm_opt_server, &client ) != GM_OK ) {
         logger( GM_LOG_ERROR, "cannot start client\n" );
         exit( EXIT_FAILURE );
     }
@@ -83,7 +83,7 @@ void worker_loop() {
 
             // create new connections
             create_gearman_worker( &worker );
-            create_gearman_client( gearman_opt_server, &client );
+            create_gearman_client( mod_gm_opt_server, &client );
         }
     }
 
@@ -139,7 +139,7 @@ void *get_job( gearman_job_st *job, void *context, size_t *result_size, gearman_
     exec_job->reschedule_check    = TRUE;
     exec_job->return_code         = STATE_OK;
     exec_job->latency             = 0.0;
-    exec_job->timeout             = gearman_opt_timeout;
+    exec_job->timeout             = mod_gm_opt_timeout;
     exec_job->start_time.tv_sec   = 0L;
     exec_job->start_time.tv_usec  = 0L;
 
@@ -245,10 +245,10 @@ void do_exec_job( ) {
     }
 
     // job is too old
-    if((int)exec_job->latency > gearman_opt_max_age) {
+    if((int)exec_job->latency > mod_gm_opt_max_age) {
         exec_job->return_code   = 3;
 
-        logger( GM_LOG_INFO, "discarded too old %s job: %i > %i\n", exec_job->type, (int)latency, gearman_opt_max_age);
+        logger( GM_LOG_INFO, "discarded too old %s job: %i > %i\n", exec_job->type, (int)latency, mod_gm_opt_max_age);
 
         gettimeofday(&end_time, NULL);
         exec_job->finish_time = end_time;
@@ -425,7 +425,7 @@ void send_result_back() {
     if(exec_job->output != NULL) {
         temp_buffer2[0]='\x0';
         strncat(temp_buffer2, "output=", (sizeof(temp_buffer2)-1));
-        if(gearman_opt_debug_result) {
+        if(mod_gm_opt_debug_result) {
             strncat(temp_buffer2, "(", (sizeof(temp_buffer2)-1));
             strncat(temp_buffer2, hostname, (sizeof(temp_buffer2)-1));
             strncat(temp_buffer2, ") - ", (sizeof(temp_buffer2)-1));
@@ -452,7 +452,7 @@ void send_result_back() {
 }
 
 
-/* create the gearman worker */
+/* create the worker */
 int create_gearman_worker( gearman_worker_st *worker ) {
     logger( GM_LOG_TRACE, "create_gearman_worker()\n" );
 
@@ -464,8 +464,8 @@ int create_gearman_worker( gearman_worker_st *worker ) {
     }
 
     int x = 0;
-    while ( gearman_opt_server[x] != NULL ) {
-        char * server   = strdup( gearman_opt_server[x] );
+    while ( mod_gm_opt_server[x] != NULL ) {
+        char * server   = strdup( mod_gm_opt_server[x] );
         char * server_c = server;
         char * host     = str_token( &server, ':' );
         char * port_val = str_token( &server, 0 );
@@ -483,27 +483,27 @@ int create_gearman_worker( gearman_worker_st *worker ) {
         x++;
     }
 
-    if(gearman_opt_hosts == GM_ENABLED)
+    if(mod_gm_opt_hosts == GM_ENABLED)
         ret = gearman_worker_add_function( worker, "host", 0, get_job, NULL );
 
-    if(gearman_opt_services == GM_ENABLED)
+    if(mod_gm_opt_services == GM_ENABLED)
         ret = gearman_worker_add_function( worker, "service", 0, get_job, NULL );
 
-    if(gearman_opt_events == GM_ENABLED)
+    if(mod_gm_opt_events == GM_ENABLED)
         ret = gearman_worker_add_function( worker, "eventhandler", 0, get_job, NULL );
 
     x = 0;
-    while ( gearman_hostgroups_list[x] != NULL ) {
+    while ( mod_gm_hostgroups_list[x] != NULL ) {
         char buffer[GM_BUFFERSIZE];
-        snprintf( buffer, (sizeof(buffer)-1), "hostgroup_%s", gearman_hostgroups_list[x] );
+        snprintf( buffer, (sizeof(buffer)-1), "hostgroup_%s", mod_gm_hostgroups_list[x] );
         ret = gearman_worker_add_function( worker, buffer, 0, get_job, NULL );
         x++;
     }
 
     x = 0;
-    while ( gearman_servicegroups_list[x] != NULL ) {
+    while ( mod_gm_servicegroups_list[x] != NULL ) {
         char buffer[GM_BUFFERSIZE];
-        snprintf( buffer, (sizeof(buffer)-1), "servicegroup_%s", gearman_servicegroups_list[x] );
+        snprintf( buffer, (sizeof(buffer)-1), "servicegroup_%s", mod_gm_servicegroups_list[x] );
         ret = gearman_worker_add_function( worker, buffer, 0, get_job, NULL );
         x++;
     }

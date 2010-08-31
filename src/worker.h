@@ -24,21 +24,21 @@
 #define GM_MAX_JOBS_PER_CLIENT        100
 
 
-int gearman_opt_debug_level;
-char * gearman_opt_server[GM_LISTSIZE];
-int gearman_opt_hosts;
-int gearman_opt_services;
-int gearman_opt_events;
-int gearman_opt_debug_result;
-int gearman_opt_timeout;
-int gearman_opt_max_age;
-char *gearman_hostgroups_list[GM_LISTSIZE];
-char *gearman_servicegroups_list[GM_LISTSIZE];
+int    mod_gm_opt_debug_level;
+char * mod_gm_opt_server[GM_LISTSIZE];
+int    mod_gm_opt_hosts;
+int    mod_gm_opt_services;
+int    mod_gm_opt_events;
+int    mod_gm_opt_debug_result;
+int    mod_gm_opt_timeout;
+int    mod_gm_opt_max_age;
+char * mod_gm_hostgroups_list[GM_LISTSIZE];
+char * mod_gm_servicegroups_list[GM_LISTSIZE];
 
-int main (int argc, char **argv);
+int  main (int argc, char **argv);
 void parse_arguments(char **argv);
-int make_new_child(void);
+int  make_new_child(void);
 void print_usage(void);
-int adjust_number_of_worker(int min, int max, int cur_workers, int cur_jobs);
+int  adjust_number_of_worker(int min, int max, int cur_workers, int cur_jobs);
 void check_signal(int sig);
 void setup_child_communicator(void);

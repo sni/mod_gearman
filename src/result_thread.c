@@ -214,8 +214,8 @@ static int create_gearman_worker( gearman_worker_st *worker ) {
     }
 
     int x = 0;
-    while ( gearman_opt_server[x] != NULL ) {
-        char * server   = strdup( gearman_opt_server[x] );
+    while ( mod_gm_opt_server[x] != NULL ) {
+        char * server   = strdup( mod_gm_opt_server[x] );
         char * server_c = server;
         char * host     = str_token( &server, ':' );
         char * port_val = str_token( &server, 0 );
@@ -234,15 +234,15 @@ static int create_gearman_worker( gearman_worker_st *worker ) {
         x++;
     }
 
-    if ( gearman_opt_result_queue == NULL ) {
+    if ( mod_gm_opt_result_queue == NULL ) {
         logger( GM_LOG_ERROR, "got no result queue!\n" );
         return GM_ERROR;
     }
-    logger( GM_LOG_DEBUG, "started result_worker thread for queue: %s\n", gearman_opt_result_queue );
+    logger( GM_LOG_DEBUG, "started result_worker thread for queue: %s\n", mod_gm_opt_result_queue );
 
-    ret = gearman_worker_add_function( worker, gearman_opt_result_queue, 0, get_results, NULL );
+    ret = gearman_worker_add_function( worker, mod_gm_opt_result_queue, 0, get_results, NULL );
     // add it once again, sometime the first one cannot register
-    ret = gearman_worker_add_function( worker, gearman_opt_result_queue, 0, get_results, NULL );
+    ret = gearman_worker_add_function( worker, mod_gm_opt_result_queue, 0, get_results, NULL );
     if ( ret != GEARMAN_SUCCESS ) {
         logger( GM_LOG_ERROR, "worker error: %s\n", gearman_worker_error( worker ) );
         return GM_ERROR;
