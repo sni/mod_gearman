@@ -36,7 +36,7 @@ char *gearman_hostgroups_list[GM_LISTSIZE];
 char *gearman_servicegroups_list[GM_LISTSIZE];
 
 int main (int argc, char **argv);
-void parse_arguments(char **argv);
+void parse_arguments(int argc, char **argv);
 int make_new_child(void);
 void print_usage(void);
 int adjust_number_of_worker(int min, int max, int cur_workers, int cur_jobs);

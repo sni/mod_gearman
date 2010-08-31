@@ -31,9 +31,7 @@ volatile sig_atomic_t current_number_of_jobs = 0;  // must be signal safe
 /* work starts here */
 int main (int argc, char **argv) {
 
-    argc = argc; // avoid warning about unused variable
-
-    parse_arguments(argv);
+    parse_arguments(argc, argv);
     logger( GM_LOG_DEBUG, "main process started\n");
 
     if(gearman_opt_max_worker == 1) {
@@ -118,17 +116,16 @@ int make_new_child() {
 
 
 /* parse command line arguments */
-void parse_arguments(char **argv) {
-    int x           = 1;
+void parse_arguments(int argc, char **argv) {
     int srv_ptr     = 0;
     int srvgrp_ptr  = 0;
     int hostgrp_ptr = 0;
 
     int set_by_hand = 0;
 
-    while(argv[x] != NULL) {
+    while(argc-- != 1) {
         char *ptr;
-        char * args   = strdup( argv[x] );
+        char * args   = strdup( argv[1] );
         while ( (ptr = strsep( &args, " " )) != NULL ) {
             char *key   = str_token( &ptr, '=' );
             char *value = str_token( &ptr, 0 );
@@ -227,7 +224,7 @@ void parse_arguments(char **argv) {
                 logger( GM_LOG_ERROR, "unknown option: %s\n", key );
             }
         }
-        x++;
+        argv++;
     }
 
     // did we get any server?
