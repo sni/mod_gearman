@@ -43,7 +43,6 @@ void worker_loop(void);
 void *get_job( gearman_job_st *, void *, size_t *, gearman_return_t * );
 void *dummy( gearman_job_st *, void *, size_t *, gearman_return_t * );
 int create_gearman_worker( gearman_worker_st *);
-int create_gearman_client( gearman_client_st *client );
 void do_exec_job(void);
 void send_result_back(void);
 void alarm_sighandler(int sig);

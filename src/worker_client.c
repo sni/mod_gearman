@@ -13,12 +13,14 @@
 #include "worker_client.h"
 #include "utils.h"
 #include "worker_logger.h"
+#include "gearman.h"
 
 char temp_buffer1[GM_BUFFERSIZE];
 char temp_buffer2[GM_BUFFERSIZE];
 char hostname[GM_BUFFERSIZE];
-gearman_client_st client;
+
 gearman_worker_st worker;
+gearman_client_st client;
 
 int number_jobs_done = 0;
 
@@ -38,14 +40,14 @@ void worker_client(int worker_mode) {
     worker_run_mode = worker_mode;
     exec_job    = ( gm_job_t * )malloc( sizeof *exec_job );
 
-    // create gearman worker
+    // create worker
     if(create_gearman_worker(&worker) != GM_OK) {
         logger( GM_LOG_ERROR, "cannot start worker\n" );
         exit( EXIT_FAILURE );
     }
 
-    // create gearman client
-    if ( create_gearman_client(&client) != GM_OK ) {
+    // create client
+    if ( create_gearman_client( gearman_opt_server, &client ) != GM_OK ) {
         logger( GM_LOG_ERROR, "cannot start client\n" );
         exit( EXIT_FAILURE );
     }
@@ -81,7 +83,7 @@ void worker_loop() {
 
             // create new connections
             create_gearman_worker( &worker );
-            create_gearman_client( &client );
+            create_gearman_client( gearman_opt_server, &client );
         }
     }
 
@@ -436,32 +438,15 @@ void send_result_back() {
 
     logger( GM_LOG_DEBUG, "data:\n%s\n", temp_buffer1);
 
-    gearman_task_st *task = NULL;
-    gearman_return_t ret;
-    gearman_client_add_task_background( &client, task, NULL, exec_job->result_queue, NULL, ( void * )temp_buffer1, ( size_t )strlen( temp_buffer1 ), &ret );
-    gearman_client_run_tasks( &client );
-    if(ret != GEARMAN_SUCCESS || (gearman_client_error(&client) != NULL && strcmp(gearman_client_error(&client), "") != 0)) { // errno is somehow empty, use error instead
-        logger( GM_LOG_ERROR, "send_result_back() finished with errors: %s\n", gearman_client_error(&client) );
-        gearman_client_free(&client);
-        sleep(5);
-        create_gearman_client( &client );
-
-        // try to resubmit once
-        gearman_client_add_task_background( &client, task, NULL, exec_job->result_queue, NULL, ( void * )temp_buffer1, ( size_t )strlen( temp_buffer1 ), &ret );
-        gearman_client_run_tasks( &client );
-        if(ret != GEARMAN_SUCCESS || (gearman_client_error(&client) != NULL && strcmp(gearman_client_error(&client), "") != 0)) { // errno is somehow empty, use error instead
-            logger( GM_LOG_DEBUG, "client error permanent: %s\n", gearman_client_error(&client));
-            gearman_client_free(&client);
-            create_gearman_client(&client);
-        }
-        else {
-            logger( GM_LOG_DEBUG, "retransmission successful\n");
-        }
-
-        return;
+    if(add_job_to_queue( &client,
+                         exec_job->result_queue,
+                         NULL,
+                         temp_buffer1,
+                         GM_JOB_PRIO_NORMAL,
+                         GM_DEFAULT_JOB_RETRIES
+                        ) == GM_OK) {
+        logger( GM_LOG_TRACE, "send_result_back() finished successfully\n" );
     }
-
-    logger( GM_LOG_TRACE, "send_result_back() finished successfully\n" );
 
     return;
 }
@@ -534,40 +519,6 @@ int create_gearman_worker( gearman_worker_st *worker ) {
     return GM_OK;
 }
 
-
-/* create the gearman worker */
-int create_gearman_client( gearman_client_st *client ) {
-    logger( GM_LOG_TRACE, "create_gearman_client()\n" );
-
-    gearman_return_t ret;
-
-    if ( gearman_client_create( client ) == NULL ) {
-        logger( GM_LOG_ERROR, "Memory allocation failure on client creation\n" );
-        return GM_ERROR;
-    }
-
-    int x = 0;
-    while ( gearman_opt_server[x] != NULL ) {
-        char * server   = strdup( gearman_opt_server[x] );
-        char * server_c = server;
-        char * host     = str_token( &server, ':' );
-        char * port_val = str_token( &server, 0 );
-        in_port_t port  = GM_SERVER_DEFAULT_PORT;
-        if(port_val != NULL) {
-            port  = ( in_port_t ) atoi( port_val );
-        }
-        ret = gearman_client_add_server( client, host, port );
-        if ( ret != GEARMAN_SUCCESS ) {
-            logger( GM_LOG_ERROR, "client error: %s\n", gearman_client_error( client ) );
-            free(server_c);
-            return GM_ERROR;
-        }
-        free(server_c);
-        x++;
-    }
-
-    return GM_OK;
-}
 
 /* called when check runs into timeout */
 void alarm_sighandler(int sig) {

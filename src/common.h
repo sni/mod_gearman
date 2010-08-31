@@ -25,6 +25,11 @@
 #define GM_LOG_TRACE                    2
 #define GM_LOG_STDOUT                   3
 
+#define GM_JOB_PRIO_LOW                 1
+#define GM_JOB_PRIO_NORMAL              2
+#define GM_JOB_PRIO_HIGH                3
+
+#define GM_DEFAULT_JOB_RETRIES          1
 
 #ifndef TRUE
 #define TRUE                            1
@@ -45,3 +50,5 @@
 
 #define GM_SHM_SIZE                   300
 #define GM_SHM_KEY                   1234       // TODO: random key, verify if this makes problem with several independant worker on same host
+
+void logger( int lvl, const char *text, ... );

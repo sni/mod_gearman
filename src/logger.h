@@ -8,4 +8,3 @@
 
 #include "nagios/nagios.h"
 
-void logger( int lvl, const char *text, ... );

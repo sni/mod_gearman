@@ -10,10 +10,10 @@
 AM_CPPFLAGS=-Iincludes
 
 pkglib_LIBRARIES = mod_gearman.so
-mod_gearman_so_SOURCES = utils.c logger.c result_thread.c mod_gearman.c
+mod_gearman_so_SOURCES = gearman.c utils.c logger.c result_thread.c mod_gearman.c
 
 bin_PROGRAMS = worker
-worker_SOURCES = worker_logger.c worker_client.c utils.c worker.c
+worker_SOURCES = gearman.c worker_logger.c worker_client.c utils.c worker.c
 
 # -g adds debug symbols, -s strips
 CFLAGS=-Wall -W -Wstrict-prototypes -g

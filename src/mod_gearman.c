@@ -11,6 +11,7 @@
 #include "result_thread.h"
 #include "mod_gearman.h"
 #include "logger.h"
+#include "gearman.h"
 
 /* specify event broker API version (required) */
 NEB_API_VERSION( CURRENT_NEB_API_VERSION );
@@ -42,7 +43,6 @@ static int   handle_host_check( int,void * );
 static int   handle_svc_check( int,void * );
 static int   handle_eventhandler( int,void * );
 static int   handle_perfdata(int e, void *);
-static int   create_gearman_client(void);
 static void  set_target_worker( host *, service * );
 static int   handle_process_events( int, void * );
 static void  start_threads(void);
@@ -75,9 +75,9 @@ int nebmodule_init( int flags, char *args, nebmodule *handle ) {
         return GM_ERROR;
     }
 
-    // create gearman client
-    if ( create_gearman_client() != GM_OK ) {
-        logger( GM_LOG_ERROR, "could not create gearman client\n" );
+    // create client
+    if ( create_gearman_client( gearman_opt_server, &client ) != GM_OK ) {
+        logger( GM_LOG_ERROR, "cannot start client\n" );
         return GM_ERROR;
     }
 
@@ -226,27 +226,14 @@ static int handle_eventhandler( int event_type, void *data ) {
     snprintf( temp_buffer,sizeof( temp_buffer )-1,"type=eventhandler\ncommand_line=%s\n",ds->command_line );
     temp_buffer[sizeof( temp_buffer )-1]='\x0';
 
-    gearman_task_st  *task = NULL;
-    gearman_return_t ret;
-    gearman_client_add_task_background( &client, task, NULL, "service", NULL, ( void * )temp_buffer, ( size_t )strlen( temp_buffer ), &ret );
-    gearman_client_run_tasks( &client );
-    if(ret != GEARMAN_SUCCESS || (gearman_client_error(&client) != NULL && strcmp(gearman_client_error(&client), "") != 0)) { // errno is somehow empty, use error instead
-        logger( GM_LOG_ERROR, "client error: %s\n", gearman_client_error(&client));
-        gearman_client_free(&client);
-        sleep(5);
-        create_gearman_client();
-
-        // try to resubmit once
-        gearman_client_add_task_background( &client, task, NULL, "service", NULL, ( void * )temp_buffer, ( size_t )strlen( temp_buffer ), &ret );
-        gearman_client_run_tasks( &client );
-        if(ret != GEARMAN_SUCCESS || (gearman_client_error(&client) != NULL && strcmp(gearman_client_error(&client), "") != 0)) { // errno is somehow empty, use error instead
-            logger( GM_LOG_DEBUG, "client error permanent: %s\n", gearman_client_error(&client));
-            gearman_client_free(&client);
-            create_gearman_client();
-        }
-        else {
-            logger( GM_LOG_DEBUG, "retransmission successful\n");
-        }
+    if(add_job_to_queue( &client,
+                         "eventhandler",
+                         NULL,
+                         temp_buffer,
+                         GM_JOB_PRIO_NORMAL,
+                         GM_DEFAULT_JOB_RETRIES
+                        ) == GM_OK) {
+        logger( GM_LOG_TRACE, "handle_eventhandler() finished successfully\n" );
     }
 
     // tell nagios to not execute
@@ -273,11 +260,6 @@ static int handle_host_check( int event_type, void *data ) {
     // shouldn't happen - internal Nagios error
     if ( hostdata == 0 ) {
         logger( GM_LOG_ERROR, "Host handler received NULL host data structure.\n" );
-        return GM_ERROR;
-    }
-
-    if ( gearman_client_errno( &client ) != GEARMAN_SUCCESS ) {
-        logger( GM_LOG_ERROR, "client error %d: %s\n", gearman_client_errno( &client ), gearman_client_error( &client ) );
         return GM_ERROR;
     }
 
@@ -347,27 +329,14 @@ static int handle_host_check( int event_type, void *data ) {
             );
     temp_buffer[sizeof( temp_buffer )-1]='\x0';
 
-    gearman_task_st  *task = NULL;
-    gearman_return_t ret;
-    gearman_client_add_task_background( &client, task, NULL, target_worker, hst->name, ( void * )temp_buffer, ( size_t )strlen( temp_buffer ), &ret );
-    gearman_client_run_tasks( &client );
-    if(ret != GEARMAN_SUCCESS || (gearman_client_error(&client) != NULL && strcmp(gearman_client_error(&client), "") != 0)) { // errno is somehow empty, use error instead
-        logger( GM_LOG_ERROR, "client error: %s\n", gearman_client_error(&client));
-        gearman_client_free(&client);
-        sleep(5);
-        create_gearman_client();
-
-        // try to resubmit once
-        gearman_client_add_task_background( &client, task, NULL, target_worker, hst->name, ( void * )temp_buffer, ( size_t )strlen( temp_buffer ), &ret );
-        gearman_client_run_tasks( &client );
-        if(ret != GEARMAN_SUCCESS || (gearman_client_error(&client) != NULL && strcmp(gearman_client_error(&client), "") != 0)) { // errno is somehow empty, use error instead
-            logger( GM_LOG_DEBUG, "client error permanent: %s\n", gearman_client_error(&client));
-            gearman_client_free(&client);
-            create_gearman_client();
-        }
-        else {
-            logger( GM_LOG_DEBUG, "retransmission successful\n");
-        }
+    if(add_job_to_queue( &client,
+                         target_worker,
+                         hst->name,
+                         temp_buffer,
+                         GM_JOB_PRIO_NORMAL,
+                         GM_DEFAULT_JOB_RETRIES
+                        ) == GM_OK) {
+        logger( GM_LOG_TRACE, "handle_host_check() finished successfully\n" );
     }
 
     // clean up
@@ -430,32 +399,20 @@ static int handle_svc_check( int event_type, void *data ) {
 
     uniq[0]='\x0';
     snprintf( uniq,sizeof( temp_buffer )-1,"%s-%s", svcdata->host_name, svcdata->service_description);
-    gearman_task_st *task = NULL;
-    gearman_return_t ret;
-    // execute forced checks with high prio as they are propably user requested
-    if(check_result_info.check_options & CHECK_OPTION_FORCE_EXECUTION) {
-        gearman_client_add_task_high_background( &client, task, NULL, target_worker, uniq, ( void * )temp_buffer, ( size_t )strlen( temp_buffer ), &ret );
-    } else {
-        gearman_client_add_task_low_background( &client, task, NULL, target_worker, uniq, ( void * )temp_buffer, ( size_t )strlen( temp_buffer ), &ret );
-    }
-    gearman_client_run_tasks( &client );
-    if(ret != GEARMAN_SUCCESS || (gearman_client_error(&client) != NULL && strcmp(gearman_client_error(&client), "") != 0)) { // errno is somehow empty, use error instead
-        logger( GM_LOG_ERROR, "client error: %s\n", gearman_client_error(&client));
-        gearman_client_free(&client);
-        sleep(5);
-        create_gearman_client();
 
-        // try to resubmit once
-        gearman_client_add_task_low_background( &client, task, NULL, target_worker, uniq, ( void * )temp_buffer, ( size_t )strlen( temp_buffer ), &ret );
-        gearman_client_run_tasks( &client );
-        if(ret != GEARMAN_SUCCESS || (gearman_client_error(&client) != NULL && strcmp(gearman_client_error(&client), "") != 0)) { // errno is somehow empty, use error instead
-            logger( GM_LOG_DEBUG, "client error permanent: %s\n", gearman_client_error(&client));
-            gearman_client_free(&client);
-            create_gearman_client();
-        }
-        else {
-            logger( GM_LOG_DEBUG, "retransmission successful\n");
-        }
+    // execute forced checks with high prio as they are propably user requested
+    int prio = GM_JOB_PRIO_LOW;
+    if(check_result_info.check_options & CHECK_OPTION_FORCE_EXECUTION)
+        prio = GM_JOB_PRIO_HIGH;
+
+    if(add_job_to_queue( &client,
+                         target_worker,
+                         uniq,
+                         temp_buffer,
+                         prio,
+                         GM_DEFAULT_JOB_RETRIES
+                        ) == GM_OK) {
+        logger( GM_LOG_TRACE, "handle_svc_check() finished successfully\n" );
     }
 
     // tell nagios to not execute
@@ -609,41 +566,6 @@ static void read_arguments( const char *args_orig ) {
     }
 
     return;
-}
-
-
-/* create the gearman client */
-static int create_gearman_client(void) {
-    gearman_return_t ret;
-    if ( gearman_client_create( &client ) == NULL ) {
-        logger( GM_LOG_ERROR, "Memory allocation failure on client creation\n" );
-        return GM_ERROR;
-    }
-
-    int x = 0;
-    while ( gearman_opt_server[x] != NULL ) {
-        char * server   = strdup( gearman_opt_server[x] );
-        char * server_c = server;
-        char * host     = str_token( &server, ':' );
-        char * port_val = str_token( &server, 0 );
-        in_port_t port  = GM_SERVER_DEFAULT_PORT;
-        if(port_val != NULL) {
-            port  = ( in_port_t ) atoi( port_val );
-        }
-        ret = gearman_client_add_server( &client, host, port );
-        if ( ret != GEARMAN_SUCCESS ) {
-            logger( GM_LOG_ERROR, "client error: %s\n", gearman_client_error( &client ) );
-            free(server_c);
-            return GM_ERROR;
-        }
-        logger( GM_LOG_DEBUG, "client added gearman server %s:%i\n", host, port );
-        free(server_c);
-        x++;
-    }
-
-    gearman_client_set_timeout( &client, gearman_opt_timeout );
-
-    return GM_OK;
 }
 
 
@@ -818,28 +740,15 @@ int handle_perfdata(int event_type, void *data) {
     }
 
     if(has_perfdata == TRUE) {
-        // create gearman task
-        gearman_task_st  *task = NULL;
-        gearman_return_t ret;
-        gearman_client_add_task_background( &client, task, NULL, GM_PERFDATA_QUEUE, NULL, ( void * )perfdatafile_template, ( size_t )strlen( perfdatafile_template ), &ret );
-        gearman_client_run_tasks( &client );
-        if(ret != GEARMAN_SUCCESS || (gearman_client_error(&client) != NULL && strcmp(gearman_client_error(&client), "") != 0)) { // errno is somehow empty, use error instead
-            logger( GM_LOG_ERROR, "client error: %s\n", gearman_client_error(&client));
-            gearman_client_free(&client);
-            sleep(5);
-            create_gearman_client();
-
-            // try to resubmit once
-            gearman_client_add_task_background( &client, task, NULL, "service", NULL, ( void * )perfdatafile_template, ( size_t )strlen( perfdatafile_template ), &ret );
-            gearman_client_run_tasks( &client );
-            if(ret != GEARMAN_SUCCESS || (gearman_client_error(&client) != NULL && strcmp(gearman_client_error(&client), "") != 0)) { // errno is somehow empty, use error instead
-                logger( GM_LOG_DEBUG, "client error permanent: %s\n", gearman_client_error(&client));
-                gearman_client_free(&client);
-                create_gearman_client();
-            }
-            else {
-                logger( GM_LOG_DEBUG, "retransmission successful\n");
-            }
+        // add our job onto the queue
+        if(add_job_to_queue( &client,
+                             GM_PERFDATA_QUEUE,
+                             NULL,
+                             perfdatafile_template,
+                             GM_JOB_PRIO_NORMAL,
+                             GM_DEFAULT_JOB_RETRIES
+                            ) == GM_OK) {
+            logger( GM_LOG_TRACE, "handle_perfdata() finished successfully\n" );
         }
     }
 

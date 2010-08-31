@@ -70,10 +70,17 @@ int main (int argc, char **argv) {
             make_new_child();
         }
 
+        int had_to_increase = 0;
         int target_number_of_workers = adjust_number_of_worker(gearman_opt_min_worker, gearman_opt_max_worker, current_number_of_workers, current_number_of_jobs);
         for (x = current_number_of_workers; x < target_number_of_workers; x++) {
             // top up the worker pool
             make_new_child();
+            had_to_increase = 1;
+        }
+
+        if(had_to_increase) {
+            // wait a little bit, otherwise worker would be spawned really fast
+            sleep(1);
         }
     }
 

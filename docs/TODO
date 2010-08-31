@@ -13,10 +13,9 @@ General
 Worker
 ======
 
- - add init scripts
- - verify if GM_WORKER_OPTIONS_DATA is working
  - kill all childs when worker exits
- - add config file support
  - check reschedule/schedule for services
  - SIGTERM on client should finish after current job
  - SIGINT on worker_client should sent result back
+ - add daemon mode ( pid file, logfile, configfile, init script )
+ - cleanup semaphores on exit
