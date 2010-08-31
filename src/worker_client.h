@@ -41,9 +41,8 @@ typedef struct gm_job_struct {
 void worker_client(int worker_mode);
 void worker_loop(void);
 void *get_job( gearman_job_st *, void *, size_t *, gearman_return_t * );
-void *dummy( gearman_job_st *, void *, size_t *, gearman_return_t * );
-int create_gearman_worker( gearman_worker_st *);
 void do_exec_job(void);
+int set_worker( gearman_worker_st *worker );
 void send_result_back(void);
 void alarm_sighandler(int sig);
 void send_state_to_parent(int status);

@@ -76,7 +76,7 @@ int nebmodule_init( int flags, char *args, nebmodule *handle ) {
     }
 
     // create client
-    if ( create_gearman_client( mod_gm_opt_server, &client ) != GM_OK ) {
+    if ( create_client( mod_gm_opt_server, &client ) != GM_OK ) {
         logger( GM_LOG_ERROR, "cannot start client\n" );
         return GM_ERROR;
     }

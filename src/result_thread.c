@@ -12,8 +12,7 @@
 #include "utils.h"
 #include "mod_gearman.h"
 #include "logger.h"
-
-static int create_gearman_worker( gearman_worker_st *);
+#include "gearman.h"
 
 /* cleanup and exit this thread */
 static void cancel_worker_thread (void * data) {
@@ -39,7 +38,7 @@ void *result_worker( void * data ) {
     pthread_setcanceltype (PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
 
     gearman_worker_st worker;
-    create_gearman_worker(&worker);
+    set_worker(&worker);
 
     pthread_cleanup_push ( cancel_worker_thread, (void*) &worker);
 
@@ -52,7 +51,7 @@ void *result_worker( void * data ) {
             gearman_worker_free( &worker );
 
             sleep(1);
-            create_gearman_worker( &worker );
+            set_worker(&worker );
         }
     }
 
@@ -203,36 +202,10 @@ void *get_results( gearman_job_st *job, void *context, size_t *result_size, gear
 }
 
 
-/* create the gearman worker */
-static int create_gearman_worker( gearman_worker_st *worker ) {
+/* get the worker */
+int set_worker( gearman_worker_st *worker ) {
 
-    gearman_return_t ret;
-
-    if ( gearman_worker_create( worker ) == NULL ) {
-        logger( GM_LOG_ERROR, "Memory allocation failure on worker creation\n" );
-        return GM_ERROR;
-    }
-
-    int x = 0;
-    while ( mod_gm_opt_server[x] != NULL ) {
-        char * server   = strdup( mod_gm_opt_server[x] );
-        char * server_c = server;
-        char * host     = str_token( &server, ':' );
-        char * port_val = str_token( &server, 0 );
-        in_port_t port  = GM_SERVER_DEFAULT_PORT;
-        if(port_val != NULL) {
-            port  = ( in_port_t ) atoi( port_val );
-        }
-        ret = gearman_worker_add_server( worker, host, port );
-        if ( ret != GEARMAN_SUCCESS ) {
-            logger( GM_LOG_ERROR, "worker error: %s\n", gearman_worker_error( worker ) );
-            free(server_c);
-            return GM_ERROR;
-        }
-        logger( GM_LOG_DEBUG, "worker added gearman server %s:%i\n", host, port );
-        free(server_c);
-        x++;
-    }
+    create_worker( mod_gm_opt_server, worker );
 
     if ( mod_gm_opt_result_queue == NULL ) {
         logger( GM_LOG_ERROR, "got no result queue!\n" );
@@ -240,12 +213,12 @@ static int create_gearman_worker( gearman_worker_st *worker ) {
     }
     logger( GM_LOG_DEBUG, "started result_worker thread for queue: %s\n", mod_gm_opt_result_queue );
 
-    ret = gearman_worker_add_function( worker, mod_gm_opt_result_queue, 0, get_results, NULL );
-    // add it once again, sometime the first one cannot register
-    ret = gearman_worker_add_function( worker, mod_gm_opt_result_queue, 0, get_results, NULL );
-    if ( ret != GEARMAN_SUCCESS ) {
-        logger( GM_LOG_ERROR, "worker error: %s\n", gearman_worker_error( worker ) );
+    if(worker_add_function( worker, mod_gm_opt_result_queue, get_results ) != GM_OK) {
         return GM_ERROR;
     }
-    return OK;
+
+    // add our dummy queue, gearman sometimes forgets the last added queue
+    worker_add_function( worker, "dummy", dummy);
+
+    return GM_OK;
 }

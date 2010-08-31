@@ -41,13 +41,13 @@ void worker_client(int worker_mode) {
     exec_job    = ( gm_job_t * )malloc( sizeof *exec_job );
 
     // create worker
-    if(create_gearman_worker(&worker) != GM_OK) {
+    if(set_worker(&worker) != GM_OK) {
         logger( GM_LOG_ERROR, "cannot start worker\n" );
         exit( EXIT_FAILURE );
     }
 
     // create client
-    if ( create_gearman_client( mod_gm_opt_server, &client ) != GM_OK ) {
+    if ( create_client( mod_gm_opt_server, &client ) != GM_OK ) {
         logger( GM_LOG_ERROR, "cannot start client\n" );
         exit( EXIT_FAILURE );
     }
@@ -82,8 +82,8 @@ void worker_loop() {
                 sleep_time_after_error = 60;
 
             // create new connections
-            create_gearman_worker( &worker );
-            create_gearman_client( mod_gm_opt_server, &client );
+            set_worker( &worker );
+            create_client( mod_gm_opt_server, &client );
         }
     }
 
@@ -453,50 +453,25 @@ void send_result_back() {
 
 
 /* create the worker */
-int create_gearman_worker( gearman_worker_st *worker ) {
-    logger( GM_LOG_TRACE, "create_gearman_worker()\n" );
+int set_worker( gearman_worker_st *worker ) {
+    logger( GM_LOG_TRACE, "set_worker()\n" );
 
-    gearman_return_t ret;
-
-    if ( gearman_worker_create( worker ) == NULL ) {
-        logger( GM_LOG_ERROR, "Memory allocation failure on worker creation\n" );
-        return GM_ERROR;
-    }
-
-    int x = 0;
-    while ( mod_gm_opt_server[x] != NULL ) {
-        char * server   = strdup( mod_gm_opt_server[x] );
-        char * server_c = server;
-        char * host     = str_token( &server, ':' );
-        char * port_val = str_token( &server, 0 );
-        in_port_t port  = GM_SERVER_DEFAULT_PORT;
-        if(port_val != NULL) {
-            port  = ( in_port_t ) atoi( port_val );
-        }
-        ret = gearman_worker_add_server( worker, host, port );
-        if ( ret != GEARMAN_SUCCESS ) {
-            logger( GM_LOG_ERROR, "worker error: %s\n", gearman_worker_error( worker ) );
-            free(server_c);
-            return GM_ERROR;
-        }
-        free(server_c);
-        x++;
-    }
+    create_worker( mod_gm_opt_server, worker );
 
     if(mod_gm_opt_hosts == GM_ENABLED)
-        ret = gearman_worker_add_function( worker, "host", 0, get_job, NULL );
+        worker_add_function( worker, "host", get_job );
 
     if(mod_gm_opt_services == GM_ENABLED)
-        ret = gearman_worker_add_function( worker, "service", 0, get_job, NULL );
+        worker_add_function( worker, "service", get_job );
 
     if(mod_gm_opt_events == GM_ENABLED)
-        ret = gearman_worker_add_function( worker, "eventhandler", 0, get_job, NULL );
+        worker_add_function( worker, "eventhandler", get_job );
 
-    x = 0;
+    int x = 0;
     while ( mod_gm_hostgroups_list[x] != NULL ) {
         char buffer[GM_BUFFERSIZE];
         snprintf( buffer, (sizeof(buffer)-1), "hostgroup_%s", mod_gm_hostgroups_list[x] );
-        ret = gearman_worker_add_function( worker, buffer, 0, get_job, NULL );
+        worker_add_function( worker, buffer, get_job );
         x++;
     }
 
@@ -504,17 +479,12 @@ int create_gearman_worker( gearman_worker_st *worker ) {
     while ( mod_gm_servicegroups_list[x] != NULL ) {
         char buffer[GM_BUFFERSIZE];
         snprintf( buffer, (sizeof(buffer)-1), "servicegroup_%s", mod_gm_servicegroups_list[x] );
-        ret = gearman_worker_add_function( worker, buffer, 0, get_job, NULL );
+        worker_add_function( worker, buffer, get_job );
         x++;
     }
 
-    if ( ret != GEARMAN_SUCCESS ) {
-        logger( GM_LOG_ERROR, "worker error: %s\n", gearman_worker_error( worker ) );
-        return GM_ERROR;
-    }
-
-    // sometimes the last queue does not register, so add a dummy
-    ret = gearman_worker_add_function( worker, "dummy", 0, dummy, NULL );
+    // add our dummy queue, gearman sometimes forgets the last added queue
+    worker_add_function( worker, "dummy", dummy);
 
     return GM_OK;
 }
@@ -576,16 +546,4 @@ void send_state_to_parent(int status) {
     }
 
     return;
-}
-
-
-void *dummy( gearman_job_st *job, void *context, size_t *result_size, gearman_return_t *ret_ptr ) {
-
-    // avoid "unused parameter" warning
-    job         = job;
-    context     = context;
-    result_size = 0;
-    ret_ptr     = ret_ptr;
-
-    return NULL;
 }
