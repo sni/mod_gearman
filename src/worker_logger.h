@@ -10,4 +10,3 @@
 #include <string.h>
 #include <time.h>
 
-void logger( int lvl, const char *text, ... );

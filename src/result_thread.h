@@ -11,16 +11,10 @@
 #include <libgearman/gearman.h>
 #include "nagios/nagios.h"
 
-typedef enum {
-    GM_WORKER_OPTIONS_NONE=   0,
-    GM_WORKER_OPTIONS_DATA=   ( 1 << 0 ),
-    GM_WORKER_OPTIONS_STATUS= ( 1 << 1 ),
-    GM_WORKER_OPTIONS_UNIQUE= ( 1 << 2 )
-} gm_worker_options_t;
-
 typedef struct {
     int id;
 } worker_parm;
 
 void *result_worker(void *);
+int set_worker( gearman_worker_st *worker );
 void *get_results( gearman_job_st *, void *, size_t *, gearman_return_t * );

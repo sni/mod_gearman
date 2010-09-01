@@ -13,7 +13,7 @@
 void logger( int lvl, const char *text, ... ) {
 
     // check log level
-    if ( lvl != GM_LOG_ERROR && lvl > gearman_opt_debug_level ) {
+    if ( lvl != GM_LOG_ERROR && lvl > mod_gm_opt_debug_level ) {
         return;
     }
 
@@ -29,7 +29,7 @@ void logger( int lvl, const char *text, ... ) {
     va_end( ap );
 
     // in case of stdout logging just print and return
-    if ( gearman_opt_debug_level >= GM_LOG_STDOUT ) {
+    if ( mod_gm_opt_debug_level >= GM_LOG_STDOUT ) {
         printf( "%s", buffer );
         return;
     }

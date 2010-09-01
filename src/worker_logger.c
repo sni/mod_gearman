@@ -13,7 +13,7 @@
 void logger( int lvl, const char *text, ... ) {
 
     // check log level
-    if ( lvl != GM_LOG_ERROR && lvl > gearman_opt_debug_level ) {
+    if ( lvl != GM_LOG_ERROR && lvl > mod_gm_opt_debug_level ) {
         return;
     }
 

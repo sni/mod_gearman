@@ -12,17 +12,17 @@
 #include "worker_logger.h"
 #include "worker_client.h"
 
-int gearman_opt_min_worker      = GM_DEFAULT_MIN_WORKER;
-int gearman_opt_max_worker      = GM_DEFAULT_MAX_WORKER;
-int gearman_opt_max_age         = GM_DEFAULT_JOB_MAX_AGE;
-int gearman_opt_timeout         = GM_DEFAULT_TIMEOUT;
+int mod_gm_opt_min_worker      = GM_DEFAULT_MIN_WORKER;
+int mod_gm_opt_max_worker      = GM_DEFAULT_MAX_WORKER;
+int mod_gm_opt_max_age         = GM_DEFAULT_JOB_MAX_AGE;
+int mod_gm_opt_timeout         = GM_DEFAULT_TIMEOUT;
 
-int gearman_opt_hosts           = GM_DISABLED;
-int gearman_opt_services        = GM_DISABLED;
-int gearman_opt_events          = GM_DISABLED;
-int gearman_opt_debug_result    = GM_DISABLED;
-char *gearman_hostgroups_list[GM_LISTSIZE];
-char *gearman_servicegroups_list[GM_LISTSIZE];
+int mod_gm_opt_hosts           = GM_DISABLED;
+int mod_gm_opt_services        = GM_DISABLED;
+int mod_gm_opt_events          = GM_DISABLED;
+int mod_gm_opt_debug_result    = GM_DISABLED;
+char *mod_gm_hostgroups_list[GM_LISTSIZE];
+char *mod_gm_servicegroups_list[GM_LISTSIZE];
 
 int current_number_of_workers                = 0;
 volatile sig_atomic_t current_number_of_jobs = 0;  // must be signal safe
@@ -31,10 +31,15 @@ volatile sig_atomic_t current_number_of_jobs = 0;  // must be signal safe
 /* work starts here */
 int main (int argc, char **argv) {
 
+
+    /* set signal handlers for a clean exit */
+    signal(SIGINT, clean_exit);
+    signal(SIGTERM,clean_exit);
+
     parse_arguments(argc, argv);
     logger( GM_LOG_DEBUG, "main process started\n");
 
-    if(gearman_opt_max_worker == 1) {
+    if(mod_gm_opt_max_worker == 1) {
         worker_client(GM_WORKER_STANDALONE);
         exit( EXIT_SUCCESS );
     }
@@ -43,7 +48,7 @@ int main (int argc, char **argv) {
 
     // create initial childs
     int x;
-    for(x=0; x < gearman_opt_min_worker; x++) {
+    for(x=0; x < mod_gm_opt_min_worker; x++) {
         make_new_child();
     }
 
@@ -64,17 +69,25 @@ int main (int argc, char **argv) {
         if(current_number_of_jobs > current_number_of_workers) { current_number_of_jobs = current_number_of_workers; }
 
         // keep up minimum population
-        for (x = current_number_of_workers; x < gearman_opt_min_worker; x++) {
+        for (x = current_number_of_workers; x < mod_gm_opt_min_worker; x++) {
             make_new_child();
         }
 
-        int target_number_of_workers = adjust_number_of_worker(gearman_opt_min_worker, gearman_opt_max_worker, current_number_of_workers, current_number_of_jobs);
+        int had_to_increase = 0;
+        int target_number_of_workers = adjust_number_of_worker(mod_gm_opt_min_worker, mod_gm_opt_max_worker, current_number_of_workers, current_number_of_jobs);
         for (x = current_number_of_workers; x < target_number_of_workers; x++) {
             // top up the worker pool
             make_new_child();
+            had_to_increase = 1;
+        }
+
+        if(had_to_increase) {
+            // wait a little bit, otherwise worker would be spawned really fast
+            sleep(1);
         }
     }
 
+    clean_exit(15);
     exit( EXIT_SUCCESS );
 }
 
@@ -98,6 +111,8 @@ int make_new_child() {
         logger( GM_LOG_DEBUG, "worker started with pid: %d\n", getpid() );
 
         signal(SIGUSR1, SIG_IGN);
+        signal(SIGINT,  SIG_DFL);
+        signal(SIGTERM, SIG_DFL);
 
         // do the real work
         worker_client(GM_WORKER_MULTI);
@@ -140,27 +155,27 @@ void parse_arguments(int argc, char **argv) {
             if ( !strcmp( key, "hosts" ) || !strcmp( key, "--hosts" ) ) {
                 set_by_hand++;
                 if( value == NULL || !strcmp( value, "yes" ) ) {
-                    gearman_opt_hosts = GM_ENABLED;
+                    mod_gm_opt_hosts = GM_ENABLED;
                     logger( GM_LOG_DEBUG, "enabling processing of hosts queue\n");
                 }
             }
             else if ( !strcmp( key, "services" ) || !strcmp( key, "--services" ) ) {
                 set_by_hand++;
                 if( value == NULL || !strcmp( value, "yes" ) ) {
-                    gearman_opt_services = GM_ENABLED;
+                    mod_gm_opt_services = GM_ENABLED;
                     logger( GM_LOG_DEBUG, "enabling processing of service queue\n");
                 }
             }
             else if ( !strcmp( key, "events" ) || !strcmp( key, "--events" ) ) {
                 set_by_hand++;
                 if( value == NULL || !strcmp( value, "yes" ) ) {
-                    gearman_opt_events = GM_ENABLED;
+                    mod_gm_opt_events = GM_ENABLED;
                     logger( GM_LOG_DEBUG, "enabling processing of events queue\n");
                 }
             }
             else if ( !strcmp( key, "debug-result" ) || !strcmp( key, "--debug-result" ) ) {
                 if( value == NULL || !strcmp( value, "yes" ) ) {
-                    gearman_opt_debug_result = GM_ENABLED;
+                    mod_gm_opt_debug_result = GM_ENABLED;
                     logger( GM_LOG_DEBUG, "adding debug output to check output\n");
                 }
             }
@@ -169,31 +184,36 @@ void parse_arguments(int argc, char **argv) {
                 continue;
 
             if ( !strcmp( key, "debug" ) || !strcmp( key, "--debug" ) ) {
-                gearman_opt_debug_level = atoi( value );
-                if(gearman_opt_debug_level < 0) { gearman_opt_debug_level = 0; }
-                logger( GM_LOG_DEBUG, "Setting debug level to %d\n", gearman_opt_debug_level );
+                mod_gm_opt_debug_level = atoi( value );
+                if(mod_gm_opt_debug_level < 0) { mod_gm_opt_debug_level = 0; }
+                logger( GM_LOG_DEBUG, "Setting debug level to %d\n", mod_gm_opt_debug_level );
             }
             else if ( !strcmp( key, "timeout" ) || !strcmp( key, "--timeout" ) ) {
-                gearman_opt_timeout = atoi( value );
-                if(gearman_opt_timeout < 1) { gearman_opt_timeout = 1; }
-                logger( GM_LOG_DEBUG, "Setting default timeout to %d\n", gearman_opt_timeout );
+                mod_gm_opt_timeout = atoi( value );
+                if(mod_gm_opt_timeout < 1) { mod_gm_opt_timeout = 1; }
+                logger( GM_LOG_DEBUG, "Setting default timeout to %d\n", mod_gm_opt_timeout );
             }
             else if ( !strcmp( key, "min-worker" ) || !strcmp( key, "--min-worker" ) ) {
-                gearman_opt_min_worker = atoi( value );
-                if(gearman_opt_min_worker <= 0) { gearman_opt_min_worker = 1; }
-                logger( GM_LOG_DEBUG, "Setting min worker to %d\n", gearman_opt_min_worker );
+                mod_gm_opt_min_worker = atoi( value );
+                if(mod_gm_opt_min_worker <= 0) { mod_gm_opt_min_worker = 1; }
+                logger( GM_LOG_DEBUG, "Setting min worker to %d\n", mod_gm_opt_min_worker );
             }
             else if ( !strcmp( key, "max-worker" ) || !strcmp( key, "--max-worker" ) ) {
-                gearman_opt_max_worker = atoi( value );
-                if(gearman_opt_max_worker <= 0) { gearman_opt_max_worker = 1; }
-                logger( GM_LOG_DEBUG, "Setting max worker to %d\n", gearman_opt_max_worker );
+                mod_gm_opt_max_worker = atoi( value );
+                if(mod_gm_opt_max_worker <= 0) { mod_gm_opt_max_worker = 1; }
+                logger( GM_LOG_DEBUG, "Setting max worker to %d\n", mod_gm_opt_max_worker );
+            }
+            else if ( !strcmp( key, "max-age" ) || !strcmp( key, "--max-age" ) ) {
+                mod_gm_opt_max_age = atoi( value );
+                if(mod_gm_opt_max_age <= 0) { mod_gm_opt_max_age = 1; }
+                logger( GM_LOG_DEBUG, "Setting max job age to %d\n", mod_gm_opt_max_age );
             }
             else if ( !strcmp( key, "server" ) || !strcmp( key, "--server" ) ) {
                 char *servername;
                 while ( (servername = strsep( &value, "," )) != NULL ) {
                     if ( strcmp( servername, "" ) ) {
                         logger( GM_LOG_DEBUG, "Adding server %s\n", servername);
-                        gearman_opt_server[srv_ptr] = servername;
+                        mod_gm_opt_server[srv_ptr] = servername;
                         srv_ptr++;
                     }
                 }
@@ -203,7 +223,7 @@ void parse_arguments(int argc, char **argv) {
                 char *groupname;
                 while ( (groupname = strsep( &value, "," )) != NULL ) {
                     if ( strcmp( groupname, "" ) ) {
-                        gearman_servicegroups_list[srvgrp_ptr] = groupname;
+                        mod_gm_servicegroups_list[srvgrp_ptr] = groupname;
                         srvgrp_ptr++;
                         logger( GM_LOG_DEBUG, "added seperate worker for servicegroup: %s\n", groupname );
                     }
@@ -213,7 +233,7 @@ void parse_arguments(int argc, char **argv) {
                 char *groupname;
                 while ( (groupname = strsep( &value, "," )) != NULL ) {
                     if ( strcmp( groupname, "" ) ) {
-                        gearman_hostgroups_list[hostgrp_ptr] = groupname;
+                        mod_gm_hostgroups_list[hostgrp_ptr] = groupname;
                         hostgrp_ptr++;
                         logger( GM_LOG_DEBUG, "added seperate worker for hostgroup: %s\n", groupname );
                     }
@@ -236,18 +256,18 @@ void parse_arguments(int argc, char **argv) {
     // nothing set by hand -> defaults
     if(set_by_hand == 0 && srvgrp_ptr == 0 && hostgrp_ptr == 0) {
         logger( GM_LOG_DEBUG, "starting client with default queues\n" );
-        gearman_opt_hosts    = GM_ENABLED;
-        gearman_opt_services = GM_ENABLED;
-        gearman_opt_events   = GM_ENABLED;
+        mod_gm_opt_hosts    = GM_ENABLED;
+        mod_gm_opt_services = GM_ENABLED;
+        mod_gm_opt_events   = GM_ENABLED;
     }
 
-    if(srvgrp_ptr == 0 && hostgrp_ptr == 0 && gearman_opt_hosts == GM_DISABLED && gearman_opt_services == GM_DISABLED && gearman_opt_events == GM_DISABLED) {
+    if(srvgrp_ptr == 0 && hostgrp_ptr == 0 && mod_gm_opt_hosts == GM_DISABLED && mod_gm_opt_services == GM_DISABLED && mod_gm_opt_events == GM_DISABLED) {
         logger( GM_LOG_ERROR, "starting client without queues is useless\n" );
         exit(EXIT_FAILURE);
     }
 
-    if(gearman_opt_min_worker > gearman_opt_max_worker)
-        gearman_opt_min_worker = gearman_opt_max_worker;
+    if(mod_gm_opt_min_worker > mod_gm_opt_max_worker)
+        mod_gm_opt_min_worker = mod_gm_opt_max_worker;
 
 }
 
@@ -271,6 +291,7 @@ void print_usage() {
     printf("       [ --min-worker=<nr>     ]\n");
     printf("       [ --max-worker=<nr>     ]\n");
     printf("\n");
+    printf("       [ --max-age=<sec>       ]\n");
     printf("       [ --timeout             ]\n");
     printf("\n");
     printf("\n");
@@ -286,7 +307,7 @@ void check_signal(int sig) {
     int *shm;
 
     // Locate the segment.
-    if ((shmid = shmget(GM_SHM_KEY, GM_SHM_SIZE, 0666)) < 0) {
+    if ((shmid = shmget(gm_shm_key, GM_SHM_SIZE, 0666)) < 0) {
         perror("shmget");
         exit(1);
     }
@@ -307,6 +328,7 @@ void check_signal(int sig) {
     return;
 }
 
+/* create shared memory segments */
 void setup_child_communicator() {
     logger( GM_LOG_TRACE, "setup_child_communicator()\n");
 
@@ -323,7 +345,8 @@ void setup_child_communicator() {
     int * shm;
 
     // Create the segment.
-    if ((shmid = shmget(GM_SHM_KEY, GM_SHM_SIZE, IPC_CREAT | 0666)) < 0) {
+    gm_shm_key = getpid(); // use pid as shm key
+    if ((shmid = shmget(gm_shm_key, GM_SHM_SIZE, IPC_CREAT | 0666)) < 0) {
         perror("shmget");
         exit(1);
     }
@@ -365,4 +388,38 @@ int adjust_number_of_worker(int min, int max, int cur_workers, int cur_jobs) {
     if(target > max) { target = max; }
 
     return target;
+}
+
+
+/* do a clean exit */
+void clean_exit(int sig) {
+    logger( GM_LOG_TRACE, "clean_exit(%d)\n", sig);
+
+    // become the process group leader
+    signal(SIGTERM, SIG_IGN);
+    signal(SIGINT,  SIG_DFL);
+
+    /*
+     * send term signal to our childs
+     * children will finish the current job and exit
+     */
+    pid_t pid = getpid();
+    logger( GM_LOG_TRACE, "send SIGTERM to %d\n", pid);
+    kill(-pid, SIGTERM);
+    signal(SIGTERM, SIG_DFL);
+
+    logger( GM_LOG_TRACE, "waiting for childs to exit...\n");
+    int status;
+    int chld;
+    while((chld = wait(&status)) > 0) {
+        logger( GM_LOG_TRACE, "wait() %d exited with %d\n", chld, status);
+    }
+
+    /*
+     * clean up shared memory
+     * will be removed when last client detaches
+     */
+    shmctl( gm_shm_key, IPC_RMID, 0 );
+
+    exit( EXIT_SUCCESS );
 }
