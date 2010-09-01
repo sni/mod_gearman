@@ -53,7 +53,7 @@ clean-local:
 	rm -f worker.static
 
 static-worker: worker
-	gcc -Wall -W -Wstrict-prototypes -g -static -o worker.static worker_logger.o worker_client.o utils.o worker.o -lgearman -lpthread -luuid
+	gcc -Wall -W -Wstrict-prototypes -g -static -o worker.static $(worker_OBJECTS) -lgearman -lpthread -luuid
 	@echo ""
 	@echo " worker.static created."
 	@echo ""
