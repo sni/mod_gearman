@@ -35,6 +35,8 @@ int    mod_gm_opt_max_age;
 char * mod_gm_hostgroups_list[GM_LISTSIZE];
 char * mod_gm_servicegroups_list[GM_LISTSIZE];
 
+int gm_shm_key;
+
 int  main (int argc, char **argv);
 void parse_arguments(char **argv);
 int  make_new_child(void);
@@ -42,3 +44,4 @@ void print_usage(void);
 int  adjust_number_of_worker(int min, int max, int cur_workers, int cur_jobs);
 void check_signal(int sig);
 void setup_child_communicator(void);
+void clean_exit(int signal);

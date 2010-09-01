@@ -33,6 +33,10 @@ int main (int argc, char **argv) {
 
     argc = argc; // avoid warning about unused variable
 
+    /* set signal handlers for a clean exit */
+    signal(SIGINT, clean_exit);
+    signal(SIGTERM,clean_exit);
+
     parse_arguments(argv);
     logger( GM_LOG_DEBUG, "main process started\n");
 
@@ -84,6 +88,7 @@ int main (int argc, char **argv) {
         }
     }
 
+    clean_exit(15);
     exit( EXIT_SUCCESS );
 }
 
@@ -107,6 +112,8 @@ int make_new_child() {
         logger( GM_LOG_DEBUG, "worker started with pid: %d\n", getpid() );
 
         signal(SIGUSR1, SIG_IGN);
+        signal(SIGINT,  SIG_DFL);
+        signal(SIGTERM, SIG_DFL);
 
         // do the real work
         worker_client(GM_WORKER_MULTI);
@@ -302,7 +309,7 @@ void check_signal(int sig) {
     int *shm;
 
     // Locate the segment.
-    if ((shmid = shmget(GM_SHM_KEY, GM_SHM_SIZE, 0666)) < 0) {
+    if ((shmid = shmget(gm_shm_key, GM_SHM_SIZE, 0666)) < 0) {
         perror("shmget");
         exit(1);
     }
@@ -323,6 +330,7 @@ void check_signal(int sig) {
     return;
 }
 
+/* create shared memory segments */
 void setup_child_communicator() {
     logger( GM_LOG_TRACE, "setup_child_communicator()\n");
 
@@ -339,7 +347,8 @@ void setup_child_communicator() {
     int * shm;
 
     // Create the segment.
-    if ((shmid = shmget(GM_SHM_KEY, GM_SHM_SIZE, IPC_CREAT | 0666)) < 0) {
+    gm_shm_key = getpid(); // use pid as shm key
+    if ((shmid = shmget(gm_shm_key, GM_SHM_SIZE, IPC_CREAT | 0666)) < 0) {
         perror("shmget");
         exit(1);
     }
@@ -381,4 +390,38 @@ int adjust_number_of_worker(int min, int max, int cur_workers, int cur_jobs) {
     if(target > max) { target = max; }
 
     return target;
+}
+
+
+/* do a clean exit */
+void clean_exit(int sig) {
+    logger( GM_LOG_TRACE, "clean_exit(%d)\n", sig);
+
+    // become the process group leader
+    signal(SIGTERM, SIG_IGN);
+    signal(SIGINT,  SIG_DFL);
+
+    /*
+     * send term signal to our childs
+     * children will finish the current job and exit
+     */
+    pid_t pid = getpid();
+    logger( GM_LOG_TRACE, "send SIGTERM to %d\n", pid);
+    kill(-pid, SIGTERM);
+    signal(SIGTERM, SIG_DFL);
+
+    logger( GM_LOG_TRACE, "waiting for childs to exit...\n");
+    int status;
+    int chld;
+    while((chld = wait(&status)) > 0) {
+        logger( GM_LOG_TRACE, "wait() %d exited with %d\n", chld, status);
+    }
+
+    /*
+     * clean up shared memory
+     * will be removed when last client detaches
+     */
+    shmctl( gm_shm_key, IPC_RMID, 0 );
+
+    exit( EXIT_SUCCESS );
 }

@@ -517,7 +517,7 @@ void send_state_to_parent(int status) {
     int *shm;
 
     // Locate the segment.
-    if ((shmid = shmget(GM_SHM_KEY, GM_SHM_SIZE, 0666)) < 0) {
+    if ((shmid = shmget(gm_shm_key, GM_SHM_SIZE, 0666)) < 0) {
         perror("shmget");
         exit(1);
     }

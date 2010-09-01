@@ -13,9 +13,8 @@ General
 Worker
 ======
 
- - kill all childs when worker exits
  - check reschedule/schedule for services
  - SIGTERM on client should finish after current job
- - SIGINT on worker_client should sent result back
+ - childs should sent back their final result after SIGTERM
  - add daemon mode ( pid file, logfile, configfile, init script )
- - cleanup semaphores on exit
+ - add SIGHUP handler to reload config, if there will be a config :)
