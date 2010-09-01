@@ -81,8 +81,8 @@ int main (int argc, char **argv) {
             had_to_increase = 1;
         }
 
+        /* wait a little bit, otherwise worker would be spawned really fast */
         if(had_to_increase) {
-            // wait a little bit, otherwise worker would be spawned really fast
             sleep(1);
         }
     }
@@ -117,7 +117,6 @@ int make_new_child() {
         // do the real work
         worker_client(GM_WORKER_MULTI);
 
-        logger( GM_LOG_DEBUG, "worker fin: %d\n", getpid() );
         exit(EXIT_SUCCESS);
     }
 
@@ -409,9 +408,28 @@ void clean_exit(int sig) {
     signal(SIGTERM, SIG_DFL);
 
     logger( GM_LOG_TRACE, "waiting for childs to exit...\n");
-    int status;
-    int chld;
-    while((chld = wait(&status)) > 0) {
+    int status, chld;
+    int waited = 0;
+    while((chld = waitpid(-1, &status, WNOHANG)) != -1) {
+        if(chld > 0) {
+            current_number_of_workers--;
+            logger( GM_LOG_TRACE, "wait() %d exited with %d\n", chld, status);
+        }
+        sleep(1);
+        waited++;
+        if(waited > GM_CHILD_SHUTDOWN_TIMEOUT) {
+            break;
+        }
+        logger( GM_LOG_TRACE, "still waiting (%d)...\n", waited);
+    }
+
+    if(current_number_of_workers > 0) {
+        logger( GM_LOG_TRACE, "sending SIGINT...\n");
+        kill(-pid, SIGINT);
+    }
+
+    while(waitpid(-1, &status, WNOHANG) > 0) {
+        current_number_of_workers--;
         logger( GM_LOG_TRACE, "wait() %d exited with %d\n", chld, status);
     }
 
@@ -419,7 +437,20 @@ void clean_exit(int sig) {
      * clean up shared memory
      * will be removed when last client detaches
      */
-    shmctl( gm_shm_key, IPC_RMID, 0 );
+    int shmid;
+    if ((shmid = shmget(gm_shm_key, GM_SHM_SIZE, 0666)) < 0) {
+        perror("shmget");
+    }
+    if( shmctl( shmid, IPC_RMID, 0 ) == -1 ) {
+        perror("shmctl");
+    }
+    logger( GM_LOG_TRACE, "shared memory deleted, %d\n", status);
+    sleep(1);
+
+    /* kill remaining worker */
+    if(current_number_of_workers > 0) {
+        kill(-pid, SIGKILL);
+    }
 
     exit( EXIT_SUCCESS );
 }

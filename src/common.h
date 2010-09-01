@@ -30,6 +30,7 @@
 #define GM_JOB_PRIO_HIGH                3
 
 #define GM_DEFAULT_JOB_RETRIES          1
+#define GM_CHILD_SHUTDOWN_TIMEOUT       5
 
 #ifndef TRUE
 #define TRUE                            1

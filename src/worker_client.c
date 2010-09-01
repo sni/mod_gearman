@@ -37,6 +37,10 @@ void worker_client(int worker_mode) {
 
     logger( GM_LOG_TRACE, "worker client started\n" );
 
+    /* set signal handlers for a clean exit */
+    signal(SIGINT, clean_worker_exit);
+    signal(SIGTERM,clean_worker_exit);
+
     worker_run_mode = worker_mode;
     exec_job    = ( gm_job_t * )malloc( sizeof *exec_job );
 
@@ -519,13 +523,15 @@ void send_state_to_parent(int status) {
     // Locate the segment.
     if ((shmid = shmget(gm_shm_key, GM_SHM_SIZE, 0666)) < 0) {
         perror("shmget");
-        exit(1);
+        logger( GM_LOG_DEBUG, "worker finished: %d\n", getpid() );
+        exit( EXIT_FAILURE );
     }
 
     // Now we attach the segment to our data space.
     if ((shm = shmat(shmid, NULL, 0)) == (int *) -1) {
         perror("shmat");
-        exit(1);
+        logger( GM_LOG_DEBUG, "worker finished: %d\n", getpid() );
+        exit( EXIT_FAILURE );
     }
 
     // set our counter
@@ -542,8 +548,17 @@ void send_state_to_parent(int status) {
     kill(getppid(), SIGUSR1);
 
     if(number_jobs_done >= GM_MAX_JOBS_PER_CLIENT) {
+        logger( GM_LOG_DEBUG, "worker finished: %d\n", getpid() );
         exit(EXIT_SUCCESS);
     }
 
     return;
+}
+
+
+/* do a clean exit */
+void clean_worker_exit(int sig) {
+    logger( GM_LOG_TRACE, "clean_worker_exit(%d)\n", sig);
+
+    exit( EXIT_SUCCESS );
 }

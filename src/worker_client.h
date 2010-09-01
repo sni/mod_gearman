@@ -47,3 +47,4 @@ void send_result_back(void);
 void alarm_sighandler(int sig);
 void send_state_to_parent(int status);
 void execute_safe_command(void);
+void clean_worker_exit(int signal);
