@@ -34,6 +34,7 @@ int    mod_gm_opt_timeout;
 int    mod_gm_opt_max_age;
 char * mod_gm_hostgroups_list[GM_LISTSIZE];
 char * mod_gm_servicegroups_list[GM_LISTSIZE];
+char * mod_gm_opt_crypt_key;
 
 int gm_shm_key;
 

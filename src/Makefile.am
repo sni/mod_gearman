@@ -10,15 +10,15 @@
 AM_CPPFLAGS=-Iincludes
 
 pkglib_LIBRARIES = mod_gearman.so
-mod_gearman_so_SOURCES = gearman.c utils.c logger.c result_thread.c mod_gearman.c
+mod_gearman_so_SOURCES = base64.c crypt.c rijndael.c gearman.c utils.c logger.c result_thread.c mod_gearman.c
 
 bin_PROGRAMS = worker
-worker_SOURCES = gearman.c worker_logger.c worker_client.c utils.c worker.c
+worker_SOURCES = base64.c crypt.c rijndael.c gearman.c worker_logger.c worker_client.c utils.c worker.c
 
 # -g adds debug symbols, -s strips
 CFLAGS=-Wall -W -Wstrict-prototypes -g
 #mod_gearman_so_CXXFLAGS = $(CFLAGS) -fPIC -O
-mod_gearman_so_CXXFLAGS = $(CFLAGS) -fPIC -O
+mod_gearman_so_CXXFLAGS = $(CFLAGS) -fPIC -O -g
 mod_gearman_so_CFLAGS   = $(mod_gearman_so_CXXFLAGS)
 
 
@@ -41,8 +41,8 @@ all-local: mod_gearman.o
 	@echo ""
 	@echo "  read the README for configuration details"
 	@echo ""
-	@echo " for static worker continue with"
-	@echo " make static-worker"
+	@echo "  for static worker continue with"
+	@echo "  make static-worker"
 	@echo ""
 	@echo "################################################################"
 

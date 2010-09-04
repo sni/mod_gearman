@@ -36,7 +36,16 @@ int main (int argc, char **argv) {
     signal(SIGINT, clean_exit);
     signal(SIGTERM,clean_exit);
 
+    /* parse command line */
     parse_arguments(argc, argv);
+
+    /* init crypto functions */
+    if(mod_gm_opt_crypt_key == NULL) {
+        logger( GM_LOG_ERROR, "no encryption key provided, please use --key=...\n");
+        exit( EXIT_FAILURE );
+    }
+    mod_gm_crypt_init(mod_gm_opt_crypt_key);
+
     logger( GM_LOG_DEBUG, "main process started\n");
 
     if(mod_gm_opt_max_worker == 1) {
@@ -53,6 +62,7 @@ int main (int argc, char **argv) {
     }
 
     // maintain the population
+    int had_to_increase;
     while (1) {
         // check number of workers every 30 seconds
         // sleep gets canceled anyway when receiving signals
@@ -73,7 +83,7 @@ int main (int argc, char **argv) {
             make_new_child();
         }
 
-        int had_to_increase = 0;
+        had_to_increase = 0;
         int target_number_of_workers = adjust_number_of_worker(mod_gm_opt_min_worker, mod_gm_opt_max_worker, current_number_of_workers, current_number_of_jobs);
         for (x = current_number_of_workers; x < target_number_of_workers; x++) {
             // top up the worker pool
@@ -83,7 +93,7 @@ int main (int argc, char **argv) {
 
         /* wait a little bit, otherwise worker would be spawned really fast */
         if(had_to_increase) {
-            sleep(1);
+            sleep(2);
         }
     }
 
@@ -186,6 +196,13 @@ void parse_arguments(int argc, char **argv) {
                 mod_gm_opt_debug_level = atoi( value );
                 if(mod_gm_opt_debug_level < 0) { mod_gm_opt_debug_level = 0; }
                 logger( GM_LOG_DEBUG, "Setting debug level to %d\n", mod_gm_opt_debug_level );
+            }
+            else if ( !strcmp( key, "key" ) || !strcmp( key, "--key" ) ) {
+                if(strlen(value) < 8) {
+                    logger( GM_LOG_INFO, "encryption key should be at least 8 bytes!\n" );
+                }
+                mod_gm_opt_crypt_key = strdup( value );
+                logger( GM_LOG_DEBUG, "Setting crypt key\n" );
             }
             else if ( !strcmp( key, "timeout" ) || !strcmp( key, "--timeout" ) ) {
                 mod_gm_opt_timeout = atoi( value );
@@ -292,6 +309,7 @@ void print_usage() {
     printf("\n");
     printf("       [ --max-age=<sec>       ]\n");
     printf("       [ --timeout             ]\n");
+    printf("       [ --key=<string>        ]\n");
     printf("\n");
     printf("\n");
 

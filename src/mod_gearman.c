@@ -75,6 +75,12 @@ int nebmodule_init( int flags, char *args, nebmodule *handle ) {
         return GM_ERROR;
     }
 
+    if(mod_gm_opt_crypt_key == NULL) {
+        logger( GM_LOG_ERROR, "no encryption key provided, please use key=...\n");
+        return GM_ERROR;
+    }
+    mod_gm_crypt_init(mod_gm_opt_crypt_key);
+
     // create client
     if ( create_client( mod_gm_opt_server, &client ) != GM_OK ) {
         logger( GM_LOG_ERROR, "cannot start client\n" );
@@ -223,7 +229,7 @@ static int handle_eventhandler( int event_type, void *data ) {
     logger( GM_LOG_TRACE, "got eventhandler event: %s\n", ds->command_line );
 
     temp_buffer[0]='\x0';
-    snprintf( temp_buffer,sizeof( temp_buffer )-1,"type=eventhandler\ncommand_line=%s\n",ds->command_line );
+    snprintf( temp_buffer,sizeof( temp_buffer )-1,"type=eventhandler\ncommand_line=%s\n\n\n",ds->command_line );
     temp_buffer[sizeof( temp_buffer )-1]='\x0';
 
     if(add_job_to_queue( &client,
@@ -319,7 +325,7 @@ static int handle_host_check( int event_type, void *data ) {
 
     //extern check_result check_result_info;
     temp_buffer[0]='\x0';
-    snprintf( temp_buffer,sizeof( temp_buffer )-1,"type=host\nresult_queue=%s\nhost_name=%s\nstart_time=%i.%i\ntimeout=%d\ncommand_line=%s\n",
+    snprintf( temp_buffer,sizeof( temp_buffer )-1,"type=host\nresult_queue=%s\nhost_name=%s\nstart_time=%i.%i\ntimeout=%d\ncommand_line=%s\n\n\n",
               mod_gm_opt_result_queue,
               hst->name,
               ( int )start_time.tv_sec,
@@ -382,7 +388,7 @@ static int handle_svc_check( int event_type, void *data ) {
 
     extern check_result check_result_info;
     temp_buffer[0]='\x0';
-    snprintf( temp_buffer,sizeof( temp_buffer )-1,"type=service\nresult_queue=%s\nhost_name=%s\nservice_description=%s\nstart_time=%i.%i\ntimeout=%d\ncheck_options=%i\nscheduled_check=%i\nreschedule_check=%i\nlatency=%f\ncommand_line=%s\n",
+    snprintf( temp_buffer,sizeof( temp_buffer )-1,"type=service\nresult_queue=%s\nhost_name=%s\nservice_description=%s\nstart_time=%i.%i\ntimeout=%d\ncheck_options=%i\nscheduled_check=%i\nreschedule_check=%i\nlatency=%f\ncommand_line=%s\n\n\n",
               mod_gm_opt_result_queue,
               svcdata->host_name,
               svcdata->service_description,
@@ -478,6 +484,13 @@ static void read_arguments( const char *args_orig ) {
                     srv_ptr++;
                 }
             }
+        }
+        else if ( !strcmp( key, "key" ) || !strcmp( key, "--key" ) ) {
+            if(strlen(value) < 8) {
+                logger( GM_LOG_INFO, "encryption key should be at least 8 bytes!\n" );
+            }
+            mod_gm_opt_crypt_key = strdup( value );
+            logger( GM_LOG_DEBUG, "setting key for encryption\n" );
         }
         else if ( !strcmp( key, "eventhandler" ) || !strcmp( key, "--eventhandler" ) ) {
             if ( !strcmp( value, "yes" ) ) {
@@ -724,7 +737,7 @@ int handle_perfdata(int event_type, void *data) {
                                 "SERVICEPERFDATA::%s\t"
                                 "SERVICECHECKCOMMAND::%s\t"
                                 "SERVICESTATE::%d\t"
-                                "SERVICESTATETYPE::%d\n",
+                                "SERVICESTATETYPE::%d\n\n\n",
                                 (int)srvchkdata->timestamp.tv_sec,
                                 srvchkdata->host_name, srvchkdata->service_description,
                                 srvchkdata->perf_data, service->service_check_command,

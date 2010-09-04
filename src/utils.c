@@ -9,6 +9,8 @@
 #include "common.h"
 #include "utils.h"
 #include "logger.h"
+#include "crypt.h"
+#include "base64.h"
 
 /* return string until token */
 char *str_token( char **c, char delim ) {
@@ -27,6 +29,7 @@ char *str_token( char **c, char delim ) {
         *c = end;
     return begin;
 }
+
 
 /* escapes newlines in a string */
 char *escape_newlines(char *rawbuf) {
@@ -63,25 +66,6 @@ char *escape_newlines(char *rawbuf) {
 }
 
 
-
-/* array push */
-void push(gm_array_t *ps, void * data) {
-    if (ps->size == GM_STACKSIZE) {
-        logger(GM_LOG_ERROR, "Error: stack overflow\n");
-        exit(1);
-    } else
-        ps->items[ps->size++] = data;
-}
-
-
-/* array pop */
-void * pop(gm_array_t *ps) {
-    if (ps->size == 0) {
-        return NULL;
-    } else
-        return ps->items[--ps->size];
-}
-
 /* convert exit code to int */
 int real_exit_code(int code) {
     int return_code;
@@ -96,4 +80,40 @@ int real_exit_code(int code) {
         }
     }
     return(return_code);
+}
+
+
+/* initialize encryption */
+void mod_gm_crypt_init(char * key) {
+    return mod_gm_blowfish_init(key);
+}
+
+
+/* encrypt text with given key */
+int mod_gm_encrypt(char ** encrypted, char * text) {
+    int size;
+    unsigned char * crypted;
+    size = mod_gm_blowfish_encrypt(&crypted, text);
+
+    /* now encode in base64 */
+    char * base64 = malloc(GM_BUFFERSIZE);
+    base64[0] = 0;
+    base64_encode(crypted, size, base64, GM_BUFFERSIZE);
+    free(*encrypted);
+    free(crypted);
+    *encrypted = base64;
+    return strlen(base64);
+}
+
+
+/* decrypt text with given key */
+void mod_gm_decrypt(char ** decrypted, char * text, int size) {
+    unsigned char * buffer = malloc(GM_BUFFERSIZE);
+
+    /* now decode from base64 */
+    size_t bsize = base64_decode(text, buffer, GM_BUFFERSIZE);
+
+    mod_gm_blowfish_decrypt(decrypted, buffer, bsize);
+    free(buffer);
+    return;
 }
