@@ -69,7 +69,9 @@ int main (int argc, char **argv) {
     }
 
     // maintain the population
-    int had_to_increase;
+    int now                 = (int)time(NULL);
+    int last_time_increased = now;
+    int had_to_increase     = 0;
     while (1) {
         // check number of workers every 30 seconds
         // sleep gets canceled anyway when receiving signals
@@ -91,6 +93,10 @@ int main (int argc, char **argv) {
         }
 
         had_to_increase = 0;
+        now = (int)time(NULL);
+        if(last_time_increased +2 > now)
+            continue;
+
         int target_number_of_workers = adjust_number_of_worker(mod_gm_opt_min_worker, mod_gm_opt_max_worker, current_number_of_workers, current_number_of_jobs);
         for (x = current_number_of_workers; x < target_number_of_workers; x++) {
             // top up the worker pool
@@ -100,7 +106,7 @@ int main (int argc, char **argv) {
 
         /* wait a little bit, otherwise worker would be spawned really fast */
         if(had_to_increase) {
-            sleep(2);
+            last_time_increased = time(NULL);
         }
     }
 
