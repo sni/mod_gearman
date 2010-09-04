@@ -72,12 +72,21 @@ void *get_results( gearman_job_st *job, void *context, size_t *result_size, gear
     *ret_ptr = GEARMAN_SUCCESS;
 
     // get the data
-    char * workload;
-    workload = strdup((char *)gearman_job_workload(job));
-    char * workload_c = workload;
-
+    char * workload   = strdup((char *)gearman_job_workload(job));
     logger( GM_LOG_DEBUG, "got result %s\n", gearman_job_handle( job ));
-    logger( GM_LOG_TRACE, "--->\n%s\n<---\n", workload );
+    logger( GM_LOG_TRACE, "%d +++>\n%s\n<+++\n", strlen(workload), workload );
+
+    // decrypt data
+    char *decrypted_data   = malloc(GM_BUFFERSIZE);
+    char *decrypted_data_c = decrypted_data;
+    mod_gm_decrypt(&decrypted_data, workload, strlen(workload));
+    free(workload);
+
+    if(decrypted_data == NULL) {
+        *ret_ptr = GEARMAN_WORK_FAIL;
+        return NULL;
+    }
+    logger( GM_LOG_TRACE, "%d --->\n%s\n<---\n", strlen(decrypted_data), decrypted_data );
 
     // nagios will free it after processing
     check_result * chk_result;
@@ -101,7 +110,7 @@ void *get_results( gearman_job_st *job, void *context, size_t *result_size, gear
     chk_result->reschedule_check    = TRUE;
 
     char *ptr;
-    while ( (ptr = strsep(&workload, "\n" )) != NULL ) {
+    while ( (ptr = strsep(&decrypted_data, "\n" )) != NULL ) {
         char *key   = str_token( &ptr, '=' );
         char *value = str_token( &ptr, 0 );
 
@@ -156,7 +165,6 @@ void *get_results( gearman_job_st *job, void *context, size_t *result_size, gear
             chk_result->latency = atof( value );
         }
     }
-    free(workload_c);
 
     if ( chk_result->host_name == NULL || chk_result->output == NULL ) {
         *ret_ptr= GEARMAN_WORK_FAIL;
@@ -197,6 +205,8 @@ void *get_results( gearman_job_st *job, void *context, size_t *result_size, gear
 
     // reset pointer
     chk_result = NULL;
+
+    free(decrypted_data_c);
 
     return NULL;
 }

@@ -70,7 +70,8 @@ void worker_loop() {
         gearman_return_t ret;
 
         // wait three minutes for a job, otherwise exit
-        alarm(180);
+        if(worker_run_mode != GM_WORKER_STANDALONE)
+            alarm(180);
 
         ret = gearman_worker_work( &worker );
         if ( ret != GEARMAN_SUCCESS ) {
@@ -116,18 +117,28 @@ void *get_job( gearman_job_st *job, void *context, size_t *result_size, gearman_
     sigset_t block_mask;
     sigset_t old_mask;
     sigaddset(&block_mask, SIGTERM);
+    // TODO: Syscall param rt_sigprocmask(set) points to uninitialised byte(s)
     sigprocmask(SIG_BLOCK, &block_mask, &old_mask);
 
     // send start signal to parent
     send_state_to_parent(GM_JOB_START);
 
     // get the data
-    char * workload;
-    workload = strdup((char *)gearman_job_workload(job));
-    char * workload_c = workload;
-
+    char * workload = strdup((char*)gearman_job_workload(job));
     logger( GM_LOG_DEBUG, "got new job %s\n", gearman_job_handle( job ) );
-    logger( GM_LOG_TRACE, "--->\n%s\n<---\n", workload );
+    logger( GM_LOG_TRACE, "%d +++>\n%s\n<+++\n", strlen(workload), workload );
+
+    // decrypt data
+    char * decrypted_data = malloc(GM_BUFFERSIZE);
+    char * decrypted_data_c = decrypted_data;
+    mod_gm_decrypt(&decrypted_data, workload, strlen(workload));
+    free(workload);
+
+    if(decrypted_data == NULL) {
+        *ret_ptr = GEARMAN_WORK_FAIL;
+        return NULL;
+    }
+    logger( GM_LOG_TRACE, "%d --->\n%s\n<---\n", strlen(decrypted_data), decrypted_data );
 
     // set result pointer to success
     *ret_ptr= GEARMAN_SUCCESS;
@@ -149,7 +160,7 @@ void *get_job( gearman_job_st *job, void *context, size_t *result_size, gearman_
 
     char *ptr;
     char command[GM_BUFFERSIZE];
-    while ( (ptr = strsep(&workload, "\n" )) != NULL ) {
+    while ( (ptr = strsep(&decrypted_data, "\n" )) != NULL ) {
         char *key   = str_token( &ptr, '=' );
         char *value = str_token( &ptr, 0 );
 
@@ -194,13 +205,13 @@ void *get_job( gearman_job_st *job, void *context, size_t *result_size, gearman_
 
     do_exec_job();
 
-    free(workload_c);
-
     // send finish signal to parent
     send_state_to_parent(GM_JOB_END);
 
     // start listening to SIGTERMs
     sigprocmask(SIG_SETMASK, &old_mask, NULL);
+
+    free(decrypted_data_c);
 
     return NULL;
 }
@@ -214,9 +225,11 @@ void do_exec_job( ) {
     double latency = 0.0;
 
     if(exec_job->type == NULL) {
+        logger( GM_LOG_ERROR, "discarded invalid job\n" );
         return;
     }
     if(exec_job->command_line == NULL) {
+        logger( GM_LOG_ERROR, "discarded invalid job\n" );
         return;
     }
 
@@ -343,7 +356,10 @@ void execute_safe_command() {
         char temp_buffer[GM_BUFFERSIZE];
         strcpy(temp_buffer,"");
         while(fgets(buffer,sizeof(buffer)-1,fp)){
-            strncat(temp_buffer, escape_newlines(buffer), sizeof( temp_buffer ));
+            char * buf;
+            buf = escape_newlines(buffer);
+            strncat(temp_buffer, buf, sizeof( temp_buffer ));
+            free(buf);
         }
         write(pdes[1], temp_buffer, strlen(temp_buffer)+1);
 
@@ -436,9 +452,9 @@ void send_result_back() {
         }
         strncat(temp_buffer2, exec_job->output, (sizeof(temp_buffer2)-1));
         strncat(temp_buffer2, "\n", (sizeof(temp_buffer2)-1));
-
         strncat(temp_buffer1, temp_buffer2, (sizeof(temp_buffer1)-1));
     }
+    strncat(temp_buffer1, "\n", (sizeof(temp_buffer1)-1));
 
     logger( GM_LOG_DEBUG, "data:\n%s\n", temp_buffer1);
 
@@ -507,7 +523,10 @@ void alarm_sighandler(int sig) {
     logger( GM_LOG_TRACE, "send SIGKILL to %d\n", pid);
     kill(-pid, SIGKILL);
 
-    _exit(EXIT_SUCCESS);
+    if(worker_run_mode != GM_WORKER_STANDALONE)
+        _exit(EXIT_SUCCESS);
+
+    return;
 }
 
 /* tell parent our state */

@@ -5,15 +5,14 @@ TODO LIST
 General
 =======
 
- - add encryption
- - add authorization
  - remove debug symbols (-g) and add strip (-s) again
+ - support --keyfile
+ - cleanup code and put read_args in common
 
 
 Worker
 ======
 
- - check reschedule/schedule for services
  - SIGTERM on client should finish after current job
  - childs should sent back their final result after SIGTERM
  - add daemon mode ( pid file, logfile, configfile, init script )

@@ -100,14 +100,21 @@ int add_job_to_queue( gearman_client_st *client, char * queue, char * uniq, char
     gearman_task_st *task = NULL;
     gearman_return_t ret;
 
+    logger( GM_LOG_TRACE, "add_job_to_queue(%s, %s)\n", queue, uniq );
+    logger( GM_LOG_TRACE, "%d --->%s<---\n", strlen(data), data );
+
+    char * crypted_data = malloc(GM_BUFFERSIZE);
+    int size = mod_gm_encrypt(&crypted_data, data);
+    logger( GM_LOG_TRACE, "%d +++>\n%s\n<+++\n", size, crypted_data );
+
     if( priority == GM_JOB_PRIO_LOW ) {
-        gearman_client_add_task_low_background( client, task, NULL, queue, uniq, ( void * )data, ( size_t )strlen( data ), &ret );
+        gearman_client_add_task_low_background( client, task, NULL, queue, uniq, ( void * )crypted_data, ( size_t )size, &ret );
     }
     if( priority == GM_JOB_PRIO_NORMAL ) {
-        gearman_client_add_task_background( client, task, NULL, queue, uniq, ( void * )data, ( size_t )strlen( data ), &ret );
+        gearman_client_add_task_background( client, task, NULL, queue, uniq, ( void * )crypted_data, ( size_t )size, &ret );
     }
     if( priority == GM_JOB_PRIO_HIGH ) {
-        gearman_client_add_task_high_background( client, task, NULL, queue, uniq, ( void * )data, ( size_t )strlen( data ), &ret );
+        gearman_client_add_task_high_background( client, task, NULL, queue, uniq, ( void * )crypted_data, ( size_t )size, &ret );
     }
 
     gearman_client_run_tasks( client );
@@ -121,9 +128,11 @@ int add_job_to_queue( gearman_client_st *client, char * queue, char * uniq, char
         // no more retries...
         else {
             logger( GM_LOG_ERROR, "add_job_to_queue() finished with errors: %s\n", gearman_client_error(client) );
+            free(crypted_data);
             return GM_ERROR;
         }
     }
+    free(crypted_data);
     return GM_OK;
 }
 
