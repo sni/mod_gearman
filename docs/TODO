@@ -6,8 +6,6 @@ General
 =======
 
  - remove debug symbols (-g) and add strip (-s) again
- - support --keyfile
- - cleanup code and put read_args in common
 
 
 Worker
@@ -15,5 +13,5 @@ Worker
 
  - SIGTERM on client should finish after current job
  - childs should sent back their final result after SIGTERM
- - add daemon mode ( pid file, logfile, configfile, init script )
+ - add daemon mode ( logfile, configfile, init script )
  - add SIGHUP handler to reload config, if there will be a config :)

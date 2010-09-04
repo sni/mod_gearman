@@ -68,9 +68,8 @@ char *escape_newlines(char *rawbuf) {
 
 /* convert exit code to int */
 int real_exit_code(int code) {
-    int return_code;
     if( code == -1 ){
-        return_code   = 3;
+        return(3);
     } else {
         if(WIFSIGNALED( code)) {
             return(128 + WTERMSIG( code ));
@@ -79,7 +78,7 @@ int real_exit_code(int code) {
             return(WEXITSTATUS(code));
         }
     }
-    return(return_code);
+    return(0);
 }
 
 
@@ -130,4 +129,16 @@ void mod_gm_decrypt(char ** decrypted, char * text, int mode) {
     }
     free(buffer);
     return;
+}
+
+
+/* test for file existence */
+int file_exists (char * fileName) {
+    struct stat buf;
+    int i = stat ( fileName, &buf );
+    /* File found */
+    if( i == 0 ) {
+        return 1;
+    }
+    return 0;
 }

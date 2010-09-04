@@ -24,6 +24,7 @@ int mod_gm_opt_debug_result    = GM_DISABLED;
 int mod_gm_opt_encryption      = GM_ENABLED;
 char *mod_gm_hostgroups_list[GM_LISTSIZE];
 char *mod_gm_servicegroups_list[GM_LISTSIZE];
+char *mod_gm_opt_pidfile;
 
 int mod_gm_transportmode = GM_ENCODE_AND_ENCRYPT;
 
@@ -34,13 +35,17 @@ volatile sig_atomic_t current_number_of_jobs = 0;  // must be signal safe
 /* work starts here */
 int main (int argc, char **argv) {
 
-
     /* set signal handlers for a clean exit */
     signal(SIGINT, clean_exit);
     signal(SIGTERM,clean_exit);
 
     /* parse command line */
     parse_arguments(argc, argv);
+
+    /* check and write pid file */
+    if(write_pid_file() != GM_OK) {
+        exit( EXIT_SUCCESS );
+    }
 
     /* init crypto functions */
     if(mod_gm_opt_encryption == GM_ENABLED) {
@@ -231,6 +236,9 @@ void parse_arguments(int argc, char **argv) {
                     mod_gm_opt_crypt_key[i] = fgetc(fp);
                 fclose(fp);
                 logger( GM_LOG_DEBUG, "read key for encryption from %s\n", value );
+            }
+            else if ( !strcmp( key, "pidfile" ) || !strcmp( key, "--pidfile" ) ) {
+                mod_gm_opt_pidfile = strdup( value );
             }
             else if ( !strcmp( key, "timeout" ) || !strcmp( key, "--timeout" ) ) {
                 mod_gm_opt_timeout = atoi( value );
@@ -502,5 +510,51 @@ void clean_exit(int sig) {
         kill(-pid, SIGKILL);
     }
 
+    if(mod_gm_opt_pidfile != NULL)
+        unlink(mod_gm_opt_pidfile);
+
     exit( EXIT_SUCCESS );
+}
+
+
+/* check for pid file and write new one */
+int write_pid_file() {
+    FILE *fp;
+
+    /* no pidfile given */
+    if(mod_gm_opt_pidfile == NULL)
+        return GM_OK;
+
+    if(file_exists(mod_gm_opt_pidfile)) {
+        fp = fopen(mod_gm_opt_pidfile, "r");
+        if(fp != NULL) {
+            char pid[GM_BUFFERSIZE];
+            fgets(pid, GM_BUFFERSIZE, fp);
+            fclose(fp);
+            logger( GM_LOG_INFO, "found pid file for: %s", pid);
+            char pid_path[GM_BUFFERSIZE];
+            snprintf(pid_path, "/proc/%s", pid);
+            if(file_exists(pid_path)) {
+                logger( GM_LOG_INFO, "pidfile already exists, cannot start!\n");
+                return(GM_ERROR);
+            } else {
+                logger( GM_LOG_INFO, "removed stale pidfile\n");
+                unlink(mod_gm_opt_pidfile);
+            }
+        } else {
+            perror("fopen");
+            logger( GM_LOG_INFO, "cannot read pidfile\n");
+            return(GM_ERROR);
+        }
+    }
+
+    /* now write new pidfile */
+    fp = fopen(mod_gm_opt_pidfile,"w+");
+    if(fp == NULL)
+        perror("fopen");
+
+    fprintf(fp, "%d\n", getpid());
+    fclose(fp);
+    logger( GM_LOG_DEBUG, "pid file %s written\n", mod_gm_opt_pidfile );
+    return GM_OK;
 }

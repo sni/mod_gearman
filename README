@@ -233,6 +233,11 @@ keyfile:            The shared password will be read from this file.
                     Example: keyfile=/path/to/secret.file
 
 
+pidfile:            Path to the pidfile.
+
+                    Example: pidfile=/path/to/pid.file
+
+
 
 
 Queue Names
