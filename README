@@ -106,6 +106,9 @@ init script. So just start it by hand.
 Patch Nagios
 ++++++++++++
 
+Note: The patch has been applied to Nagios 3.2.2. Use the patch if you
+use an older version.
+
 It is not possible to distribute Eventhandler without patching Nagios
 as the moment. So please apply the patch from the patches dir to your
 Nagios sources and build nagios again. You only need to replace the
