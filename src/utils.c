@@ -107,7 +107,7 @@ int mod_gm_encrypt(char ** encrypted, char * text) {
 
 
 /* decrypt text with given key */
-void mod_gm_decrypt(char ** decrypted, char * text, int size) {
+void mod_gm_decrypt(char ** decrypted, char * text) {
     unsigned char * buffer = malloc(GM_BUFFERSIZE);
 
     /* now decode from base64 */
