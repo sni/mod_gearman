@@ -79,7 +79,7 @@ void *get_results( gearman_job_st *job, void *context, size_t *result_size, gear
     // decrypt data
     char *decrypted_data   = malloc(GM_BUFFERSIZE);
     char *decrypted_data_c = decrypted_data;
-    mod_gm_decrypt(&decrypted_data, workload);
+    mod_gm_decrypt(&decrypted_data, workload, mod_gm_transportmode);
     free(workload);
 
     if(decrypted_data == NULL) {

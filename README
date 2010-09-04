@@ -120,7 +120,12 @@ Configuration
 NEB Module
 ++++++++++
 
-there are several module options:
+A sample config in your nagios.cfg could look like:
+
+  broker=/usr/local/share/nagios/mod_gearman.o keyfile=/usr/local/share/nagios/secret.txt server=localhost eventhandler=yes hosts=yes services=yes
+
+See the following list for a detailed explaination of available
+options:
 
 
 debug:              use debug to increase the verbosity of the module.
@@ -174,16 +179,19 @@ localhostgroups:    sets a list of hostgroups which will not be executed
 
                     Example: localhostgroups=name1,name2,name3
 
+
 localservicegroups: sets a list of servicegroups which will not be executed
                     by gearman. They are just passed through.
 
                     Example: localservicegroups=name1,name2,name3
+
 
 result_workers      Number of result worker threads. Usually one is
                     enough. You may increase the value if your
                     result queue is not processed fast enough.
 
                     Example: result_workers=3
+
 
 perfdata:           defines if the module should distribute perfdata
                     to gearman.
@@ -194,6 +202,32 @@ perfdata:           defines if the module should distribute perfdata
                     queue.
 
                     Example: perfdata=yes
+
+
+encryption:         enables or disables encryption. It is strongly
+                    advised to not disable encryption. Anybody will be
+                    able to inject packages to your worker.
+                    Encryption is enabled by default and you have to
+                    explicitly disable it.
+                    When using encryption, you will either have to
+                    specify a shared password with key=... or a
+                    keyfile with keyfile=...
+
+                    Example: encryption=yes
+
+
+key:                A shared password which will be used for
+                    encryption of data pakets. Should be at least 8
+                    bytes long. Maximum length is 32 characters.
+
+                    Example: key=secret
+
+
+keyfile:            The shared password will be read from this file.
+                    Use either key or keyfile. Only the first 32
+                    characters will be used.
+
+                    Example: keyfile=/path/to/secret.file
 
 
 

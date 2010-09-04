@@ -30,6 +30,9 @@ int mod_gm_opt_services;
 int mod_gm_opt_hosts;
 int mod_gm_opt_events;
 int mod_gm_opt_perfdata;
+int mod_gm_opt_encryption = GM_ENABLED;
+
+int mod_gm_transportmode = GM_ENCODE_AND_ENCRYPT;
 
 int result_threads_running = 0;
 pthread_t result_thr[GM_LISTSIZE];
@@ -75,11 +78,15 @@ int nebmodule_init( int flags, char *args, nebmodule *handle ) {
         return GM_ERROR;
     }
 
-    if(mod_gm_opt_crypt_key == NULL) {
-        logger( GM_LOG_ERROR, "no encryption key provided, please use key=...\n");
-        return GM_ERROR;
+    if(mod_gm_opt_encryption == GM_ENABLED) {
+        if(mod_gm_opt_crypt_key == NULL) {
+            logger( GM_LOG_ERROR, "no encryption key provided, please use key=... or keyfile=...\n");
+            return GM_ERROR;
+        }
+        mod_gm_crypt_init(mod_gm_opt_crypt_key);
+    } else {
+        mod_gm_transportmode = GM_ENCODE_ONLY;
     }
-    mod_gm_crypt_init(mod_gm_opt_crypt_key);
 
     // create client
     if ( create_client( mod_gm_opt_server, &client ) != GM_OK ) {
@@ -237,7 +244,8 @@ static int handle_eventhandler( int event_type, void *data ) {
                          NULL,
                          temp_buffer,
                          GM_JOB_PRIO_NORMAL,
-                         GM_DEFAULT_JOB_RETRIES
+                         GM_DEFAULT_JOB_RETRIES,
+                         mod_gm_transportmode
                         ) == GM_OK) {
         logger( GM_LOG_TRACE, "handle_eventhandler() finished successfully\n" );
     }
@@ -340,7 +348,8 @@ static int handle_host_check( int event_type, void *data ) {
                          hst->name,
                          temp_buffer,
                          GM_JOB_PRIO_NORMAL,
-                         GM_DEFAULT_JOB_RETRIES
+                         GM_DEFAULT_JOB_RETRIES,
+                         mod_gm_transportmode
                         ) == GM_OK) {
         logger( GM_LOG_TRACE, "handle_host_check() finished successfully\n" );
     }
@@ -416,7 +425,8 @@ static int handle_svc_check( int event_type, void *data ) {
                          uniq,
                          temp_buffer,
                          prio,
-                         GM_DEFAULT_JOB_RETRIES
+                         GM_DEFAULT_JOB_RETRIES,
+                         mod_gm_transportmode
                         ) == GM_OK) {
         logger( GM_LOG_TRACE, "handle_svc_check() finished successfully\n" );
     }
@@ -485,12 +495,27 @@ static void read_arguments( const char *args_orig ) {
                 }
             }
         }
-        else if ( !strcmp( key, "key" ) || !strcmp( key, "--key" ) ) {
-            if(strlen(value) < 8) {
-                logger( GM_LOG_INFO, "encryption key should be at least 8 bytes!\n" );
+        else if ( !strcmp( key, "encryption" ) || !strcmp( key, "--encryption" ) ) {
+            if( value != NULL && !strcmp( value, "no" ) ) {
+                mod_gm_opt_encryption = GM_DISABLED;
+                logger( GM_LOG_DEBUG, "disabling encryption\n");
             }
+        }
+        else if ( !strcmp( key, "key" ) || !strcmp( key, "--key" ) ) {
             mod_gm_opt_crypt_key = strdup( value );
             logger( GM_LOG_DEBUG, "setting key for encryption\n" );
+        }
+        else if ( !strcmp( key, "keyfile" ) || !strcmp( key, "--keyfile" ) ) {
+            FILE *fp;
+            fp = fopen(value,"rb");
+            if(fp == NULL)
+                perror("fopen");
+            int i;
+            mod_gm_opt_crypt_key = malloc(GM_BUFFERSIZE);
+            for(i=0;i<32;i++)
+                mod_gm_opt_crypt_key[i] = fgetc(fp);
+            fclose(fp);
+            logger( GM_LOG_DEBUG, "read key for encryption from %s\n", value );
         }
         else if ( !strcmp( key, "eventhandler" ) || !strcmp( key, "--eventhandler" ) ) {
             if ( !strcmp( value, "yes" ) ) {
@@ -759,7 +784,8 @@ int handle_perfdata(int event_type, void *data) {
                              NULL,
                              perfdatafile_template,
                              GM_JOB_PRIO_NORMAL,
-                             GM_DEFAULT_JOB_RETRIES
+                             GM_DEFAULT_JOB_RETRIES,
+                             mod_gm_transportmode
                             ) == GM_OK) {
             logger( GM_LOG_TRACE, "handle_perfdata() finished successfully\n" );
         }

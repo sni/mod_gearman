@@ -96,7 +96,7 @@ int create_client( char ** server_list, gearman_client_st *client ) {
 
 
 /* create a task and send it */
-int add_job_to_queue( gearman_client_st *client, char * queue, char * uniq, char * data, int priority, int retries ) {
+int add_job_to_queue( gearman_client_st *client, char * queue, char * uniq, char * data, int priority, int retries, int transport_mode ) {
     gearman_task_st *task = NULL;
     gearman_return_t ret;
 
@@ -104,7 +104,7 @@ int add_job_to_queue( gearman_client_st *client, char * queue, char * uniq, char
     logger( GM_LOG_TRACE, "%d --->%s<---\n", strlen(data), data );
 
     char * crypted_data = malloc(GM_BUFFERSIZE);
-    int size = mod_gm_encrypt(&crypted_data, data);
+    int size = mod_gm_encrypt(&crypted_data, data, transport_mode);
     logger( GM_LOG_TRACE, "%d +++>\n%s\n<+++\n", size, crypted_data );
 
     if( priority == GM_JOB_PRIO_LOW ) {
@@ -123,7 +123,7 @@ int add_job_to_queue( gearman_client_st *client, char * queue, char * uniq, char
         if(retries > 0) {
             retries--;
             sleep(5);
-            return(add_job_to_queue( client, queue, uniq, data, priority, retries));
+            return(add_job_to_queue( client, queue, uniq, data, priority, retries, transport_mode));
         }
         // no more retries...
         else {

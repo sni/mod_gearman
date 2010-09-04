@@ -40,4 +40,7 @@ int    mod_gm_opt_debug_level;
 char * mod_gm_opt_result_queue;
 int    mod_gm_opt_timeout;
 int    mod_gm_opt_result_workers;
+int    mod_gm_opt_encryption;
 char * mod_gm_opt_crypt_key;
+
+int    mod_gm_transportmode;

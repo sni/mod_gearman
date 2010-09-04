@@ -32,6 +32,9 @@
 #define GM_DEFAULT_JOB_RETRIES          1
 #define GM_CHILD_SHUTDOWN_TIMEOUT       5
 
+#define GM_ENCODE_AND_ENCRYPT           1
+#define GM_ENCODE_ONLY                  2
+
 #ifndef TRUE
 #define TRUE                            1
 #elif (TRUE!=1)

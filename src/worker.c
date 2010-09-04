@@ -21,8 +21,11 @@ int mod_gm_opt_hosts           = GM_DISABLED;
 int mod_gm_opt_services        = GM_DISABLED;
 int mod_gm_opt_events          = GM_DISABLED;
 int mod_gm_opt_debug_result    = GM_DISABLED;
+int mod_gm_opt_encryption      = GM_ENABLED;
 char *mod_gm_hostgroups_list[GM_LISTSIZE];
 char *mod_gm_servicegroups_list[GM_LISTSIZE];
+
+int mod_gm_transportmode = GM_ENCODE_AND_ENCRYPT;
 
 int current_number_of_workers                = 0;
 volatile sig_atomic_t current_number_of_jobs = 0;  // must be signal safe
@@ -40,11 +43,15 @@ int main (int argc, char **argv) {
     parse_arguments(argc, argv);
 
     /* init crypto functions */
-    if(mod_gm_opt_crypt_key == NULL) {
-        logger( GM_LOG_ERROR, "no encryption key provided, please use --key=...\n");
-        exit( EXIT_FAILURE );
+    if(mod_gm_opt_encryption == GM_ENABLED) {
+        if(mod_gm_opt_crypt_key == NULL) {
+            logger( GM_LOG_ERROR, "no encryption key provided, please use --key=... or keyfile=...\n");
+            exit( EXIT_FAILURE );
+        }
+        mod_gm_crypt_init(mod_gm_opt_crypt_key);
+    } else {
+        mod_gm_transportmode = GM_ENCODE_ONLY;
     }
-    mod_gm_crypt_init(mod_gm_opt_crypt_key);
 
     logger( GM_LOG_DEBUG, "main process started\n");
 
@@ -197,12 +204,27 @@ void parse_arguments(int argc, char **argv) {
                 if(mod_gm_opt_debug_level < 0) { mod_gm_opt_debug_level = 0; }
                 logger( GM_LOG_DEBUG, "Setting debug level to %d\n", mod_gm_opt_debug_level );
             }
-            else if ( !strcmp( key, "key" ) || !strcmp( key, "--key" ) ) {
-                if(strlen(value) < 8) {
-                    logger( GM_LOG_INFO, "encryption key should be at least 8 bytes!\n" );
+            else if ( !strcmp( key, "encryption" ) || !strcmp( key, "--encryption" ) ) {
+                if( value != NULL && !strcmp( value, "no" ) ) {
+                    mod_gm_opt_encryption = GM_DISABLED;
+                    logger( GM_LOG_DEBUG, "disabling encryption\n");
                 }
+            }
+            else if ( !strcmp( key, "key" ) || !strcmp( key, "--key" ) ) {
                 mod_gm_opt_crypt_key = strdup( value );
                 logger( GM_LOG_DEBUG, "Setting crypt key\n" );
+            }
+            else if ( !strcmp( key, "keyfile" ) || !strcmp( key, "--keyfile" ) ) {
+                FILE *fp;
+                fp = fopen(value,"rb");
+                if(fp == NULL)
+                    perror("fopen");
+                int i;
+                mod_gm_opt_crypt_key = malloc(GM_BUFFERSIZE);
+                for(i=0;i<32;i++)
+                    mod_gm_opt_crypt_key[i] = fgetc(fp);
+                fclose(fp);
+                logger( GM_LOG_DEBUG, "read key for encryption from %s\n", value );
             }
             else if ( !strcmp( key, "timeout" ) || !strcmp( key, "--timeout" ) ) {
                 mod_gm_opt_timeout = atoi( value );
@@ -309,8 +331,12 @@ void print_usage() {
     printf("\n");
     printf("       [ --max-age=<sec>       ]\n");
     printf("       [ --timeout             ]\n");
-    printf("       [ --key=<string>        ]\n");
     printf("\n");
+    printf("       [ --encryption=<yes|no> ]\n");
+    printf("       [ --key=<string>        ]\n");
+    printf("       [ --keyfile=<file>      ]\n");
+    printf("\n");
+    printf("see README for a detailed explaination of all options.\n");
     printf("\n");
 
     exit( EXIT_SUCCESS );

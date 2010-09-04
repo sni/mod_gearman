@@ -85,15 +85,25 @@ int real_exit_code(int code) {
 
 /* initialize encryption */
 void mod_gm_crypt_init(char * key) {
+    if(strlen(key) < 8) {
+        logger( GM_LOG_INFO, "encryption key should be at least 8 bytes!\n" );
+    }
     return mod_gm_blowfish_init(key);
 }
 
 
 /* encrypt text with given key */
-int mod_gm_encrypt(char ** encrypted, char * text) {
+int mod_gm_encrypt(char ** encrypted, char * text, int mode) {
     int size;
     unsigned char * crypted;
-    size = mod_gm_blowfish_encrypt(&crypted, text);
+
+    if(mode == GM_ENCODE_AND_ENCRYPT) {
+        size = mod_gm_blowfish_encrypt(&crypted, text);
+    }
+    else {
+        crypted = (unsigned char*)strdup(text);
+        size    = strlen(text);
+    }
 
     /* now encode in base64 */
     char * base64 = malloc(GM_BUFFERSIZE);
@@ -107,13 +117,17 @@ int mod_gm_encrypt(char ** encrypted, char * text) {
 
 
 /* decrypt text with given key */
-void mod_gm_decrypt(char ** decrypted, char * text) {
+void mod_gm_decrypt(char ** decrypted, char * text, int mode) {
     unsigned char * buffer = malloc(GM_BUFFERSIZE);
 
     /* now decode from base64 */
     size_t bsize = base64_decode(text, buffer, GM_BUFFERSIZE);
-
-    mod_gm_blowfish_decrypt(decrypted, buffer, bsize);
+    if(mode == GM_ENCODE_AND_ENCRYPT) {
+        mod_gm_blowfish_decrypt(decrypted, buffer, bsize);
+    }
+    else  {
+        decrypted = strdup((char*)buffer);
+    }
     free(buffer);
     return;
 }
