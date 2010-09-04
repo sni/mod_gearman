@@ -243,10 +243,10 @@ void do_exec_job( ) {
     }
 
     // our gm start time
-    double start1_f = start_time.tv_sec + start_time.tv_usec/1000000;
+    double start1_f = (double)start_time.tv_sec + (double)start_time.tv_usec/1000000;
 
     // start time from core
-    double start2_f = exec_job->start_time.tv_sec + exec_job->start_time.tv_usec / 1000000;
+    double start2_f = (double)exec_job->start_time.tv_sec + (double)exec_job->start_time.tv_usec / 1000000;
 
     latency = start1_f - start2_f;
     logger( GM_LOG_TRACE, "latency: %0.4f\n", latency);
