@@ -146,13 +146,18 @@ int file_exists (char * fileName) {
 
 /* trim left spaces */
 char *ltrim(char *s) {
-    while(isspace(*s)) s++;
+    if(s == NULL)
+        return NULL;
+    while(isspace(*s))
+        s++;
     return s;
 }
 
 
 /* trim right spaces */
 char *rtrim(char *s) {
+    if(s == NULL)
+        return NULL;
     char* back = s + strlen(s);
     while(isspace(*--back));
     *(back+1) = '\0';
@@ -162,6 +167,8 @@ char *rtrim(char *s) {
 
 /* trim spaces */
 char *trim(char *s) {
+    if(s == NULL)
+        return NULL;
     return rtrim(ltrim(s));
 }
 
@@ -238,9 +245,8 @@ int parse_yes_or_no(char*value, int dfl) {
 
 /* parse one line of args into the given struct */
 void parse_args_line(mod_gm_opt_t *opt, char * arg) {
-    char * args = strdup( arg );
-    char *key   = str_token( &args, '=' );
-    char *value = str_token( &args, 0 );
+    char *key   = str_token( &arg, '=' );
+    char *value = str_token( &arg, 0 );
 
     if ( key == NULL )
         return;
@@ -354,7 +360,7 @@ void parse_args_line(mod_gm_opt_t *opt, char * arg) {
         while ( (servername = strsep( &value, "," )) != NULL ) {
             servername = trim(servername);
             if ( strcmp( servername, "" ) ) {
-                opt->server_list[opt->server_num] = servername;
+                opt->server_list[opt->server_num] = strdup(servername);
                 opt->server_num++;
             }
         }
@@ -368,7 +374,7 @@ void parse_args_line(mod_gm_opt_t *opt, char * arg) {
         while ( (groupname = strsep( &value, "," )) != NULL ) {
             groupname = trim(groupname);
             if ( strcmp( groupname, "" ) ) {
-                opt->servicegroups_list[opt->servicegroups_num] = groupname;
+                opt->servicegroups_list[opt->servicegroups_num] = strdup(groupname);
                 opt->servicegroups_num++;
                 opt->set_queues_by_hand++;
             }
@@ -382,7 +388,7 @@ void parse_args_line(mod_gm_opt_t *opt, char * arg) {
         while ( (groupname = strsep( &value, "," )) != NULL ) {
             groupname = trim(groupname);
             if ( strcmp( groupname, "" ) ) {
-                opt->hostgroups_list[opt->hostgroups_num] = groupname;
+                opt->hostgroups_list[opt->hostgroups_num] = strdup(groupname);
                 opt->hostgroups_num++;
                 opt->set_queues_by_hand++;
             }
@@ -401,6 +407,7 @@ void read_config_file(mod_gm_opt_t *opt, char*filename) {
     }
 
     char *line = malloc(GM_BUFFERSIZE);
+    char *line_c = line;
     line[0] = '\0';
     while(fgets(line, GM_BUFFERSIZE, fp) != NULL) {
         /* trim comments */
@@ -415,6 +422,7 @@ void read_config_file(mod_gm_opt_t *opt, char*filename) {
         parse_args_line(opt, line);
     }
     fclose(fp);
+    free(line_c);
     return;
 }
 
@@ -459,4 +467,18 @@ void dumpconfig(mod_gm_opt_t *opt) {
 
     logger( GM_LOG_DEBUG, "--------------------------------\n" );
     return;
+}
+
+
+/* free options structure */
+void mod_gm_free_opt(mod_gm_opt_t *opt) {
+    int i;
+    for(i=0;i<opt->server_num;i++)
+        free(opt->server_list[i]);
+    for(i=0;i<opt->hostgroups_num;i++)
+        free(opt->hostgroups_list[i]);
+    for(i=0;i<opt->servicegroups_num;i++)
+        free(opt->servicegroups_list[i]);
+    free(opt->crypt_key);
+    free(opt);
 }

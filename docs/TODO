@@ -13,6 +13,5 @@ Worker
 
  - SIGTERM on client should finish after current job
  - childs should sent back their final result after SIGTERM
- - add daemon mode ( logfile, configfile, init script )
- - add SIGHUP handler to reload config, if there will be a config :)
+ - add daemon mode ( logfile, init script )
  - avoid recursion when reading config files

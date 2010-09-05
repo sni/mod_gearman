@@ -15,15 +15,25 @@
 int current_number_of_workers                = 0;
 volatile sig_atomic_t current_number_of_jobs = 0;  // must be signal safe
 
+int     orig_argc;
+char ** orig_argv;
+
 /* work starts here */
 int main (int argc, char **argv) {
 
-    /* allocate options structure
+    /* store the original command line for later reloads */
+    store_original_comandline(argc, argv);
+
+    /*
+     * allocate options structure
      * and parse command line
      */
     mod_gm_opt = malloc(sizeof(mod_gm_opt_t));
     set_default_options(mod_gm_opt);
-    parse_arguments(argc, argv);
+    signal(SIGHUP, reload_config);
+    if(parse_arguments(argc, argv) != GM_OK) {
+        exit( EXIT_FAILURE );
+    }
 
     /* set signal handlers for a clean exit */
     signal(SIGINT, clean_exit);
@@ -148,52 +158,62 @@ int make_new_child() {
 /* parse command line arguments */
 int parse_arguments(int argc, char **argv) {
     int i;
+    mod_gm_opt_t * mod_gm_new_opt;
+    mod_gm_new_opt = malloc(sizeof(mod_gm_opt_t));
+    set_default_options(mod_gm_new_opt);
     for(i=1;i<argc;i++) {
         char * arg   = strdup( argv[i] );
         lc(arg);
         if ( !strcmp( arg, "help" ) || !strcmp( arg, "--help" )  || !strcmp( arg, "-h" ) ) {
             print_usage();
         }
-        parse_args_line(mod_gm_opt, arg);
+        parse_args_line(mod_gm_new_opt, arg);
         free(arg);
     }
 
-    if(mod_gm_opt->debug_level >= GM_LOG_DEBUG) {
-        dumpconfig(mod_gm_opt);
+    int verify;
+    verify = verify_options(mod_gm_new_opt);
+    if(verify == GM_OK) {
+        mod_gm_free_opt(mod_gm_opt);
+        mod_gm_opt = mod_gm_new_opt;
     }
 
-    return(verify_options());
+    if(mod_gm_new_opt->debug_level >= GM_LOG_DEBUG) {
+        dumpconfig(mod_gm_new_opt);
+    }
+
+    return(verify);
 }
 
 
 /* verify our option */
-int verify_options() {
+int verify_options(mod_gm_opt_t *opt) {
     // did we get any server?
-    if(mod_gm_opt->server_num == 0) {
+    if(opt->server_num == 0) {
         logger( GM_LOG_ERROR, "please specify at least one server\n" );
         return(GM_ERROR);
     }
 
     // nothing set by hand -> defaults
-    if( mod_gm_opt->set_queues_by_hand == 0 ) {
+    if( opt->set_queues_by_hand == 0 ) {
         logger( GM_LOG_DEBUG, "starting client with default queues\n" );
-        mod_gm_opt->hosts    = GM_ENABLED;
-        mod_gm_opt->services = GM_ENABLED;
-        mod_gm_opt->events   = GM_ENABLED;
+        opt->hosts    = GM_ENABLED;
+        opt->services = GM_ENABLED;
+        opt->events   = GM_ENABLED;
     }
 
-    if(   mod_gm_opt->servicegroups_num == 0
-       && mod_gm_opt->hostgroups_num    == 0
-       && mod_gm_opt->hosts    == GM_DISABLED
-       && mod_gm_opt->services == GM_DISABLED
-       && mod_gm_opt->events   == GM_DISABLED
+    if(   opt->servicegroups_num == 0
+       && opt->hostgroups_num    == 0
+       && opt->hosts    == GM_DISABLED
+       && opt->services == GM_DISABLED
+       && opt->events   == GM_DISABLED
       ) {
         logger( GM_LOG_ERROR, "starting worker without any queues is useless\n" );
         return(GM_ERROR);
     }
 
-    if(mod_gm_opt->min_worker > mod_gm_opt->max_worker)
-        mod_gm_opt->min_worker = mod_gm_opt->max_worker;
+    if(opt->min_worker > opt->max_worker)
+        opt->min_worker = opt->max_worker;
 
     return(GM_OK);
 }
@@ -330,6 +350,40 @@ int adjust_number_of_worker(int min, int max, int cur_workers, int cur_jobs) {
 void clean_exit(int sig) {
     logger( GM_LOG_TRACE, "clean_exit(%d)\n", sig);
 
+    /* stop all childs */
+    stop_childs();
+
+    /*
+     * clean up shared memory
+     * will be removed when last client detaches
+     */
+    int shmid;
+    if ((shmid = shmget(mod_gm_shm_key, GM_SHM_SIZE, 0666)) < 0) {
+        perror("shmget");
+    }
+    if( shmctl( shmid, IPC_RMID, 0 ) == -1 ) {
+        perror("shmctl");
+    }
+    logger( GM_LOG_TRACE, "shared memory deleted\n");
+    sleep(1);
+
+    /* kill remaining worker */
+    if(current_number_of_workers > 0) {
+        pid_t pid = getpid();
+        kill(-pid, SIGKILL);
+    }
+
+    if(mod_gm_opt->pidfile != NULL)
+        unlink(mod_gm_opt->pidfile);
+
+    mod_gm_free_opt(mod_gm_opt);
+
+    exit( EXIT_SUCCESS );
+}
+
+
+/* stop all childs */
+void stop_childs() {
     // become the process group leader
     signal(SIGTERM, SIG_IGN);
     signal(SIGINT,  SIG_DFL);
@@ -368,30 +422,6 @@ void clean_exit(int sig) {
         current_number_of_workers--;
         logger( GM_LOG_TRACE, "wait() %d exited with %d\n", chld, status);
     }
-
-    /*
-     * clean up shared memory
-     * will be removed when last client detaches
-     */
-    int shmid;
-    if ((shmid = shmget(mod_gm_shm_key, GM_SHM_SIZE, 0666)) < 0) {
-        perror("shmget");
-    }
-    if( shmctl( shmid, IPC_RMID, 0 ) == -1 ) {
-        perror("shmctl");
-    }
-    logger( GM_LOG_TRACE, "shared memory deleted, %d\n", status);
-    sleep(1);
-
-    /* kill remaining worker */
-    if(current_number_of_workers > 0) {
-        kill(-pid, SIGKILL);
-    }
-
-    if(mod_gm_opt->pidfile != NULL)
-        unlink(mod_gm_opt->pidfile);
-
-    exit( EXIT_SUCCESS );
 }
 
 
@@ -435,4 +465,31 @@ int write_pid_file() {
     fclose(fp);
     logger( GM_LOG_DEBUG, "pid file %s written\n", mod_gm_opt->pidfile );
     return GM_OK;
+}
+
+
+/* store the original command line for later reloads */
+int store_original_comandline(int argc, char **argv) {
+    orig_argc = argc;
+    orig_argv = argv;
+    return(GM_OK);
+}
+
+
+/* try to reload the config */
+void reload_config(int sig) {
+    logger( GM_LOG_TRACE, "reload_config(%d)\n", sig);
+    if(parse_arguments(orig_argc, orig_argv) != GM_OK) {
+        logger( GM_LOG_ERROR, "reload config failed, check your config\n");
+        return;
+    }
+
+    /*
+     * restart workers gracefully:
+     * send term signal to our childs
+     * children will finish the current job and exit
+     */
+    stop_childs();
+
+    return;
 }

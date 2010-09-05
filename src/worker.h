@@ -24,6 +24,7 @@ int mod_gm_shm_key;
 mod_gm_opt_t *mod_gm_opt;
 
 int main (int argc, char **argv);
+int store_original_comandline(int argc, char **argv);
 int parse_arguments(int argc, char **argv);
 int make_new_child(void);
 void print_usage(void);
@@ -32,4 +33,6 @@ void check_signal(int sig);
 void setup_child_communicator(void);
 void clean_exit(int signal);
 int write_pid_file(void);
-int verify_options(void);
+int verify_options(mod_gm_opt_t *opt);
+void reload_config(int sig);
+void stop_childs(void);
