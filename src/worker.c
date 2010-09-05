@@ -35,6 +35,24 @@ int main (int argc, char **argv) {
         exit( EXIT_FAILURE );
     }
 
+    /* fork into daemon mode? */
+    if(mod_gm_opt->daemon_mode == GM_ENABLED) {
+        pid_t pid = fork();
+        /* an error occurred while trying to fork */
+        if(pid == -1) {
+            perror("fork");
+            exit( EXIT_FAILURE );
+        }
+        /* we are in the child process */
+        else if(pid == 0) {
+            logger( GM_LOG_TRACE, "daemon started with pid %d\n", getpid());
+        }
+        /* we are the parent. So forking into daemon mode worked */
+        else {
+            exit( EXIT_SUCCESS );
+        }
+    }
+
     /* set signal handlers for a clean exit */
     signal(SIGINT, clean_exit);
     signal(SIGTERM,clean_exit);
@@ -128,6 +146,7 @@ int make_new_child() {
 
     /* an error occurred while trying to fork */
     if(pid==-1){
+        perror("fork");
         logger( GM_LOG_ERROR, "fork error\n" );
         return GM_ERROR;
     }
@@ -226,6 +245,7 @@ void print_usage() {
     printf("worker [ --debug=<lvl>         ]\n");
     printf("       [ --debug-result        ]\n");
     printf("       [ --help|-h             ]\n");
+    printf("       [ --daemon|-d           ]\n");
     printf("\n");
     printf("       [ --config=<configfile> ]\n");
     printf("\n");
@@ -436,12 +456,14 @@ int write_pid_file() {
     if(file_exists(mod_gm_opt->pidfile)) {
         fp = fopen(mod_gm_opt->pidfile, "r");
         if(fp != NULL) {
-            char pid[GM_BUFFERSIZE];
+            char *pid;
+            pid = malloc(GM_BUFFERSIZE);
             fgets(pid, GM_BUFFERSIZE, fp);
             fclose(fp);
-            logger( GM_LOG_INFO, "found pid file for: %s", pid);
+            pid = trim(pid);
+            logger( GM_LOG_INFO, "found pid file for: %s\n", pid);
             char pid_path[GM_BUFFERSIZE];
-            snprintf(pid_path, GM_BUFFERSIZE, "/proc/%s", pid);
+            snprintf(pid_path, GM_BUFFERSIZE, "/proc/%s/status", pid);
             if(file_exists(pid_path)) {
                 logger( GM_LOG_INFO, "pidfile already exists, cannot start!\n");
                 return(GM_ERROR);

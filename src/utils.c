@@ -259,8 +259,13 @@ void parse_args_line(mod_gm_opt_t *opt, char * arg) {
     while(key[0] == '-')
         key++;
 
+    /* daemon mode */
+    if ( !strcmp( key, "daemon" ) ||  !strcmp( key, "d" ) ) {
+        opt->daemon_mode = parse_yes_or_no(value, GM_ENABLED);
+    }
+
     /* hosts */
-    if (   !strcmp( key, "hosts" )
+    else if (   !strcmp( key, "hosts" )
         || !strcmp( key, "host" )
         ) {
         opt->set_queues_by_hand++;

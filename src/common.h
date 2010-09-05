@@ -88,6 +88,8 @@ typedef struct mod_gm_opt_struct {
     int            transportmode;
 /* worker */
     char         * pidfile;
+    char         * logfile;
+    int            daemon_mode;
     int            debug_result;
     int            max_age;
     int            min_worker;
