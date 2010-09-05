@@ -131,12 +131,19 @@ See the following list for a detailed explaination of available
 options:
 
 
+config:             read config from this file. Options are the same
+                    like described here.
+
+                    Example: config=/etc/nagios3/mod_gm_worker.conf
+
+
 debug:              use debug to increase the verbosity of the module.
                     Possible values are:
                         0 = only errors
                         1 = debug messages
                         2 = trace messages
                         3 = trace and all gearman related logs are going to stdout.
+                    Default is 0.
 
                     Example: debug=1
 
@@ -215,6 +222,7 @@ encryption:         enables or disables encryption. It is strongly
                     When using encryption, you will either have to
                     specify a shared password with key=... or a
                     keyfile with keyfile=...
+                    Default is On.
 
                     Example: encryption=yes
 

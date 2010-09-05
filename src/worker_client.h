@@ -13,6 +13,9 @@
 #include <sys/shm.h>
 #include <libgearman/gearman.h>
 
+#define MOD_GM_WORKER
+#include "common.h"
+
 #define GM_JOB_START            0
 #define GM_JOB_END              1
 

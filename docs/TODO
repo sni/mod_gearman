@@ -15,3 +15,4 @@ Worker
  - childs should sent back their final result after SIGTERM
  - add daemon mode ( logfile, configfile, init script )
  - add SIGHUP handler to reload config, if there will be a config :)
+ - avoid recursion when reading config files

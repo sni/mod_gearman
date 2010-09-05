@@ -8,8 +8,8 @@
 
 
 /* include header */
-#include "common.h"
 #include "worker.h"
+#include "common.h"
 #include "worker_client.h"
 #include "utils.h"
 #include "worker_logger.h"
@@ -51,7 +51,7 @@ void worker_client(int worker_mode) {
     }
 
     // create client
-    if ( create_client( mod_gm_opt_server, &client ) != GM_OK ) {
+    if ( create_client( mod_gm_opt->server_list, &client ) != GM_OK ) {
         logger( GM_LOG_ERROR, "cannot start client\n" );
         exit( EXIT_FAILURE );
     }
@@ -88,7 +88,7 @@ void worker_loop() {
 
             // create new connections
             set_worker( &worker );
-            create_client( mod_gm_opt_server, &client );
+            create_client( mod_gm_opt->server_list, &client );
         }
     }
 
@@ -154,7 +154,7 @@ void *get_job( gearman_job_st *job, void *context, size_t *result_size, gearman_
     exec_job->reschedule_check    = TRUE;
     exec_job->return_code         = STATE_OK;
     exec_job->latency             = 0.0;
-    exec_job->timeout             = mod_gm_opt_timeout;
+    exec_job->timeout             = mod_gm_opt->timeout;
     exec_job->start_time.tv_sec   = 0L;
     exec_job->start_time.tv_usec  = 0L;
 
@@ -262,10 +262,10 @@ void do_exec_job( ) {
     }
 
     // job is too old
-    if((int)exec_job->latency > mod_gm_opt_max_age) {
+    if((int)exec_job->latency > mod_gm_opt->max_age) {
         exec_job->return_code   = 3;
 
-        logger( GM_LOG_INFO, "discarded too old %s job: %i > %i\n", exec_job->type, (int)latency, mod_gm_opt_max_age);
+        logger( GM_LOG_INFO, "discarded too old %s job: %i > %i\n", exec_job->type, (int)latency, mod_gm_opt->max_age);
 
         gettimeofday(&end_time, NULL);
         exec_job->finish_time = end_time;
@@ -445,7 +445,7 @@ void send_result_back() {
     if(exec_job->output != NULL) {
         temp_buffer2[0]='\x0';
         strncat(temp_buffer2, "output=", (sizeof(temp_buffer2)-1));
-        if(mod_gm_opt_debug_result) {
+        if(mod_gm_opt->debug_result) {
             strncat(temp_buffer2, "(", (sizeof(temp_buffer2)-1));
             strncat(temp_buffer2, hostname, (sizeof(temp_buffer2)-1));
             strncat(temp_buffer2, ") - ", (sizeof(temp_buffer2)-1));
@@ -477,29 +477,29 @@ void send_result_back() {
 int set_worker( gearman_worker_st *worker ) {
     logger( GM_LOG_TRACE, "set_worker()\n" );
 
-    create_worker( mod_gm_opt_server, worker );
+    create_worker( mod_gm_opt->server_list, worker );
 
-    if(mod_gm_opt_hosts == GM_ENABLED)
+    if(mod_gm_opt->hosts == GM_ENABLED)
         worker_add_function( worker, "host", get_job );
 
-    if(mod_gm_opt_services == GM_ENABLED)
+    if(mod_gm_opt->services == GM_ENABLED)
         worker_add_function( worker, "service", get_job );
 
-    if(mod_gm_opt_events == GM_ENABLED)
+    if(mod_gm_opt->events == GM_ENABLED)
         worker_add_function( worker, "eventhandler", get_job );
 
     int x = 0;
-    while ( mod_gm_hostgroups_list[x] != NULL ) {
+    while ( mod_gm_opt->hostgroups_list[x] != NULL ) {
         char buffer[GM_BUFFERSIZE];
-        snprintf( buffer, (sizeof(buffer)-1), "hostgroup_%s", mod_gm_hostgroups_list[x] );
+        snprintf( buffer, (sizeof(buffer)-1), "hostgroup_%s", mod_gm_opt->hostgroups_list[x] );
         worker_add_function( worker, buffer, get_job );
         x++;
     }
 
     x = 0;
-    while ( mod_gm_servicegroups_list[x] != NULL ) {
+    while ( mod_gm_opt->servicegroups_list[x] != NULL ) {
         char buffer[GM_BUFFERSIZE];
-        snprintf( buffer, (sizeof(buffer)-1), "servicegroup_%s", mod_gm_servicegroups_list[x] );
+        snprintf( buffer, (sizeof(buffer)-1), "servicegroup_%s", mod_gm_opt->servicegroups_list[x] );
         worker_add_function( worker, buffer, get_job );
         x++;
     }
@@ -541,7 +541,7 @@ void send_state_to_parent(int status) {
     int *shm;
 
     // Locate the segment.
-    if ((shmid = shmget(gm_shm_key, GM_SHM_SIZE, 0666)) < 0) {
+    if ((shmid = shmget(mod_gm_shm_key, GM_SHM_SIZE, 0666)) < 0) {
         perror("shmget");
         logger( GM_LOG_DEBUG, "worker finished: %d\n", getpid() );
         exit( EXIT_FAILURE );

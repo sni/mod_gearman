@@ -12,35 +12,23 @@
 #include "worker_logger.h"
 #include "worker_client.h"
 
-int mod_gm_opt_min_worker      = GM_DEFAULT_MIN_WORKER;
-int mod_gm_opt_max_worker      = GM_DEFAULT_MAX_WORKER;
-int mod_gm_opt_max_age         = GM_DEFAULT_JOB_MAX_AGE;
-int mod_gm_opt_timeout         = GM_DEFAULT_TIMEOUT;
-
-int mod_gm_opt_hosts           = GM_DISABLED;
-int mod_gm_opt_services        = GM_DISABLED;
-int mod_gm_opt_events          = GM_DISABLED;
-int mod_gm_opt_debug_result    = GM_DISABLED;
-int mod_gm_opt_encryption      = GM_ENABLED;
-char *mod_gm_hostgroups_list[GM_LISTSIZE];
-char *mod_gm_servicegroups_list[GM_LISTSIZE];
-char *mod_gm_opt_pidfile;
-
-int mod_gm_transportmode = GM_ENCODE_AND_ENCRYPT;
-
 int current_number_of_workers                = 0;
 volatile sig_atomic_t current_number_of_jobs = 0;  // must be signal safe
 
-
 /* work starts here */
 int main (int argc, char **argv) {
+
+    /* allocate options structure
+     * and parse command line
+     */
+    mod_gm_opt = malloc(sizeof(mod_gm_opt_t));
+    set_default_options(mod_gm_opt);
+    parse_arguments(argc, argv);
 
     /* set signal handlers for a clean exit */
     signal(SIGINT, clean_exit);
     signal(SIGTERM,clean_exit);
 
-    /* parse command line */
-    parse_arguments(argc, argv);
 
     /* check and write pid file */
     if(write_pid_file() != GM_OK) {
@@ -48,19 +36,19 @@ int main (int argc, char **argv) {
     }
 
     /* init crypto functions */
-    if(mod_gm_opt_encryption == GM_ENABLED) {
-        if(mod_gm_opt_crypt_key == NULL) {
+    if(mod_gm_opt->encryption == GM_ENABLED) {
+        if(mod_gm_opt->crypt_key == NULL) {
             logger( GM_LOG_ERROR, "no encryption key provided, please use --key=... or keyfile=...\n");
             exit( EXIT_FAILURE );
         }
-        mod_gm_crypt_init(mod_gm_opt_crypt_key);
+        mod_gm_crypt_init(mod_gm_opt->crypt_key);
     } else {
         mod_gm_transportmode = GM_ENCODE_ONLY;
     }
 
     logger( GM_LOG_DEBUG, "main process started\n");
 
-    if(mod_gm_opt_max_worker == 1) {
+    if(mod_gm_opt->max_worker == 1) {
         worker_client(GM_WORKER_STANDALONE);
         exit( EXIT_SUCCESS );
     }
@@ -69,7 +57,7 @@ int main (int argc, char **argv) {
 
     // create initial childs
     int x;
-    for(x=0; x < mod_gm_opt_min_worker; x++) {
+    for(x=0; x < mod_gm_opt->min_worker; x++) {
         make_new_child();
     }
 
@@ -93,7 +81,7 @@ int main (int argc, char **argv) {
         if(current_number_of_jobs > current_number_of_workers) { current_number_of_jobs = current_number_of_workers; }
 
         // keep up minimum population
-        for (x = current_number_of_workers; x < mod_gm_opt_min_worker; x++) {
+        for (x = current_number_of_workers; x < mod_gm_opt->min_worker; x++) {
             make_new_child();
         }
 
@@ -102,7 +90,7 @@ int main (int argc, char **argv) {
         if(last_time_increased +2 > now)
             continue;
 
-        int target_number_of_workers = adjust_number_of_worker(mod_gm_opt_min_worker, mod_gm_opt_max_worker, current_number_of_workers, current_number_of_jobs);
+        int target_number_of_workers = adjust_number_of_worker(mod_gm_opt->min_worker, mod_gm_opt->max_worker, current_number_of_workers, current_number_of_jobs);
         for (x = current_number_of_workers; x < target_number_of_workers; x++) {
             // top up the worker pool
             make_new_child();
@@ -158,169 +146,56 @@ int make_new_child() {
 
 
 /* parse command line arguments */
-void parse_arguments(int argc, char **argv) {
-    int srv_ptr     = 0;
-    int srvgrp_ptr  = 0;
-    int hostgrp_ptr = 0;
-
-    int set_by_hand = 0;
-
-    while(argc-- != 1) {
-        char *ptr;
-        char * args   = strdup( argv[1] );
-        while ( (ptr = strsep( &args, " " )) != NULL ) {
-            char *key   = str_token( &ptr, '=' );
-            char *value = str_token( &ptr, 0 );
-
-            if ( key == NULL )
-                continue;
-
-            if ( !strcmp( key, "help" ) || !strcmp( key, "--help" )  || !strcmp( key, "-h" ) ) {
-                print_usage();
-            }
-
-            if ( !strcmp( key, "hosts" ) || !strcmp( key, "--hosts" ) ) {
-                set_by_hand++;
-                if( value == NULL || !strcmp( value, "yes" ) ) {
-                    mod_gm_opt_hosts = GM_ENABLED;
-                    logger( GM_LOG_DEBUG, "enabling processing of hosts queue\n");
-                }
-            }
-            else if ( !strcmp( key, "services" ) || !strcmp( key, "--services" ) ) {
-                set_by_hand++;
-                if( value == NULL || !strcmp( value, "yes" ) ) {
-                    mod_gm_opt_services = GM_ENABLED;
-                    logger( GM_LOG_DEBUG, "enabling processing of service queue\n");
-                }
-            }
-            else if ( !strcmp( key, "events" ) || !strcmp( key, "--events" ) ) {
-                set_by_hand++;
-                if( value == NULL || !strcmp( value, "yes" ) ) {
-                    mod_gm_opt_events = GM_ENABLED;
-                    logger( GM_LOG_DEBUG, "enabling processing of events queue\n");
-                }
-            }
-            else if ( !strcmp( key, "debug-result" ) || !strcmp( key, "--debug-result" ) ) {
-                if( value == NULL || !strcmp( value, "yes" ) ) {
-                    mod_gm_opt_debug_result = GM_ENABLED;
-                    logger( GM_LOG_DEBUG, "adding debug output to check output\n");
-                }
-            }
-
-            if ( value == NULL )
-                continue;
-
-            if ( !strcmp( key, "debug" ) || !strcmp( key, "--debug" ) ) {
-                mod_gm_opt_debug_level = atoi( value );
-                if(mod_gm_opt_debug_level < 0) { mod_gm_opt_debug_level = 0; }
-                logger( GM_LOG_DEBUG, "Setting debug level to %d\n", mod_gm_opt_debug_level );
-            }
-            else if ( !strcmp( key, "encryption" ) || !strcmp( key, "--encryption" ) ) {
-                if( value != NULL && !strcmp( value, "no" ) ) {
-                    mod_gm_opt_encryption = GM_DISABLED;
-                    logger( GM_LOG_DEBUG, "disabling encryption\n");
-                }
-            }
-            else if ( !strcmp( key, "key" ) || !strcmp( key, "--key" ) ) {
-                mod_gm_opt_crypt_key = strdup( value );
-                logger( GM_LOG_DEBUG, "Setting crypt key\n" );
-            }
-            else if ( !strcmp( key, "keyfile" ) || !strcmp( key, "--keyfile" ) ) {
-                FILE *fp;
-                fp = fopen(value,"rb");
-                if(fp == NULL)
-                    perror("fopen");
-                int i;
-                mod_gm_opt_crypt_key = malloc(GM_BUFFERSIZE);
-                for(i=0;i<32;i++)
-                    mod_gm_opt_crypt_key[i] = fgetc(fp);
-                fclose(fp);
-                logger( GM_LOG_DEBUG, "read key for encryption from %s\n", value );
-            }
-            else if ( !strcmp( key, "pidfile" ) || !strcmp( key, "--pidfile" ) ) {
-                mod_gm_opt_pidfile = strdup( value );
-            }
-            else if ( !strcmp( key, "timeout" ) || !strcmp( key, "--timeout" ) ) {
-                mod_gm_opt_timeout = atoi( value );
-                if(mod_gm_opt_timeout < 1) { mod_gm_opt_timeout = 1; }
-                logger( GM_LOG_DEBUG, "Setting default timeout to %d\n", mod_gm_opt_timeout );
-            }
-            else if ( !strcmp( key, "min-worker" ) || !strcmp( key, "--min-worker" ) ) {
-                mod_gm_opt_min_worker = atoi( value );
-                if(mod_gm_opt_min_worker <= 0) { mod_gm_opt_min_worker = 1; }
-                logger( GM_LOG_DEBUG, "Setting min worker to %d\n", mod_gm_opt_min_worker );
-            }
-            else if ( !strcmp( key, "max-worker" ) || !strcmp( key, "--max-worker" ) ) {
-                mod_gm_opt_max_worker = atoi( value );
-                if(mod_gm_opt_max_worker <= 0) { mod_gm_opt_max_worker = 1; }
-                logger( GM_LOG_DEBUG, "Setting max worker to %d\n", mod_gm_opt_max_worker );
-            }
-            else if ( !strcmp( key, "max-age" ) || !strcmp( key, "--max-age" ) ) {
-                mod_gm_opt_max_age = atoi( value );
-                if(mod_gm_opt_max_age <= 0) { mod_gm_opt_max_age = 1; }
-                logger( GM_LOG_DEBUG, "Setting max job age to %d\n", mod_gm_opt_max_age );
-            }
-            else if ( !strcmp( key, "server" ) || !strcmp( key, "--server" ) ) {
-                char *servername;
-                while ( (servername = strsep( &value, "," )) != NULL ) {
-                    if ( strcmp( servername, "" ) ) {
-                        logger( GM_LOG_DEBUG, "Adding server %s\n", servername);
-                        mod_gm_opt_server[srv_ptr] = servername;
-                        srv_ptr++;
-                    }
-                }
-            }
-
-            else if ( !strcmp( key, "servicegroups" ) || !strcmp( key, "--servicegroups" ) ) {
-                char *groupname;
-                while ( (groupname = strsep( &value, "," )) != NULL ) {
-                    if ( strcmp( groupname, "" ) ) {
-                        mod_gm_servicegroups_list[srvgrp_ptr] = groupname;
-                        srvgrp_ptr++;
-                        logger( GM_LOG_DEBUG, "added seperate worker for servicegroup: %s\n", groupname );
-                    }
-                }
-            }
-            else if ( !strcmp( key, "hostgroups" ) || !strcmp( key, "--hostgroups" ) ) {
-                char *groupname;
-                while ( (groupname = strsep( &value, "," )) != NULL ) {
-                    if ( strcmp( groupname, "" ) ) {
-                        mod_gm_hostgroups_list[hostgrp_ptr] = groupname;
-                        hostgrp_ptr++;
-                        logger( GM_LOG_DEBUG, "added seperate worker for hostgroup: %s\n", groupname );
-                    }
-                }
-            }
-
-            else  {
-                logger( GM_LOG_ERROR, "unknown option: %s\n", key );
-            }
+int parse_arguments(int argc, char **argv) {
+    int i;
+    for(i=1;i<argc;i++) {
+        char * arg   = strdup( argv[i] );
+        lc(arg);
+        if ( !strcmp( arg, "help" ) || !strcmp( arg, "--help" )  || !strcmp( arg, "-h" ) ) {
+            print_usage();
         }
-        argv++;
+        parse_args_line(mod_gm_opt, arg);
+        free(arg);
     }
 
+    if(mod_gm_opt->debug_level >= GM_LOG_DEBUG) {
+        dumpconfig(mod_gm_opt);
+    }
+
+    return(verify_options());
+}
+
+
+/* verify our option */
+int verify_options() {
     // did we get any server?
-    if(srv_ptr == 0) {
+    if(mod_gm_opt->server_num == 0) {
         logger( GM_LOG_ERROR, "please specify at least one server\n" );
-        exit(EXIT_FAILURE);
+        return(GM_ERROR);
     }
 
     // nothing set by hand -> defaults
-    if(set_by_hand == 0 && srvgrp_ptr == 0 && hostgrp_ptr == 0) {
+    if( mod_gm_opt->set_queues_by_hand == 0 ) {
         logger( GM_LOG_DEBUG, "starting client with default queues\n" );
-        mod_gm_opt_hosts    = GM_ENABLED;
-        mod_gm_opt_services = GM_ENABLED;
-        mod_gm_opt_events   = GM_ENABLED;
+        mod_gm_opt->hosts    = GM_ENABLED;
+        mod_gm_opt->services = GM_ENABLED;
+        mod_gm_opt->events   = GM_ENABLED;
     }
 
-    if(srvgrp_ptr == 0 && hostgrp_ptr == 0 && mod_gm_opt_hosts == GM_DISABLED && mod_gm_opt_services == GM_DISABLED && mod_gm_opt_events == GM_DISABLED) {
-        logger( GM_LOG_ERROR, "starting client without queues is useless\n" );
-        exit(EXIT_FAILURE);
+    if(   mod_gm_opt->servicegroups_num == 0
+       && mod_gm_opt->hostgroups_num    == 0
+       && mod_gm_opt->hosts    == GM_DISABLED
+       && mod_gm_opt->services == GM_DISABLED
+       && mod_gm_opt->events   == GM_DISABLED
+      ) {
+        logger( GM_LOG_ERROR, "starting worker without any queues is useless\n" );
+        return(GM_ERROR);
     }
 
-    if(mod_gm_opt_min_worker > mod_gm_opt_max_worker)
-        mod_gm_opt_min_worker = mod_gm_opt_max_worker;
+    if(mod_gm_opt->min_worker > mod_gm_opt->max_worker)
+        mod_gm_opt->min_worker = mod_gm_opt->max_worker;
 
+    return(GM_OK);
 }
 
 
@@ -331,6 +206,8 @@ void print_usage() {
     printf("worker [ --debug=<lvl>         ]\n");
     printf("       [ --debug-result        ]\n");
     printf("       [ --help|-h             ]\n");
+    printf("\n");
+    printf("       [ --config=<configfile> ]\n");
     printf("\n");
     printf("       [ --server=<server>     ]\n");
     printf("\n");
@@ -356,6 +233,7 @@ void print_usage() {
     exit( EXIT_SUCCESS );
 }
 
+
 /* check child signal pipe */
 void check_signal(int sig) {
     logger( GM_LOG_TRACE, "check_signal(%i)\n", sig);
@@ -364,7 +242,7 @@ void check_signal(int sig) {
     int *shm;
 
     // Locate the segment.
-    if ((shmid = shmget(gm_shm_key, GM_SHM_SIZE, 0666)) < 0) {
+    if ((shmid = shmget(mod_gm_shm_key, GM_SHM_SIZE, 0666)) < 0) {
         perror("shmget");
         exit(1);
     }
@@ -402,8 +280,8 @@ void setup_child_communicator() {
     int * shm;
 
     // Create the segment.
-    gm_shm_key = getpid(); // use pid as shm key
-    if ((shmid = shmget(gm_shm_key, GM_SHM_SIZE, IPC_CREAT | 0666)) < 0) {
+    mod_gm_shm_key = getpid(); // use pid as shm key
+    if ((shmid = shmget(mod_gm_shm_key, GM_SHM_SIZE, IPC_CREAT | 0666)) < 0) {
         perror("shmget");
         exit(1);
     }
@@ -496,7 +374,7 @@ void clean_exit(int sig) {
      * will be removed when last client detaches
      */
     int shmid;
-    if ((shmid = shmget(gm_shm_key, GM_SHM_SIZE, 0666)) < 0) {
+    if ((shmid = shmget(mod_gm_shm_key, GM_SHM_SIZE, 0666)) < 0) {
         perror("shmget");
     }
     if( shmctl( shmid, IPC_RMID, 0 ) == -1 ) {
@@ -510,8 +388,8 @@ void clean_exit(int sig) {
         kill(-pid, SIGKILL);
     }
 
-    if(mod_gm_opt_pidfile != NULL)
-        unlink(mod_gm_opt_pidfile);
+    if(mod_gm_opt->pidfile != NULL)
+        unlink(mod_gm_opt->pidfile);
 
     exit( EXIT_SUCCESS );
 }
@@ -522,39 +400,39 @@ int write_pid_file() {
     FILE *fp;
 
     /* no pidfile given */
-    if(mod_gm_opt_pidfile == NULL)
+    if(mod_gm_opt->pidfile == NULL)
         return GM_OK;
 
-    if(file_exists(mod_gm_opt_pidfile)) {
-        fp = fopen(mod_gm_opt_pidfile, "r");
+    if(file_exists(mod_gm_opt->pidfile)) {
+        fp = fopen(mod_gm_opt->pidfile, "r");
         if(fp != NULL) {
             char pid[GM_BUFFERSIZE];
             fgets(pid, GM_BUFFERSIZE, fp);
             fclose(fp);
             logger( GM_LOG_INFO, "found pid file for: %s", pid);
             char pid_path[GM_BUFFERSIZE];
-            snprintf(pid_path, "/proc/%s", pid);
+            snprintf(pid_path, GM_BUFFERSIZE, "/proc/%s", pid);
             if(file_exists(pid_path)) {
                 logger( GM_LOG_INFO, "pidfile already exists, cannot start!\n");
                 return(GM_ERROR);
             } else {
                 logger( GM_LOG_INFO, "removed stale pidfile\n");
-                unlink(mod_gm_opt_pidfile);
+                unlink(mod_gm_opt->pidfile);
             }
         } else {
-            perror("fopen");
+            perror(mod_gm_opt->pidfile);
             logger( GM_LOG_INFO, "cannot read pidfile\n");
             return(GM_ERROR);
         }
     }
 
     /* now write new pidfile */
-    fp = fopen(mod_gm_opt_pidfile,"w+");
+    fp = fopen(mod_gm_opt->pidfile,"w+");
     if(fp == NULL)
         perror("fopen");
 
     fprintf(fp, "%d\n", getpid());
     fclose(fp);
-    logger( GM_LOG_DEBUG, "pid file %s written\n", mod_gm_opt_pidfile );
+    logger( GM_LOG_DEBUG, "pid file %s written\n", mod_gm_opt->pidfile );
     return GM_OK;
 }
