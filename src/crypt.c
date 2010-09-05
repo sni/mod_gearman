@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <crypt.h>
+#include "common.h"
 
 int encryption_initialized = 0;
 unsigned char key[KEYLENGTH(KEYBITS)];
@@ -27,18 +28,18 @@ int mod_gm_blowfish_encrypt(unsigned char ** encrypted, char * text) {
 
     unsigned long rk[RKLENGTH(KEYBITS)];
     int nrounds;
-    nrounds = rijndaelSetupEncrypt(rk, key, 256);
+    nrounds = rijndaelSetupEncrypt(rk, key, KEYBITS);
     int size = strlen(text);
-    int totalsize = size + 16-size%16;
+    int totalsize = size + BLOCKSIZE-size%BLOCKSIZE;
     int i = 0;
     int k = 0;
     unsigned char *enc;
     enc = (unsigned char *) malloc(sizeof(unsigned char)*totalsize);
     while(size > 0) {
-        unsigned char plaintext[16];
-        unsigned char ciphertext[16];
+        unsigned char plaintext[BLOCKSIZE];
+        unsigned char ciphertext[BLOCKSIZE];
         int j;
-        for (j = 0; j < 16; j++) {
+        for (j = 0; j < BLOCKSIZE; j++) {
             int c = text[i];
             if(c == 0)
                 break;
@@ -46,12 +47,12 @@ int mod_gm_blowfish_encrypt(unsigned char ** encrypted, char * text) {
             i++;
         }
 
-        for (; j < 16; j++)
+        for (; j < BLOCKSIZE; j++)
             plaintext[j] = ' ';
         rijndaelEncrypt(rk, nrounds, plaintext, ciphertext);
-        for (j = 0; j < 16; j++)
+        for (j = 0; j < BLOCKSIZE; j++)
             enc[k++] = ciphertext[j];
-        size -=16;
+        size -=BLOCKSIZE;
     }
 
     *encrypted = enc;
@@ -64,25 +65,25 @@ void mod_gm_blowfish_decrypt(char ** text, unsigned char * encrypted, int size) 
 
     assert(encryption_initialized == 1);
 
-    char decr[8192];
+    char decr[GM_BUFFERSIZE];
     decr[0] = '\0';
     unsigned long rk[RKLENGTH(KEYBITS)];
     int nrounds;
-    nrounds = rijndaelSetupDecrypt(rk, key, 256);
+    nrounds = rijndaelSetupDecrypt(rk, key, KEYBITS);
     int i = 0;
     while(1) {
-        unsigned char plaintext[16];
-        unsigned char ciphertext[16];
+        unsigned char plaintext[BLOCKSIZE];
+        unsigned char ciphertext[BLOCKSIZE];
         int j;
-        for (j = 0; j < 16; j++) {
+        for (j = 0; j < BLOCKSIZE; j++) {
             int c = encrypted[i];
             ciphertext[j] = c;
             i++;
         }
         rijndaelDecrypt(rk, nrounds, ciphertext, plaintext);
-        strncat(decr, (char*)plaintext, 16);
-        size -= 16;
-        if(size < 16)
+        strncat(decr, (char*)plaintext, BLOCKSIZE);
+        size -= BLOCKSIZE;
+        if(size < BLOCKSIZE)
             break;
     }
 

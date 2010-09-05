@@ -142,3 +142,25 @@ int file_exists (char * fileName) {
     }
     return 0;
 }
+
+
+/* trim left spaces */
+char *ltrim(char *s) {
+    while(isspace(*s)) s++;
+    return s;
+}
+
+
+/* trim right spaces */
+char *rtrim(char *s) {
+    char* back = s + strlen(s);
+    while(isspace(*--back));
+    *(back+1) = '\0';
+    return s;
+}
+
+
+/* trim spaces */
+char *trim(char *s) {
+    return rtrim(ltrim(s));
+}

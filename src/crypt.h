@@ -2,7 +2,8 @@
 #include <string.h>
 #include "rijndael.h"
 
-#define KEYBITS 256
+#define KEYBITS     256
+#define BLOCKSIZE    16
 
 void mod_gm_blowfish_init(char * password);
 int mod_gm_blowfish_encrypt(unsigned char ** encrypted, char * text);

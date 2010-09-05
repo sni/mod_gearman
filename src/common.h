@@ -19,12 +19,14 @@
 #define GM_OK                           0
 #define GM_ERROR                        1
 
+/* log modes */
 #define GM_LOG_ERROR                   -1
 #define GM_LOG_INFO                     0
 #define GM_LOG_DEBUG                    1
 #define GM_LOG_TRACE                    2
 #define GM_LOG_STDOUT                   3
 
+/* job priorities */
 #define GM_JOB_PRIO_LOW                 1
 #define GM_JOB_PRIO_NORMAL              2
 #define GM_JOB_PRIO_HIGH                3
@@ -32,6 +34,7 @@
 #define GM_DEFAULT_JOB_RETRIES          1
 #define GM_CHILD_SHUTDOWN_TIMEOUT       5
 
+/* transport modes */
 #define GM_ENCODE_AND_ENCRYPT           1
 #define GM_ENCODE_ONLY                  2
 
@@ -51,7 +54,13 @@
 #define STATE_CRITICAL                  2
 #define STATE_UNKNOWN                   3
 
-
+/* size of the shared memory segment */
 #define GM_SHM_SIZE                   300
 
+
+
+/*
+ * logger is then defined in worker_logger.c
+ * and the neb logger in logger.c
+ */
 void logger( int lvl, const char *text, ... );

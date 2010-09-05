@@ -13,3 +13,6 @@ void mod_gm_crypt_init(char * key);
 int mod_gm_encrypt(char ** encrypted, char * text, int mode);
 void mod_gm_decrypt(char ** decrypted, char * text, int mode);
 int file_exists (char * fileName);
+char *ltrim(char *s);
+char *rtrim(char *s);
+char *trim(char *s);

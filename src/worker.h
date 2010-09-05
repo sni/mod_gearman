@@ -6,6 +6,8 @@
  *
  *****************************************************************************/
 
+#define MOD_GM_WORKER
+
 #include <stdlib.h>
 #include <signal.h>
 #include <stdio.h>
