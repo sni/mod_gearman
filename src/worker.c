@@ -45,7 +45,7 @@ int main (int argc, char **argv) {
         }
         /* we are in the child process */
         else if(pid == 0) {
-            logger( GM_LOG_TRACE, "daemon started with pid %d\n", getpid());
+            logger( GM_LOG_INFO, "mod_gearman worker daemon started with pid %d\n", getpid());
         }
         /* we are the parent. So forking into daemon mode worked */
         else {
@@ -176,6 +176,10 @@ int make_new_child() {
 
 /* parse command line arguments */
 int parse_arguments(int argc, char **argv) {
+    if(mod_gm_opt->logfile_fp != NULL) {
+        fclose(mod_gm_opt->logfile_fp);
+        mod_gm_opt->logfile_fp = NULL;
+    }
     int i;
     mod_gm_opt_t * mod_gm_new_opt;
     mod_gm_new_opt = malloc(sizeof(mod_gm_opt_t));
@@ -195,6 +199,13 @@ int parse_arguments(int argc, char **argv) {
     if(verify == GM_OK) {
         mod_gm_free_opt(mod_gm_opt);
         mod_gm_opt = mod_gm_new_opt;
+    }
+
+    if(mod_gm_opt->logfile) {
+        mod_gm_opt->logfile_fp = fopen(mod_gm_opt->logfile, "a+");
+        if(mod_gm_opt->logfile_fp == NULL) {
+            perror(mod_gm_opt->logfile);
+        }
     }
 
     if(mod_gm_new_opt->debug_level >= GM_LOG_DEBUG) {
@@ -396,6 +407,8 @@ void clean_exit(int sig) {
     if(mod_gm_opt->pidfile != NULL)
         unlink(mod_gm_opt->pidfile);
 
+    logger( GM_LOG_INFO, "mod_gearman worker exited\n");
+
     mod_gm_free_opt(mod_gm_opt);
 
     exit( EXIT_SUCCESS );
@@ -512,6 +525,8 @@ void reload_config(int sig) {
      * children will finish the current job and exit
      */
     stop_childs();
+
+    logger( GM_LOG_INFO, "reloading config was successful\n");
 
     return;
 }

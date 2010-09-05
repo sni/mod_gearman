@@ -6,6 +6,8 @@
  *
  *****************************************************************************/
 
+#include <stdio.h>
+
 #ifndef MOD_GM_COMMON_H
 #define MOD_GM_COMMON_H
 
@@ -89,6 +91,7 @@ typedef struct mod_gm_opt_struct {
 /* worker */
     char         * pidfile;
     char         * logfile;
+    FILE         * logfile_fp;
     int            daemon_mode;
     int            debug_result;
     int            max_age;

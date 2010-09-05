@@ -335,6 +335,11 @@ void parse_args_line(mod_gm_opt_t *opt, char * arg) {
         opt->pidfile = strdup( value );
     }
 
+    /* logfile */
+    else if ( !strcmp( key, "logfile" ) ) {
+        opt->logfile = strdup( value );
+    }
+
     /* timeout */
     else if ( !strcmp( key, "timeout" ) ) {
         opt->timeout = atoi( value );

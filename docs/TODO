@@ -7,11 +7,9 @@ General
 
  - remove debug symbols (-g) and add strip (-s) again
 
-
 Worker
 ======
 
  - SIGTERM on client should finish after current job
  - childs should sent back their final result after SIGTERM
- - add logfile
  - avoid recursion when reading config files
