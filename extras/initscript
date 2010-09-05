@@ -48,7 +48,7 @@ case "$1" in
                 ps -p $pid > /dev/null 2>&1 && sleep 1;
             done
             ps -p $pid > /dev/null 2>&1;
-            if [ $? -eq 0 ]; then
+            if [ $? -ne 0 ]; then
                 echo "done"
                 exit 0;
             else

@@ -246,6 +246,12 @@ pidfile:            Path to the pidfile.
                     Example: pidfile=/path/to/pid.file
 
 
+logfile:            Path to the logfile.
+
+                    Example: logfile=/path/to/log.file
+
+
+
 
 
 Queue Names

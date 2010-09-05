@@ -43,6 +43,10 @@ void logger( int lvl, const char *text, ... ) {
     vsnprintf( buffer + strlen( buffer ), sizeof( buffer ) - strlen( buffer ), text, ap );
     va_end( ap );
 
-    printf( "%s", buffer );
+    if(mod_gm_opt->logfile_fp == NULL) {
+        printf( "%s", buffer );
+    } else {
+        fprintf( mod_gm_opt->logfile_fp, "%s", buffer );
+    }
     return;
 }
