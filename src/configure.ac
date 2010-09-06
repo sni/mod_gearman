@@ -3,7 +3,7 @@
 
 ##############################################
 AC_PREREQ([2.61])
-AC_INIT([mod_gearman], [0.1], [sven@nierlein.de])
+AC_INIT([mod_gearman], [0.2], [sven@nierlein.de])
 AM_INIT_AUTOMAKE([-Wall foreign])
 AC_CONFIG_SRCDIR([mod_gearman.c])
 AC_CONFIG_HEADER([config.h])

@@ -21,19 +21,6 @@ extern int currently_running_host_checks;
 void *gearman_module_handle=NULL;
 gearman_client_st client;
 
-char *mod_gm_hostgroups_list[GM_LISTSIZE];
-char *mod_gm_servicegroups_list[GM_LISTSIZE];
-char *mod_gm_local_hostgroups_list[GM_LISTSIZE];
-char *mod_gm_local_servicegroups_list[GM_LISTSIZE];
-
-int mod_gm_opt_services;
-int mod_gm_opt_hosts;
-int mod_gm_opt_events;
-int mod_gm_opt_perfdata;
-int mod_gm_opt_encryption = GM_ENABLED;
-
-int mod_gm_transportmode = GM_ENCODE_AND_ENCRYPT;
-
 int result_threads_running = 0;
 pthread_t result_thr[GM_LISTSIZE];
 char target_queue[GM_BUFFERSIZE];
@@ -41,7 +28,8 @@ char temp_buffer[GM_BUFFERSIZE];
 char uniq[GM_BUFFERSIZE];
 
 static void  register_neb_callbacks(void);
-static void  read_arguments( const char * );
+static int   read_arguments( const char * );
+static int   verify_options(mod_gm_opt_t *opt);
 static int   handle_host_check( int,void * );
 static int   handle_svc_check( int,void * );
 static int   handle_eventhandler( int,void * );
@@ -65,11 +53,13 @@ int nebmodule_init( int flags, char *args, nebmodule *handle ) {
     neb_set_module_info( gearman_module_handle, NEBMODULE_MODINFO_LICENSE, "GPL v3" );
     neb_set_module_info( gearman_module_handle, NEBMODULE_MODINFO_DESC,    "distribute host/service checks and eventhandler via gearman" );
 
-    logger( GM_LOG_INFO, "Version %s\n", GM_VERSION );
+    mod_gm_opt = malloc(sizeof(mod_gm_opt_t));
+    set_default_options(mod_gm_opt);
+    logger( GM_LOG_INFO,  "Version %s\n", GM_VERSION );
 
     // parse arguments
     read_arguments( args );
-    logger( GM_LOG_DEBUG, "args: %s\n", args );
+    logger( GM_LOG_TRACE, "args: %s\n", args );
     logger( GM_LOG_TRACE, "nebmodule_init(%i, %i)\n", flags );
     logger( GM_LOG_DEBUG, "running on libgearman %s\n", gearman_version() );
 
@@ -78,18 +68,19 @@ int nebmodule_init( int flags, char *args, nebmodule *handle ) {
         return GM_ERROR;
     }
 
-    if(mod_gm_opt_encryption == GM_ENABLED) {
-        if(mod_gm_opt_crypt_key == NULL) {
-            logger( GM_LOG_ERROR, "no encryption key provided, please use key=... or keyfile=...\n");
-            return GM_ERROR;
+    /* init crypto functions */
+    if(mod_gm_opt->encryption == GM_ENABLED) {
+        if(mod_gm_opt->crypt_key == NULL) {
+            logger( GM_LOG_ERROR, "no encryption key provided, please use --key=... or keyfile=...\n");
+            exit( EXIT_FAILURE );
         }
-        mod_gm_crypt_init(mod_gm_opt_crypt_key);
+        mod_gm_crypt_init(mod_gm_opt->crypt_key);
     } else {
-        mod_gm_transportmode = GM_ENCODE_ONLY;
+        mod_gm_opt->transportmode = GM_ENCODE_ONLY;
     }
 
     // create client
-    if ( create_client( mod_gm_opt_server, &client ) != GM_OK ) {
+    if ( create_client( mod_gm_opt->server_list, &client ) != GM_OK ) {
         logger( GM_LOG_ERROR, "cannot start client\n" );
         return GM_ERROR;
     }
@@ -106,18 +97,18 @@ int nebmodule_init( int flags, char *args, nebmodule *handle ) {
 /* register eventhandler callback */
 static void register_neb_callbacks(void) {
 
-    // only if we have hostgroups defined or general hosts GM_ENABLED
-    if ( mod_gm_hostgroups_list[0] != NULL || mod_gm_opt_hosts == GM_ENABLED )
+    // only if we have hostgroups defined or general hosts enabled
+    if ( mod_gm_opt->hostgroups_num > 0 || mod_gm_opt->hosts == GM_ENABLED )
         neb_register_callback( NEBCALLBACK_HOST_CHECK_DATA,    gearman_module_handle, 0, handle_host_check );
 
-    // only if we have groups defined or general services GM_ENABLED
-    if ( mod_gm_servicegroups_list[0] != NULL || mod_gm_hostgroups_list[0] != NULL || mod_gm_opt_services == GM_ENABLED )
+    // only if we have groups defined or general services enabled
+    if ( mod_gm_opt->servicegroups_num > 0 || mod_gm_opt->hostgroups_num > 0 || mod_gm_opt->services == GM_ENABLED )
         neb_register_callback( NEBCALLBACK_SERVICE_CHECK_DATA, gearman_module_handle, 0, handle_svc_check );
 
-    if ( mod_gm_opt_events == GM_ENABLED )
+    if ( mod_gm_opt->events == GM_ENABLED )
         neb_register_callback( NEBCALLBACK_EVENT_HANDLER_DATA, gearman_module_handle, 0, handle_eventhandler );
 
-    if ( mod_gm_opt_perfdata == GM_ENABLED ) {
+    if ( mod_gm_opt->perfdata == GM_ENABLED ) {
         neb_register_callback( NEBCALLBACK_HOST_CHECK_DATA, gearman_module_handle, 0, handle_perfdata );
         neb_register_callback( NEBCALLBACK_SERVICE_CHECK_DATA, gearman_module_handle, 0, handle_perfdata );
     }
@@ -134,18 +125,18 @@ int nebmodule_deinit( int flags, int reason ) {
     // should be removed already, but just for the case it wasn't
     neb_deregister_callback( NEBCALLBACK_PROCESS_DATA, gearman_module_handle );
 
-    // only if we have hostgroups defined or general hosts GM_ENABLED
-    if ( mod_gm_hostgroups_list[0] != NULL || mod_gm_opt_hosts == GM_ENABLED )
+    // only if we have hostgroups defined or general hosts enabled
+    if ( mod_gm_opt->hostgroups_num > 0 || mod_gm_opt->hosts == GM_ENABLED )
         neb_deregister_callback( NEBCALLBACK_HOST_CHECK_DATA, gearman_module_handle );
 
-    // only if we have groups defined or general services GM_ENABLED
-    if ( mod_gm_servicegroups_list[0] != NULL || mod_gm_hostgroups_list[0] != NULL || mod_gm_opt_services == GM_ENABLED )
+    // only if we have groups defined or general services enabled
+    if ( mod_gm_opt->servicegroups_num > 0 || mod_gm_opt->hostgroups_num > 0 || mod_gm_opt->services == GM_ENABLED )
         neb_deregister_callback( NEBCALLBACK_SERVICE_CHECK_DATA, gearman_module_handle );
 
-    if ( mod_gm_opt_events == GM_ENABLED )
+    if ( mod_gm_opt->events == GM_ENABLED )
         neb_deregister_callback( NEBCALLBACK_EVENT_HANDLER_DATA, gearman_module_handle );
 
-    if ( mod_gm_opt_perfdata == GM_ENABLED ) {
+    if ( mod_gm_opt->perfdata == GM_ENABLED ) {
         neb_deregister_callback( NEBCALLBACK_HOST_CHECK_DATA, gearman_module_handle );
         neb_deregister_callback( NEBCALLBACK_SERVICE_CHECK_DATA, gearman_module_handle );
     }
@@ -154,7 +145,7 @@ int nebmodule_deinit( int flags, int reason ) {
 
     // stop result threads
     int x;
-    for(x = 0; x < mod_gm_opt_result_workers; x++) {
+    for(x = 0; x < mod_gm_opt->result_workers; x++) {
         pthread_cancel(result_thr[x]);
         pthread_join(result_thr[x], NULL);
     }
@@ -179,40 +170,40 @@ static int handle_process_events( int event_type, void *data ) {
         // this cannot be done befor nagios has finished reading his config
         // verify local servicegroups names
         int x=0;
-        while ( mod_gm_local_servicegroups_list[x] != NULL ) {
-            servicegroup * temp_servicegroup = find_servicegroup( mod_gm_local_servicegroups_list[x] );
+        while ( mod_gm_opt->local_servicegroups_list[x] != NULL ) {
+            servicegroup * temp_servicegroup = find_servicegroup( mod_gm_opt->local_servicegroups_list[x] );
             if( temp_servicegroup == NULL ) {
-                logger( GM_LOG_INFO, "Warning: servicegroup '%s' does not exist, possible typo?\n", mod_gm_local_servicegroups_list[x] );
+                logger( GM_LOG_INFO, "Warning: servicegroup '%s' does not exist, possible typo?\n", mod_gm_opt->local_servicegroups_list[x] );
             }
             x++;
         }
 
         // verify local hostgroup names
         x = 0;
-        while ( mod_gm_local_hostgroups_list[x] != NULL ) {
-            hostgroup * temp_hostgroup = find_hostgroup( mod_gm_local_hostgroups_list[x] );
+        while ( mod_gm_opt->local_hostgroups_list[x] != NULL ) {
+            hostgroup * temp_hostgroup = find_hostgroup( mod_gm_opt->local_hostgroups_list[x] );
             if( temp_hostgroup == NULL ) {
-                logger( GM_LOG_INFO, "Warning: hostgroup '%s' does not exist, possible typo?\n", mod_gm_local_hostgroups_list[x] );
+                logger( GM_LOG_INFO, "Warning: hostgroup '%s' does not exist, possible typo?\n", mod_gm_opt->local_hostgroups_list[x] );
             }
             x++;
         }
 
         // verify servicegroups names
         x = 0;
-        while ( mod_gm_servicegroups_list[x] != NULL ) {
-            servicegroup * temp_servicegroup = find_servicegroup( mod_gm_servicegroups_list[x] );
+        while ( mod_gm_opt->servicegroups_list[x] != NULL ) {
+            servicegroup * temp_servicegroup = find_servicegroup( mod_gm_opt->servicegroups_list[x] );
             if( temp_servicegroup == NULL ) {
-                logger( GM_LOG_INFO, "Warning: servicegroup '%s' does not exist, possible typo?\n", mod_gm_servicegroups_list[x] );
+                logger( GM_LOG_INFO, "Warning: servicegroup '%s' does not exist, possible typo?\n", mod_gm_opt->servicegroups_list[x] );
             }
             x++;
         }
 
         // verify hostgroup names
         x = 0;
-        while ( mod_gm_hostgroups_list[x] != NULL ) {
-            hostgroup * temp_hostgroup = find_hostgroup( mod_gm_hostgroups_list[x] );
+        while ( mod_gm_opt->hostgroups_list[x] != NULL ) {
+            hostgroup * temp_hostgroup = find_hostgroup( mod_gm_opt->hostgroups_list[x] );
             if( temp_hostgroup == NULL ) {
-                logger( GM_LOG_INFO, "Warning: hostgroup '%s' does not exist, possible typo?\n", mod_gm_hostgroups_list[x] );
+                logger( GM_LOG_INFO, "Warning: hostgroup '%s' does not exist, possible typo?\n", mod_gm_opt->hostgroups_list[x] );
             }
             x++;
         }
@@ -245,7 +236,7 @@ static int handle_eventhandler( int event_type, void *data ) {
                          temp_buffer,
                          GM_JOB_PRIO_NORMAL,
                          GM_DEFAULT_JOB_RETRIES,
-                         mod_gm_transportmode
+                         mod_gm_opt->transportmode
                         ) == GM_OK) {
         logger( GM_LOG_TRACE, "handle_eventhandler() finished successfully\n" );
     }
@@ -334,7 +325,7 @@ static int handle_host_check( int event_type, void *data ) {
     //extern check_result check_result_info;
     temp_buffer[0]='\x0';
     snprintf( temp_buffer,sizeof( temp_buffer )-1,"type=host\nresult_queue=%s\nhost_name=%s\nstart_time=%i.%i\ntimeout=%d\ncommand_line=%s\n\n\n",
-              mod_gm_opt_result_queue,
+              mod_gm_opt->result_queue,
               hst->name,
               ( int )start_time.tv_sec,
               ( int )start_time.tv_usec,
@@ -349,7 +340,7 @@ static int handle_host_check( int event_type, void *data ) {
                          temp_buffer,
                          GM_JOB_PRIO_NORMAL,
                          GM_DEFAULT_JOB_RETRIES,
-                         mod_gm_transportmode
+                         mod_gm_opt->transportmode
                         ) == GM_OK) {
         logger( GM_LOG_TRACE, "handle_host_check() finished successfully\n" );
     }
@@ -398,7 +389,7 @@ static int handle_svc_check( int event_type, void *data ) {
     extern check_result check_result_info;
     temp_buffer[0]='\x0';
     snprintf( temp_buffer,sizeof( temp_buffer )-1,"type=service\nresult_queue=%s\nhost_name=%s\nservice_description=%s\nstart_time=%i.%i\ntimeout=%d\ncheck_options=%i\nscheduled_check=%i\nreschedule_check=%i\nlatency=%f\ncommand_line=%s\n\n\n",
-              mod_gm_opt_result_queue,
+              mod_gm_opt->result_queue,
               svcdata->host_name,
               svcdata->service_description,
               ( int )svcdata->start_time.tv_sec,
@@ -426,7 +417,7 @@ static int handle_svc_check( int event_type, void *data ) {
                          temp_buffer,
                          prio,
                          GM_DEFAULT_JOB_RETRIES,
-                         mod_gm_transportmode
+                         mod_gm_opt->transportmode
                         ) == GM_OK) {
         logger( GM_LOG_TRACE, "handle_svc_check() finished successfully\n" );
     }
@@ -437,173 +428,74 @@ static int handle_svc_check( int event_type, void *data ) {
 
 
 /* parse the module arguments */
-static void read_arguments( const char *args_orig ) {
-
-    mod_gm_opt_timeout        = 0;
-    mod_gm_opt_result_workers = 1;
-    mod_gm_opt_result_queue   = NULL;
-    mod_gm_opt_events         = GM_DISABLED;
-    mod_gm_opt_services       = GM_DISABLED;
-    mod_gm_opt_hosts          = GM_DISABLED;
-    mod_gm_opt_perfdata       = GM_DISABLED;
-
-    // no arguments given
-    if ( !args_orig )
-        return;
+static int read_arguments( const char *args_orig ) {
 
     char *ptr;
-    int  srv_ptr         = 0;
-    int  srvgrp_ptr      = 0;
-    int  hostgrp_ptr     = 0;
-    int  loc_srvgrp_ptr  = 0;
-    int  loc_hostgrp_ptr = 0;
-    char * args      = strdup( args_orig );
+    char *args = strdup(args_orig);
     while ( (ptr = strsep( &args, " " )) != NULL ) {
-        char *key   = str_token( &ptr, '=' );
-        char *value = str_token( &ptr, 0 );
-
-        if ( key == NULL )
-            continue;
-
-        if ( value == NULL )
-            continue;
-
-        if ( !strcmp( key, "debug" ) || !strcmp( key, "--debug" ) ) {
-            mod_gm_opt_debug_level = atoi( value );
-            logger( GM_LOG_DEBUG, "Setting debug level to %d\n", mod_gm_opt_debug_level );
-        }
-        else if ( !strcmp( key, "timeout" ) || !strcmp( key, "--timeout" ) ) {
-            mod_gm_opt_timeout = atoi( value );
-            logger( GM_LOG_DEBUG, "Setting timeout to %d\n", mod_gm_opt_timeout );
-        }
-        else if ( !strcmp( key, "result_workers" ) || !strcmp( key, "--result_workers" ) ) {
-            mod_gm_opt_result_workers = atoi( value );
-            if(mod_gm_opt_result_workers > GM_LISTSIZE) { mod_gm_opt_result_workers = GM_LISTSIZE; }
-            if(mod_gm_opt_result_workers <= 0)          { mod_gm_opt_result_workers = 1; }
-            logger( GM_LOG_DEBUG, "Setting result_workers to %d\n", mod_gm_opt_result_workers );
-        }
-        else if ( !strcmp( key, "result_queue" ) || !strcmp( key, "--result_queue" ) ) {
-            mod_gm_opt_result_queue = value;
-            logger( GM_LOG_DEBUG, "set result queue to '%s'\n", mod_gm_opt_result_queue );
-        }
-        else if ( !strcmp( key, "server" ) || !strcmp( key, "--server" ) ) {
-            char *servername;
-            while ( (servername = strsep( &value, "," )) != NULL ) {
-                if ( strcmp( servername, "" ) ) {
-                    mod_gm_opt_server[srv_ptr] = servername;
-                    srv_ptr++;
-                }
-            }
-        }
-        else if ( !strcmp( key, "encryption" ) || !strcmp( key, "--encryption" ) ) {
-            if( value != NULL && !strcmp( value, "no" ) ) {
-                mod_gm_opt_encryption = GM_DISABLED;
-                logger( GM_LOG_DEBUG, "disabling encryption\n");
-            }
-        }
-        else if ( !strcmp( key, "key" ) || !strcmp( key, "--key" ) ) {
-            mod_gm_opt_crypt_key = strdup( value );
-            logger( GM_LOG_DEBUG, "setting key for encryption\n" );
-        }
-        else if ( !strcmp( key, "keyfile" ) || !strcmp( key, "--keyfile" ) ) {
-            FILE *fp;
-            fp = fopen(value,"rb");
-            if(fp == NULL)
-                perror("fopen");
-            int i;
-            mod_gm_opt_crypt_key = malloc(GM_BUFFERSIZE);
-            for(i=0;i<32;i++)
-                mod_gm_opt_crypt_key[i] = fgetc(fp);
-            fclose(fp);
-            logger( GM_LOG_DEBUG, "read key for encryption from %s\n", value );
-        }
-        else if ( !strcmp( key, "eventhandler" ) || !strcmp( key, "--eventhandler" ) ) {
-            if ( !strcmp( value, "yes" ) ) {
-                mod_gm_opt_events = GM_ENABLED;
-                logger( GM_LOG_DEBUG, "enabled handling of eventhandlers\n" );
-            }
-        }
-        else if ( !strcmp( key, "perfdata" ) || !strcmp( key, "--perfdata" ) ) {
-            if ( !strcmp( value, "yes" ) ) {
-                mod_gm_opt_perfdata = GM_ENABLED;
-                logger( GM_LOG_DEBUG, "enabled handling of perfdata\n" );
-            }
-        }
-        else if ( !strcmp( key, "services" ) || !strcmp( key, "--services" ) ) {
-            if ( !strcmp( value, "yes" ) ) {
-                mod_gm_opt_services = GM_ENABLED;
-                logger( GM_LOG_DEBUG, "enabled handling of service checks\n" );
-            }
-        }
-        else if ( !strcmp( key, "hosts" ) || !strcmp( key, "--hosts" ) ) {
-            if ( !strcmp( value, "yes" ) ) {
-                mod_gm_opt_hosts = GM_ENABLED;
-                logger( GM_LOG_DEBUG, "enabled handling of hostchecks\n" );
-            }
-        }
-        else if ( !strcmp( key, "servicegroups" ) || !strcmp( key, "--servicegroups" ) ) {
-            char *groupname;
-            while ( (groupname = strsep( &value, "," )) != NULL ) {
-                if ( strcmp( groupname, "" ) ) {
-                    mod_gm_servicegroups_list[srvgrp_ptr] = groupname;
-                    srvgrp_ptr++;
-                    logger( GM_LOG_DEBUG, "added seperate worker for servicegroup: %s\n", groupname );
-                }
-            }
-        }
-        else if ( !strcmp( key, "hostgroups" ) || !strcmp( key, "--hostgroups" ) ) {
-            char *groupname;
-            while ( (groupname = strsep( &value, "," )) != NULL ) {
-                if ( strcmp( groupname, "" ) ) {
-                    mod_gm_hostgroups_list[hostgrp_ptr] = groupname;
-                    hostgrp_ptr++;
-                    logger( GM_LOG_DEBUG, "added seperate worker for hostgroup: %s\n", groupname );
-                }
-            }
-        }
-        else if ( !strcmp( key, "localhostgroups" ) || !strcmp( key, "--localhostgroups" ) ) {
-            char *groupname;
-            while ( (groupname = strsep( &value, "," )) != NULL ) {
-                if ( strcmp( groupname, "" ) ) {
-                    mod_gm_local_hostgroups_list[loc_hostgrp_ptr] = groupname;
-                    loc_hostgrp_ptr++;
-                    logger( GM_LOG_DEBUG, "added local hostgroup for: %s\n", groupname );
-                }
-            }
-        }
-        else if ( !strcmp( key, "localservicegroups" ) || !strcmp( key, "--localservicegroups" ) ) {
-            char *groupname;
-            while ( (groupname = strsep( &value, "," )) != NULL ) {
-                if ( strcmp( groupname, "" ) ) {
-                    mod_gm_local_servicegroups_list[loc_srvgrp_ptr] = groupname;
-                    loc_srvgrp_ptr++;
-                    logger( GM_LOG_DEBUG, "added local servicegroup for: %s\n", groupname );
-                }
-            }
-        } else  {
-            logger( GM_LOG_ERROR, "unknown option: key: %s value: %s\n", key, value );
-        }
+        parse_args_line(mod_gm_opt, ptr);
     }
 
-    if ( mod_gm_opt_result_queue == NULL )
-        mod_gm_opt_result_queue = "check_results";
+    int verify;
+    verify = verify_options(mod_gm_opt);
 
-    if ( mod_gm_opt_timeout == 0 )
-        mod_gm_opt_timeout     = 3000;
+    if(mod_gm_opt->debug_level >= GM_LOG_DEBUG) {
+        dumpconfig(mod_gm_opt, GM_NEB_MODE);
+    }
 
+    /* read keyfile */
+    read_keyfile(mod_gm_opt);
+
+    free(args);
+
+    return(verify);
+}
+
+
+/* verify our option */
+static int verify_options(mod_gm_opt_t *opt) {
     // did we get any server?
-    if(srv_ptr == 0) {
+    if(opt->server_num == 0) {
         logger( GM_LOG_ERROR, "please specify at least one server\n" );
-        return;
+        return(GM_ERROR);
     }
+
+    // nothing set by hand -> defaults
+    if( opt->set_queues_by_hand == 0 ) {
+        logger( GM_LOG_DEBUG, "starting client with default queues\n" );
+        opt->hosts    = GM_ENABLED;
+        opt->services = GM_ENABLED;
+        opt->events   = GM_ENABLED;
+    }
+
+    if(   opt->servicegroups_num == 0
+       && opt->hostgroups_num    == 0
+       && opt->hosts    == GM_DISABLED
+       && opt->services == GM_DISABLED
+       && opt->events   == GM_DISABLED
+       && opt->perfdata == GM_DISABLED
+      ) {
+        logger( GM_LOG_ERROR, "starting worker without any queues is useless\n" );
+        return(GM_ERROR);
+    }
+
+    if ( mod_gm_opt->result_queue == NULL )
+        mod_gm_opt->result_queue = "check_results";
+
+    if ( mod_gm_opt->timeout <= 100 )
+        mod_gm_opt->timeout     = 3000;
 
     // do we need a result thread?
-    if(srvgrp_ptr == 0 && hostgrp_ptr == 0 && mod_gm_opt_hosts == GM_DISABLED && mod_gm_opt_services == GM_DISABLED) {
+    if(   opt->servicegroups_num == 0
+       && opt->hostgroups_num    == 0
+       && opt->hosts    == GM_DISABLED
+       && opt->services == GM_DISABLED
+      ) {
         logger( GM_LOG_DEBUG, "disabled unused result threads\n" );
-        mod_gm_opt_result_workers = 0;
+        mod_gm_opt->result_workers = 0;
     }
 
-    return;
+    return(GM_OK);
 }
 
 
@@ -616,10 +508,10 @@ static void set_target_queue( host *host, service *svc ) {
     // look for matching local servicegroups
     int x=0;
     if ( svc ) {
-        while ( mod_gm_local_servicegroups_list[x] != NULL ) {
-            servicegroup * temp_servicegroup = find_servicegroup( mod_gm_local_servicegroups_list[x] );
+        while ( mod_gm_opt->local_servicegroups_list[x] != NULL ) {
+            servicegroup * temp_servicegroup = find_servicegroup( mod_gm_opt->local_servicegroups_list[x] );
             if ( is_service_member_of_servicegroup( temp_servicegroup,svc )==TRUE ) {
-                logger( GM_LOG_TRACE, "service is member of local servicegroup: %s\n", mod_gm_local_servicegroups_list[x] );
+                logger( GM_LOG_TRACE, "service is member of local servicegroup: %s\n", mod_gm_opt->local_servicegroups_list[x] );
                 return;
             }
             x++;
@@ -628,10 +520,10 @@ static void set_target_queue( host *host, service *svc ) {
 
     // look for matching local hostgroups
     x = 0;
-    while ( mod_gm_local_hostgroups_list[x] != NULL ) {
-        hostgroup * temp_hostgroup = find_hostgroup( mod_gm_local_hostgroups_list[x] );
+    while ( mod_gm_opt->local_hostgroups_list[x] != NULL ) {
+        hostgroup * temp_hostgroup = find_hostgroup( mod_gm_opt->local_hostgroups_list[x] );
         if ( is_host_member_of_hostgroup( temp_hostgroup,host )==TRUE ) {
-            logger( GM_LOG_TRACE, "server is member of local hostgroup: %s\n", mod_gm_local_hostgroups_list[x] );
+            logger( GM_LOG_TRACE, "server is member of local hostgroup: %s\n", mod_gm_opt->local_hostgroups_list[x] );
             return;
         }
         x++;
@@ -640,11 +532,11 @@ static void set_target_queue( host *host, service *svc ) {
     // look for matching servicegroups
     x = 0;
     if ( svc ) {
-        while ( mod_gm_servicegroups_list[x] != NULL ) {
-            servicegroup * temp_servicegroup = find_servicegroup( mod_gm_servicegroups_list[x] );
+        while ( mod_gm_opt->servicegroups_list[x] != NULL ) {
+            servicegroup * temp_servicegroup = find_servicegroup( mod_gm_opt->servicegroups_list[x] );
             if ( is_service_member_of_servicegroup( temp_servicegroup,svc )==TRUE ) {
-                logger( GM_LOG_TRACE, "service is member of servicegroup: %s\n", mod_gm_servicegroups_list[x] );
-                snprintf( target_queue, sizeof(target_queue)-1, "servicegroup_%s", mod_gm_servicegroups_list[x] );
+                logger( GM_LOG_TRACE, "service is member of servicegroup: %s\n", mod_gm_opt->servicegroups_list[x] );
+                snprintf( target_queue, sizeof(target_queue)-1, "servicegroup_%s", mod_gm_opt->servicegroups_list[x] );
                 target_queue[sizeof( target_queue )-1]='\x0';
                 return;
             }
@@ -654,11 +546,11 @@ static void set_target_queue( host *host, service *svc ) {
 
     // look for matching hostgroups
     x = 0;
-    while ( mod_gm_hostgroups_list[x] != NULL ) {
-        hostgroup * temp_hostgroup = find_hostgroup( mod_gm_hostgroups_list[x] );
+    while ( mod_gm_opt->hostgroups_list[x] != NULL ) {
+        hostgroup * temp_hostgroup = find_hostgroup( mod_gm_opt->hostgroups_list[x] );
         if ( is_host_member_of_hostgroup( temp_hostgroup,host )==TRUE ) {
-            logger( GM_LOG_TRACE, "server is member of hostgroup: %s\n", mod_gm_hostgroups_list[x] );
-            snprintf( target_queue, sizeof(target_queue)-1, "hostgroup_%s", mod_gm_hostgroups_list[x] );
+            logger( GM_LOG_TRACE, "server is member of hostgroup: %s\n", mod_gm_opt->hostgroups_list[x] );
+            snprintf( target_queue, sizeof(target_queue)-1, "hostgroup_%s", mod_gm_opt->hostgroups_list[x] );
             target_queue[sizeof( target_queue )-1]='\x0';
             return;
         }
@@ -667,7 +559,7 @@ static void set_target_queue( host *host, service *svc ) {
 
     if ( svc ) {
         // pass into the general service queue
-        if ( mod_gm_opt_services == GM_ENABLED && svc ) {
+        if ( mod_gm_opt->services == GM_ENABLED && svc ) {
             snprintf( target_queue, sizeof(target_queue)-1, "service" );
             target_queue[sizeof( target_queue )-1]='\x0';
             return;
@@ -675,7 +567,7 @@ static void set_target_queue( host *host, service *svc ) {
     }
     else {
         // pass into the general host queue
-        if ( mod_gm_opt_hosts == GM_ENABLED ) {
+        if ( mod_gm_opt->hosts == GM_ENABLED ) {
             snprintf( target_queue, sizeof(target_queue)-1, "host" );
             target_queue[sizeof( target_queue )-1]='\x0';
             return;
@@ -691,7 +583,7 @@ static void start_threads(void) {
     if ( !result_threads_running ) {
         // create result worker
         int x;
-        for(x = 0; x < mod_gm_opt_result_workers; x++) {
+        for(x = 0; x < mod_gm_opt->result_workers; x++) {
             result_threads_running++;
             worker_parm *p;
             p = (worker_parm *)malloc(sizeof(worker_parm));
@@ -785,7 +677,7 @@ int handle_perfdata(int event_type, void *data) {
                              perfdatafile_template,
                              GM_JOB_PRIO_NORMAL,
                              GM_DEFAULT_JOB_RETRIES,
-                             mod_gm_transportmode
+                             mod_gm_opt->transportmode
                             ) == GM_OK) {
             logger( GM_LOG_TRACE, "handle_perfdata() finished successfully\n" );
         }

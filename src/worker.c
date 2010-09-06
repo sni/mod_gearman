@@ -71,7 +71,7 @@ int main (int argc, char **argv) {
         }
         mod_gm_crypt_init(mod_gm_opt->crypt_key);
     } else {
-        mod_gm_transportmode = GM_ENCODE_ONLY;
+        mod_gm_opt->transportmode = GM_ENCODE_ONLY;
     }
 
     logger( GM_LOG_DEBUG, "main process started\n");
@@ -208,8 +208,11 @@ int parse_arguments(int argc, char **argv) {
         }
     }
 
+    /* read keyfile */
+    read_keyfile(mod_gm_opt);
+
     if(mod_gm_new_opt->debug_level >= GM_LOG_DEBUG) {
-        dumpconfig(mod_gm_new_opt);
+        dumpconfig(mod_gm_new_opt, GM_WORKER_MODE);
     }
 
     return(verify);

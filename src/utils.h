@@ -23,5 +23,6 @@ char *lc(char * str);
 void parse_args_line(mod_gm_opt_t *opt, char * arg);
 int parse_yes_or_no(char*value, int dfl);
 void read_config_file(mod_gm_opt_t *opt, char*filename);
-void dumpconfig(mod_gm_opt_t *opt);
+void dumpconfig(mod_gm_opt_t *opt, int mode);
 void mod_gm_free_opt(mod_gm_opt_t *opt);
+void read_keyfile(mod_gm_opt_t *opt);

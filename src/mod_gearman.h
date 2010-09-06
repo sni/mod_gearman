@@ -37,12 +37,4 @@ int nebmodule_init( int, char *, nebmodule * );
 int nebmodule_deinit( int, int );
 
 /* global variables */
-char * mod_gm_opt_server[GM_LISTSIZE];
-int    mod_gm_opt_debug_level;
-char * mod_gm_opt_result_queue;
-int    mod_gm_opt_timeout;
-int    mod_gm_opt_result_workers;
-int    mod_gm_opt_encryption;
-char * mod_gm_opt_crypt_key;
-
-int    mod_gm_transportmode;
+mod_gm_opt_t *mod_gm_opt;

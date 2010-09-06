@@ -50,6 +50,11 @@
 #define GM_ENCODE_AND_ENCRYPT           1
 #define GM_ENCODE_ONLY                  2
 
+/* modes */
+#define GM_WORKER_MODE                  1
+#define GM_NEB_MODE                     1
+
+
 #ifndef TRUE
 #define TRUE                            1
 #elif (TRUE!=1)
@@ -88,6 +93,14 @@ typedef struct mod_gm_opt_struct {
     int            timeout;
     int            encryption;
     int            transportmode;
+/* neb module */
+    char         * result_queue;
+    int            result_workers;
+    int            perfdata;
+    char         * local_hostgroups_list[GM_LISTSIZE];
+    int            local_hostgroups_num;
+    char         * local_servicegroups_list[GM_LISTSIZE];
+    int            local_servicegroups_num;
 /* worker */
     char         * pidfile;
     char         * logfile;

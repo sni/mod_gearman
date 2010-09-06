@@ -19,7 +19,6 @@
 #include <libgearman/gearman.h>
 #include "common.h"
 
-int mod_gm_transportmode;
 int mod_gm_shm_key;
 mod_gm_opt_t *mod_gm_opt;
 

@@ -13,11 +13,11 @@
 void logger( int lvl, const char *text, ... ) {
 
     // check log level
-    if ( lvl != GM_LOG_ERROR && lvl > mod_gm_opt_debug_level ) {
+    if ( lvl != GM_LOG_ERROR && lvl > mod_gm_opt->debug_level ) {
         return;
     }
 
-    char buffer[8192];
+    char buffer[GM_BUFFERSIZE];
     if ( lvl == GM_LOG_ERROR ) {
         snprintf( buffer, 22, "mod_gearman: ERROR - " );
     } else {
@@ -29,7 +29,7 @@ void logger( int lvl, const char *text, ... ) {
     va_end( ap );
 
     // in case of stdout logging just print and return
-    if ( mod_gm_opt_debug_level >= GM_LOG_STDOUT ) {
+    if ( mod_gm_opt->debug_level >= GM_LOG_STDOUT ) {
         printf( "%s", buffer );
         return;
     }

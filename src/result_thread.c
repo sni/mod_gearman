@@ -79,7 +79,7 @@ void *get_results( gearman_job_st *job, void *context, size_t *result_size, gear
     // decrypt data
     char *decrypted_data   = malloc(GM_BUFFERSIZE);
     char *decrypted_data_c = decrypted_data;
-    mod_gm_decrypt(&decrypted_data, workload, mod_gm_transportmode);
+    mod_gm_decrypt(&decrypted_data, workload, mod_gm_opt->transportmode);
     free(workload);
 
     if(decrypted_data == NULL) {
@@ -215,15 +215,15 @@ void *get_results( gearman_job_st *job, void *context, size_t *result_size, gear
 /* get the worker */
 int set_worker( gearman_worker_st *worker ) {
 
-    create_worker( mod_gm_opt_server, worker );
+    create_worker( mod_gm_opt->server_list, worker );
 
-    if ( mod_gm_opt_result_queue == NULL ) {
+    if ( mod_gm_opt->result_queue == NULL ) {
         logger( GM_LOG_ERROR, "got no result queue!\n" );
         return GM_ERROR;
     }
-    logger( GM_LOG_DEBUG, "started result_worker thread for queue: %s\n", mod_gm_opt_result_queue );
+    logger( GM_LOG_DEBUG, "started result_worker thread for queue: %s\n", mod_gm_opt->result_queue );
 
-    if(worker_add_function( worker, mod_gm_opt_result_queue, get_results ) != GM_OK) {
+    if(worker_add_function( worker, mod_gm_opt->result_queue, get_results ) != GM_OK) {
         return GM_ERROR;
     }
 
