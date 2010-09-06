@@ -28,7 +28,6 @@
 #include "nagios/broker.h"
 #include "nagios/macros.h"
 
-
 /* include the gearman libs */
 #include <libgearman/gearman.h>
 

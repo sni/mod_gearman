@@ -154,7 +154,7 @@ void *get_job( gearman_job_st *job, void *context, size_t *result_size, gearman_
     exec_job->reschedule_check    = TRUE;
     exec_job->return_code         = STATE_OK;
     exec_job->latency             = 0.0;
-    exec_job->timeout             = mod_gm_opt->timeout;
+    exec_job->timeout             = mod_gm_opt->job_timeout;
     exec_job->start_time.tv_sec   = 0L;
     exec_job->start_time.tv_usec  = 0L;
 
@@ -467,6 +467,10 @@ void send_result_back() {
                          mod_gm_opt->transportmode
                         ) == GM_OK) {
         logger( GM_LOG_TRACE, "send_result_back() finished successfully\n" );
+    }
+    else {
+        gearman_client_free( &client );
+        create_client( mod_gm_opt->server_list, &client );
     }
 
     return;

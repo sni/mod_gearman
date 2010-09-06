@@ -36,7 +36,7 @@
 #define GM_JOB_PRIO_NORMAL              2
 #define GM_JOB_PRIO_HIGH                3
 
-#define GM_DEFAULT_TIMEOUT             60
+#define GM_DEFAULT_JOB_TIMEOUT         60
 #define GM_DEFAULT_JOB_RETRIES          1
 #define GM_CHILD_SHUTDOWN_TIMEOUT       5
 
@@ -90,7 +90,7 @@ typedef struct mod_gm_opt_struct {
     int            hosts;
     int            services;
     int            events;
-    int            timeout;
+    int            job_timeout;
     int            encryption;
     int            transportmode;
 /* neb module */

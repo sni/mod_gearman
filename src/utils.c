@@ -194,7 +194,7 @@ int set_default_options(mod_gm_opt_t *opt) {
     opt->hosts              = GM_DISABLED;
     opt->services           = GM_DISABLED;
     opt->events             = GM_DISABLED;
-    opt->timeout            = GM_DEFAULT_TIMEOUT;
+    opt->job_timeout        = GM_DEFAULT_JOB_TIMEOUT;
     opt->encryption         = GM_ENABLED;
     opt->pidfile            = NULL;
     opt->debug_result       = GM_DISABLED;
@@ -368,9 +368,9 @@ void parse_args_line(mod_gm_opt_t *opt, char * arg) {
     }
 
     /* timeout */
-    else if ( !strcmp( key, "timeout" ) ) {
-        opt->timeout = atoi( value );
-        if(opt->timeout < 1) { opt->timeout = 1; }
+    else if ( !strcmp( key, "job_timeout" ) ) {
+        opt->job_timeout = atoi( value );
+        if(opt->job_timeout < 1) { opt->job_timeout = 1; }
     }
 
     /* min-worker */
@@ -497,9 +497,9 @@ void dumpconfig(mod_gm_opt_t *opt, int mode) {
     logger( GM_LOG_DEBUG, "configuration:\n" );
     logger( GM_LOG_DEBUG, "pidfile:             %s\n", opt->pidfile == NULL ? "no" : opt->pidfile);
     logger( GM_LOG_DEBUG, "log level:           %d\n", opt->debug_level);
-    logger( GM_LOG_DEBUG, "timeout:             %d\n", opt->timeout);
     if(mode == GM_WORKER_MODE) {
         logger( GM_LOG_DEBUG, "job max age:         %d\n", opt->max_age);
+        logger( GM_LOG_DEBUG, "job timeout:         %d\n", opt->job_timeout);
         logger( GM_LOG_DEBUG, "min worker:          %d\n", opt->min_worker);
         logger( GM_LOG_DEBUG, "max worker:          %d\n", opt->max_worker);
     }

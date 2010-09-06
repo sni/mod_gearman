@@ -16,6 +16,8 @@
 /* specify event broker API version (required) */
 NEB_API_VERSION( CURRENT_NEB_API_VERSION );
 extern int currently_running_host_checks;
+extern timed_event *event_list_low;
+extern timed_event *event_list_low_tail;
 
 /* global variables */
 void *gearman_module_handle=NULL;
@@ -240,6 +242,10 @@ static int handle_eventhandler( int event_type, void *data ) {
                         ) == GM_OK) {
         logger( GM_LOG_TRACE, "handle_eventhandler() finished successfully\n" );
     }
+    else {
+        gearman_client_free( &client );
+        create_client( mod_gm_opt->server_list, &client );
+    }
 
     // tell nagios to not execute
     return NEBERROR_CALLBACKOVERRIDE;
@@ -344,6 +350,13 @@ static int handle_host_check( int event_type, void *data ) {
                         ) == GM_OK) {
         logger( GM_LOG_TRACE, "handle_host_check() finished successfully\n" );
     }
+    else {
+        gearman_client_free( &client );
+        create_client( mod_gm_opt->server_list, &client );
+        my_free(raw_command);
+        my_free(processed_command);
+        return NEBERROR_CALLBACKCANCEL;
+    }
 
     // clean up
     my_free(raw_command);
@@ -421,6 +434,11 @@ static int handle_svc_check( int event_type, void *data ) {
                         ) == GM_OK) {
         logger( GM_LOG_TRACE, "handle_svc_check() finished successfully\n" );
     }
+    else {
+        gearman_client_free( &client );
+        create_client( mod_gm_opt->server_list, &client );
+        return NEBERROR_CALLBACKCANCEL;
+    }
 
     // tell nagios to not execute
     return NEBERROR_CALLBACKOVERRIDE;
@@ -481,9 +499,6 @@ static int verify_options(mod_gm_opt_t *opt) {
 
     if ( mod_gm_opt->result_queue == NULL )
         mod_gm_opt->result_queue = "check_results";
-
-    if ( mod_gm_opt->timeout <= 100 )
-        mod_gm_opt->timeout     = 3000;
 
     // do we need a result thread?
     if(   opt->servicegroups_num == 0
@@ -681,8 +696,11 @@ int handle_perfdata(int event_type, void *data) {
                             ) == GM_OK) {
             logger( GM_LOG_TRACE, "handle_perfdata() finished successfully\n" );
         }
+        else {
+            gearman_client_free( &client );
+            create_client( mod_gm_opt->server_list, &client );
+        }
     }
-
 
     return 0;
 }

@@ -42,6 +42,10 @@ int create_worker( char ** server_list, gearman_worker_st *worker ) {
         free(server_c);
         x++;
     }
+    assert(x != 0);
+
+    // gearman_worker_set_timeout( worker, 60000 );
+
     return GM_OK;
 }
 
@@ -90,6 +94,10 @@ int create_client( char ** server_list, gearman_client_st *client ) {
         free(server_c);
         x++;
     }
+    assert(x != 0);
+
+    gearman_client_set_options( client, GEARMAN_CLIENT_NON_BLOCKING );
+    gearman_client_set_timeout( client, 3000 );
 
     return GM_OK;
 }
@@ -118,16 +126,17 @@ int add_job_to_queue( gearman_client_st *client, char * queue, char * uniq, char
     }
 
     gearman_client_run_tasks( client );
+    ret = gearman_client_wait( client );
     if(ret != GEARMAN_SUCCESS || (gearman_client_error(client) != NULL && strcmp(gearman_client_error(client), "") != 0)) { // errno is somehow empty, use error instead
         // maybe its a connection issue, so just wait a little bit
         if(retries > 0) {
             retries--;
-            sleep(5);
+            sleep(2);
             return(add_job_to_queue( client, queue, uniq, data, priority, retries, transport_mode));
         }
         // no more retries...
         else {
-            logger( GM_LOG_ERROR, "add_job_to_queue() finished with errors: %s\n", gearman_client_error(client) );
+            logger( GM_LOG_ERROR, "add_job_to_queue() finished with errors: %d - %s\n", ret, gearman_client_error(client) );
             free(crypted_data);
             return GM_ERROR;
         }
