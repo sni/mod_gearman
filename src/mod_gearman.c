@@ -448,10 +448,14 @@ static int handle_svc_check( int event_type, void *data ) {
 /* parse the module arguments */
 static int read_arguments( const char *args_orig ) {
 
+    int errors = 0;
     char *ptr;
     char *args = strdup(args_orig);
     while ( (ptr = strsep( &args, " " )) != NULL ) {
-        parse_args_line(mod_gm_opt, ptr);
+        if(parse_args_line(mod_gm_opt, ptr, 0) != GM_OK) {
+            errors++;
+            break;
+        }
     }
 
     int verify;
@@ -465,6 +469,10 @@ static int read_arguments( const char *args_orig ) {
     read_keyfile(mod_gm_opt);
 
     free(args);
+
+    if(errors > 0) {
+        return(GM_ERROR);
+    }
 
     return(verify);
 }

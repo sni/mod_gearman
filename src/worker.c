@@ -181,6 +181,7 @@ int parse_arguments(int argc, char **argv) {
         mod_gm_opt->logfile_fp = NULL;
     }
     int i;
+    int errors = 0;
     mod_gm_opt_t * mod_gm_new_opt;
     mod_gm_new_opt = malloc(sizeof(mod_gm_opt_t));
     set_default_options(mod_gm_new_opt);
@@ -190,13 +191,17 @@ int parse_arguments(int argc, char **argv) {
         if ( !strcmp( arg, "help" ) || !strcmp( arg, "--help" )  || !strcmp( arg, "-h" ) ) {
             print_usage();
         }
-        parse_args_line(mod_gm_new_opt, arg);
+        if(parse_args_line(mod_gm_new_opt, arg, 0) != GM_OK) {
+            errors++;
+            free(arg);
+            break;
+        }
         free(arg);
     }
 
     int verify;
     verify = verify_options(mod_gm_new_opt);
-    if(verify == GM_OK) {
+    if(errors == 0 && verify == GM_OK) {
         mod_gm_free_opt(mod_gm_opt);
         mod_gm_opt = mod_gm_new_opt;
     }
@@ -213,6 +218,10 @@ int parse_arguments(int argc, char **argv) {
 
     if(mod_gm_new_opt->debug_level >= GM_LOG_DEBUG) {
         dumpconfig(mod_gm_new_opt, GM_WORKER_MODE);
+    }
+
+    if(errors > 0) {
+        return(GM_ERROR);
     }
 
     return(verify);

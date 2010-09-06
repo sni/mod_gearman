@@ -253,12 +253,12 @@ int parse_yes_or_no(char*value, int dfl) {
 
 
 /* parse one line of args into the given struct */
-void parse_args_line(mod_gm_opt_t *opt, char * arg) {
+int parse_args_line(mod_gm_opt_t *opt, char * arg, int recursion_level) {
     char *key   = str_token( &arg, '=' );
     char *value = str_token( &arg, 0 );
 
     if ( key == NULL )
-        return;
+        return(GM_ERROR);
 
     lc(key);
     key   = trim(key);
@@ -316,7 +316,7 @@ void parse_args_line(mod_gm_opt_t *opt, char * arg) {
     }
 
     if ( value == NULL )
-        return;
+        return GM_OK;
 
     /* debug */
     if ( !strcmp( key, "debug" ) ) {
@@ -340,7 +340,10 @@ void parse_args_line(mod_gm_opt_t *opt, char * arg) {
     else if (   !strcmp( key, "config" )
              || !strcmp( key, "configfile" )
             ) {
-        read_config_file(opt, value);
+        if(read_config_file(opt, value, ++recursion_level) != GM_OK) {
+            recursion_level--;
+            return GM_ERROR;
+        }
     }
 
     /* key / password */
@@ -458,18 +461,24 @@ void parse_args_line(mod_gm_opt_t *opt, char * arg) {
             }
         }
     }
+    return GM_OK;
 }
 
 
 /* read an entire config file */
-void read_config_file(mod_gm_opt_t *opt, char*filename) {
+int read_config_file(mod_gm_opt_t *opt, char*filename, int recursion_level) {
+    if(recursion_level > 10) {
+        logger( GM_LOG_ERROR, "deep recursion in config files!\n" );
+        return GM_ERROR;
+    }
     FILE * fp;
     fp = fopen(filename, "r");
     if(fp == NULL) {
         perror(filename);
-        return;
+        return GM_ERROR;
     }
 
+    int errors = 0;
     char *line = malloc(GM_BUFFERSIZE);
     char *line_c = line;
     line[0] = '\0';
@@ -483,11 +492,16 @@ void read_config_file(mod_gm_opt_t *opt, char*filename) {
             line[pos] = '\0';
         }
         line = trim(line);
-        parse_args_line(opt, line);
+        if(parse_args_line(opt, line, recursion_level) != GM_OK) {
+            errors++;
+            break;
+        }
     }
     fclose(fp);
     free(line_c);
-    return;
+    if(errors > 0)
+        return(GM_ERROR);
+    return(GM_OK);
 }
 
 /* dump config */

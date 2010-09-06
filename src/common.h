@@ -52,7 +52,7 @@
 
 /* modes */
 #define GM_WORKER_MODE                  1
-#define GM_NEB_MODE                     1
+#define GM_NEB_MODE                     2
 
 
 #ifndef TRUE
