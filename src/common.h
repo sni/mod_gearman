@@ -50,9 +50,13 @@
 #define GM_ENCODE_AND_ENCRYPT           1
 #define GM_ENCODE_ONLY                  2
 
-/* modes */
+/* dump config modes */
 #define GM_WORKER_MODE                  1
 #define GM_NEB_MODE                     2
+
+/* worker stop modes */
+#define GM_WORKER_STOP                  1
+#define GM_WORKER_RESTART               2
 
 
 #ifndef TRUE

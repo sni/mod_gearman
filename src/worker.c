@@ -396,7 +396,7 @@ void clean_exit(int sig) {
     logger( GM_LOG_TRACE, "clean_exit(%d)\n", sig);
 
     /* stop all childs */
-    stop_childs();
+    stop_childs(GM_WORKER_STOP);
 
     /*
      * clean up shared memory
@@ -430,7 +430,7 @@ void clean_exit(int sig) {
 
 
 /* stop all childs */
-void stop_childs() {
+void stop_childs(int mode) {
     // become the process group leader
     signal(SIGTERM, SIG_IGN);
     signal(SIGINT,  SIG_DFL);
@@ -447,10 +447,16 @@ void stop_childs() {
     logger( GM_LOG_TRACE, "waiting for childs to exit...\n");
     int status, chld;
     int waited = 0;
-    while((chld = waitpid(-1, &status, WNOHANG)) != -1) {
-        if(chld > 0) {
-            current_number_of_workers--;
-            logger( GM_LOG_TRACE, "wait() %d exited with %d\n", chld, status);
+
+    while(current_number_of_workers > 0) {
+        while((chld = waitpid(-1, &status, WNOHANG)) != -1) {
+            if(chld > 0) {
+                current_number_of_workers--;
+                logger( GM_LOG_TRACE, "wait() %d exited with %d\n", chld, status);
+                if(mode == GM_WORKER_RESTART) {
+                    make_new_child();
+                }
+            }
         }
         sleep(1);
         waited++;
@@ -460,14 +466,17 @@ void stop_childs() {
         logger( GM_LOG_TRACE, "still waiting (%d)...\n", waited);
     }
 
-    if(current_number_of_workers > 0) {
-        logger( GM_LOG_TRACE, "sending SIGINT...\n");
-        kill(-pid, SIGINT);
-    }
+    if(mode == GM_WORKER_STOP) {
+        if(current_number_of_workers > 0) {
+            logger( GM_LOG_TRACE, "sending SIGINT...\n");
+            kill(-pid, SIGINT);
+        }
 
-    while(waitpid(-1, &status, WNOHANG) > 0) {
-        current_number_of_workers--;
-        logger( GM_LOG_TRACE, "wait() %d exited with %d\n", chld, status);
+        /* this will kill us too */
+        while(waitpid(-1, &status, WNOHANG) > 0) {
+            current_number_of_workers--;
+            logger( GM_LOG_TRACE, "wait() %d exited with %d\n", chld, status);
+        }
     }
 }
 
@@ -538,7 +547,7 @@ void reload_config(int sig) {
      * send term signal to our childs
      * children will finish the current job and exit
      */
-    stop_childs();
+    stop_childs(GM_WORKER_RESTART);
 
     logger( GM_LOG_INFO, "reloading config was successful\n");
 

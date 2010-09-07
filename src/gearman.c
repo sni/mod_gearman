@@ -38,7 +38,6 @@ int create_worker( char ** server_list, gearman_worker_st *worker ) {
             free(server_c);
             return GM_ERROR;
         }
-        logger( GM_LOG_DEBUG, "worker added gearman server %s:%i\n", host, port );
         free(server_c);
         x++;
     }

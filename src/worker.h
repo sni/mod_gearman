@@ -34,4 +34,4 @@ void clean_exit(int signal);
 int write_pid_file(void);
 int verify_options(mod_gm_opt_t *opt);
 void reload_config(int sig);
-void stop_childs(void);
+void stop_childs(int mode);
