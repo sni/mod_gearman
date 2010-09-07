@@ -254,11 +254,12 @@ int parse_yes_or_no(char*value, int dfl) {
 
 /* parse one line of args into the given struct */
 int parse_args_line(mod_gm_opt_t *opt, char * arg, int recursion_level) {
+    logger( GM_LOG_TRACE, "parse_args_line(%s, %d)\n", arg, recursion_level);
     char *key   = str_token( &arg, '=' );
     char *value = str_token( &arg, 0 );
 
     if ( key == NULL )
-        return(GM_ERROR);
+        return(GM_OK);
 
     lc(key);
     key   = trim(key);
@@ -316,7 +317,7 @@ int parse_args_line(mod_gm_opt_t *opt, char * arg, int recursion_level) {
     }
 
     if ( value == NULL )
-        return GM_OK;
+        return(GM_OK);
 
     /* debug */
     if ( !strcmp( key, "debug" ) ) {
@@ -461,12 +462,13 @@ int parse_args_line(mod_gm_opt_t *opt, char * arg, int recursion_level) {
             }
         }
     }
-    return GM_OK;
+    return(GM_OK);
 }
 
 
 /* read an entire config file */
 int read_config_file(mod_gm_opt_t *opt, char*filename, int recursion_level) {
+    logger( GM_LOG_TRACE, "read_config_file(%s, %d)\n", filename, recursion_level );
     if(recursion_level > 10) {
         logger( GM_LOG_ERROR, "deep recursion in config files!\n" );
         return GM_ERROR;

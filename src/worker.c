@@ -215,9 +215,11 @@ int parse_arguments(int argc, char **argv) {
 
     /* read keyfile */
     read_keyfile(mod_gm_opt);
-
-    if(mod_gm_new_opt->debug_level >= GM_LOG_DEBUG) {
+    if(verify != GM_OK || errors > 0 || mod_gm_new_opt->debug_level >= GM_LOG_DEBUG) {
+        int old_debug = mod_gm_opt->debug_level;
+        mod_gm_opt->debug_level = GM_LOG_DEBUG;
         dumpconfig(mod_gm_new_opt, GM_WORKER_MODE);
+        mod_gm_opt->debug_level = old_debug;
     }
 
     if(errors > 0) {
