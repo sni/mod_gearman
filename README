@@ -241,6 +241,8 @@ keyfile:            The shared password will be read from this file.
                     Example: keyfile=/path/to/secret.file
 
 
+Worker Options:
+
 pidfile:            Path to the pidfile.
 
                     Example: pidfile=/path/to/pid.file
@@ -249,6 +251,23 @@ pidfile:            Path to the pidfile.
 logfile:            Path to the logfile.
 
                     Example: logfile=/path/to/log.file
+
+
+min-worker:         Minimum number of worker processes which should
+                    run at any time.
+                    Default: 1
+
+                    Example: min-worker=1
+
+
+max-worker:         Maximum number of worker processes which should
+                    run at any time. You may set this equal to
+                    min-worker setting to disable dynamic starting of
+                    workers. When setting this to 1, all services from
+                    this worker will be executed one after another.
+                    Default: 20
+
+                    Example: max-worker=20
 
 
 
