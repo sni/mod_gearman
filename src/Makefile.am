@@ -32,7 +32,18 @@ mod_gearman.o: $(mod_gearman_so_OBJECTS) $(mod_gearman_so_DEPENDENCIES)
 	fi
 	rm -f mod_gearman.so
 
-all-local: mod_gearman.o
+mod_gearman.conf-local:
+	sed 's:%LOGFILE%:$(DESTDIR)$(localstatedir)/log/mod_gearman_worker.log:g' mod_gearman.conf.in | \
+	sed 's:%PIDFILE%:$(DESTDIR)$(localstatedir)/mod_gearman/mod_gearman_worker.pid:g' > mod_gearman.conf
+	chmod 644 mod_gearman.conf
+
+initscript-local:
+	sed 's:%CONFIG%:$(DESTDIR)$(sysconfdir)/mod_gearman/mod_gearman.conf:g' initscript.in | \
+	sed 's:%PIDFILE%:$(DESTDIR)$(localstatedir)/mod_gearman/mod_gearman_worker.pid:g' | \
+	sed 's:%WORKERBIN%:$(DESTDIR)$(bindir)/worker:g' > initscript
+	chmod 755 initscript
+
+all-local: mod_gearman.o initscript-local mod_gearman.conf-local
 	@echo ""
 	@echo "################################################################"
 	@echo ""
@@ -47,10 +58,10 @@ all-local: mod_gearman.o
 	@echo "  read the README for configuration details"
 	@echo ""
 	@echo "  for static worker continue with"
-	@echo "  make static-worker"
+	@echo "  cd src; make static-worker"
 	@echo ""
 	@echo "  for a normal installation continue with"
-	@echo "  make install"
+	@echo "  cd src; make install"
 	@echo ""
 	@echo "################################################################"
 
@@ -66,13 +77,15 @@ static-worker: worker
 	@echo " worker.static created."
 	@echo ""
 
-install-exec-local:
+install-exec-local: 
 	rm -f $(DESTDIR)$(pkglibdir)/mod_gearman.so
 	$(install_sh_PROGRAM) mod_gearman.o $(DESTDIR)$(pkglibdir)/mod_gearman.o
-	$(install_sh_PROGRAM) ../extras/initscript $(DESTDIR)$(sysconfdir)/init.d/mod_gearman_worker
+	$(install_sh_PROGRAM) initscript $(DESTDIR)$(sysconfdir)/init.d/mod_gearman_worker
 
 install-data-local:
-	$(install_sh_PROGRAM) ../extras/example.conf $(DESTDIR)$(sysconfdir)/mod_gearman/mod_gm.conf
+	$(MKDIR_P) $(DESTDIR)$(localstatedir)/mod_gearman/
+	$(MKDIR_P) $(DESTDIR)$(localstatedir)/log/
+	$(install_sh_PROGRAM) mod_gearman.conf $(DESTDIR)$(sysconfdir)/mod_gearman/mod_gearman.conf
 	$(install_sh_PROGRAM) ../extras/example.conf $(DESTDIR)$(datarootdir)/mod_gearman/examples/example.conf
 	@echo ""
 	@echo "################################################################"
@@ -81,8 +94,7 @@ install-data-local:
 	@echo " neb module:    $(DESTDIR)$(pkglibdir)/mod_gearman.o"
 	@echo " worker:        $(DESTDIR)$(bindir)/worker"
 	@echo " init script:   $(DESTDIR)$(sysconfdir)/init.d/mod_gearman_worker"
-	@echo " configuration: $(DESTDIR)$(sysconfdir)/mod_gearman/mod_gm.conf"
-	@echo " examples:      $(DESTDIR)$(datarootdir)/mod_gearman/examples/"
+	@echo " configuration: $(DESTDIR)$(sysconfdir)/mod_gearman/mod_gearman.conf"
 	@echo ""
 	@echo "just add the broker line to your nagios.cfg:"
 	@echo "broker_module=$(DESTDIR)$(pkglibdir)/mod_gearman.o config=$(DESTDIR)$(sysconfdir)/mod_gearman/mod_gm.conf"

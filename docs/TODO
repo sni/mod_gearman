@@ -10,6 +10,7 @@ General
 Worker
 ======
 
+ - add user/group for daemon mode
  - SIGTERM on client should finish after current job
  - childs should sent back their final result after SIGTERM
  - add "worker_hostname" queue to directly request worker status

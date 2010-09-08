@@ -13,3 +13,5 @@ configure
 depcomp
 install-sh
 missing
+mod_gearman.conf
+initscript

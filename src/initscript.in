@@ -13,10 +13,10 @@
 
 
 PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
-DAEMON=./../src/worker
+DAEMON=%WORKERBIN%
 NAME=mod_gm_worker
-CONFIG=./worker.conf
-PIDFILE=./worker.pid
+CONFIG=%CONFIG%
+PIDFILE=%PIDFILE%
 
 case "$1" in
     start)
