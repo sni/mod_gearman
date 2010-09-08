@@ -5,7 +5,7 @@
 AC_PREREQ([2.61])
 AC_INIT([mod_gearman], [0.2], [sven@nierlein.de])
 AM_INIT_AUTOMAKE([-Wall foreign])
-AC_CONFIG_SRCDIR([mod_gearman.c])
+AC_CONFIG_SRCDIR([neb_module/mod_gearman.c],[worker/worker.c])
 AC_CONFIG_HEADER([config.h])
 
 ##############################################
@@ -35,6 +35,15 @@ AC_ARG_WITH(gearman,
  [  LDFLAGS="$LDFLAGS -L$withval/lib"
     CFLAGS="$CFLAGS -I$withval/include"
  ])
+
+##############################################
+# Determine the system init.d directory
+AC_ARG_WITH([init-dir],
+[AS_HELP_STRING([--with-init-dir],
+[specify the system init script directory @<:@default="${sysconfdir}/init.d"@:>@])],
+[], [with_init_dir="${sysconfdir}/init.d"])
+initrddir="$with_init_dir"
+AC_SUBST(initrddir)
 
 ##############################################
 # Check some functions

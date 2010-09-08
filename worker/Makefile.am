@@ -12,6 +12,8 @@ worker_SOURCES = worker_logger.c worker_client.c worker.c
 
 worker_LDADD = ../common/libcmn.la
 
+distclean:
+
 static-worker: worker
 	$(CC) $(LDFLAGS) $(CFLAGS) -static -o worker.static $(worker_OBJECTS) -lgearman -lpthread -luuid
 	@echo ""

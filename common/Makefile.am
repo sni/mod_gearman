@@ -9,3 +9,4 @@
 
 libcmn_la_SOURCES = base64.c crypt.c rijndael.c gearman.c utils.c
 
+noinst_LTLIBRARIES = libcmn.la
