@@ -54,7 +54,7 @@ AC_CHECK_LIB([gearman], [gearman_client_create],,AC_MSG_ERROR([Compiling mod_gea
 
 ##############################################
 # add a "make install" target
-# AC_PROG_INSTALL
+AC_PROG_INSTALL
 
 ##############################################
 # write out files
