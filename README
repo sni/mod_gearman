@@ -338,3 +338,18 @@ eventhandler          This is the generic queue for all eventhandler.
                       with --events to work on this queue.
 
 
+
+Hints
+-----
+ - Make sure you have at least one worker for every queue. You should
+   monitor that.
+
+ - Add Logfile checks for your gearmand server and mod_gearman
+   clients.
+
+ - Make sure all gearman checks are in local groups. Gearman procs
+   should not be monitored by gearman of course.
+
+ - Keep the gearmand server close to Nagios for better performance.
+
+
