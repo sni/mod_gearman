@@ -33,7 +33,7 @@ CFLAGS=-Wall -W -Wstrict-prototypes -g
 mod_gearman_so_CXXFLAGS = $(CFLAGS) -fPIC -O -g
 mod_gearman_so_CFLAGS   = $(mod_gearman_so_CXXFLAGS)
 
-replace_vars = sed 's:%CONFIG%:$(DESTDIR)$(sysconfdir)/mod_gearman/mod_gearman.conf:g' | \
+replace_vars = sed 's:%CONFIG%:$(DESTDIR)$(sysconfdir)/mod_gearman.conf:g' | \
                sed 's:%PIDFILE%:$(DESTDIR)$(localstatedir)/mod_gearman/mod_gearman_worker.pid:g' | \
                sed 's:%WORKERBIN%:$(DESTDIR)$(bindir)/mod_gearman_worker:g' | \
                sed 's:%LOGFILE%:$(DESTDIR)$(localstatedir)/log/mod_gearman_worker.log:g'
@@ -62,21 +62,20 @@ all-local: mod_gearman.o initscript-local mod_gearman.conf-local
 	@echo ""
 	@echo "################################################################"
 	@echo ""
-	@echo "  two files have been created:"
+	@echo "  the following files have been created:"
 	@echo ""
-	@echo "  src/mod_gearman.o"
-	@echo "  src/worker"
-	@echo ""
-	@echo "  copy the src/mod_gearman.o to your nagios folder"
-	@echo "  and at the broker= line to your config."
+	@echo "  mod_gearman.o"
+	@echo "  mod_gearman_worker"
+	@echo "  etc/mod_gearman.conf"
+	@echo "  worker/initscript"
 	@echo ""
 	@echo "  read the README for configuration details"
 	@echo ""
 	@echo "  for static worker continue with"
-	@echo "  cd src; make static-worker"
+	@echo "  make worker.static"
 	@echo ""
 	@echo "  for a normal installation continue with"
-	@echo "  cd src; make install"
+	@echo "  make install"
 	@echo ""
 	@echo "################################################################"
 
@@ -86,8 +85,14 @@ distclean-local: clean
 clean-local:
 	rm -f worker.static worker/initscript etc/mod_gearman.conf
 
-static-worker: worker
-	$(CC) $(LDFLAGS) $(CFLAGS) -static -o worker.static $(worker_OBJECTS) -lgearman -lpthread -luuid
+worker.static: worker
+	@echo "################################################################"
+	@echo ""
+	@echo " if the static compiler complains about 'cannot find -lgearman', you have to"
+	@echo " compile libgearman with -static"
+	@echo ""
+	@echo "################################################################"
+	cd worker && $(CC) $(LDFLAGS) $(CFLAGS) -static -o worker.static $(worker_OBJECTS) -lgearman -lpthread -luuid
 	@echo ""
 	@echo " worker.static created."
 	@echo ""
@@ -112,7 +117,7 @@ install-data-local:
 	@echo " configuration: $(DESTDIR)$(sysconfdir)/mod_gearman.conf"
 	@echo ""
 	@echo "just add the broker line to your nagios.cfg:"
-	@echo "broker_module=$(DESTDIR)$(pkglibdir)/mod_gearman.o config=$(DESTDIR)$(sysconfdir)/mod_gearman/mod_gearman.conf"
+	@echo "broker_module=$(DESTDIR)$(pkglibdir)/mod_gearman.o config=$(DESTDIR)$(sysconfdir)/mod_gearman.conf"
 	@echo ""
 	@echo ""
 	@echo "################################################################"
