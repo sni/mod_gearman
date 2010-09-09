@@ -387,6 +387,9 @@ int adjust_number_of_worker(int min, int max, int cur_workers, int cur_jobs) {
     // dont go over the top
     if(target > max) { target = max; }
 
+    if(target != cur_workers)
+        logger( GM_LOG_DEBUG, "adjust_number_of_worker(min %d, max %d, worker %d, jobs %d) = %d%% running -> %d\n", min, max, cur_workers, cur_jobs, perc_running, target);
+
     return target;
 }
 
