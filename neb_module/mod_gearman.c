@@ -259,7 +259,7 @@ static int handle_host_check( int event_type, void *data ) {
 
     nebstruct_host_check_data * hostdata = ( nebstruct_host_check_data * )data;
 
-    logger( GM_LOG_DEBUG, "---------------\nhost Job -> %i vs %i, %i vs %i\n", event_type, NEBCALLBACK_HOST_CHECK_DATA, hostdata->type, NEBTYPE_HOSTCHECK_ASYNC_PRECHECK );
+    logger( GM_LOG_TRACE, "---------------\nhost Job -> %i vs %i, %i vs %i\n", event_type, NEBCALLBACK_HOST_CHECK_DATA, hostdata->type, NEBTYPE_HOSTCHECK_ASYNC_PRECHECK );
 
     if ( event_type != NEBCALLBACK_HOST_CHECK_DATA )
         return GM_OK;
@@ -283,7 +283,7 @@ static int handle_host_check( int event_type, void *data ) {
         return GM_OK;
     }
 
-    logger( GM_LOG_DEBUG, "Received Job for queue %s: %s\n", target_queue, hostdata->host_name );
+    logger( GM_LOG_DEBUG, "received job for queue %s: %s\n", target_queue, hostdata->host_name );
 
     // as we have to intercept host checks much earlier than service checks
     // we have to do some host check logic here
@@ -396,7 +396,7 @@ static int handle_svc_check( int event_type, void *data ) {
         return GM_OK;
     }
 
-    logger( GM_LOG_DEBUG, "Received Job for queue %s: %s - %s\n", target_queue, svcdata->host_name, svcdata->service_description );
+    logger( GM_LOG_DEBUG, "received job for queue %s: %s - %s\n", target_queue, svcdata->host_name, svcdata->service_description );
     logger( GM_LOG_TRACE, "cmd_line: %s\n", svcdata->command_line );
 
     extern check_result check_result_info;
