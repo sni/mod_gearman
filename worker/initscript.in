@@ -17,11 +17,17 @@ DAEMON=%WORKERBIN%
 NAME=mod_gm_worker
 CONFIG=%CONFIG%
 PIDFILE=%PIDFILE%
+USER=%USER%
+WHO=`whoami`
+SU=""
+if [ $WHO == "root" ]; then
+    SU="su - $USER -c "
+fi
 
 case "$1" in
     start)
         echo -n "Starting $NAME "
-        $DAEMON -d --config=$CONFIG
+        $SU "$DAEMON -d --config=$CONFIG"
         if [ $? -eq 0 ]; then
             echo "done"
         else

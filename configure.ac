@@ -46,6 +46,15 @@ initrddir="$with_init_dir"
 AC_SUBST(initrddir)
 
 ##############################################
+# Determine the user
+AC_ARG_WITH([user],
+[AS_HELP_STRING([--with-user],
+[specify the user @<:@default="nagios"@:>@])],
+[], [with_user="nagios"])
+user="$with_user"
+AC_SUBST(user)
+
+##############################################
 # Check some functions
 AC_CHECK_FUNCS([gettimeofday strdup strchr alarm gethostname memset strcspn strerror])
 
