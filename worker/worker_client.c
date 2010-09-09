@@ -125,7 +125,7 @@ void *get_job( gearman_job_st *job, void *context, size_t *result_size, gearman_
 
     // get the data
     char * workload = strdup((char*)gearman_job_workload(job));
-    logger( GM_LOG_DEBUG, "got new job %s\n", gearman_job_handle( job ) );
+    logger( GM_LOG_TRACE, "got new job %s\n", gearman_job_handle( job ) );
     logger( GM_LOG_TRACE, "%d +++>\n%s\n<+++\n", strlen(workload), workload );
 
     // decrypt data
@@ -231,6 +231,16 @@ void do_exec_job( ) {
     if(exec_job->command_line == NULL) {
         logger( GM_LOG_ERROR, "discarded invalid job\n" );
         return;
+    }
+
+    if ( !strcmp( exec_job->type, "service" ) ) {
+        logger( GM_LOG_DEBUG, "got service job: %s - %s\n", exec_job->host_name, exec_job->service_description);
+    }
+    else if ( !strcmp( exec_job->type, "host" ) ) {
+        logger( GM_LOG_DEBUG, "got host job: %s\n", exec_job->host_name);
+    }
+    else if ( !strcmp( exec_job->type, "event" ) ) {
+        logger( GM_LOG_DEBUG, "got eventhandler job\n");
     }
 
     logger( GM_LOG_TRACE, "timeout %i\n", exec_job->timeout);
@@ -381,12 +391,12 @@ void execute_safe_command() {
     else {
         close(pdes[1]);
 
-        logger( GM_LOG_DEBUG, "started check with pid: %d\n", current_child_pid);
+        logger( GM_LOG_TRACE, "started check with pid: %d\n", current_child_pid);
 
         int status;
         waitpid(current_child_pid, &status, 0);
         status = real_exit_code(status);
-        logger( GM_LOG_DEBUG, "finished check from pid: %d with status: %d\n", current_child_pid, status);
+        logger( GM_LOG_TRACE, "finished check from pid: %d with status: %d\n", current_child_pid, status);
 
         // get all lines of plugin output
         char buffer[GM_BUFFERSIZE];
@@ -456,7 +466,7 @@ void send_result_back() {
     }
     strncat(temp_buffer1, "\n", (sizeof(temp_buffer1)-1));
 
-    logger( GM_LOG_DEBUG, "data:\n%s\n", temp_buffer1);
+    logger( GM_LOG_TRACE, "data:\n%s\n", temp_buffer1);
 
     if(add_job_to_queue( &client,
                          mod_gm_opt->server_list,
@@ -547,14 +557,14 @@ void send_state_to_parent(int status) {
     // Locate the segment.
     if ((shmid = shmget(mod_gm_shm_key, GM_SHM_SIZE, 0666)) < 0) {
         perror("shmget");
-        logger( GM_LOG_DEBUG, "worker finished: %d\n", getpid() );
+        logger( GM_LOG_TRACE, "worker finished: %d\n", getpid() );
         exit( EXIT_FAILURE );
     }
 
     // Now we attach the segment to our data space.
     if ((shm = shmat(shmid, NULL, 0)) == (int *) -1) {
         perror("shmat");
-        logger( GM_LOG_DEBUG, "worker finished: %d\n", getpid() );
+        logger( GM_LOG_TRACE, "worker finished: %d\n", getpid() );
         exit( EXIT_FAILURE );
     }
 
@@ -572,7 +582,7 @@ void send_state_to_parent(int status) {
     kill(getppid(), SIGUSR1);
 
     if(number_jobs_done >= GM_MAX_JOBS_PER_CLIENT) {
-        logger( GM_LOG_DEBUG, "worker finished: %d\n", getpid() );
+        logger( GM_LOG_TRACE, "worker finished: %d\n", getpid() );
         exit(EXIT_SUCCESS);
     }
 
