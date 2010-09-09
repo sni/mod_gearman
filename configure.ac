@@ -4,7 +4,7 @@
 ##############################################
 AC_PREREQ([2.61])
 AC_INIT([mod_gearman], [0.2], [sven@nierlein.de])
-AM_INIT_AUTOMAKE([-Wall foreign])
+AM_INIT_AUTOMAKE([-Wall foreign subdir-objects])
 AC_CONFIG_SRCDIR([neb_module/mod_gearman.c],[worker/worker.c])
 AC_CONFIG_HEADER([config.h])
 
@@ -47,7 +47,7 @@ AC_SUBST(initrddir)
 
 ##############################################
 # Check some functions
-AC_CHECK_FUNCS([gettimeofday strdup strchr])
+AC_CHECK_FUNCS([gettimeofday strdup strchr alarm gethostname memset strcspn strerror])
 
 ##############################################
 # Checks for typedefs, structures, and compiler characteristics.
