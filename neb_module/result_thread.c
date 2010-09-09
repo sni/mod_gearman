@@ -73,7 +73,7 @@ void *get_results( gearman_job_st *job, void *context, size_t *result_size, gear
 
     // get the data
     char * workload   = strdup((char *)gearman_job_workload(job));
-    logger( GM_LOG_DEBUG, "got result %s\n", gearman_job_handle( job ));
+    logger( GM_LOG_TRACE, "got result %s\n", gearman_job_handle( job ));
     logger( GM_LOG_TRACE, "%d +++>\n%s\n<+++\n", strlen(workload), workload );
 
     // decrypt data
