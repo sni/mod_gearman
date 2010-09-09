@@ -1,0 +1,19 @@
+Installation
+============
+
+Prerequirements
+---------------
+
+You will need libgearman with at least version 0.14.
+Building libgearman needs the uuid-dev and libevent-dev package.
+
+
+Building
+--------
+
+ %> ./autogen.sh
+ %> ./configure
+ %> make
+ %> make install
+
+see the README for configuration examples

@@ -233,6 +233,7 @@ static int handle_eventhandler( int event_type, void *data ) {
     temp_buffer[sizeof( temp_buffer )-1]='\x0';
 
     if(add_job_to_queue( &client,
+                         mod_gm_opt->server_list,
                          "eventhandler",
                          NULL,
                          temp_buffer,
@@ -243,8 +244,7 @@ static int handle_eventhandler( int event_type, void *data ) {
         logger( GM_LOG_TRACE, "handle_eventhandler() finished successfully\n" );
     }
     else {
-        gearman_client_free( &client );
-        create_client( mod_gm_opt->server_list, &client );
+        logger( GM_LOG_TRACE, "handle_eventhandler() finished unsuccessfully\n" );
     }
 
     // tell nagios to not execute
@@ -341,6 +341,7 @@ static int handle_host_check( int event_type, void *data ) {
     temp_buffer[sizeof( temp_buffer )-1]='\x0';
 
     if(add_job_to_queue( &client,
+                         mod_gm_opt->server_list,
                          target_queue,
                          hst->name,
                          temp_buffer,
@@ -351,10 +352,9 @@ static int handle_host_check( int event_type, void *data ) {
         logger( GM_LOG_TRACE, "handle_host_check() finished successfully\n" );
     }
     else {
-        gearman_client_free( &client );
-        create_client( mod_gm_opt->server_list, &client );
         my_free(raw_command);
         my_free(processed_command);
+        logger( GM_LOG_TRACE, "handle_host_check() finished unsuccessfully\n" );
         return NEBERROR_CALLBACKCANCEL;
     }
 
@@ -425,6 +425,7 @@ static int handle_svc_check( int event_type, void *data ) {
         prio = GM_JOB_PRIO_HIGH;
 
     if(add_job_to_queue( &client,
+                         mod_gm_opt->server_list,
                          target_queue,
                          uniq,
                          temp_buffer,
@@ -435,8 +436,7 @@ static int handle_svc_check( int event_type, void *data ) {
         logger( GM_LOG_TRACE, "handle_svc_check() finished successfully\n" );
     }
     else {
-        gearman_client_free( &client );
-        create_client( mod_gm_opt->server_list, &client );
+        logger( GM_LOG_TRACE, "handle_svc_check() finished unsuccessfully\n" );
         return NEBERROR_CALLBACKCANCEL;
     }
 
@@ -695,6 +695,7 @@ int handle_perfdata(int event_type, void *data) {
     if(has_perfdata == TRUE) {
         // add our job onto the queue
         if(add_job_to_queue( &client,
+                             mod_gm_opt->server_list,
                              GM_PERFDATA_QUEUE,
                              NULL,
                              perfdatafile_template,
@@ -705,8 +706,7 @@ int handle_perfdata(int event_type, void *data) {
             logger( GM_LOG_TRACE, "handle_perfdata() finished successfully\n" );
         }
         else {
-            gearman_client_free( &client );
-            create_client( mod_gm_opt->server_list, &client );
+            logger( GM_LOG_TRACE, "handle_perfdata() finished unsuccessfully\n" );
         }
     }
 

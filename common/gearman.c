@@ -15,6 +15,7 @@
 int create_worker( char ** server_list, gearman_worker_st *worker ) {
 
     gearman_return_t ret;
+    signal(SIGPIPE, SIG_IGN);
 
     worker = gearman_worker_create( worker );
     if ( worker == NULL ) {
@@ -43,8 +44,6 @@ int create_worker( char ** server_list, gearman_worker_st *worker ) {
     }
     assert(x != 0);
 
-    // gearman_worker_set_timeout( worker, 60000 );
-
     return GM_OK;
 }
 
@@ -67,6 +66,7 @@ int create_client( char ** server_list, gearman_client_st *client ) {
     logger( GM_LOG_TRACE, "create_gearman_client()\n" );
 
     gearman_return_t ret;
+    signal(SIGPIPE, SIG_IGN);
 
     client = gearman_client_create(client);
     if ( client == NULL ) {
@@ -95,19 +95,18 @@ int create_client( char ** server_list, gearman_client_st *client ) {
     }
     assert(x != 0);
 
-    gearman_client_set_options( client, GEARMAN_CLIENT_NON_BLOCKING );
-    gearman_client_set_timeout( client, 3000 );
-
     return GM_OK;
 }
 
 
 /* create a task and send it */
-int add_job_to_queue( gearman_client_st *client, char * queue, char * uniq, char * data, int priority, int retries, int transport_mode ) {
+int add_job_to_queue( gearman_client_st *client, char ** server_list, char * queue, char * uniq, char * data, int priority, int retries, int transport_mode ) {
     gearman_task_st *task = NULL;
-    gearman_return_t ret;
+    gearman_return_t ret1, ret2;
 
-    logger( GM_LOG_TRACE, "add_job_to_queue(%s, %s)\n", queue, uniq );
+    signal(SIGPIPE, SIG_IGN);
+
+    logger( GM_LOG_TRACE, "add_job_to_queue(%s, %s, %d, %d, %d)\n", queue, uniq, priority, retries, transport_mode );
     logger( GM_LOG_TRACE, "%d --->%s<---\n", strlen(data), data );
 
     char * crypted_data = malloc(GM_BUFFERSIZE);
@@ -115,31 +114,45 @@ int add_job_to_queue( gearman_client_st *client, char * queue, char * uniq, char
     logger( GM_LOG_TRACE, "%d +++>\n%s\n<+++\n", size, crypted_data );
 
     if( priority == GM_JOB_PRIO_LOW ) {
-        gearman_client_add_task_low_background( client, task, NULL, queue, uniq, ( void * )crypted_data, ( size_t )size, &ret );
+        task = gearman_client_add_task_low_background( client, NULL, NULL, queue, uniq, ( void * )crypted_data, ( size_t )size, &ret1 );
     }
-    if( priority == GM_JOB_PRIO_NORMAL ) {
-        gearman_client_add_task_background( client, task, NULL, queue, uniq, ( void * )crypted_data, ( size_t )size, &ret );
+    else if( priority == GM_JOB_PRIO_NORMAL ) {
+        task = gearman_client_add_task_background( client, NULL, NULL, queue, uniq, ( void * )crypted_data, ( size_t )size, &ret1 );
     }
-    if( priority == GM_JOB_PRIO_HIGH ) {
-        gearman_client_add_task_high_background( client, task, NULL, queue, uniq, ( void * )crypted_data, ( size_t )size, &ret );
+    else if( priority == GM_JOB_PRIO_HIGH ) {
+        task = gearman_client_add_task_high_background( client, NULL, NULL, queue, uniq, ( void * )crypted_data, ( size_t )size, &ret1 );
+    }
+    else {
+        logger( GM_LOG_ERROR, "add_job_to_queue() wrong priority: %d\n", priority );
     }
 
-    gearman_client_run_tasks( client );
-    ret = gearman_client_wait( client );
-    if(ret != GEARMAN_SUCCESS || (gearman_client_error(client) != NULL && strcmp(gearman_client_error(client), "") != 0)) { // errno is somehow empty, use error instead
-        // maybe its a connection issue, so just wait a little bit
+    ret2 = gearman_client_run_tasks( client );
+    if(   ret1 != GEARMAN_SUCCESS
+       || ret2 != GEARMAN_SUCCESS
+       || task == NULL
+       || (gearman_client_error(client) != NULL && strcmp(gearman_client_error(client), "") != 0)) { // errno is somehow empty, use error instead
+
+        if(retries == 0)
+            logger( GM_LOG_ERROR, "add_job_to_queue() failed: %s\n", gearman_client_error(client) );
+
+        // recreate client, otherwise gearman sigsegvs
+        gearman_client_free( client );
+        create_client( server_list, client );
+
+        // retry as long as we have retries
         if(retries > 0) {
             retries--;
-            sleep(2);
-            return(add_job_to_queue( client, queue, uniq, data, priority, retries, transport_mode));
+            logger( GM_LOG_TRACE, "add_job_to_queue() retrying... %d\n", retries );
+            return(add_job_to_queue( client, server_list, queue, uniq, data, priority, retries, transport_mode));
         }
         // no more retries...
         else {
-            logger( GM_LOG_ERROR, "add_job_to_queue() finished with errors: %d - %s\n", ret, gearman_client_error(client) );
+            logger( GM_LOG_TRACE, "add_job_to_queue() finished with errors: %d %d\n", ret1, ret2 );
             free(crypted_data);
             return GM_ERROR;
         }
     }
+    logger( GM_LOG_TRACE, "add_job_to_queue() finished sucessfully: %d %d\n", ret1, ret2 );
     free(crypted_data);
     return GM_OK;
 }

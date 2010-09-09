@@ -459,6 +459,7 @@ void send_result_back() {
     logger( GM_LOG_DEBUG, "data:\n%s\n", temp_buffer1);
 
     if(add_job_to_queue( &client,
+                         mod_gm_opt->server_list,
                          exec_job->result_queue,
                          NULL,
                          temp_buffer1,
@@ -469,8 +470,7 @@ void send_result_back() {
         logger( GM_LOG_TRACE, "send_result_back() finished successfully\n" );
     }
     else {
-        gearman_client_free( &client );
-        create_client( mod_gm_opt->server_list, &client );
+        logger( GM_LOG_TRACE, "send_result_back() finished unsuccessfully\n" );
     }
 
     return;
