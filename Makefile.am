@@ -106,7 +106,6 @@ install-exec-local:
 install-data-local:
 	$(MKDIR_P) $(DESTDIR)$(localstatedir)/mod_gearman/
 	$(MKDIR_P) $(DESTDIR)$(localstatedir)/log/
-	$(install_sh_PROGRAM) etc/mod_gearman.conf $(DESTDIR)$(sysconfdir)/mod_gearman.conf
 	$(install_sh_PROGRAM) extras/example.conf $(DESTDIR)$(datarootdir)/examples/example.conf
 	@echo ""
 	@echo "################################################################"
@@ -115,10 +114,21 @@ install-data-local:
 	@echo " neb module:    $(DESTDIR)$(pkglibdir)/mod_gearman.o"
 	@echo " worker:        $(DESTDIR)$(bindir)/mod_gearman_worker"
 	@echo " init script:   $(DESTDIR)$(initrddir)/mod_gearman_worker"
-	@echo " configuration: $(DESTDIR)$(sysconfdir)/mod_gearman.conf"
 	@echo ""
 	@echo "just add the broker line to your nagios.cfg:"
 	@echo "broker_module=$(DESTDIR)$(pkglibdir)/mod_gearman.o config=$(DESTDIR)$(sysconfdir)/mod_gearman.conf"
 	@echo ""
+	@echo " install default config with"
+	@echo ""
+	@echo " make install-config"
+	@echo ""
+	@echo "################################################################"
+
+
+install-config:
+	$(install_sh_PROGRAM) etc/mod_gearman.conf $(DESTDIR)$(sysconfdir)/mod_gearman.conf
+	@echo "################################################################"
+	@echo ""
+	@echo " configuration: $(DESTDIR)$(sysconfdir)/mod_gearman.conf"
 	@echo ""
 	@echo "################################################################"
