@@ -454,31 +454,27 @@ void clean_exit(int sig) {
 
 /* stop all childs */
 void stop_childs(int mode) {
-    // become the process group leader
+    // ignore some signals for now
     signal(SIGTERM, SIG_IGN);
-    signal(SIGINT,  SIG_DFL);
+    signal(SIGINT,  SIG_IGN);
 
     /*
      * send term signal to our childs
      * children will finish the current job and exit
      */
-    pid_t pid = getpid();
-    logger( GM_LOG_TRACE, "send SIGTERM to %d\n", pid);
-    kill(-pid, SIGTERM);
+    logger( GM_LOG_TRACE, "send SIGTERM\n");
+    killpg(0, SIGTERM);
     signal(SIGTERM, SIG_DFL);
 
     logger( GM_LOG_TRACE, "waiting for childs to exit...\n");
     int status, chld;
     int waited = 0;
-
     while(current_number_of_workers > 0) {
-        while((chld = waitpid(-1, &status, WNOHANG)) != -1) {
-            if(chld > 0) {
-                current_number_of_workers--;
-                logger( GM_LOG_TRACE, "wait() %d exited with %d\n", chld, status);
-                if(mode == GM_WORKER_RESTART) {
-                    make_new_child();
-                }
+        while((chld = waitpid(-1, &status, WNOHANG)) != -1 && chld > 0) {
+            current_number_of_workers--;
+            logger( GM_LOG_TRACE, "wait() %d exited with %d\n", chld, status);
+            if(mode == GM_WORKER_RESTART) {
+                make_new_child();
             }
         }
         sleep(1);
@@ -492,13 +488,18 @@ void stop_childs(int mode) {
     if(mode == GM_WORKER_STOP) {
         if(current_number_of_workers > 0) {
             logger( GM_LOG_TRACE, "sending SIGINT...\n");
-            kill(-pid, SIGINT);
+            killpg(0, SIGINT);
         }
 
-        /* this will kill us too */
         while(waitpid(-1, &status, WNOHANG) > 0) {
             current_number_of_workers--;
             logger( GM_LOG_TRACE, "wait() %d exited with %d\n", chld, status);
+        }
+
+        if(current_number_of_workers > 0) {
+            /* this will kill us too */
+            logger( GM_LOG_TRACE, "sending SIGKILL...\n");
+            killpg(0, SIGKILL);
         }
     }
 }
