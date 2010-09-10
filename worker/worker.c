@@ -178,10 +178,6 @@ int make_new_child() {
 
 /* parse command line arguments */
 int parse_arguments(int argc, char **argv) {
-    if(mod_gm_opt->logfile_fp != NULL) {
-        fclose(mod_gm_opt->logfile_fp);
-        mod_gm_opt->logfile_fp = NULL;
-    }
     int i;
     int errors = 0;
     mod_gm_opt_t * mod_gm_new_opt;
@@ -201,13 +197,23 @@ int parse_arguments(int argc, char **argv) {
         free(arg);
     }
 
+    /* close old logfile */
+    if(mod_gm_opt->logfile_fp != NULL) {
+        fclose(mod_gm_opt->logfile_fp);
+        mod_gm_opt->logfile_fp = NULL;
+    }
+
+    /* verify options */
     int verify;
     verify = verify_options(mod_gm_new_opt);
+
+    /* set new options */
     if(errors == 0 && verify == GM_OK) {
         mod_gm_free_opt(mod_gm_opt);
         mod_gm_opt = mod_gm_new_opt;
     }
 
+    /* open new logfile */
     if(mod_gm_opt->logfile && mod_gm_opt->debug_level < GM_LOG_STDOUT) {
         mod_gm_opt->logfile_fp = fopen(mod_gm_opt->logfile, "a+");
         if(mod_gm_opt->logfile_fp == NULL) {
@@ -464,7 +470,6 @@ void stop_childs(int mode) {
      */
     logger( GM_LOG_TRACE, "send SIGTERM\n");
     killpg(0, SIGTERM);
-    signal(SIGTERM, SIG_DFL);
 
     logger( GM_LOG_TRACE, "waiting for childs to exit...\n");
     int status, chld;
@@ -502,6 +507,10 @@ void stop_childs(int mode) {
             killpg(0, SIGKILL);
         }
     }
+
+    /* restore signal handlers for a clean exit */
+    signal(SIGINT, clean_exit);
+    signal(SIGTERM,clean_exit);
 }
 
 
