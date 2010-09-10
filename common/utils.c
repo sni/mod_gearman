@@ -230,22 +230,22 @@ int parse_yes_or_no(char*value, int dfl) {
         return dfl;
 
     lc(value);
-    if(strcmp( value, "yes" ))
+    if(!strcmp( value, "yes" ))
         return(GM_ENABLED);
-    if(strcmp( value, "on" ))
+    if(!strcmp( value, "on" ))
         return(GM_ENABLED);
-    if(strcmp( value, "true" ))
+    if(!strcmp( value, "true" ))
         return(GM_ENABLED);
-    if(strcmp( value, "1" ))
+    if(!strcmp( value, "1" ))
         return(GM_ENABLED);
 
-    if(strcmp( value, "no" ))
+    if(!strcmp( value, "no" ))
         return(GM_DISABLED);
-    if(strcmp( value, "off" ))
+    if(!strcmp( value, "off" ))
         return(GM_DISABLED);
-    if(strcmp( value, "false" ))
+    if(!strcmp( value, "false" ))
         return(GM_DISABLED);
-    if(strcmp( value, "0" ))
+    if(!strcmp( value, "0" ))
         return(GM_DISABLED);
 
     return dfl;
