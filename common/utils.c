@@ -494,6 +494,8 @@ int read_config_file(mod_gm_opt_t *opt, char*filename, int recursion_level) {
             line[pos] = '\0';
         }
         line = trim(line);
+        if(line[0] == 0)
+            continue;
         if(parse_args_line(opt, line, recursion_level) != GM_OK) {
             errors++;
             break;
@@ -586,19 +588,24 @@ void mod_gm_free_opt(mod_gm_opt_t *opt) {
 
 
 /* read keyfile */
-void read_keyfile(mod_gm_opt_t *opt) {
+int read_keyfile(mod_gm_opt_t *opt) {
 
     if(opt->keyfile == NULL)
-        return;
+        return(GM_ERROR);
+
 
     FILE *fp;
     fp = fopen(opt->keyfile,"rb");
-    if(fp == NULL)
+    if(fp == NULL) {
         perror(opt->keyfile);
+        return(GM_ERROR);
+    }
     int i;
+    if(opt->crypt_key != NULL)
+        free(opt->crypt_key);
     opt->crypt_key = malloc(GM_BUFFERSIZE);
     for(i=0;i<32;i++)
         opt->crypt_key[i] = fgetc(fp);
     fclose(fp);
-    return;
+    return(GM_OK);
 }

@@ -51,6 +51,8 @@ int main (int argc, char **argv) {
         else {
             exit( EXIT_SUCCESS );
         }
+    } else {
+        logger( GM_LOG_INFO, "mod_gearman worker started with pid %d\n", getpid());
     }
 
     /* set signal handlers for a clean exit */
@@ -206,15 +208,19 @@ int parse_arguments(int argc, char **argv) {
         mod_gm_opt = mod_gm_new_opt;
     }
 
-    if(mod_gm_opt->logfile) {
+    if(mod_gm_opt->logfile && mod_gm_opt->debug_level < GM_LOG_STDOUT) {
         mod_gm_opt->logfile_fp = fopen(mod_gm_opt->logfile, "a+");
         if(mod_gm_opt->logfile_fp == NULL) {
             perror(mod_gm_opt->logfile);
+            errors++;
         }
     }
 
     /* read keyfile */
-    read_keyfile(mod_gm_opt);
+    if(mod_gm_opt->keyfile != NULL && read_keyfile(mod_gm_opt) != GM_OK) {
+            errors++;
+    }
+
     if(verify != GM_OK || errors > 0 || mod_gm_new_opt->debug_level >= GM_LOG_DEBUG) {
         int old_debug = mod_gm_opt->debug_level;
         mod_gm_opt->debug_level = GM_LOG_DEBUG;
@@ -232,6 +238,12 @@ int parse_arguments(int argc, char **argv) {
 
 /* verify our option */
 int verify_options(mod_gm_opt_t *opt) {
+
+    // stdout loggin in daemon mode is pointless
+    if( opt->debug_level > GM_LOG_TRACE && opt->daemon_mode == GM_ENABLED) {
+        opt->debug_level = GM_LOG_TRACE;
+    }
+
     // did we get any server?
     if(opt->server_num == 0) {
         logger( GM_LOG_ERROR, "please specify at least one server\n" );
@@ -246,6 +258,7 @@ int verify_options(mod_gm_opt_t *opt) {
         opt->events   = GM_ENABLED;
     }
 
+    // do we have queues to serve?
     if(   opt->servicegroups_num == 0
        && opt->hostgroups_num    == 0
        && opt->hosts    == GM_DISABLED
@@ -258,6 +271,14 @@ int verify_options(mod_gm_opt_t *opt) {
 
     if(opt->min_worker > opt->max_worker)
         opt->min_worker = opt->max_worker;
+
+    // encryption without key?
+    if(opt->encryption == GM_ENABLED) {
+        if(opt->crypt_key == NULL && opt->keyfile == NULL) {
+            logger( GM_LOG_ERROR, "no encryption key provided, please use --key=... or keyfile=...\n");
+            return(GM_ERROR);
+        }
+    }
 
     return(GM_OK);
 }
@@ -357,7 +378,6 @@ void setup_child_communicator() {
         exit(1);
     }
     shm[0] = 0;
-    logger( GM_LOG_TRACE, "setup: %i\n", shm[0]);
 
     // detach from shared memory
     if(shmdt(shm) < 0)

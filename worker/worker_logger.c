@@ -42,10 +42,11 @@ void logger( int lvl, const char *text, ... ) {
     vsnprintf( buffer + strlen( buffer ), sizeof( buffer ) - strlen( buffer ), text, ap );
     va_end( ap );
 
-    if(mod_gm_opt->debug_level >= GM_LOG_STDOUT || mod_gm_opt->logfile_fp == NULL) {
-        printf( "%s", buffer );
-    } else {
+    if(mod_gm_opt->logfile_fp != NULL) {
         fprintf( mod_gm_opt->logfile_fp, "%s", buffer );
+        fflush( mod_gm_opt->logfile_fp );
+    } else {
+        printf( "%s", buffer );
     }
     return;
 }
