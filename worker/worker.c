@@ -218,7 +218,7 @@ int parse_arguments(int argc, char **argv) {
 
     /* read keyfile */
     if(mod_gm_opt->keyfile != NULL && read_keyfile(mod_gm_opt) != GM_OK) {
-            errors++;
+        errors++;
     }
 
     if(verify != GM_OK || errors > 0 || mod_gm_new_opt->debug_level >= GM_LOG_DEBUG) {

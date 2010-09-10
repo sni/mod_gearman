@@ -466,7 +466,9 @@ static int read_arguments( const char *args_orig ) {
     }
 
     /* read keyfile */
-    read_keyfile(mod_gm_opt);
+    if(mod_gm_opt->keyfile != NULL && read_keyfile(mod_gm_opt) != GM_OK) {
+        errors++;
+    }
 
     free(args);
 
