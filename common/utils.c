@@ -86,7 +86,8 @@ void mod_gm_crypt_init(char * key) {
     if(strlen(key) < 8) {
         logger( GM_LOG_INFO, "encryption key should be at least 8 bytes!\n" );
     }
-    return mod_gm_blowfish_init(key);
+    mod_gm_aes_init(key);
+    return;
 }
 
 
@@ -96,7 +97,7 @@ int mod_gm_encrypt(char ** encrypted, char * text, int mode) {
     unsigned char * crypted;
 
     if(mode == GM_ENCODE_AND_ENCRYPT) {
-        size = mod_gm_blowfish_encrypt(&crypted, text);
+        size = mod_gm_aes_encrypt(&crypted, text);
     }
     else {
         crypted = (unsigned char*)strdup(text);
@@ -121,7 +122,7 @@ void mod_gm_decrypt(char ** decrypted, char * text, int mode) {
     /* now decode from base64 */
     size_t bsize = base64_decode(text, buffer, GM_BUFFERSIZE);
     if(mode == GM_ENCODE_AND_ENCRYPT) {
-        mod_gm_blowfish_decrypt(decrypted, buffer, bsize);
+        mod_gm_aes_decrypt(decrypted, buffer, bsize);
     }
     else  {
         /* TODO: warning: assignment from incompatible pointer type */
@@ -175,6 +176,8 @@ char *trim(char *s) {
 
 /* make string lowercase */
 char * lc(char * str) {
+    if(str == NULL)
+        return NULL;
     int i;
     for( i = 0; str[ i ]; i++)
         str[ i ] = tolower( str[ i ] );

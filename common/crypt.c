@@ -10,7 +10,7 @@ unsigned char key[KEYLENGTH(KEYBITS)];
 
 
 /* initialize encryption */
-void mod_gm_blowfish_init(char * password) {
+void mod_gm_aes_init(char * password) {
 
     /* pad key till keysize */
     int i;
@@ -18,11 +18,12 @@ void mod_gm_blowfish_init(char * password) {
         key[i] = *password != 0 ? *password++ : 0;
 
     encryption_initialized = 1;
+    return;
 }
 
 
 /* encrypt text with given key */
-int mod_gm_blowfish_encrypt(unsigned char ** encrypted, char * text) {
+int mod_gm_aes_encrypt(unsigned char ** encrypted, char * text) {
 
     assert(encryption_initialized == 1);
 
@@ -61,7 +62,7 @@ int mod_gm_blowfish_encrypt(unsigned char ** encrypted, char * text) {
 
 
 /* decrypt text with given key */
-void mod_gm_blowfish_decrypt(char ** text, unsigned char * encrypted, int size) {
+void mod_gm_aes_decrypt(char ** text, unsigned char * encrypted, int size) {
 
     assert(encryption_initialized == 1);
 

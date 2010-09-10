@@ -27,6 +27,13 @@ mod_gearman_worker_SOURCES = $(common_SOURCES) \
                              worker/worker_client.c   \
                              worker/worker.c
 
+# tests
+check_PROGRAMS   = 01_utils
+01_utils_SOURCES = $(common_SOURCES) t/tap.h t/tap.c worker/worker_logger.c t/01-utils.c
+01_utils_CFLAGS  = -Wall --pedantic -std=c99 -fPIC -O -g
+TESTS            = 01_utils
+
+
 # -g adds debug symbols, -s strips
 CFLAGS=-Wall -W -Wstrict-prototypes -g
 #mod_gearman_so_CXXFLAGS = $(CFLAGS) -fPIC -O
@@ -85,6 +92,7 @@ distclean-local: clean
 
 clean-local:
 	rm -f worker.static worker/initscript etc/mod_gearman.conf
+	rm -f *.o */*.o
 
 worker.static: worker
 	@echo "################################################################"
