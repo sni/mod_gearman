@@ -7,8 +7,12 @@
 #
 ###############################################################################
 
+# -g adds debug symbols, -s strips
+CFLAGS=-Wall -W -Wstrict-prototypes -g -O -fPIC
 AM_CPPFLAGS=-Iinclude
+OS=`uname`
 
+# source definitions
 common_SOURCES             = common/base64.c \
                              common/crypt.c  \
                              common/rijndael.c \
@@ -30,15 +34,8 @@ mod_gearman_worker_SOURCES = $(common_SOURCES) \
 # tests
 check_PROGRAMS   = 01_utils
 01_utils_SOURCES = $(common_SOURCES) t/tap.h t/tap.c worker/worker_logger.c t/01-utils.c
-01_utils_CFLAGS  = -Wall --pedantic -std=c99 -fPIC -O -g
 TESTS            = 01_utils
 
-
-# -g adds debug symbols, -s strips
-CFLAGS=-Wall -W -Wstrict-prototypes -g
-#mod_gearman_so_CXXFLAGS = $(CFLAGS) -fPIC -O
-mod_gearman_so_CXXFLAGS = $(CFLAGS) -fPIC -O -g
-mod_gearman_so_CFLAGS   = $(mod_gearman_so_CXXFLAGS)
 
 replace_vars = sed 's:%CONFIG%:$(DESTDIR)$(sysconfdir)/mod_gearman.conf:g' | \
                sed 's:%PIDFILE%:$(DESTDIR)$(localstatedir)/mod_gearman/mod_gearman_worker.pid:g' | \
@@ -46,10 +43,7 @@ replace_vars = sed 's:%CONFIG%:$(DESTDIR)$(sysconfdir)/mod_gearman.conf:g' | \
                sed 's:%USER%:$(user):g' | \
                sed 's:%LOGFILE%:$(DESTDIR)$(localstatedir)/log/mod_gearman_worker.log:g'
 
-
-
-OS=`uname`
-
+# other targets
 mod_gearman.o: $(mod_gearman_so_OBJECTS) $(mod_gearman_so_DEPENDENCIES)
 	if [ "$(OS)" == "Darwin" ]; then \
 	    $(CXX) $(LDFLAGS) -dynamiclib -single_module -undefined dynamic_lookup $(mod_gearman_so_OBJECTS) -o $@ -lpthread -lgearman; \

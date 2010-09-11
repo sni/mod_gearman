@@ -55,6 +55,7 @@ int main(void) {
     mod_gm_decrypt(&decrypted, encrypted, GM_ENCODE_AND_ENCRYPT);
     ok(!strcmp(trim(decrypted), text), "decrypted text") || diag("expected: '%s' but got: '%s'", text, trim(decrypted));
     free(decrypted);
+    free(encrypted);
 
     /* base 64 */
     char * base64 = malloc(GM_BUFFERSIZE);
@@ -63,11 +64,10 @@ int main(void) {
     ok(!strcmp(base64, "dGVzdCBtZXNzYWdl"), "base64 only string");
 
     /* debase 64 */
-    char * debase64  = malloc(GM_BUFFERSIZE);
+    char * debase64 = malloc(GM_BUFFERSIZE);
     mod_gm_decrypt(&debase64, base64, GM_ENCODE_ONLY);
     ok(!strcmp(debase64, text), "debase64 text") || diag("expected: '%s' but got: '%s'", text, debase64);
     free(debase64);
-    free(encrypted);
     free(base64);
 
 

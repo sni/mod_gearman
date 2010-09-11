@@ -119,13 +119,17 @@ int mod_gm_encrypt(char ** encrypted, char * text, int mode) {
 void mod_gm_decrypt(char ** decrypted, char * text, int mode) {
     unsigned char * buffer = malloc(sizeof(unsigned char) * GM_BUFFERSIZE);
 
-    /* now decode from base64 */
+    /* first decode from base64 */
     size_t bsize = base64_decode(text, buffer, GM_BUFFERSIZE);
     if(mode == GM_ENCODE_AND_ENCRYPT) {
+        /* then decrypt */
         mod_gm_aes_decrypt(decrypted, buffer, bsize);
     }
     else  {
-        strncpy(*decrypted, (char*)buffer, bsize);
+        char debase64[GM_BUFFERSIZE];
+        strncpy(debase64, (char*)buffer, bsize);
+        debase64[bsize] = '\0';
+        strcpy(*decrypted, debase64);
     }
     free(buffer);
     return;
