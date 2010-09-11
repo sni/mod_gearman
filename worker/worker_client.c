@@ -325,6 +325,7 @@ void execute_safe_command() {
     logger( GM_LOG_TRACE, "execute_safe_command()\n" );
 
     int pdes[2];
+    // TODO: warning: ignoring return value of ‘pipe’, declared with attribute warn_unused_result
     pipe(pdes);
 
     // fork a child process
@@ -368,9 +369,11 @@ void execute_safe_command() {
         while(fgets(buffer,sizeof(buffer)-1,fp)){
             char * buf;
             buf = escape_newlines(buffer);
+            // TODO: warning: call to __builtin___strncat_chk might overflow destination buffer
             strncat(temp_buffer, buf, sizeof( temp_buffer ));
             free(buf);
         }
+        // TODO: warning: ignoring return value of ‘write’, declared with attribute warn_unused_result
         write(pdes[1], temp_buffer, strlen(temp_buffer)+1);
 
         // close the process
@@ -380,6 +383,7 @@ void execute_safe_command() {
         if(pclose_result == -1) {
             char error[GM_BUFFERSIZE];
             snprintf(error, sizeof(error), "error: %s", strerror(errno));
+            // TODO: warning: ignoring return value of ‘write’, declared with attribute warn_unused_result
             write(pdes[1], error, strlen(error)+1);
         }
 
@@ -400,6 +404,7 @@ void execute_safe_command() {
 
         // get all lines of plugin output
         char buffer[GM_BUFFERSIZE];
+        // TODO: warning: ignoring return value of ‘read’, declared with attribute warn_unused_result
         read(pdes[0], buffer, sizeof(buffer)-1);
 
         // file not found errors?

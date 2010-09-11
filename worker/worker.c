@@ -93,8 +93,7 @@ int main (int argc, char **argv) {
 
     // maintain the population
     int now                 = (int)time(NULL);
-    int last_time_increased = now;
-    int had_to_increase     = 0;
+    int last_time_checked   = now;
     while (1) {
         // check number of workers every 30 seconds
         // sleep gets canceled anyway when receiving signals
@@ -115,21 +114,15 @@ int main (int argc, char **argv) {
             make_new_child();
         }
 
-        had_to_increase = 0;
         now = (int)time(NULL);
-        if(last_time_increased +2 > now)
+        if(last_time_checked +2 > now)
             continue;
+        last_time_checked = time(NULL);
 
         int target_number_of_workers = adjust_number_of_worker(mod_gm_opt->min_worker, mod_gm_opt->max_worker, current_number_of_workers, current_number_of_jobs);
         for (x = current_number_of_workers; x < target_number_of_workers; x++) {
             // top up the worker pool
             make_new_child();
-            had_to_increase = 1;
-        }
-
-        /* wait a little bit, otherwise worker would be spawned really fast */
-        if(had_to_increase) {
-            last_time_increased = time(NULL);
         }
     }
 
@@ -496,7 +489,7 @@ void stop_childs(int mode) {
             killpg(0, SIGINT);
         }
 
-        while(waitpid(-1, &status, WNOHANG) > 0) {
+        while((chld = waitpid(-1, &status, WNOHANG)) != -1 && chld > 0) {
             current_number_of_workers--;
             logger( GM_LOG_TRACE, "wait() %d exited with %d\n", chld, status);
         }
@@ -527,6 +520,7 @@ int write_pid_file() {
         if(fp != NULL) {
             char *pid;
             pid = malloc(GM_BUFFERSIZE);
+            // TODO: warning: ignoring return value of ‘fgets’, declared with attribute warn_unused_result
             fgets(pid, GM_BUFFERSIZE, fp);
             fclose(fp);
             pid = trim(pid);
