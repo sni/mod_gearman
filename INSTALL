@@ -14,6 +14,7 @@ Building
  %> ./autogen.sh
  %> ./configure
  %> make
+ %> make test
  %> make install
 
 see the README for configuration examples

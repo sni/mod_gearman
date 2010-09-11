@@ -117,7 +117,7 @@ int mod_gm_encrypt(char ** encrypted, char * text, int mode) {
 
 /* decrypt text with given key */
 void mod_gm_decrypt(char ** decrypted, char * text, int mode) {
-    unsigned char * buffer = malloc(GM_BUFFERSIZE);
+    unsigned char * buffer = malloc(sizeof(unsigned char) * GM_BUFFERSIZE);
 
     /* now decode from base64 */
     size_t bsize = base64_decode(text, buffer, GM_BUFFERSIZE);
@@ -125,8 +125,7 @@ void mod_gm_decrypt(char ** decrypted, char * text, int mode) {
         mod_gm_aes_decrypt(decrypted, buffer, bsize);
     }
     else  {
-        /* TODO: warning: assignment from incompatible pointer type */
-        *decrypted = strdup((char*)buffer);
+        strncpy(*decrypted, (char*)buffer, bsize);
     }
     free(buffer);
     return;
