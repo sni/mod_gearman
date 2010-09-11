@@ -126,7 +126,7 @@ void mod_gm_decrypt(char ** decrypted, char * text, int mode) {
     }
     else  {
         /* TODO: warning: assignment from incompatible pointer type */
-        decrypted = strdup((char*)buffer);
+        *decrypted = strdup((char*)buffer);
     }
     free(buffer);
     return;

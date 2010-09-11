@@ -140,3 +140,10 @@ install-config:
 	@echo " configuration: $(DESTDIR)$(sysconfdir)/mod_gearman.conf"
 	@echo ""
 	@echo "################################################################"
+
+test: check
+	@echo "################################################################"
+	@echo ""
+	@echo " All tests complete"
+	@echo ""
+	@echo "################################################################"
