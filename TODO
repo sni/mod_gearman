@@ -1,18 +1,24 @@
 TODO LIST
-#########
+=========
 
 
 General
-=======
+-------
 
  - remove debug symbols (-g) and add strip (-s) again
  - move latency calculation to neb module
  - verify cancelation of checks
 
 Worker
-======
+------
 
  - SIGTERM on client should finish after current job
  - childs should sent back their final result after SIGTERM
  - add "worker_hostname" queue to directly request worker status
    * add check_gearman_worker check script
+
+WISH LIST
+=========
+
+ - no need to fork for clean plugins. (check_icmp, check_http...)
+ - implement some plugins directly into the worker

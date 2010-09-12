@@ -32,9 +32,10 @@ mod_gearman_worker_SOURCES = $(common_SOURCES) \
                              worker/worker.c
 
 # tests
-check_PROGRAMS   = 01_utils
+check_PROGRAMS   = 01_utils 02_full
 01_utils_SOURCES = $(common_SOURCES) t/tap.h t/tap.c worker/worker_logger.c t/01-utils.c
-TESTS            = 01_utils
+02_full_SOURCES  = $(common_SOURCES) t/tap.h t/tap.c worker/worker_logger.c t/02-full.c
+TESTS            = 01_utils 02_full
 
 
 replace_vars = sed 's:%CONFIG%:$(DESTDIR)$(sysconfdir)/mod_gearman.conf:g' | \
@@ -138,6 +139,6 @@ install-config:
 test: check
 	@echo "################################################################"
 	@echo ""
-	@echo " All tests complete"
+	@echo " All tests completed successfully"
 	@echo ""
 	@echo "################################################################"

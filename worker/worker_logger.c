@@ -11,8 +11,16 @@
 #include "worker_logger.h"
 
 void logger( int lvl, const char *text, ... ) {
+
+    FILE * fp       = NULL;
+    int debug_level = GM_LOG_ERROR;
+    if(mod_gm_opt != NULL) {
+        debug_level = mod_gm_opt->debug_level;
+        fp          = mod_gm_opt->logfile_fp;
+    }
+
     // check log level
-    if ( lvl != GM_LOG_ERROR && lvl > mod_gm_opt->debug_level ) {
+    if ( lvl != GM_LOG_ERROR && lvl > debug_level ) {
         return;
     }
 
@@ -42,9 +50,9 @@ void logger( int lvl, const char *text, ... ) {
     vsnprintf( buffer + strlen( buffer ), sizeof( buffer ) - strlen( buffer ), text, ap );
     va_end( ap );
 
-    if(mod_gm_opt->logfile_fp != NULL) {
-        fprintf( mod_gm_opt->logfile_fp, "%s", buffer );
-        fflush( mod_gm_opt->logfile_fp );
+    if(fp != NULL) {
+        fprintf( fp, "%s", buffer );
+        fflush( fp );
     } else {
         printf( "%s", buffer );
     }
