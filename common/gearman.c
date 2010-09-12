@@ -168,3 +168,17 @@ void *dummy( gearman_job_st *job, void *context, size_t *result_size, gearman_re
 
     return NULL;
 }
+
+
+/* free client structure */
+void free_client(gearman_client_st *client) {
+    gearman_client_free( client );
+    return;
+}
+
+
+/* free worker structure */
+void free_worker(gearman_worker_st *worker) {
+    gearman_worker_free( worker );
+    return;
+}

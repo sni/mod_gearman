@@ -17,7 +17,7 @@
 int gearmand_pid;
 gearman_worker_st worker;
 gearman_client_st client;
-char * server_list[1];
+mod_gm_opt_t *mod_gm_opt;
 
 
 /* start the gearmand server */
@@ -45,7 +45,7 @@ void *start_gearmand(void*data) {
 /* test event handler over gearmand */
 void test_eventhandler(int transportmode) {
     char * testdata = "type=eventhandler\ncommand_line=/bin/hostname\n\n\n";
-    int rt = add_job_to_queue( &client, server_list, "eventhandler", NULL, testdata, GM_JOB_PRIO_NORMAL, 1, transportmode);
+    int rt = add_job_to_queue( &client, mod_gm_opt->server_list, "eventhandler", NULL, testdata, GM_JOB_PRIO_NORMAL, 1, transportmode);
     ok(rt == GM_OK, "eventhandler sent successfully in mode %s", transportmode == GM_ENCODE_ONLY ? "base64" : "aes256");
     return;
 }
@@ -54,20 +54,24 @@ void test_eventhandler(int transportmode) {
 /* create server / worker / clients */
 void create_modules(void);
 void create_modules() {
-    char * server_list[1];
-    server_list[0] = malloc(30);
-    snprintf(server_list[0], 30, "%s:%d", "localhost", GEARMAND_TEST_PORT);
-    ok(create_client( server_list, &client ) == GM_OK, "created test client");
-    ok(create_worker( server_list, &worker ) == GM_OK, "created test worker");
+    ok(create_client( mod_gm_opt->server_list, &client ) == GM_OK, "created test client");
+    ok(create_worker( mod_gm_opt->server_list, &worker ) == GM_OK, "created test worker");
     return;
 }
 
 
 /* main tests */
 int main(void) {
-    int tests = 15;
+    int tests = 16;
     plan_tests(tests);
 
+    mod_gm_opt = malloc(sizeof(mod_gm_opt_t));
+    set_default_options(mod_gm_opt);
+
+    char options[150];
+    snprintf(options, 150, "--server=localhost:%d", GEARMAND_TEST_PORT);
+    ok(parse_args_line(mod_gm_opt, options, 0) == 0, "parse_args_line()");
+    mod_gm_opt->debug_level = GM_LOG_ERROR;
 
     /* first fire up a gearmand server */
     pthread_t gearmand_thread;
@@ -77,7 +81,7 @@ int main(void) {
         diag("make sure gearmand is in your PATH. Usuall locations are /usr/sbin or /usr/local/sbin");
 
     skip_start(gearmand_pid <= 0,   /* Boolean expression      */
-               tests-1,             /* Number of tests to skip */
+               tests-2,             /* Number of tests to skip */
                "Skipping all tests, no need to go on without gearmand");
 
     /* create server / worker / clients */
@@ -101,6 +105,9 @@ int main(void) {
     }
 
     /* cleanup */
+    mod_gm_free_opt(mod_gm_opt);
+    free_client(&client);
+    free_worker(&worker);
     kill(gearmand_pid, SIGTERM);
     skip_end;
     pthread_cancel(gearmand_thread);
