@@ -6,7 +6,6 @@ General
 -------
 
  - remove debug symbols (-g) and add strip (-s) again
- - move latency calculation to neb module
  - verify cancelation of checks
 
 Worker

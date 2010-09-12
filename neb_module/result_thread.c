@@ -62,21 +62,25 @@ void *result_worker( void * data ) {
 /* put back the result into the core */
 void *get_results( gearman_job_st *job, void *context, size_t *result_size, gearman_return_t *ret_ptr ) {
 
-    // contect is unused
+    /* for calculating real latency */
+    struct timeval now, core_start_time;
+    gettimeofday(&now,NULL);
+
+    /* contect is unused */
     context = context;
 
-    // set size of result
+    /* set size of result */
     *result_size = 0;
 
-    // set result pointer to success
+    /* set result pointer to success */
     *ret_ptr = GEARMAN_SUCCESS;
 
-    // get the data
+    /* get the data */
     char * workload   = strdup((char *)gearman_job_workload(job));
     logger( GM_LOG_TRACE, "got result %s\n", gearman_job_handle( job ));
     logger( GM_LOG_TRACE, "%d +++>\n%s\n<+++\n", strlen(workload), workload );
 
-    // decrypt data
+    /* decrypt data */
     char *decrypted_data   = malloc(GM_BUFFERSIZE);
     char *decrypted_data_c = decrypted_data;
     mod_gm_decrypt(&decrypted_data, workload, mod_gm_opt->transportmode);
@@ -88,7 +92,7 @@ void *get_results( gearman_job_st *job, void *context, size_t *result_size, gear
     }
     logger( GM_LOG_TRACE, "%d --->\n%s\n<---\n", strlen(decrypted_data), decrypted_data );
 
-    // nagios will free it after processing
+    /* nagios will free it after processing */
     check_result * chk_result;
     if ( ( chk_result = ( check_result * )malloc( sizeof *chk_result ) ) == 0 ) {
         *ret_ptr = GEARMAN_WORK_FAIL;
@@ -108,6 +112,8 @@ void *get_results( gearman_job_st *job, void *context, size_t *result_size, gear
     chk_result->finish_time.tv_usec = 0;
     chk_result->scheduled_check     = TRUE;
     chk_result->reschedule_check    = TRUE;
+    core_start_time.tv_sec          = 0;
+    core_start_time.tv_usec         = 0;
 
     char *ptr;
     while ( (ptr = strsep(&decrypted_data, "\n" )) != NULL ) {
@@ -151,6 +157,11 @@ void *get_results( gearman_job_st *job, void *context, size_t *result_size, gear
             chk_result->early_timeout = atoi( value );
         } else if ( !strcmp( key, "return_code" ) ) {
             chk_result->return_code = atoi( value );
+        } else if ( !strcmp( key, "core_start_time" ) ) {
+            int sec   = atoi( str_token( &value, '.' ) );
+            int usec  = atoi( str_token( &value, 0 ) );
+            core_start_time.tv_sec  = sec;
+            core_start_time.tv_usec = usec;
         } else if ( !strcmp( key, "start_time" ) ) {
             int sec   = atoi( str_token( &value, '.' ) );
             int usec  = atoi( str_token( &value, 0 ) );
@@ -179,20 +190,32 @@ void *get_results( gearman_job_st *job, void *context, size_t *result_size, gear
         chk_result->check_type           = HOST_CHECK_ACTIVE;
     }
 
-    // this check is not a freshnes check
-    chk_result->check_options    = chk_result->check_options & ! CHECK_OPTION_FRESHNESS_CHECK;
-
-    // initialize and fill with result info
-    chk_result->output_file    = 0;
-    chk_result->output_file_fd = -1;
-
-    // fill some maybe missing options
+    /* fill some maybe missing options */
     if(chk_result->start_time.tv_sec  == 0) {
         chk_result->start_time.tv_sec = (unsigned long)time(NULL);
     }
     if(chk_result->finish_time.tv_sec  == 0) {
         chk_result->finish_time.tv_sec = (unsigned long)time(NULL);
     }
+    if(core_start_time.tv_sec  == 0) {
+        core_start_time.tv_sec = (unsigned long)time(NULL);
+    }
+
+    /* calculate real latency */
+    double now_f            = (double)now.tv_sec + (double)now.tv_usec / 1000000;
+    double core_starttime_f = (double)core_start_time.tv_sec + (double)core_start_time.tv_usec / 1000000;
+    double starttime_f      = (double)chk_result->start_time.tv_sec + (double)chk_result->start_time.tv_usec / 1000000;
+    double finishtime_f     = (double)chk_result->finish_time.tv_sec + (double)chk_result->finish_time.tv_usec / 1000000;
+    double exec_time        = finishtime_f - starttime_f;
+    double latency          = now_f - exec_time - core_starttime_f;
+    chk_result->latency    += latency;
+
+    /* this check is not a freshnes check */
+    chk_result->check_options    = chk_result->check_options & ! CHECK_OPTION_FRESHNESS_CHECK;
+
+    /* initialize and fill with result info */
+    chk_result->output_file    = 0;
+    chk_result->output_file_fd = -1;
 
     if ( chk_result->service_description != NULL ) {
         logger( GM_LOG_DEBUG, "service job completed: %s %s: %d\n", chk_result->host_name, chk_result->service_description, chk_result->return_code );
@@ -200,10 +223,10 @@ void *get_results( gearman_job_st *job, void *context, size_t *result_size, gear
         logger( GM_LOG_DEBUG, "host job completed: %s: %d\n", chk_result->host_name, chk_result->return_code );
     }
 
-    // nagios internal function
+    /* nagios internal function */
     add_check_result_to_list( chk_result );
 
-    // reset pointer
+    /* reset pointer */
     chk_result = NULL;
 
     free(decrypted_data_c);

@@ -192,8 +192,8 @@ void *get_job( gearman_job_st *job, void *context, size_t *result_size, gearman_
             char *sec   = str_token( &ptr, '.' );
             char *usec  = str_token( &ptr, 0 );
             if(usec == NULL) { usec = 0; }
-            exec_job->start_time.tv_sec  = atoi(sec);
-            exec_job->start_time.tv_usec = atoi(usec);
+            exec_job->core_start_time.tv_sec  = atoi(sec);
+            exec_job->core_start_time.tv_usec = atoi(usec);
             free(ptr_c);
         } else if ( !strcmp( key, "timeout" ) ) {
             exec_job->timeout = atoi(value);
@@ -222,7 +222,6 @@ void do_exec_job( ) {
     logger( GM_LOG_TRACE, "do_exec_job()\n" );
 
     struct timeval start_time,end_time;
-    double latency = 0.0;
 
     if(exec_job->type == NULL) {
         logger( GM_LOG_ERROR, "discarded invalid job\n" );
@@ -245,34 +244,13 @@ void do_exec_job( ) {
 
     logger( GM_LOG_TRACE, "timeout %i\n", exec_job->timeout);
 
-    // calculate real latency
     // get the check start time
     gettimeofday(&start_time,NULL);
-    if(exec_job->start_time.tv_sec == 0) {
-        exec_job->start_time = start_time;
-    }
-
-    // our gm start time
-    double start1_f = (double)start_time.tv_sec + (double)start_time.tv_usec/1000000;
-
-    // start time from core
-    double start2_f = (double)exec_job->start_time.tv_sec + (double)exec_job->start_time.tv_usec / 1000000;
-
-    latency = start1_f - start2_f;
-    logger( GM_LOG_TRACE, "latency: %0.4f\n", latency);
-    exec_job->latency += latency;
-    if(latency < 0) {
-        logger( GM_LOG_ERROR, "latency: %0.4f\n", latency);
-        time_t real_start = (time_t) exec_job->start_time.tv_sec;
-        logger( GM_LOG_ERROR, "real start_time: %i.%i\n", exec_job->start_time.tv_sec, exec_job->start_time.tv_usec);
-        logger( GM_LOG_ERROR, "real start_time: %s\n", asctime(localtime(&real_start)));
-        time_t start = (time_t) start_time.tv_sec;
-        logger( GM_LOG_ERROR, "job start_time: %i.%i\n", start_time.tv_sec, start_time.tv_usec);
-        logger( GM_LOG_ERROR, "job start_time: %s\n", asctime(localtime(&start)));
-    }
+    exec_job->start_time = start_time;
+    int latency = exec_job->core_start_time.tv_sec - start_time.tv_sec;
 
     // job is too old
-    if((int)exec_job->latency > mod_gm_opt->max_age) {
+    if(latency > mod_gm_opt->max_age) {
         exec_job->return_code   = 3;
 
         logger( GM_LOG_INFO, "discarded too old %s job: %i > %i\n", exec_job->type, (int)latency, mod_gm_opt->max_age);
@@ -297,10 +275,6 @@ void do_exec_job( ) {
     // record check result info
     gettimeofday(&end_time, NULL);
     exec_job->finish_time = end_time;
-
-    time_t end = time(&end_time.tv_sec);
-    logger( GM_LOG_TRACE, "finish_time: %i.%i\n", end_time.tv_sec, end_time.tv_usec);
-    logger( GM_LOG_TRACE, "finish_time: %s\n", asctime(localtime(&end)));
 
     // did we have a timeout?
     if(exec_job->timeout < ((int)end_time.tv_sec - (int)start_time.tv_sec)) {
@@ -437,8 +411,10 @@ void send_result_back() {
 
     logger( GM_LOG_TRACE, "queue: %s\n", exec_job->result_queue );
     temp_buffer1[0]='\x0';
-    snprintf( temp_buffer1, sizeof( temp_buffer1 )-1, "host_name=%s\nstart_time=%i.%i\nfinish_time=%i.%i\nlatency=%f\nreturn_code=%i\nexited_ok=%i\n",
+    snprintf( temp_buffer1, sizeof( temp_buffer1 )-1, "host_name=%s\ncore_start_time=%i.%i\nstart_time=%i.%i\nfinish_time=%i.%i\nlatency=%f\nreturn_code=%i\nexited_ok=%i\n",
               exec_job->host_name,
+              ( int )exec_job->core_start_time.tv_sec,
+              ( int )exec_job->core_start_time.tv_usec,
               ( int )exec_job->start_time.tv_sec,
               ( int )exec_job->start_time.tv_usec,
               ( int )exec_job->finish_time.tv_sec,
