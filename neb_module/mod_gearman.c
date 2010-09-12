@@ -15,9 +15,12 @@
 
 /* specify event broker API version (required) */
 NEB_API_VERSION( CURRENT_NEB_API_VERSION );
+
+/* import some global variables */
 extern int currently_running_host_checks;
 extern timed_event *event_list_low;
 extern timed_event *event_list_low_tail;
+extern int process_performance_data;
 
 /* global variables */
 void *gearman_module_handle=NULL;
@@ -621,6 +624,9 @@ static void start_threads(void) {
 
 /* handle performance data */
 int handle_perfdata(int event_type, void *data) {
+    if(process_performance_data == 0)
+        return 0;
+
     nebstruct_host_check_data *hostchkdata   = NULL;
     nebstruct_service_check_data *srvchkdata = NULL;
 
@@ -637,27 +643,29 @@ int handle_perfdata(int event_type, void *data) {
             // an aggregated status data dump just started or ended
             if ((hostchkdata = (nebstruct_host_check_data *) data)) {
 
-                host = find_host(hostchkdata->host_name);
-
-                if (hostchkdata->type == NEBTYPE_HOSTCHECK_PROCESSED
-                    && hostchkdata->perf_data != NULL) {
-
-                    snprintf(perfdatafile_template, sizeof(perfdatafile_template) - 1,
-                                "DATATYPE::HOSTPERFDATA\t"
-                                "TIMET::%d\t"
-                                "HOSTNAME::%s\t"
-                                "HOSTPERFDATA::%s\t"
-                                "HOSTCHECKCOMMAND::%s!%s\t"
-                                "HOSTSTATE::%d\t"
-                                "HOSTSTATETYPE::%d\n",
-                                (int)hostchkdata->timestamp.tv_sec,
-                                hostchkdata->host_name, hostchkdata->perf_data,
-                                hostchkdata->command_name, hostchkdata->command_args,
-                                hostchkdata->state, hostchkdata->state_type);
-
-                    perfdatafile_template[sizeof(perfdatafile_template) - 1] = '\x0';
-                    has_perfdata = TRUE;
+                if (hostchkdata->type != NEBTYPE_HOSTCHECK_PROCESSED || hostchkdata->perf_data == NULL ) {
+                    break;
                 }
+
+                host = find_host(hostchkdata->host_name);
+                if(host->process_performance_data == 0)
+                    break;
+
+                snprintf(perfdatafile_template, sizeof(perfdatafile_template) - 1,
+                            "DATATYPE::HOSTPERFDATA\t"
+                            "TIMET::%d\t"
+                            "HOSTNAME::%s\t"
+                            "HOSTPERFDATA::%s\t"
+                            "HOSTCHECKCOMMAND::%s!%s\t"
+                            "HOSTSTATE::%d\t"
+                            "HOSTSTATETYPE::%d\n",
+                            (int)hostchkdata->timestamp.tv_sec,
+                            hostchkdata->host_name, hostchkdata->perf_data,
+                            hostchkdata->command_name, hostchkdata->command_args,
+                            hostchkdata->state, hostchkdata->state_type);
+
+                perfdatafile_template[sizeof(perfdatafile_template) - 1] = '\x0';
+                has_perfdata = TRUE;
             }
             break;
 
@@ -665,28 +673,30 @@ int handle_perfdata(int event_type, void *data) {
             // an aggregated status data dump just started or ended
             if ((srvchkdata = (nebstruct_service_check_data *) data)) {
 
-                if (srvchkdata->type == NEBTYPE_SERVICECHECK_PROCESSED
-                    && srvchkdata->perf_data != NULL) {
-
-                    // find the nagios service object for this service
-                    service = find_service(srvchkdata->host_name, srvchkdata->service_description);
-
-                    snprintf(perfdatafile_template, sizeof(perfdatafile_template) - 1,
-                                "DATATYPE::SERVICEPERFDATA\t"
-                                "TIMET::%d\t"
-                                "HOSTNAME::%s\t"
-                                "SERVICEDESC::%s\t"
-                                "SERVICEPERFDATA::%s\t"
-                                "SERVICECHECKCOMMAND::%s\t"
-                                "SERVICESTATE::%d\t"
-                                "SERVICESTATETYPE::%d\n\n\n",
-                                (int)srvchkdata->timestamp.tv_sec,
-                                srvchkdata->host_name, srvchkdata->service_description,
-                                srvchkdata->perf_data, service->service_check_command,
-                                srvchkdata->state, srvchkdata->state_type);
-                    perfdatafile_template[sizeof(perfdatafile_template) - 1] = '\x0';
-                    has_perfdata = TRUE;
+                if(srvchkdata->type != NEBTYPE_SERVICECHECK_PROCESSED || srvchkdata->perf_data == NULL) {
+                    break;
                 }
+
+                // find the nagios service object for this service
+                service = find_service(srvchkdata->host_name, srvchkdata->service_description);
+                if(service->process_performance_data == 0)
+                    break;
+
+                snprintf(perfdatafile_template, sizeof(perfdatafile_template) - 1,
+                            "DATATYPE::SERVICEPERFDATA\t"
+                            "TIMET::%d\t"
+                            "HOSTNAME::%s\t"
+                            "SERVICEDESC::%s\t"
+                            "SERVICEPERFDATA::%s\t"
+                            "SERVICECHECKCOMMAND::%s\t"
+                            "SERVICESTATE::%d\t"
+                            "SERVICESTATETYPE::%d\n\n\n",
+                            (int)srvchkdata->timestamp.tv_sec,
+                            srvchkdata->host_name, srvchkdata->service_description,
+                            srvchkdata->perf_data, service->service_check_command,
+                            srvchkdata->state, srvchkdata->state_type);
+                perfdatafile_template[sizeof(perfdatafile_template) - 1] = '\x0';
+                has_perfdata = TRUE;
             }
             break;
 
