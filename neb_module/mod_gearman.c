@@ -627,8 +627,11 @@ static void start_threads(void) {
 
 /* handle performance data */
 int handle_perfdata(int event_type, void *data) {
-    if(process_performance_data == 0)
+    logger( GM_LOG_TRACE, "handle_perfdata(%d)\n", event_type );
+    if(process_performance_data == 0) {
+        logger( GM_LOG_TRACE, "handle_perfdata() process_performance_data disabled globally\n" );
         return 0;
+    }
 
     nebstruct_host_check_data *hostchkdata   = NULL;
     nebstruct_service_check_data *srvchkdata = NULL;
@@ -651,8 +654,10 @@ int handle_perfdata(int event_type, void *data) {
                 }
 
                 host = find_host(hostchkdata->host_name);
-                if(host->process_performance_data == 0)
+                if(host->process_performance_data == 0) {
+                    logger( GM_LOG_TRACE, "handle_perfdata() process_performance_data disabled for: %s\n", host->name );
                     break;
+                }
 
                 snprintf(perfdatafile_template, sizeof(perfdatafile_template) - 1,
                             "DATATYPE::HOSTPERFDATA\t"
@@ -682,8 +687,10 @@ int handle_perfdata(int event_type, void *data) {
 
                 // find the nagios service object for this service
                 service = find_service(srvchkdata->host_name, srvchkdata->service_description);
-                if(service->process_performance_data == 0)
+                if(service->process_performance_data == 0) {
+                    logger( GM_LOG_TRACE, "handle_perfdata() process_performance_data disabled for: %s - %s\n", service->host_name, service->description );
                     break;
+                }
 
                 snprintf(perfdatafile_template, sizeof(perfdatafile_template) - 1,
                             "DATATYPE::SERVICEPERFDATA\t"
