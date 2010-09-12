@@ -155,6 +155,9 @@ int nebmodule_deinit( int flags, int reason ) {
         pthread_join(result_thr[x], NULL);
     }
 
+    /* cleanup client */
+    free_client(&client);
+
     return GM_OK;
 }
 
