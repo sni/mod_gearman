@@ -639,7 +639,6 @@ int handle_perfdata(int event_type, void *data) {
     host *host       = NULL;
     service *service = NULL;
 
-    char perfdatafile_template[GM_BUFFERSIZE];
     int has_perfdata = FALSE;
 
     // what type of event/data do we have?
@@ -659,7 +658,8 @@ int handle_perfdata(int event_type, void *data) {
                     break;
                 }
 
-                snprintf(perfdatafile_template, sizeof(perfdatafile_template) - 1,
+                temp_buffer[0]='\x0';
+                snprintf( temp_buffer,sizeof( temp_buffer )-1,
                             "DATATYPE::HOSTPERFDATA\t"
                             "TIMET::%d\t"
                             "HOSTNAME::%s\t"
@@ -671,8 +671,7 @@ int handle_perfdata(int event_type, void *data) {
                             hostchkdata->host_name, hostchkdata->perf_data,
                             hostchkdata->command_name, hostchkdata->command_args,
                             hostchkdata->state, hostchkdata->state_type);
-
-                perfdatafile_template[sizeof(perfdatafile_template) - 1] = '\x0';
+                temp_buffer[sizeof( temp_buffer )-1]='\x0';
                 has_perfdata = TRUE;
             }
             break;
@@ -692,7 +691,8 @@ int handle_perfdata(int event_type, void *data) {
                     break;
                 }
 
-                snprintf(perfdatafile_template, sizeof(perfdatafile_template) - 1,
+                temp_buffer[0]='\x0';
+                snprintf( temp_buffer,sizeof( temp_buffer )-1,
                             "DATATYPE::SERVICEPERFDATA\t"
                             "TIMET::%d\t"
                             "HOSTNAME::%s\t"
@@ -705,7 +705,7 @@ int handle_perfdata(int event_type, void *data) {
                             srvchkdata->host_name, srvchkdata->service_description,
                             srvchkdata->perf_data, service->service_check_command,
                             srvchkdata->state, srvchkdata->state_type);
-                perfdatafile_template[sizeof(perfdatafile_template) - 1] = '\x0';
+                temp_buffer[sizeof( temp_buffer )-1]='\x0';
                 has_perfdata = TRUE;
             }
             break;
@@ -720,7 +720,7 @@ int handle_perfdata(int event_type, void *data) {
                              mod_gm_opt->server_list,
                              GM_PERFDATA_QUEUE,
                              NULL,
-                             perfdatafile_template,
+                             temp_buffer,
                              GM_JOB_PRIO_NORMAL,
                              GM_DEFAULT_JOB_RETRIES,
                              mod_gm_opt->transportmode

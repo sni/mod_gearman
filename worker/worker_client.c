@@ -123,8 +123,11 @@ void *get_job( gearman_job_st *job, void *context, size_t *result_size, gearman_
     // send start signal to parent
     send_state_to_parent(GM_JOB_START);
 
-    // get the data
-    char * workload = strdup((char*)gearman_job_workload(job));
+    /* get the data */
+    int wsize = gearman_job_workload_size(job);
+    char workload[GM_BUFFERSIZE];
+    strncpy(workload, (char*)gearman_job_workload(job), wsize);
+    workload[wsize] = '\0';
     logger( GM_LOG_TRACE, "got new job %s\n", gearman_job_handle( job ) );
     logger( GM_LOG_TRACE, "%d +++>\n%s\n<+++\n", strlen(workload), workload );
 
@@ -132,7 +135,6 @@ void *get_job( gearman_job_st *job, void *context, size_t *result_size, gearman_
     char * decrypted_data = malloc(GM_BUFFERSIZE);
     char * decrypted_data_c = decrypted_data;
     mod_gm_decrypt(&decrypted_data, workload, mod_gm_opt->transportmode);
-    free(workload);
 
     if(decrypted_data == NULL) {
         *ret_ptr = GEARMAN_WORK_FAIL;
