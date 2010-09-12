@@ -142,3 +142,9 @@ test: check
 	@echo " All tests completed successfully"
 	@echo ""
 	@echo "################################################################"
+
+docs:
+	rm -f images
+	ln -s /usr/share/asciidoc/images .
+	asciidoc --unsafe -a toc -a toclevels=2 -a icons -a data-uri -a max-width=800 README
+	chmod 644 README.html

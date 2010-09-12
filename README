@@ -1,30 +1,32 @@
 Gearman Module for Nagios
 =========================
 
-mod_gearman is a new way of distributing active nagios checks across
-your network. It consists of two parts.
-There is a NEB module which resides in the nagios core and adds
-Servicechecks, Hostchecks and Eventhandler to a gearman
-(http://gearman.org) queue. There can be multiple equal gearman
-servers.
-The other part is one or more worker clients for the work. They
-can be bound to host and servicegroups.
+Mod_Gearman is a new way of distributing active nagios checks across
+your network. It consists of two parts.  There is a NEB module which
+resides in the Nagios core and adds servicechecks, hostchecks and
+eventhandler to a Gearman (http://gearman.org) queue. There can be
+multiple equal gearman servers.  The counterpart is one or more worker
+clients for the checks itself. They can be bound to host and
+servicegroups.
 
 
-HOW DOES IT WORK
+How does it work
 ----------------
 When the broker module is loaded, it captures all servicecheck,
 hostcheck and the eventhandler events. Eventhandler are sent to a
 generic 'eventhandler' queue. Checks for hosts which are in one of the
 specified hostgroups, are sent into a seperate hostgroup queue. All
-non matching hosts are sent to a generic hosts queue. Checks for
+non matching hosts are sent to a generic 'hosts' queue. Checks for
 services are first checked against the list of servicegroups, then
 against the hostgroups and if none matches they will be sent into a
-generic service queue.
-The NEB module starts a single thread, which monitors the result queue
-where all results resides.
+generic 'service' queue.
+The NEB module starts a single thread, which monitors the
+'check_results' where all results come in.
+
+image:mod_gearman.png["Workflow"]
 
 A simple example queue would look like:
+======
  +---------------+------------------+--------------+--------------+
  | Queue Name    | Worker Available | Jobs Waiting | Jobs Running |
  +---------------+------------------+--------------+--------------+
@@ -33,25 +35,29 @@ A simple example queue would look like:
  | service       | 50               | 0            | 13           |
  | eventhandler  | 50               | 0            | 0            |
  +---------------+------------------+--------------+--------------+
+======
 
 There is one queue for the results and two for the checks plus the
 eventhandler.
 
 The workflow is simple:
+
  1. Nagios wants to execute a service check.
  2. The check is intercepted by the mod_gearman neb module.
- 3. mod_gearman puts the job into the "service" queue.
+ 3. mod_gearman puts the job into the 'service' queue.
  4. a worker grabs the job and puts back the result into the
-    "check_results" queue
- 5. mod_gearman grabs the result job and puts back the result into the
-    core
+    'check_results' queue
+ 5. mod_gearman grabs the result job and puts back the result onto the
+    check result list
+ 6. the reaper reads all checks from the result list and updates hosts / services
 
 
-If you specifiy some host or servicegroups. This example uses a
-seperate hostgroup for japan and a seperate servicegroup for
-"jmx4perl".
+You can set some host or servicegroups for special worker. This
+example uses a seperate hostgroup for japan and a seperate
+servicegroup for jmx4perl.
 
 It would look like this:
+======
  +-----------------------+------------------+--------------+--------------+
  | Queue Name            | Worker Available | Jobs Waiting | Jobs Running |
  +-----------------------+------------------+--------------+--------------+
@@ -62,6 +68,7 @@ It would look like this:
  | hostgroup_japan       | 3                | 1            | 3            |
  | eventhandler          | 50               | 0            | 0            |
  +-----------------------+------------------+--------------+--------------+
+======
 
 You still have the generic queues and in addition there are two queues
 for the specific groups.
@@ -71,7 +78,7 @@ The worker processes will take jobs from the queues and put the result
 back into the check_result queue which will then be taken back by the
 neb module and put back into the nagios core. A worker can work on one
 or more queues. So you could start a worker which only handles the
-"hostgroup_japan" group.  One worker for the "jmx4perl" checks and one
+'hostgroup_japan' group.  One worker for the 'jmx4perl' checks and one
 worker which covers the other queues. There can be more than one
 worker on each queue which would share the load.
 
@@ -81,6 +88,7 @@ Installation
 ------------
 
 Pre Requirements: 
+
  - gcc / g++
  - autoconf / automake / autoheader
  - libtool
@@ -93,27 +101,30 @@ nagios installation and add a broker line to your nagios.cfg:
 ======
   broker_module=.../mod_gearman.o server=localhost:4730 eventhandler=yes services=yes hosts=yes
 ======
-see <Configuration> for details on all parameters
+see <<_configuration,Configuration>> for details on all parameters
 
 
-The last step is to start one or more worker. There is currently no
-init script. So just start it by hand.
+The last step is to start one or more worker. You may use the same
+configuration file as for the neb module.
+
 ======
-./scripts/worker.pl --server=localhost:4730 --events --services --hosts --threads=15
+ ./mod_gearman_worker --server=localhost:4730 --services --hosts
 ======
+or use the supplied init script.
 
 
 Patch Nagios
-++++++++++++
+~~~~~~~~~~~~
 
-Note: The patch has been applied to Nagios 3.2.2. Use the patch if you
+NOTE: The needed patch is already included since Nagios 3.2.2. Use the patch if you
 use an older version.
 
-It is not possible to distribute Eventhandler without patching Nagios
-as the moment. So please apply the patch from the patches dir to your
-Nagios sources and build nagios again. You only need to replace the
-nagios binary. Nothing else has changed.
-If you plan to distribute only Host/Servicechecks, no patch is needed.
+It is not possible to distribute eventhandler with Nagios versions
+prior 3.2.2. Just apply the patch from the patches directory to your
+Nagios sources and build Nagios again if you want to use an older
+version. You only need to replace the nagios binary. Nothing else has
+changed.  If you plan to distribute only Host/Servicechecks, no patch
+is needed.
 
 
 
@@ -121,16 +132,19 @@ Configuration
 -------------
 
 NEB Module
-++++++++++
+~~~~~~~~~~
 
-A sample config in your nagios.cfg could look like:
+A sample broker in your nagios.cfg could look like:
 
-  broker=/usr/local/share/nagios/mod_gearman.o keyfile=/usr/local/share/nagios/secret.txt server=localhost eventhandler=yes hosts=yes services=yes
+======
+ broker=/usr/local/share/nagios/mod_gearman.o keyfile=/usr/local/share/nagios/secret.txt server=localhost eventhandler=yes hosts=yes services=yes
+======
 
 See the following list for a detailed explaination of available
 options:
 
 
+.......
 config:             read config from this file. Options are the same
                     like described here.
 
@@ -239,10 +253,12 @@ keyfile:            The shared password will be read from this file.
                     characters will be used.
 
                     Example: keyfile=/path/to/secret.file
+.......
 
 
-Worker Options:
+Additional options for worker:
 
+.......
 pidfile:            Path to the pidfile.
 
                     Example: pidfile=/path/to/pid.file
@@ -268,6 +284,7 @@ max-worker:         Maximum number of worker processes which should
                     Default: 20
 
                     Example: max-worker=20
+.......
 
 
 
@@ -280,6 +297,7 @@ You may want to watch your gearman server job queue. The shipped
 tools/queue_top.pl does this. It polls the gearman server every second
 and displays the current queue statistics.
 
+======
  +-----------------------+--------+-------+-------+---------+
  | Name                  | Worker | Avail | Queue | Running |
  +-----------------------+--------+-------+-------+---------+
@@ -290,8 +308,10 @@ and displays the current queue statistics.
  | servicegroup_jmx4perl | 3      | 3     | 0     | 0       |
  | hostgroup_japan       | 3      | 3     | 0     | 0       |
  +-----------------------+--------+-------+-------+---------+
+======
 
 
+.......
 check_results         this queue is monitored by the neb module to
                       fetch results from the worker.
                       You don't need an extra worker for this queue.
@@ -336,6 +356,7 @@ eventhandler          This is the generic queue for all eventhandler.
                       Make sure you have a worker for this queue if
                       you have eventhandler enabled. Start the worker
                       with --events to work on this queue.
+.......
 
 
 
@@ -345,10 +366,10 @@ Hints
    monitor that.
 
  - Add Logfile checks for your gearmand server and mod_gearman
-   clients.
+   worker.
 
- - Make sure all gearman checks are in local groups. Gearman procs
-   should not be monitored by gearman of course.
+ - Make sure all gearman checks are in local groups. Gearman self
+   checks should not be monitored through gearman.
 
  - Keep the gearmand server close to Nagios for better performance.
 

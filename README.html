@@ -1,0 +1,1292 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
+    "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<meta name="generator" content="AsciiDoc 8.5.2" />
+<title>Gearman Module for Nagios</title>
+<style type="text/css">
+/* Debug borders */
+p, li, dt, dd, div, pre, h1, h2, h3, h4, h5, h6 {
+/*
+  border: 1px solid red;
+*/
+}
+
+body {
+  margin: 1em 5% 1em 5%;
+}
+
+a {
+  color: blue;
+  text-decoration: underline;
+}
+a:visited {
+  color: fuchsia;
+}
+
+em {
+  font-style: italic;
+  color: navy;
+}
+
+strong {
+  font-weight: bold;
+  color: #083194;
+}
+
+tt {
+  color: navy;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  color: #527bbd;
+  font-family: sans-serif;
+  margin-top: 1.2em;
+  margin-bottom: 0.5em;
+  line-height: 1.3;
+}
+
+h1, h2, h3 {
+  border-bottom: 2px solid silver;
+}
+h2 {
+  padding-top: 0.5em;
+}
+h3 {
+  float: left;
+}
+h3 + * {
+  clear: left;
+}
+
+div.sectionbody {
+  font-family: serif;
+  margin-left: 0;
+}
+
+hr {
+  border: 1px solid silver;
+}
+
+p {
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
+}
+
+ul, ol, li > p {
+  margin-top: 0;
+}
+
+pre {
+  padding: 0;
+  margin: 0;
+}
+
+span#author {
+  color: #527bbd;
+  font-family: sans-serif;
+  font-weight: bold;
+  font-size: 1.1em;
+}
+span#email {
+}
+span#revnumber, span#revdate, span#revremark {
+  font-family: sans-serif;
+}
+
+div#footer {
+  font-family: sans-serif;
+  font-size: small;
+  border-top: 2px solid silver;
+  padding-top: 0.5em;
+  margin-top: 4.0em;
+}
+div#footer-text {
+  float: left;
+  padding-bottom: 0.5em;
+}
+div#footer-badges {
+  float: right;
+  padding-bottom: 0.5em;
+}
+
+div#preamble {
+  margin-top: 1.5em;
+  margin-bottom: 1.5em;
+}
+div.tableblock, div.imageblock, div.exampleblock, div.verseblock,
+div.quoteblock, div.literalblock, div.listingblock, div.sidebarblock,
+div.admonitionblock {
+  margin-top: 1.0em;
+  margin-bottom: 1.5em;
+}
+div.admonitionblock {
+  margin-top: 2.0em;
+  margin-bottom: 2.0em;
+  margin-right: 10%;
+  color: #606060;
+}
+
+div.content { /* Block element content. */
+  padding: 0;
+}
+
+/* Block element titles. */
+div.title, caption.title {
+  color: #527bbd;
+  font-family: sans-serif;
+  font-weight: bold;
+  text-align: left;
+  margin-top: 1.0em;
+  margin-bottom: 0.5em;
+}
+div.title + * {
+  margin-top: 0;
+}
+
+td div.title:first-child {
+  margin-top: 0.0em;
+}
+div.content div.title:first-child {
+  margin-top: 0.0em;
+}
+div.content + div.title {
+  margin-top: 0.0em;
+}
+
+div.sidebarblock > div.content {
+  background: #ffffee;
+  border: 1px solid silver;
+  padding: 0.5em;
+}
+
+div.listingblock > div.content {
+  border: 1px solid silver;
+  background: #f4f4f4;
+  padding: 0.5em;
+}
+
+div.quoteblock, div.verseblock {
+  padding-left: 1.0em;
+  margin-left: 1.0em;
+  margin-right: 10%;
+  border-left: 5px solid #dddddd;
+  color: #777777;
+}
+
+div.quoteblock > div.attribution {
+  padding-top: 0.5em;
+  text-align: right;
+}
+
+div.verseblock > div.content {
+  white-space: pre;
+}
+div.verseblock > div.attribution {
+  padding-top: 0.75em;
+  text-align: left;
+}
+/* DEPRECATED: Pre version 8.2.7 verse style literal block. */
+div.verseblock + div.attribution {
+  text-align: left;
+}
+
+div.admonitionblock .icon {
+  vertical-align: top;
+  font-size: 1.1em;
+  font-weight: bold;
+  text-decoration: underline;
+  color: #527bbd;
+  padding-right: 0.5em;
+}
+div.admonitionblock td.content {
+  padding-left: 0.5em;
+  border-left: 3px solid #dddddd;
+}
+
+div.exampleblock > div.content {
+  border-left: 3px solid #dddddd;
+  padding-left: 0.5em;
+}
+
+div.imageblock div.content { padding-left: 0; }
+span.image img { border-style: none; }
+a.image:visited { color: white; }
+
+dl {
+  margin-top: 0.8em;
+  margin-bottom: 0.8em;
+}
+dt {
+  margin-top: 0.5em;
+  margin-bottom: 0;
+  font-style: normal;
+  color: navy;
+}
+dd > *:first-child {
+  margin-top: 0.1em;
+}
+
+ul, ol {
+    list-style-position: outside;
+}
+ol.arabic {
+  list-style-type: decimal;
+}
+ol.loweralpha {
+  list-style-type: lower-alpha;
+}
+ol.upperalpha {
+  list-style-type: upper-alpha;
+}
+ol.lowerroman {
+  list-style-type: lower-roman;
+}
+ol.upperroman {
+  list-style-type: upper-roman;
+}
+
+div.compact ul, div.compact ol,
+div.compact p, div.compact p,
+div.compact div, div.compact div {
+  margin-top: 0.1em;
+  margin-bottom: 0.1em;
+}
+
+div.tableblock > table {
+  border: 3px solid #527bbd;
+}
+thead, p.table.header {
+  font-family: sans-serif;
+  font-weight: bold;
+}
+tfoot {
+  font-weight: bold;
+}
+td > div.verse {
+  white-space: pre;
+}
+p.table {
+  margin-top: 0;
+}
+/* Because the table frame attribute is overriden by CSS in most browsers. */
+div.tableblock > table[frame="void"] {
+  border-style: none;
+}
+div.tableblock > table[frame="hsides"] {
+  border-left-style: none;
+  border-right-style: none;
+}
+div.tableblock > table[frame="vsides"] {
+  border-top-style: none;
+  border-bottom-style: none;
+}
+
+
+div.hdlist {
+  margin-top: 0.8em;
+  margin-bottom: 0.8em;
+}
+div.hdlist tr {
+  padding-bottom: 15px;
+}
+dt.hdlist1.strong, td.hdlist1.strong {
+  font-weight: bold;
+}
+td.hdlist1 {
+  vertical-align: top;
+  font-style: normal;
+  padding-right: 0.8em;
+  color: navy;
+}
+td.hdlist2 {
+  vertical-align: top;
+}
+div.hdlist.compact tr {
+  margin: 0;
+  padding-bottom: 0;
+}
+
+.comment {
+  background: yellow;
+}
+
+.footnote, .footnoteref {
+  font-size: 0.8em;
+}
+
+span.footnote, span.footnoteref {
+  vertical-align: super;
+}
+
+#footnotes {
+  margin: 20px 0 20px 0;
+  padding: 7px 0 0 0;
+}
+
+#footnotes div.footnote {
+  margin: 0 0 5px 0;
+}
+
+#footnotes hr {
+  border: none;
+  border-top: 1px solid silver;
+  height: 1px;
+  text-align: left;
+  margin-left: 0;
+  width: 20%;
+  min-width: 100px;
+}
+
+
+@media print {
+  div#footer-badges { display: none; }
+}
+
+div#toc {
+  margin-bottom: 2.5em;
+}
+
+div#toctitle {
+  color: #527bbd;
+  font-family: sans-serif;
+  font-size: 1.1em;
+  font-weight: bold;
+  margin-top: 1.0em;
+  margin-bottom: 0.1em;
+}
+
+div.toclevel1, div.toclevel2, div.toclevel3, div.toclevel4 {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+div.toclevel2 {
+  margin-left: 2em;
+  font-size: 0.9em;
+}
+div.toclevel3 {
+  margin-left: 4em;
+  font-size: 0.9em;
+}
+div.toclevel4 {
+  margin-left: 6em;
+  font-size: 0.9em;
+}
+/* Workarounds for IE6's broken and incomplete CSS2. */
+
+div.sidebar-content {
+  background: #ffffee;
+  border: 1px solid silver;
+  padding: 0.5em;
+}
+div.sidebar-title, div.image-title {
+  color: #527bbd;
+  font-family: sans-serif;
+  font-weight: bold;
+  margin-top: 0.0em;
+  margin-bottom: 0.5em;
+}
+
+div.listingblock div.content {
+  border: 1px solid silver;
+  background: #f4f4f4;
+  padding: 0.5em;
+}
+
+div.quoteblock-attribution {
+  padding-top: 0.5em;
+  text-align: right;
+}
+
+div.verseblock-content {
+  white-space: pre;
+}
+div.verseblock-attribution {
+  padding-top: 0.75em;
+  text-align: left;
+}
+
+div.exampleblock-content {
+  border-left: 3px solid #dddddd;
+  padding-left: 0.5em;
+}
+
+/* IE6 sets dynamically generated links as visited. */
+div#toc a:visited { color: blue; }
+</style>
+<script type="text/javascript">
+/*<![CDATA[*/
+window.onload = function(){asciidoc.footnotes(); asciidoc.toc(2);}
+var asciidoc = {  // Namespace.
+
+/////////////////////////////////////////////////////////////////////
+// Table Of Contents generator
+/////////////////////////////////////////////////////////////////////
+
+/* Author: Mihai Bazon, September 2002
+ * http://students.infoiasi.ro/~mishoo
+ *
+ * Table Of Content generator
+ * Version: 0.4
+ *
+ * Feel free to use this script under the terms of the GNU General Public
+ * License, as long as you do not remove or alter this notice.
+ */
+
+ /* modified by Troy D. Hanson, September 2006. License: GPL */
+ /* modified by Stuart Rackham, 2006, 2009. License: GPL */
+
+// toclevels = 1..4.
+toc: function (toclevels) {
+
+  function getText(el) {
+    var text = "";
+    for (var i = el.firstChild; i != null; i = i.nextSibling) {
+      if (i.nodeType == 3 /* Node.TEXT_NODE */) // IE doesn't speak constants.
+        text += i.data;
+      else if (i.firstChild != null)
+        text += getText(i);
+    }
+    return text;
+  }
+
+  function TocEntry(el, text, toclevel) {
+    this.element = el;
+    this.text = text;
+    this.toclevel = toclevel;
+  }
+
+  function tocEntries(el, toclevels) {
+    var result = new Array;
+    var re = new RegExp('[hH]([2-'+(toclevels+1)+'])');
+    // Function that scans the DOM tree for header elements (the DOM2
+    // nodeIterator API would be a better technique but not supported by all
+    // browsers).
+    var iterate = function (el) {
+      for (var i = el.firstChild; i != null; i = i.nextSibling) {
+        if (i.nodeType == 1 /* Node.ELEMENT_NODE */) {
+          var mo = re.exec(i.tagName);
+          if (mo && (i.getAttribute("class") || i.getAttribute("className")) != "float") {
+            result[result.length] = new TocEntry(i, getText(i), mo[1]-1);
+          }
+          iterate(i);
+        }
+      }
+    }
+    iterate(el);
+    return result;
+  }
+
+  var toc = document.getElementById("toc");
+  var entries = tocEntries(document.getElementById("content"), toclevels);
+  for (var i = 0; i < entries.length; ++i) {
+    var entry = entries[i];
+    if (entry.element.id == "")
+      entry.element.id = "_toc_" + i;
+    var a = document.createElement("a");
+    a.href = "#" + entry.element.id;
+    a.appendChild(document.createTextNode(entry.text));
+    var div = document.createElement("div");
+    div.appendChild(a);
+    div.className = "toclevel" + entry.toclevel;
+    toc.appendChild(div);
+  }
+  if (entries.length == 0)
+    toc.parentNode.removeChild(toc);
+},
+
+
+/////////////////////////////////////////////////////////////////////
+// Footnotes generator
+/////////////////////////////////////////////////////////////////////
+
+/* Based on footnote generation code from:
+ * http://www.brandspankingnew.net/archive/2005/07/format_footnote.html
+ */
+
+footnotes: function () {
+  var cont = document.getElementById("content");
+  var noteholder = document.getElementById("footnotes");
+  var spans = cont.getElementsByTagName("span");
+  var refs = {};
+  var n = 0;
+  for (i=0; i<spans.length; i++) {
+    if (spans[i].className == "footnote") {
+      n++;
+      // Use [\s\S] in place of . so multi-line matches work.
+      // Because JavaScript has no s (dotall) regex flag.
+      note = spans[i].innerHTML.match(/\s*\[([\s\S]*)]\s*/)[1];
+      noteholder.innerHTML +=
+        "<div class='footnote' id='_footnote_" + n + "'>" +
+        "<a href='#_footnoteref_" + n + "' title='Return to text'>" +
+        n + "</a>. " + note + "</div>";
+      spans[i].innerHTML =
+        "[<a id='_footnoteref_" + n + "' href='#_footnote_" + n +
+        "' title='View footnote' class='footnote'>" + n + "</a>]";
+      var id =spans[i].getAttribute("id");
+      if (id != null) refs["#"+id] = n;
+    }
+  }
+  if (n == 0)
+    noteholder.parentNode.removeChild(noteholder);
+  else {
+    // Process footnoterefs.
+    for (i=0; i<spans.length; i++) {
+      if (spans[i].className == "footnoteref") {
+        var href = spans[i].getElementsByTagName("a")[0].getAttribute("href");
+        href = href.match(/#.*/)[0];  // Because IE return full URL.
+        n = refs[href];
+        spans[i].innerHTML =
+          "[<a href='#_footnote_" + n +
+          "' title='View footnote' class='footnote'>" + n + "</a>]";
+      }
+    }
+  }
+}
+
+}
+/*]]>*/
+</script>
+</head>
+<body style="max-width:800">
+<div id="header">
+<h1>Gearman Module for Nagios</h1>
+<div id="toc">
+  <div id="toctitle">Table of Contents</div>
+  <noscript><p><b>JavaScript must be enabled in your browser to display the table of contents.</b></p></noscript>
+</div>
+</div>
+<div id="content">
+<div id="preamble">
+<div class="sectionbody">
+<div class="paragraph"><p>Mod_Gearman is a new way of distributing active nagios checks across
+your network. It consists of two parts.  There is a NEB module which
+resides in the Nagios core and adds servicechecks, hostchecks and
+eventhandler to a Gearman (<a href="http://gearman.org">http://gearman.org</a>) queue. There can be
+multiple equal gearman servers.  The counterpart is one or more worker
+clients for the checks itself. They can be bound to host and
+servicegroups.</p></div>
+</div>
+</div>
+<h2 id="_how_does_it_work">How does it work</h2>
+<div class="sectionbody">
+<div class="paragraph"><p>When the broker module is loaded, it captures all servicecheck,
+hostcheck and the eventhandler events. Eventhandler are sent to a
+generic <em>eventhandler</em> queue. Checks for hosts which are in one of the
+specified hostgroups, are sent into a seperate hostgroup queue. All
+non matching hosts are sent to a generic <em>hosts</em> queue. Checks for
+services are first checked against the list of servicegroups, then
+against the hostgroups and if none matches they will be sent into a
+generic <em>service</em> queue.
+The NEB module starts a single thread, which monitors the
+<em>check_results</em> where all results come in.</p></div>
+<div class="paragraph"><p><span class="image">
+<img alt="Workflow" src="data:image/png;base64,
+iVBORw0KGgoAAAANSUhEUgAAA8AAAALQCAMAAABoqemGAAAAAXNSR0ICQMB9xQAAAitQTFRFAAAA
+OF2KOF6MOl+NOV6NOmCPPmaXPWSUPmeYPmKOO2KSO2GRPWWWOmCNPmKPP2mcPWeYPGSVP2ibPGOU
+OmCOP2qdTU1NUXGZQGqcQWudS2yVQGiaV3acQGWSQWyfRWqYQ2iVS3GeRWeRXnygQ2+jSHatSXix
+S3qzTH22RnKoTHy1Tn+6Q22hSnmxTX64RHClRnOqSXevRXGmQ26iWH6rUHajR3SrVHimVnupSn67
+Sn25RnavRXWvRXKsSXmzQm2iSny5TH69Q2+mT4G9T4C7XoOyW4CvToG9V4G2ToHDUorOVY7VVI3S
+UYjLToPEUITHTYDAVIvRaGhofHx8aoaocIurfZWzd5CvZIGkaY67a5G+Y4m2YYa0eJ7NbpPCc5nH
+eJ/MYY7Ee6DPfqPSjIyMmpqag5q2iZ+6kKS+m67ElqnBl7TYia/egafVhqzbg6nYjq/VjrTjjLHg
+mrzmvb29srKyp6enqLjLobPIrr3Ppb7dpL7dusfWtMLTvMrbsMbhuc3lvNPuu87lsszsqMXpvNLu
+wcza2dnZ0NDQx8fHx9He09vlzdbi0d7uwtToytnrzN3yxdjx0t/uxNjx2uDp2OPx3+jz3ej32OX1
+0uH02ub20+L05uvw4Obt+fr77PD08PDw4eHh6enp8/X4+vz96vD39fj75ez18PT58vb8/P3+4uz4
+9fn9+Pv95u/56vH67vT76O/26/L6+vz+8PX74Or35u759fj9////L4QIjwAAAAlwSFlzAAAOxAAA
+DsQBlSsOGwAAABl0RVh0U29mdHdhcmUATWljcm9zb2Z0IE9mZmljZX/tNXEAADaKSURBVHja7Z35
+YxzVneCr7EFgnNljMtsGhyW7thAGA3FgNrtsJpnMyju7iZLJRm2OPSbHjuQgNLsTRq02UWBbjmQk
+gWWLGAuwjVHLkm8w0fn+vH1HXd3qo/qu4/P5QV3dVd163/fep9/RVfUsAQCxxSILABAYABAYABAY
+AIEBAIEBAIEBAIEBEBgAEBgAEBgAgQEAgQEAgQEAgQEQGAAQGAAQGAAQGACBAQCBAQCBARAYABAY
+ABAYABA4LNfOjJ0+BVDGK2Nvf4bAUeezsaM2QBUOvfERAke58X2VOgq1OfUBAkeU62/oEtr3WP9T
+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
+SUVORK5CYII=" />
+</span></p></div>
+<div class="paragraph"><p>A simple example queue would look like:</p></div>
+<div class="exampleblock">
+<div class="exampleblock-content">
+<div class="literalblock">
+<div class="content">
+<pre><tt>+---------------+------------------+--------------+--------------+
+| Queue Name    | Worker Available | Jobs Waiting | Jobs Running |
++---------------+------------------+--------------+--------------+
+| check_results | 1                | 0            | 0            |
+| host          | 50               | 0            | 1            |
+| service       | 50               | 0            | 13           |
+| eventhandler  | 50               | 0            | 0            |
++---------------+------------------+--------------+--------------+</tt></pre>
+</div></div>
+</div></div>
+<div class="paragraph"><p>There is one queue for the results and two for the checks plus the
+eventhandler.</p></div>
+<div class="paragraph"><p>The workflow is simple:</p></div>
+<div class="olist arabic"><ol class="arabic">
+<li>
+<p>
+Nagios wants to execute a service check.
+</p>
+</li>
+<li>
+<p>
+The check is intercepted by the mod_gearman neb module.
+</p>
+</li>
+<li>
+<p>
+mod_gearman puts the job into the <em>service</em> queue.
+</p>
+</li>
+<li>
+<p>
+a worker grabs the job and puts back the result into the
+    <em>check_results</em> queue
+</p>
+</li>
+<li>
+<p>
+mod_gearman grabs the result job and puts back the result onto the
+    check result list
+</p>
+</li>
+<li>
+<p>
+the reaper reads all checks from the result list and updates hosts / services
+</p>
+</li>
+</ol></div>
+<div class="paragraph"><p>You can set some host or servicegroups for special worker. This
+example uses a seperate hostgroup for japan and a seperate
+servicegroup for jmx4perl.</p></div>
+<div class="paragraph"><p>It would look like this:</p></div>
+<div class="exampleblock">
+<div class="exampleblock-content">
+<div class="literalblock">
+<div class="content">
+<pre><tt>+-----------------------+------------------+--------------+--------------+
+| Queue Name            | Worker Available | Jobs Waiting | Jobs Running |
++-----------------------+------------------+--------------+--------------+
+| check_results         | 1                | 0            | 0            |
+| host                  | 50               | 0            | 1            |
+| service               | 50               | 0            | 13           |
+| servicegroup_jmx4perl | 3                | 0            | 3            |
+| hostgroup_japan       | 3                | 1            | 3            |
+| eventhandler          | 50               | 0            | 0            |
++-----------------------+------------------+--------------+--------------+</tt></pre>
+</div></div>
+</div></div>
+<div class="paragraph"><p>You still have the generic queues and in addition there are two queues
+for the specific groups.</p></div>
+<div class="paragraph"><p>The worker processes will take jobs from the queues and put the result
+back into the check_result queue which will then be taken back by the
+neb module and put back into the nagios core. A worker can work on one
+or more queues. So you could start a worker which only handles the
+<em>hostgroup_japan</em> group.  One worker for the <em>jmx4perl</em> checks and one
+worker which covers the other queues. There can be more than one
+worker on each queue which would share the load.</p></div>
+</div>
+<h2 id="_installation">Installation</h2>
+<div class="sectionbody">
+<div class="paragraph"><p>Pre Requirements:</p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+gcc / g++
+</p>
+</li>
+<li>
+<p>
+autoconf / automake / autoheader
+</p>
+</li>
+<li>
+<p>
+libtool
+</p>
+</li>
+<li>
+<p>
+libgearman (&gt;= 0.14)
+</p>
+</li>
+</ul></div>
+<div class="paragraph"><p>Download the tarball and do "make". Add the neb_module/mod_gearman.o to your
+nagios installation and add a broker line to your nagios.cfg:</p></div>
+<div class="exampleblock">
+<div class="exampleblock-content">
+<div class="literalblock">
+<div class="content">
+<pre><tt>broker_module=.../mod_gearman.o server=localhost:4730 eventhandler=yes services=yes hosts=yes</tt></pre>
+</div></div>
+</div></div>
+<div class="paragraph"><p>see <a href="#_configuration">Configuration</a> for details on all parameters</p></div>
+<div class="paragraph"><p>The last step is to start one or more worker. You may use the same
+configuration file as for the neb module.</p></div>
+<div class="exampleblock">
+<div class="exampleblock-content">
+<div class="literalblock">
+<div class="content">
+<pre><tt>./mod_gearman_worker --server=localhost:4730 --services --hosts</tt></pre>
+</div></div>
+</div></div>
+<div class="paragraph"><p>or use the supplied init script.</p></div>
+<h3 id="_patch_nagios">Patch Nagios</h3><div style="clear:left"></div>
+<div class="admonitionblock">
+<table><tr>
+<td class="icon">
+<img alt="Note" src="data:image/png;base64,
+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" />
+</td>
+<td class="content">The needed patch is already included since Nagios 3.2.2. Use the patch if you
+use an older version.</td>
+</tr></table>
+</div>
+<div class="paragraph"><p>It is not possible to distribute eventhandler with Nagios versions
+prior 3.2.2. Just apply the patch from the patches directory to your
+Nagios sources and build Nagios again if you want to use an older
+version. You only need to replace the nagios binary. Nothing else has
+changed.  If you plan to distribute only Host/Servicechecks, no patch
+is needed.</p></div>
+</div>
+<h2 id="_configuration">Configuration</h2>
+<div class="sectionbody">
+<h3 id="_neb_module">NEB Module</h3><div style="clear:left"></div>
+<div class="paragraph"><p>A sample broker in your nagios.cfg could look like:</p></div>
+<div class="exampleblock">
+<div class="exampleblock-content">
+<div class="literalblock">
+<div class="content">
+<pre><tt>broker=/usr/local/share/nagios/mod_gearman.o keyfile=/usr/local/share/nagios/secret.txt server=localhost eventhandler=yes hosts=yes services=yes</tt></pre>
+</div></div>
+</div></div>
+<div class="paragraph"><p>See the following list for a detailed explaination of available
+options:</p></div>
+<div class="literalblock">
+<div class="content">
+<pre><tt>config:             read config from this file. Options are the same
+                    like described here.
+
+                    Example: config=/etc/nagios3/mod_gm_worker.conf
+
+
+debug:              use debug to increase the verbosity of the module.
+                    Possible values are:
+                        0 = only errors
+                        1 = debug messages
+                        2 = trace messages
+                        3 = trace and all gearman related logs are going to stdout.
+                    Default is 0.
+
+                    Example: debug=1
+
+
+server:             sets the addess of your gearman job server. Can be specified
+                    more than once to add more server.
+
+                    Example: server=localhost:4730,remote_host:4730
+
+
+eventhandler:       defines if the module should distribute execution of
+                    eventhandlers.
+
+                    Example: eventhandler=yes
+
+
+services:           defines if the module should distribute execution of
+                    service checks.
+
+                    Example: services=yes
+
+
+hosts:              defines if the module should distribute execution of
+                    host checks.
+
+                    Example: hosts=yes
+
+
+hostgroups:         sets a list of hostgroups which will go into seperate
+                    queues.
+
+                    Example: hostgroups=name1,name2,name3
+
+
+servicegroups:      sets a list of servicegroups which will go into seperate
+                    queues.
+
+                    Example: servicegroups=name1,name2,name3
+
+
+localhostgroups:    sets a list of hostgroups which will not be executed
+                    by gearman. They are just passed through.
+
+                    Example: localhostgroups=name1,name2,name3
+
+
+localservicegroups: sets a list of servicegroups which will not be executed
+                    by gearman. They are just passed through.
+
+                    Example: localservicegroups=name1,name2,name3
+
+
+result_workers      Number of result worker threads. Usually one is
+                    enough. You may increase the value if your
+                    result queue is not processed fast enough.
+
+                    Example: result_workers=3
+
+
+perfdata:           defines if the module should distribute perfdata
+                    to gearman.
+                    Note: processing of perfdata is not part of
+                    mod_gearman. You will need additional worker for
+                    handling performance data. For example: pnp4nagios
+                    Performance data is just written to the gearman
+                    queue.
+
+                    Example: perfdata=yes
+
+
+encryption:         enables or disables encryption. It is strongly
+                    advised to not disable encryption. Anybody will be
+                    able to inject packages to your worker.
+                    Encryption is enabled by default and you have to
+                    explicitly disable it.
+                    When using encryption, you will either have to
+                    specify a shared password with key=... or a
+                    keyfile with keyfile=...
+                    Default is On.
+
+                    Example: encryption=yes
+
+
+key:                A shared password which will be used for
+                    encryption of data pakets. Should be at least 8
+                    bytes long. Maximum length is 32 characters.
+
+                    Example: key=secret
+
+
+keyfile:            The shared password will be read from this file.
+                    Use either key or keyfile. Only the first 32
+                    characters will be used.
+
+                    Example: keyfile=/path/to/secret.file</tt></pre>
+</div></div>
+<div class="paragraph"><p>Additional options for worker:</p></div>
+<div class="literalblock">
+<div class="content">
+<pre><tt>pidfile:            Path to the pidfile.
+
+                    Example: pidfile=/path/to/pid.file
+
+
+logfile:            Path to the logfile.
+
+                    Example: logfile=/path/to/log.file
+
+
+min-worker:         Minimum number of worker processes which should
+                    run at any time.
+                    Default: 1
+
+                    Example: min-worker=1
+
+
+max-worker:         Maximum number of worker processes which should
+                    run at any time. You may set this equal to
+                    min-worker setting to disable dynamic starting of
+                    workers. When setting this to 1, all services from
+                    this worker will be executed one after another.
+                    Default: 20
+
+                    Example: max-worker=20</tt></pre>
+</div></div>
+</div>
+<h2 id="_queue_names">Queue Names</h2>
+<div class="sectionbody">
+<div class="paragraph"><p>You may want to watch your gearman server job queue. The shipped
+tools/queue_top.pl does this. It polls the gearman server every second
+and displays the current queue statistics.</p></div>
+<div class="exampleblock">
+<div class="exampleblock-content">
+<div class="literalblock">
+<div class="content">
+<pre><tt>+-----------------------+--------+-------+-------+---------+
+| Name                  | Worker | Avail | Queue | Running |
++-----------------------+--------+-------+-------+---------+
+| check_results         | 1      | 1     | 0     | 0       |
+| host                  | 3      | 3     | 0     | 0       |
+| service               | 3      | 3     | 0     | 0       |
+| eventhandler          | 3      | 3     | 0     | 0       |
+| servicegroup_jmx4perl | 3      | 3     | 0     | 0       |
+| hostgroup_japan       | 3      | 3     | 0     | 0       |
++-----------------------+--------+-------+-------+---------+</tt></pre>
+</div></div>
+</div></div>
+<div class="literalblock">
+<div class="content">
+<pre><tt>check_results         this queue is monitored by the neb module to
+                      fetch results from the worker.
+                      You don't need an extra worker for this queue.
+                      The number of result workers can be set to a
+                      maximum of 256, but usually one is enough.
+                      One worker is capable of processing several
+                      thousand results per second.
+
+
+host                  This is the queue for generic host checks. If
+                      you enable host checks with the hosts=yes switch.
+                      Before a host goes into this queue, it is
+                      checked if any of the local groups matches or a
+                      seperate hostgroup machtes. If nothing matches,
+                      then this queue is used.
+
+
+service               This is the queue for generic service checks. If
+                      you enable service checks with the services=yes
+                      switch. Before a service goes into this queue
+                      it is checked against the local host- and
+                      service-groups. Then the normal host- and
+                      servicegroups are checked and if none matches,
+                      this queue is used.
+
+
+hostgroup_&lt;name&gt;      This queue is created for every hostgroup which
+                      has been defined by the hostgroups=... option.
+                      Make sure you have at least one worker for every
+                      hostgroup you specify. Start the worker with
+                      --hostgroups=... to work on hostgroup queues.
+                      Note that this queue may also contain service
+                      checks if the hostgroup of a service matches.
+
+
+servicegroup_&lt;name&gt;   This queue is created for every servicegroup
+                      which has been defined by the servicegroup=...
+                      option.
+
+
+eventhandler          This is the generic queue for all eventhandler.
+                      Make sure you have a worker for this queue if
+                      you have eventhandler enabled. Start the worker
+                      with --events to work on this queue.</tt></pre>
+</div></div>
+</div>
+<h2 id="_hints">Hints</h2>
+<div class="sectionbody">
+<div class="ulist"><ul>
+<li>
+<p>
+Make sure you have at least one worker for every queue. You should
+   monitor that.
+</p>
+</li>
+<li>
+<p>
+Add Logfile checks for your gearmand server and mod_gearman
+   worker.
+</p>
+</li>
+<li>
+<p>
+Make sure all gearman checks are in local groups. Gearman self
+   checks should not be monitored through gearman.
+</p>
+</li>
+<li>
+<p>
+Keep the gearmand server close to Nagios for better performance.
+</p>
+</li>
+</ul></div>
+</div>
+</div>
+<div id="footnotes"><hr /></div>
+<div id="footer">
+<div id="footer-text">
+Last updated 2010-09-12 23:00:16 CEST
+</div>
+</div>
+</body>
+</html>
