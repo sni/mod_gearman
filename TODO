@@ -7,6 +7,7 @@ General
 
  - remove debug symbols (-g) and add strip (-s) again
  - verify cancelation of checks
+ - remove duplicate errors from logfile
 
 Worker
 ------

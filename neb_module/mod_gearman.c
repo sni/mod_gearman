@@ -456,7 +456,8 @@ static int read_arguments( const char *args_orig ) {
 
     int errors = 0;
     char *ptr;
-    char *args = strdup(args_orig);
+    char *args   = strdup(args_orig);
+    char *args_c = args;
     while ( (ptr = strsep( &args, " " )) != NULL ) {
         if(parse_args_line(mod_gm_opt, ptr, 0) != GM_OK) {
             errors++;
@@ -476,7 +477,7 @@ static int read_arguments( const char *args_orig ) {
         errors++;
     }
 
-    free(args);
+    free(args_c);
 
     if(errors > 0) {
         return(GM_ERROR);
@@ -616,10 +617,7 @@ static void start_threads(void) {
         int x;
         for(x = 0; x < mod_gm_opt->result_workers; x++) {
             result_threads_running++;
-            worker_parm *p;
-            p = (worker_parm *)malloc(sizeof(worker_parm));
-            p->id = result_threads_running;
-            pthread_create ( &result_thr[x], NULL, result_worker, (void *)p);
+            pthread_create ( &result_thr[x], NULL, result_worker, (void *)result_threads_running);
         }
     }
 }

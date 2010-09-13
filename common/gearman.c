@@ -115,18 +115,22 @@ int add_job_to_queue( gearman_client_st *client, char ** server_list, char * que
 
     if( priority == GM_JOB_PRIO_LOW ) {
         task = gearman_client_add_task_low_background( client, NULL, NULL, queue, uniq, ( void * )crypted_data, ( size_t )size, &ret1 );
+        gearman_task_give_workload(task,crypted_data,size);
     }
     else if( priority == GM_JOB_PRIO_NORMAL ) {
         task = gearman_client_add_task_background( client, NULL, NULL, queue, uniq, ( void * )crypted_data, ( size_t )size, &ret1 );
+        gearman_task_give_workload(task,crypted_data,size);
     }
     else if( priority == GM_JOB_PRIO_HIGH ) {
         task = gearman_client_add_task_high_background( client, NULL, NULL, queue, uniq, ( void * )crypted_data, ( size_t )size, &ret1 );
+        gearman_task_give_workload(task,crypted_data,size);
     }
     else {
         logger( GM_LOG_ERROR, "add_job_to_queue() wrong priority: %d\n", priority );
     }
 
     ret2 = gearman_client_run_tasks( client );
+    gearman_client_task_free_all( client );
     if(   ret1 != GEARMAN_SUCCESS
        || ret2 != GEARMAN_SUCCESS
        || task == NULL
@@ -153,7 +157,6 @@ int add_job_to_queue( gearman_client_st *client, char ** server_list, char * que
         }
     }
     logger( GM_LOG_TRACE, "add_job_to_queue() finished sucessfully: %d %d\n", ret1, ret2 );
-    free(crypted_data);
     return GM_OK;
 }
 

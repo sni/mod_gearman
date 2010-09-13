@@ -31,8 +31,8 @@ static void cancel_worker_thread (void * data) {
 /* callback for task completed */
 void *result_worker( void * data ) {
 
-    worker_parm *p=(worker_parm *)data;
-    logger( GM_LOG_TRACE, "worker %i started\n", p->id );
+    int worker_num = (int)data;
+    logger( GM_LOG_TRACE, "worker %d started\n", worker_num );
 
     pthread_setcancelstate (PTHREAD_CANCEL_ENABLE, NULL);
     pthread_setcanceltype (PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
