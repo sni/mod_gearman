@@ -152,7 +152,6 @@ int add_job_to_queue( gearman_client_st *client, char ** server_list, char * que
         // no more retries...
         else {
             logger( GM_LOG_TRACE, "add_job_to_queue() finished with errors: %d %d\n", ret1, ret2 );
-            free(crypted_data);
             return GM_ERROR;
         }
     }
