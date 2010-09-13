@@ -314,14 +314,14 @@ void execute_safe_command() {
         return;
     }
 
-    // we are in the child process
+    /* we are in the child process */
     else if( current_child_pid == 0 ){
 
-        // become the process group leader
+        /* become the process group leader */
         setpgid(0,0);
         current_child_pid = getpid();
 
-        // remove all customn signal handler
+        /* remove all customn signal handler */
         sigset_t mask;
         sigfillset(&mask);
         sigprocmask(SIG_UNBLOCK, &mask, NULL);
@@ -330,14 +330,14 @@ void execute_safe_command() {
         signal(SIGALRM, alarm_sighandler);
         alarm(exec_job->timeout);
 
-        // run the plugin check command
+        /* run the plugin check command */
         FILE *fp = NULL;
         fp = popen(exec_job->command_line, "r");
         if( fp == NULL ) {
             exit(3);
         }
 
-        // get all lines of plugin output - escape newlines
+        /* get all lines of plugin output - escape newlines */
         char buffer[GM_BUFFERSIZE] = "";
         strcpy(buffer,"");
         char temp_buffer[GM_BUFFERSIZE];
@@ -352,7 +352,7 @@ void execute_safe_command() {
         // TODO: warning: ignoring return value of ‘write’, declared with attribute warn_unused_result
         write(pdes[1], temp_buffer, strlen(temp_buffer)+1);
 
-        // close the process
+        /* close the process */
         int pclose_result;
         pclose_result = pclose(fp);
 
@@ -367,7 +367,7 @@ void execute_safe_command() {
         exit(return_code);
     }
 
-    // we are the parent
+    /* we are the parent */
     else {
         close(pdes[1]);
 
@@ -378,16 +378,27 @@ void execute_safe_command() {
         status = real_exit_code(status);
         logger( GM_LOG_TRACE, "finished check from pid: %d with status: %d\n", current_child_pid, status);
 
-        // get all lines of plugin output
+        /* get all lines of plugin output */
         char buffer[GM_BUFFERSIZE];
         // TODO: warning: ignoring return value of ‘read’, declared with attribute warn_unused_result
         read(pdes[0], buffer, sizeof(buffer)-1);
 
-        // file not found errors?
-        if(status == 127) {
+        /* file not executable? */
+        if(status == 126) {
             status = STATE_CRITICAL;
-            strncat( buffer, "check was running on node ", sizeof( buffer ));
-            strncat( buffer, hostname, sizeof( buffer ));
+            strncat( buffer, "CRITICAL: Return code of 126 is out of bounds. Make sure the plugin you're trying to run is executable.", sizeof( buffer ));
+        }
+        /* file not found errors? */
+        else if(status == 127) {
+            status = STATE_CRITICAL;
+            strncat( buffer, "CRITICAL: Return code of 127 is out of bounds. Make sure the plugin you're trying to run actually exists.", sizeof( buffer ));
+        }
+        /* signaled */
+        else if(status >= 128 && status < 256) {
+            status = STATE_CRITICAL;
+            char * signame = nr2signal((int)signal-128);
+            snprintf( buffer, sizeof( buffer ), "CRITICAL: Return code of %d is out of bounds. Plugin exited by signal %s", (int)(signal-128), signame);
+            free(signame);
         }
         exec_job->output = buffer;
         exec_job->return_code = status;

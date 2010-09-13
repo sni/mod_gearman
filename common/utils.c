@@ -615,3 +615,46 @@ int read_keyfile(mod_gm_opt_t *opt) {
     fclose(fp);
     return(GM_OK);
 }
+
+
+/* convert number to signal name */
+char * nr2signal(int sig) {
+    char * signame;
+    switch(sig) {
+        case 1:  signame = "SIGHUP";
+                 break;
+        case 2:  signame = "SIGINT";
+                 break;
+        case 3:  signame = "SIGQUIT";
+                 break;
+        case 4:  signame = "SIGILL";
+                 break;
+        case 5:  signame = "SIGTRAP";
+                 break;
+        case 6:  signame = "SIGABRT";
+                 break;
+        case 7:  signame = "SIGBUS";
+                 break;
+        case 8:  signame = "SIGFPE";
+                 break;
+        case 9:  signame = "SIGKILL";
+                 break;
+        case 10: signame = "SIGUSR1";
+                 break;
+        case 11: signame = "SIGSEGV";
+                 break;
+        case 12: signame = "SIGUSR2";
+                 break;
+        case 13: signame = "SIGPIPE";
+                 break;
+        case 14: signame = "SIGALRM";
+                 break;
+        case 15: signame = "SIGTERM";
+                 break;
+        case 16: signame = "SIGURG";
+                 break;
+        default: snprintf(signame, 20, "signal %d", sig);
+                 break;
+    }
+    return strdup(signame);
+}

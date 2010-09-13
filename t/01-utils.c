@@ -9,7 +9,7 @@
 #include <utils.h>
 
 int main(void) {
-    plan_tests(27);
+    plan_tests(29);
 
     /* lowercase */
     char test[100];
@@ -76,6 +76,17 @@ int main(void) {
     /* file_exists */
     ok1(file_exists("01_utils") == 1);
     ok1(file_exists("non-exist") == 0);
+
+    /* nr2signal */
+    char * signame1 = nr2signal(9);
+    if(!ok(!strcmp(signame1, "SIGKILL"), "get SIGKILL for 9"))
+        diag("expected: 'SIGKILL' but got: '%s'", signame1);
+    free(signame1);
+
+    char * signame2 = nr2signal(15);
+    if(!ok(!strcmp(signame2, "SIGTERM"), "get SIGTERM for 15"))
+        diag("expected: 'SIGTERM' but got: '%s'", signame2);
+    free(signame2);
 
     return exit_status();
 }

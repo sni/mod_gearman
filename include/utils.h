@@ -26,3 +26,4 @@ int read_config_file(mod_gm_opt_t *opt, char*filename, int recursion_level);
 void dumpconfig(mod_gm_opt_t *opt, int mode);
 void mod_gm_free_opt(mod_gm_opt_t *opt);
 int read_keyfile(mod_gm_opt_t *opt);
+char * nr2signal(int sig);
