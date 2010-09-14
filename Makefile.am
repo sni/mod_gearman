@@ -44,6 +44,9 @@ replace_vars = sed 's:%CONFIG%:$(DESTDIR)$(sysconfdir)/mod_gearman.conf:g' | \
                sed 's:%USER%:$(user):g' | \
                sed 's:%LOGFILE%:$(DESTDIR)$(localstatedir)/log/mod_gearman_worker.log:g'
 
+EXTRA_DIST = COPYING etc extras tools/queue_top.pl include autogen.sh \
+             THANKS README README.html mod_gearman.png patches Changes
+
 # other targets
 mod_gearman.o: $(mod_gearman_so_OBJECTS) $(mod_gearman_so_DEPENDENCIES)
 	if [ "$(OS)" == "Darwin" ]; then \
