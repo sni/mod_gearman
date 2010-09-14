@@ -193,16 +193,17 @@ int parse_arguments(int argc, char **argv) {
     set_default_options(mod_gm_new_opt);
     for(i=1;i<argc;i++) {
         char * arg   = strdup( argv[i] );
+        char * arg_c = arg;
         lc(arg);
         if ( !strcmp( arg, "help" ) || !strcmp( arg, "--help" )  || !strcmp( arg, "-h" ) ) {
             print_usage();
         }
         if(parse_args_line(mod_gm_new_opt, arg, 0) != GM_OK) {
             errors++;
-            free(arg);
+            free(arg_c);
             break;
         }
-        free(arg);
+        free(arg_c);
     }
 
     /* close old logfile */
@@ -242,11 +243,12 @@ int parse_arguments(int argc, char **argv) {
         mod_gm_opt->debug_level = old_debug;
     }
 
-    if(errors > 0) {
+    if(errors > 0 || verify != GM_OK) {
+        mod_gm_free_opt(mod_gm_new_opt);
         return(GM_ERROR);
     }
 
-    return(verify);
+    return(GM_OK);
 }
 
 
@@ -432,31 +434,17 @@ int adjust_number_of_worker(int min, int max, int cur_workers, int cur_jobs) {
 void clean_exit(int sig) {
     logger( GM_LOG_TRACE, "clean_exit(%d)\n", sig);
 
+    if(mod_gm_opt->pidfile != NULL)
+        unlink(mod_gm_opt->pidfile);
+
     /* stop all childs */
     stop_childs(GM_WORKER_STOP);
-
-    /*
-     * clean up shared memory
-     * will be removed when last client detaches
-     */
-    int shmid;
-    if ((shmid = shmget(mod_gm_shm_key, GM_SHM_SIZE, 0666)) < 0) {
-        perror("shmget");
-    }
-    if( shmctl( shmid, IPC_RMID, 0 ) == -1 ) {
-        perror("shmctl");
-    }
-    logger( GM_LOG_TRACE, "shared memory deleted\n");
-    sleep(1);
 
     /* kill remaining worker */
     if(current_number_of_workers > 0) {
         pid_t pid = getpid();
         kill(-pid, SIGKILL);
     }
-
-    if(mod_gm_opt->pidfile != NULL)
-        unlink(mod_gm_opt->pidfile);
 
     logger( GM_LOG_INFO, "mod_gearman worker exited\n");
 
@@ -509,6 +497,19 @@ void stop_childs(int mode) {
             logger( GM_LOG_TRACE, "wait() %d exited with %d\n", chld, status);
         }
 
+        /*
+         * clean up shared memory
+         * will be removed when last client detaches
+         */
+        int shmid;
+        if ((shmid = shmget(mod_gm_shm_key, GM_SHM_SIZE, 0666)) < 0) {
+            perror("shmget");
+        }
+        if( shmctl( shmid, IPC_RMID, 0 ) == -1 ) {
+            perror("shmctl");
+        }
+        logger( GM_LOG_TRACE, "shared memory deleted\n");
+
         if(current_number_of_workers > 0) {
             /* this will kill us too */
             logger( GM_LOG_TRACE, "sending SIGKILL...\n");
@@ -535,13 +536,14 @@ int write_pid_file() {
         if(fp != NULL) {
             char *pid;
             pid = malloc(GM_BUFFERSIZE);
-            // TODO: warning: ignoring return value of ‘fgets’, declared with attribute warn_unused_result
-            fgets(pid, GM_BUFFERSIZE, fp);
+            if(fgets(pid, GM_BUFFERSIZE, fp) <= 0)
+                perror("fgets");
             fclose(fp);
             pid = trim(pid);
             logger( GM_LOG_INFO, "found pid file for: %s\n", pid);
             char pid_path[GM_BUFFERSIZE];
             snprintf(pid_path, GM_BUFFERSIZE, "/proc/%s/status", pid);
+            free(pid);
             if(file_exists(pid_path)) {
                 logger( GM_LOG_INFO, "pidfile already exists, cannot start!\n");
                 return(GM_ERROR);
