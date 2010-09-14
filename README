@@ -97,9 +97,8 @@ Pre Requirements:
 
 Download the tarball and perform the following steps:
 .....
- #> ./autogen.sh
+ #> ./configure
  #> make
- #> make test     # ( requires gearmand in your $PATH )
  #> make install
 .....
 
