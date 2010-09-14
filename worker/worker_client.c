@@ -113,6 +113,9 @@ void worker_loop() {
 /* get a job */
 void *get_job( gearman_job_st *job, void *context, size_t *result_size, gearman_return_t *ret_ptr ) {
 
+    // send start signal to parent
+    send_state_to_parent(GM_JOB_START);
+
     // reset timeout for now, will be set befor execution again
     alarm(0);
 
@@ -133,9 +136,6 @@ void *get_job( gearman_job_st *job, void *context, size_t *result_size, gearman_
     sigemptyset(&block_mask);
     sigaddset(&block_mask, SIGTERM);
     sigprocmask(SIG_BLOCK, &block_mask, &old_mask);
-
-    // send start signal to parent
-    send_state_to_parent(GM_JOB_START);
 
     /* get the data */
     int wsize = gearman_job_workload_size(job);
@@ -221,13 +221,13 @@ void *get_job( gearman_job_st *job, void *context, size_t *result_size, gearman_
 
     do_exec_job();
 
-    // send finish signal to parent
-    send_state_to_parent(GM_JOB_END);
-
     // start listening to SIGTERMs
     sigprocmask(SIG_SETMASK, &old_mask, NULL);
 
     free(decrypted_data_c);
+
+    // send finish signal to parent
+    send_state_to_parent(GM_JOB_END);
 
     return NULL;
 }

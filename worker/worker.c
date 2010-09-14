@@ -434,31 +434,17 @@ int adjust_number_of_worker(int min, int max, int cur_workers, int cur_jobs) {
 void clean_exit(int sig) {
     logger( GM_LOG_TRACE, "clean_exit(%d)\n", sig);
 
+    if(mod_gm_opt->pidfile != NULL)
+        unlink(mod_gm_opt->pidfile);
+
     /* stop all childs */
     stop_childs(GM_WORKER_STOP);
-
-    /*
-     * clean up shared memory
-     * will be removed when last client detaches
-     */
-    int shmid;
-    if ((shmid = shmget(mod_gm_shm_key, GM_SHM_SIZE, 0666)) < 0) {
-        perror("shmget");
-    }
-    if( shmctl( shmid, IPC_RMID, 0 ) == -1 ) {
-        perror("shmctl");
-    }
-    logger( GM_LOG_TRACE, "shared memory deleted\n");
-    sleep(1);
 
     /* kill remaining worker */
     if(current_number_of_workers > 0) {
         pid_t pid = getpid();
         kill(-pid, SIGKILL);
     }
-
-    if(mod_gm_opt->pidfile != NULL)
-        unlink(mod_gm_opt->pidfile);
 
     logger( GM_LOG_INFO, "mod_gearman worker exited\n");
 
@@ -510,6 +496,19 @@ void stop_childs(int mode) {
             current_number_of_workers--;
             logger( GM_LOG_TRACE, "wait() %d exited with %d\n", chld, status);
         }
+
+        /*
+         * clean up shared memory
+         * will be removed when last client detaches
+         */
+        int shmid;
+        if ((shmid = shmget(mod_gm_shm_key, GM_SHM_SIZE, 0666)) < 0) {
+            perror("shmget");
+        }
+        if( shmctl( shmid, IPC_RMID, 0 ) == -1 ) {
+            perror("shmctl");
+        }
+        logger( GM_LOG_TRACE, "shared memory deleted\n");
 
         if(current_number_of_workers > 0) {
             /* this will kill us too */
