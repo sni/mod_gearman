@@ -380,6 +380,26 @@ perfdata              This is the generic queue for all performance
 .......
 
 
+Performance
+-----------
+
+While the main motivation was to ease distributed configuration, this
+plugin also helps to spread the load on multiple worker. Throughput is
+mainly limited by the amount of jobs a single nagios instance can put
+onto the Gearman job server. Keep the Gearman job server close to the
+nagios box. Best practice is to put both on the same machine. Both
+processes will utilize one core. Some testing with my workstation
+(Dual Core 2.50GHz) and two worker boxes gave me these results. I used
+a sample Nagios installation with 20.000 Services at a 1 minute
+interval and a sample plugin which returns just a single line of
+output. I got over 300 Servicechecks per second, which means you could
+easily setup 100.000 services at a 5 minute interval with a single
+nagios box. The amount of worker boxes depends on your check types.
+
+image:mod_gearman_performance_1.png["Performance 1"]
+image:mod_gearman_performance_2.png["Performance 2"]
+
+
 
 Hints
 -----
@@ -393,6 +413,10 @@ Hints
    checks should not be monitored through gearman.
 
  - Keep the gearmand server close to Nagios for better performance.
+
+ - If you have some checks which should not run parallel, just setup a
+   single worker with --max-worker=1 and they will be executed one
+   after another. For example for cpu intesive checks with selenium.
 
 
 
