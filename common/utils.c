@@ -226,6 +226,7 @@ int set_default_options(mod_gm_opt_t *opt) {
     opt->max_worker         = GM_DEFAULT_MAX_WORKER;
     opt->transportmode      = GM_ENCODE_AND_ENCRYPT;
     opt->daemon_mode        = GM_DISABLED;
+    opt->fork_on_exec       = GM_ENABLED;
 
     opt->server_num         = 0;
     int i;
@@ -338,6 +339,11 @@ int parse_args_line(mod_gm_opt_t *opt, char * arg, int recursion_level) {
     /* encryption */
     else if ( !strcmp( key, "encryption" ) ) {
         opt->encryption = parse_yes_or_no(value, GM_ENABLED);
+    }
+
+    /* fork_on_exec */
+    else if ( !strcmp( key, "fork_on_exec" ) ) {
+        opt->fork_on_exec = parse_yes_or_no(value, GM_ENABLED);
     }
 
     if ( value == NULL )
@@ -544,6 +550,7 @@ void dumpconfig(mod_gm_opt_t *opt, int mode) {
         logger( GM_LOG_DEBUG, "job timeout:         %d\n", opt->job_timeout);
         logger( GM_LOG_DEBUG, "min worker:          %d\n", opt->min_worker);
         logger( GM_LOG_DEBUG, "max worker:          %d\n", opt->max_worker);
+        logger( GM_LOG_DEBUG, "fork on exec:        %s\n", opt->fork_on_exec == GM_ENABLED ? "yes" : "no");
     }
     logger( GM_LOG_DEBUG, "debug result:        %s\n", opt->debug_result == GM_ENABLED ? "yes" : "no");
     if(mode == GM_NEB_MODE) {

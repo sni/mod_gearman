@@ -319,7 +319,7 @@ void execute_safe_command() {
     char plugin_output[GM_BUFFERSIZE];
     strcpy(plugin_output,"");
 
-    int fork_exec = GM_ENABLED;
+    int fork_exec = mod_gm_opt->fork_on_exec;
 
     // fork a child process
     if(fork_exec == GM_ENABLED) {
@@ -348,7 +348,8 @@ void execute_safe_command() {
         sigfillset(&mask);
         sigprocmask(SIG_UNBLOCK, &mask, NULL);
 
-        close(pdes[0]);
+        if( fork_exec == GM_ENABLED )
+            close(pdes[0]);
         signal(SIGALRM, alarm_sighandler);
         alarm(exec_job->timeout);
 
@@ -379,6 +380,7 @@ void execute_safe_command() {
         char * buf;
         buf = escape_newlines(output);
         snprintf(plugin_output, sizeof(plugin_output), "%s", buf);
+        free(buf);
 
         /* close the process */
         int pclose_result;
@@ -434,7 +436,7 @@ void execute_safe_command() {
             return_code = STATE_CRITICAL;
             free(signame);
         }
-        exec_job->output      = plugin_output;
+        exec_job->output      = strdup(plugin_output);
         exec_job->return_code = return_code;
         if( fork_exec == GM_ENABLED) {
             close(pdes[0]);
@@ -493,6 +495,7 @@ void send_result_back() {
         strncat(temp_buffer2, exec_job->output, (sizeof(temp_buffer2)-1));
         strncat(temp_buffer2, "\n", (sizeof(temp_buffer2)-1));
         strncat(temp_buffer1, temp_buffer2, (sizeof(temp_buffer1)-1));
+        free(exec_job->output);
     }
     strncat(temp_buffer1, "\n", (sizeof(temp_buffer1)-2));
 

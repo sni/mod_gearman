@@ -130,6 +130,7 @@ typedef struct mod_gm_opt_struct {
     int            max_age;
     int            min_worker;
     int            max_worker;
+    int            fork_on_exec;
 } mod_gm_opt_t;
 
 
