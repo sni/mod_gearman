@@ -31,6 +31,7 @@
 #define GM_ENABLED                      1
 #define GM_DISABLED                     0
 #define GM_BUFFERSIZE                8192
+#define GM_MAX_OUTPUT                5000  // must be ~30% below GM_BUFFERSIZE for base64/encryption
 #define GM_LISTSIZE                   512
 
 #define GM_MIN_LIB_GEARMAN_VERSION   0.14

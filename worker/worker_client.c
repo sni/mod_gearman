@@ -130,8 +130,8 @@ void *get_job( gearman_job_st *job, void *context, size_t *result_size, gearman_
     // ignore sigterms while running job
     sigset_t block_mask;
     sigset_t old_mask;
+    sigemptyset(&block_mask);
     sigaddset(&block_mask, SIGTERM);
-    // TODO: Syscall param rt_sigprocmask(set) points to uninitialised byte(s)
     sigprocmask(SIG_BLOCK, &block_mask, &old_mask);
 
     // send start signal to parent
@@ -315,21 +315,29 @@ void execute_safe_command() {
     logger( GM_LOG_TRACE, "execute_safe_command()\n" );
 
     int pdes[2];
-    // TODO: warning: ignoring return value of ‘pipe’, declared with attribute warn_unused_result
-    pipe(pdes);
+    int return_code;
+    char plugin_output[GM_BUFFERSIZE];
+    strcpy(plugin_output,"");
+
+    int fork_exec = GM_ENABLED;
 
     // fork a child process
-    current_child_pid=fork();
+    if(fork_exec == GM_ENABLED) {
+        if(pipe(pdes) != 0)
+            perror("pipe");
 
-    //fork error
-    if( current_child_pid == -1 ) {
-        exec_job->output      = "(Error On Fork)";
-        exec_job->return_code = 3;
-        return;
+        current_child_pid=fork();
+
+        //fork error
+        if( current_child_pid == -1 ) {
+            exec_job->output      = "(Error On Fork)";
+            exec_job->return_code = 3;
+            return;
+        }
     }
 
     /* we are in the child process */
-    else if( current_child_pid == 0 ){
+    if( fork_exec == GM_DISABLED || current_child_pid == 0 ){
 
         /* become the process group leader */
         setpgid(0,0);
@@ -348,75 +356,89 @@ void execute_safe_command() {
         FILE *fp = NULL;
         fp = popen(exec_job->command_line, "r");
         if( fp == NULL ) {
-            exit(3);
+            if( fork_exec == GM_ENABLED ) {
+                exit(3);
+            } else {
+                exec_job->output      = "exec error";
+                exec_job->return_code = 3;
+                alarm(0);
+                return;
+            }
         }
 
         /* get all lines of plugin output - escape newlines */
         char buffer[GM_BUFFERSIZE] = "";
+        char output[GM_BUFFERSIZE] = "";
         strcpy(buffer,"");
-        char temp_buffer[GM_BUFFERSIZE];
-        strcpy(temp_buffer,"");
-        while(fgets(buffer,sizeof(buffer)-1,fp)){
-            char * buf;
-            buf = escape_newlines(buffer);
-            // TODO: warning: call to __builtin___strncat_chk might overflow destination buffer
-            strncat(temp_buffer, buf, sizeof( temp_buffer ));
-            free(buf);
+        strcpy(output,"");
+        int size = GM_MAX_OUTPUT;
+        while(size > 0 && fgets(buffer,sizeof(buffer)-1,fp)){
+            strncat(output, buffer, size);
+            size -= strlen(buffer);
         }
-        // TODO: warning: ignoring return value of ‘write’, declared with attribute warn_unused_result
-        write(pdes[1], temp_buffer, strlen(temp_buffer)+1);
+        char * buf;
+        buf = escape_newlines(output);
+        snprintf(plugin_output, sizeof(plugin_output), "%s", buf);
 
         /* close the process */
         int pclose_result;
         pclose_result = pclose(fp);
+        return_code   = real_exit_code(pclose_result);
 
-        if(pclose_result == -1) {
-            char error[GM_BUFFERSIZE];
-            snprintf(error, sizeof(error), "error: %s", strerror(errno));
-            // TODO: warning: ignoring return value of ‘write’, declared with attribute warn_unused_result
-            write(pdes[1], error, strlen(error)+1);
+        if(fork_exec == GM_ENABLED) {
+            if(write(pdes[1], plugin_output, strlen(plugin_output)+1) <= 0)
+                perror("write");
+
+            if(pclose_result == -1) {
+                char error[GM_BUFFERSIZE];
+                snprintf(error, sizeof(error), "error: %s", strerror(errno));
+                if(write(pdes[1], error, strlen(error)+1) <= 0)
+                    perror("write");
+            }
+
+            exit(return_code);
         }
-
-        int return_code = real_exit_code(pclose_result);
-        exit(return_code);
     }
 
     /* we are the parent */
-    else {
-        close(pdes[1]);
+    if( fork_exec == GM_DISABLED || current_child_pid > 0 ){
 
         logger( GM_LOG_TRACE, "started check with pid: %d\n", current_child_pid);
 
-        int status;
-        waitpid(current_child_pid, &status, 0);
-        status = real_exit_code(status);
-        logger( GM_LOG_TRACE, "finished check from pid: %d with status: %d\n", current_child_pid, status);
+        if( fork_exec == GM_ENABLED) {
+            close(pdes[1]);
 
-        /* get all lines of plugin output */
-        char buffer[GM_BUFFERSIZE];
-        // TODO: warning: ignoring return value of ‘read’, declared with attribute warn_unused_result
-        read(pdes[0], buffer, sizeof(buffer)-1);
+            waitpid(current_child_pid, &return_code, 0);
+            return_code = real_exit_code(return_code);
+            logger( GM_LOG_TRACE, "finished check from pid: %d with status: %d\n", current_child_pid, return_code);
+            /* get all lines of plugin output */
+            if(read(pdes[0], plugin_output, sizeof(plugin_output)-1) < 0)
+                perror("read");
+
+        }
 
         /* file not executable? */
-        if(status == 126) {
-            status = STATE_CRITICAL;
-            strncat( buffer, "CRITICAL: Return code of 126 is out of bounds. Make sure the plugin you're trying to run is executable.", sizeof( buffer ));
+        if(return_code == 126) {
+            return_code = STATE_CRITICAL;
+            strncat( plugin_output, "CRITICAL: Return code of 126 is out of bounds. Make sure the plugin you're trying to run is executable.", sizeof( plugin_output ));
         }
         /* file not found errors? */
-        else if(status == 127) {
-            status = STATE_CRITICAL;
-            strncat( buffer, "CRITICAL: Return code of 127 is out of bounds. Make sure the plugin you're trying to run actually exists.", sizeof( buffer ));
+        else if(return_code == 127) {
+            return_code = STATE_CRITICAL;
+            strncat( plugin_output, "CRITICAL: Return code of 127 is out of bounds. Make sure the plugin you're trying to run actually exists.", sizeof( plugin_output ));
         }
         /* signaled */
-        else if(status >= 128 && status < 256) {
-            status = STATE_CRITICAL;
-            char * signame = nr2signal((int)signal-128);
-            snprintf( buffer, sizeof( buffer ), "CRITICAL: Return code of %d is out of bounds. Plugin exited by signal %s", (int)(signal-128), signame);
+        else if(return_code >= 128 && return_code < 256) {
+            char * signame = nr2signal((int)(return_code-128));
+            snprintf( plugin_output, sizeof( plugin_output ), "CRITICAL: Return code of %d is out of bounds. Plugin exited by signal %s", (int)(return_code-128), signame);
+            return_code = STATE_CRITICAL;
             free(signame);
         }
-        exec_job->output = buffer;
-        exec_job->return_code = status;
-        close(pdes[0]);
+        exec_job->output      = plugin_output;
+        exec_job->return_code = return_code;
+        if( fork_exec == GM_ENABLED) {
+            close(pdes[0]);
+        }
     }
     alarm(0);
     current_child_pid = 0;
@@ -472,7 +494,7 @@ void send_result_back() {
         strncat(temp_buffer2, "\n", (sizeof(temp_buffer2)-1));
         strncat(temp_buffer1, temp_buffer2, (sizeof(temp_buffer1)-1));
     }
-    strncat(temp_buffer1, "\n", (sizeof(temp_buffer1)-1));
+    strncat(temp_buffer1, "\n", (sizeof(temp_buffer1)-2));
 
     logger( GM_LOG_TRACE, "data:\n%s\n", temp_buffer1);
 
@@ -601,6 +623,10 @@ void send_state_to_parent(int status) {
 /* do a clean exit */
 void clean_worker_exit(int sig) {
     logger( GM_LOG_TRACE, "clean_worker_exit(%d)\n", sig);
+
+    gearman_job_free_all( &worker );
+    gearman_worker_free( &worker );
+    gearman_client_free( &client );
 
     exit( EXIT_SUCCESS );
 }

@@ -210,6 +210,8 @@ int set_default_options(mod_gm_opt_t *opt) {
     opt->crypt_key          = NULL;
     opt->result_queue       = NULL;
     opt->keyfile            = NULL;
+    opt->logfile            = NULL;
+    opt->logfile_fp         = NULL;
     opt->debug_level        = GM_LOG_INFO;
     opt->perfdata           = GM_DISABLED;
     opt->hosts              = GM_DISABLED;
@@ -223,6 +225,7 @@ int set_default_options(mod_gm_opt_t *opt) {
     opt->min_worker         = GM_DEFAULT_MIN_WORKER;
     opt->max_worker         = GM_DEFAULT_MAX_WORKER;
     opt->transportmode      = GM_ENCODE_AND_ENCRYPT;
+    opt->daemon_mode        = GM_DISABLED;
 
     opt->server_num         = 0;
     int i;

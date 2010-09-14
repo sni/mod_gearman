@@ -193,16 +193,17 @@ int parse_arguments(int argc, char **argv) {
     set_default_options(mod_gm_new_opt);
     for(i=1;i<argc;i++) {
         char * arg   = strdup( argv[i] );
+        char * arg_c = arg;
         lc(arg);
         if ( !strcmp( arg, "help" ) || !strcmp( arg, "--help" )  || !strcmp( arg, "-h" ) ) {
             print_usage();
         }
         if(parse_args_line(mod_gm_new_opt, arg, 0) != GM_OK) {
             errors++;
-            free(arg);
+            free(arg_c);
             break;
         }
-        free(arg);
+        free(arg_c);
     }
 
     /* close old logfile */
@@ -242,11 +243,12 @@ int parse_arguments(int argc, char **argv) {
         mod_gm_opt->debug_level = old_debug;
     }
 
-    if(errors > 0) {
+    if(errors > 0 || verify != GM_OK) {
+        mod_gm_free_opt(mod_gm_new_opt);
         return(GM_ERROR);
     }
 
-    return(verify);
+    return(GM_OK);
 }
 
 
@@ -535,13 +537,14 @@ int write_pid_file() {
         if(fp != NULL) {
             char *pid;
             pid = malloc(GM_BUFFERSIZE);
-            // TODO: warning: ignoring return value of ‘fgets’, declared with attribute warn_unused_result
-            fgets(pid, GM_BUFFERSIZE, fp);
+            if(fgets(pid, GM_BUFFERSIZE, fp) <= 0)
+                perror("fgets");
             fclose(fp);
             pid = trim(pid);
             logger( GM_LOG_INFO, "found pid file for: %s\n", pid);
             char pid_path[GM_BUFFERSIZE];
             snprintf(pid_path, GM_BUFFERSIZE, "/proc/%s/status", pid);
+            free(pid);
             if(file_exists(pid_path)) {
                 logger( GM_LOG_INFO, "pidfile already exists, cannot start!\n");
                 return(GM_ERROR);

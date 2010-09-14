@@ -25,6 +25,8 @@
 #include "worker.h"
 #include "worker_logger.h"
 
+struct tm now;
+
 void logger( int lvl, const char *text, ... ) {
 
     FILE * fp       = NULL;
@@ -54,7 +56,9 @@ void logger( int lvl, const char *text, ... ) {
     else
         level = "UNKNO";
 
-    strftime(buffer, sizeof(buffer), "[%Y-%m-%d %H:%M:%S]", localtime(&t) );
+    now = *(localtime(&t));
+
+    strftime(buffer, sizeof(buffer), "[%Y-%m-%d %H:%M:%S]", &now );
 
     char buffer2[GM_BUFFERSIZE];
     snprintf(buffer2, sizeof(buffer2), "[%i][%s] ", getpid(), level );
