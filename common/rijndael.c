@@ -1,3 +1,7 @@
+/*
+ * http://www.efgh.com/software/rijndael.htm
+ */
+
 #define FULL_UNROLL
 
 #include "rijndael.h"

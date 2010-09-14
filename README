@@ -1,13 +1,13 @@
 Gearman Module for Nagios
 =========================
 
-Mod_Gearman is a new way of distributing active nagios checks across
-your network. It consists of two parts.  There is a NEB module which
-resides in the Nagios core and adds servicechecks, hostchecks and
-eventhandler to a Gearman (http://gearman.org) queue. There can be
-multiple equal gearman servers.  The counterpart is one or more worker
-clients for the checks itself. They can be bound to host and
-servicegroups.
+Mod_Gearman (http://labs.consol.de/nagios/mod-gearman) is a new
+way of distributing active Nagios checks across your network. It
+consists of two parts: There is a NEB module which resides in the
+Nagios core and adds servicechecks, hostchecks and eventhandler to a
+Gearman (http://gearman.org) queue. There can be multiple equal
+gearman servers.  The counterpart is one or more worker clients for
+the checks itself. They can be bound to host and servicegroups.
 
 
 How does it work
@@ -49,11 +49,11 @@ The workflow is simple:
     'check_results' queue
  5. mod_gearman grabs the result job and puts back the result onto the
     check result list
- 6. the reaper reads all checks from the result list and updates hosts / services
+ 6. The reaper reads all checks from the result list and updates hosts / services
 
 
 You can set some host or servicegroups for special worker. This
-example uses a seperate hostgroup for japan and a seperate
+example uses a seperate hostgroup for Japan and a seperate
 servicegroup for jmx4perl.
 
 It would look like this:
@@ -80,7 +80,7 @@ neb module and put back into the nagios core. A worker can work on one
 or more queues. So you could start a worker which only handles the
 'hostgroup_japan' group.  One worker for the 'jmx4perl' checks and one
 worker which covers the other queues. There can be more than one
-worker on each queue which would share the load.
+worker on each queue to share the load.
 
 
 
@@ -95,8 +95,16 @@ Pre Requirements:
  - libgearman (>= 0.14)
 
 
-Download the tarball and do "make". Add the neb_module/mod_gearman.o to your
-nagios installation and add a broker line to your nagios.cfg:
+Download the tarball and perform the following steps:
+.....
+ #> ./autogen.sh
+ #> make
+ #> make test     # ( requires gearmand in your $PATH )
+ #> make install
+.....
+
+Then add the mod_gearman.o to your nagios installation and add a
+broker line to your nagios.cfg:
 
 ======
   broker_module=.../mod_gearman.o server=localhost:4730 eventhandler=yes services=yes hosts=yes
@@ -143,6 +151,8 @@ A sample broker in your nagios.cfg could look like:
 See the following list for a detailed explaination of available
 options:
 
+
+Shared options for worker and the NEB module:
 
 .......
 config:             read config from this file. Options are the same
@@ -198,6 +208,37 @@ servicegroups:      sets a list of servicegroups which will go into seperate
                     Example: servicegroups=name1,name2,name3
 
 
+encryption:         enables or disables encryption. It is strongly
+                    advised to not disable encryption. Anybody will be
+                    able to inject packages to your worker.
+                    Encryption is enabled by default and you have to
+                    explicitly disable it.
+                    When using encryption, you will either have to
+                    specify a shared password with key=... or a
+                    keyfile with keyfile=...
+                    Default is On.
+
+                    Example: encryption=yes
+
+
+key:                A shared password which will be used for
+                    encryption of data pakets. Should be at least 8
+                    bytes long. Maximum length is 32 characters.
+
+                    Example: key=secret
+
+
+keyfile:            The shared password will be read from this file.
+                    Use either key or keyfile. Only the first 32
+                    characters will be used.
+
+                    Example: keyfile=/path/to/secret.file
+.......
+
+
+Additional options for the NEB module:
+
+.......
 localhostgroups:    sets a list of hostgroups which will not be executed
                     by gearman. They are just passed through.
 
@@ -226,33 +267,6 @@ perfdata:           defines if the module should distribute perfdata
                     queue.
 
                     Example: perfdata=yes
-
-
-encryption:         enables or disables encryption. It is strongly
-                    advised to not disable encryption. Anybody will be
-                    able to inject packages to your worker.
-                    Encryption is enabled by default and you have to
-                    explicitly disable it.
-                    When using encryption, you will either have to
-                    specify a shared password with key=... or a
-                    keyfile with keyfile=...
-                    Default is On.
-
-                    Example: encryption=yes
-
-
-key:                A shared password which will be used for
-                    encryption of data pakets. Should be at least 8
-                    bytes long. Maximum length is 32 characters.
-
-                    Example: key=secret
-
-
-keyfile:            The shared password will be read from this file.
-                    Use either key or keyfile. Only the first 32
-                    characters will be used.
-
-                    Example: keyfile=/path/to/secret.file
 .......
 
 
@@ -356,6 +370,14 @@ eventhandler          This is the generic queue for all eventhandler.
                       Make sure you have a worker for this queue if
                       you have eventhandler enabled. Start the worker
                       with --events to work on this queue.
+
+
+perfdata              This is the generic queue for all performance
+                      data. It is created and used if you switch on
+                      --perfdata=yes.
+                      Performance data cannot be processed by the
+                      gearman worker itself. You will need pnp4nagios
+                      (http://www.pnp4nagios.org) therefor.
 .......
 
 
@@ -374,3 +396,10 @@ Hints
  - Keep the gearmand server close to Nagios for better performance.
 
 
+
+Download
+--------
+
+Mod Gearman is available for download at: http://labs.consol.de/nagios/mod-gearman
+
+The source is available at GitHub: http://github.com/sni/mod_gearman
