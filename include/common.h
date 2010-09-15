@@ -22,6 +22,7 @@
  *****************************************************************************/
 
 #include <stdio.h>
+#include <sys/time.h>
 
 #ifndef MOD_GM_COMMON_H
 #define MOD_GM_COMMON_H
@@ -55,6 +56,7 @@
 #define GM_DEFAULT_JOB_TIMEOUT         60
 #define GM_DEFAULT_JOB_RETRIES          1
 #define GM_CHILD_SHUTDOWN_TIMEOUT       5
+#define GM_DEFAULT_RESULT_QUEUE  "result_queue"
 
 /* worker */
 #define GM_DEFAULT_MIN_WORKER           1      // minumum number of worker
@@ -69,6 +71,7 @@
 /* dump config modes */
 #define GM_WORKER_MODE                  1
 #define GM_NEB_MODE                     2
+#define GM_SEND_GEARMAN_MODE            3
 
 /* worker stop modes */
 #define GM_WORKER_STOP                  1
@@ -131,6 +134,16 @@ typedef struct mod_gm_opt_struct {
     int            min_worker;
     int            max_worker;
     int            fork_on_exec;
+/* send_gearman */
+    int            timeout;
+    int            return_code;
+    char         * message;
+    char         * host;
+    char         * service;
+    int            active;
+    struct timeval time;
+    struct timeval latency;
+    struct timeval exec_time;
 } mod_gm_opt_t;
 
 

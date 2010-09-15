@@ -530,7 +530,7 @@ static int verify_options(mod_gm_opt_t *opt) {
     }
 
     if ( mod_gm_opt->result_queue == NULL )
-        mod_gm_opt->result_queue = "check_results";
+        mod_gm_opt->result_queue = GM_DEFAULT_RESULT_QUEUE;
 
     // do we need a result thread?
     if(   opt->servicegroups_num == 0

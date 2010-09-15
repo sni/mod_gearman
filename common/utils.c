@@ -212,6 +212,9 @@ int set_default_options(mod_gm_opt_t *opt) {
     opt->keyfile            = NULL;
     opt->logfile            = NULL;
     opt->logfile_fp         = NULL;
+    opt->message            = NULL;
+    opt->return_code        = 0;
+    opt->timeout            = 10;
     opt->debug_level        = GM_LOG_INFO;
     opt->perfdata           = GM_DISABLED;
     opt->hosts              = GM_DISABLED;
@@ -227,6 +230,9 @@ int set_default_options(mod_gm_opt_t *opt) {
     opt->transportmode      = GM_ENCODE_AND_ENCRYPT;
     opt->daemon_mode        = GM_DISABLED;
     opt->fork_on_exec       = GM_ENABLED;
+
+    opt->host               = NULL;
+    opt->service            = NULL;
 
     opt->server_num         = 0;
     int i;
@@ -346,6 +352,11 @@ int parse_args_line(mod_gm_opt_t *opt, char * arg, int recursion_level) {
         opt->fork_on_exec = parse_yes_or_no(value, GM_ENABLED);
     }
 
+    /* active */
+    else if (   !strcmp( key, "active" ) ) {
+        opt->active = parse_yes_or_no(value, GM_ENABLED);
+    }
+
     if ( value == NULL )
         return(GM_OK);
 
@@ -356,15 +367,65 @@ int parse_args_line(mod_gm_opt_t *opt, char * arg, int recursion_level) {
     }
 
     /* result worker */
-    if ( !strcmp( key, "result_workers" ) ) {
+    else if ( !strcmp( key, "result_workers" ) ) {
         opt->result_workers = atoi( value );
         if(opt->result_workers > GM_LISTSIZE) { opt->result_workers = GM_LISTSIZE; }
         if(opt->result_workers < 0) { opt->result_workers = 0; }
     }
 
+    /* return code */
+    else if (   !strcmp( key, "returncode" )
+             || !strcmp( key, "r" )
+       ) {
+        opt->return_code = atoi( value );
+        if(opt->return_code > 3) { return(GM_ERROR); }
+        if(opt->return_code < 0) { return(GM_ERROR); }
+    }
+
     /* result_queue */
     else if (   !strcmp( key, "result_queue" ) ) {
         opt->result_queue = strdup( value );
+    }
+
+    /* message */
+    else if (   !strcmp( key, "message" )
+             || !strcmp( key, "m" )
+            ) {
+        opt->message = strdup( value );
+    }
+
+    /* host */
+    else if (   !strcmp( key, "host" ) ) {
+        opt->host = strdup( value );
+    }
+
+    /* service */
+    else if (   !strcmp( key, "service" ) ) {
+        opt->service = strdup( value );
+    }
+
+    /* latency */
+    else if ( !strcmp( key, "latency" ) ) {
+        int sec   = atoi( str_token( &value, '.' ) );
+        int usec  = atoi( str_token( &value, 0 ) );
+        opt->latency.tv_sec  = sec;
+        opt->latency.tv_usec = usec;
+    }
+
+    /* time */
+    else if ( !strcmp( key, "time" ) ) {
+        int sec   = atoi( str_token( &value, '.' ) );
+        int usec  = atoi( str_token( &value, 0 ) );
+        opt->time.tv_sec  = sec;
+        opt->time.tv_usec = usec;
+    }
+
+    /* exec time */
+    else if ( !strcmp( key, "exec_time" ) ) {
+        int sec   = atoi( str_token( &value, '.' ) );
+        int usec  = atoi( str_token( &value, 0 ) );
+        opt->exec_time.tv_sec  = sec;
+        opt->exec_time.tv_usec = usec;
     }
 
     /* configfile */
@@ -543,19 +604,22 @@ void dumpconfig(mod_gm_opt_t *opt, int mode) {
     int i=0;
     logger( GM_LOG_DEBUG, "--------------------------------\n" );
     logger( GM_LOG_DEBUG, "configuration:\n" );
-    logger( GM_LOG_DEBUG, "pidfile:             %s\n", opt->pidfile == NULL ? "no" : opt->pidfile);
     logger( GM_LOG_DEBUG, "log level:           %d\n", opt->debug_level);
     if(mode == GM_WORKER_MODE) {
+        logger( GM_LOG_DEBUG, "pidfile:             %s\n", opt->pidfile == NULL ? "no" : opt->pidfile);
+        logger( GM_LOG_DEBUG, "logfile:             %s\n", opt->logfile == NULL ? "no" : opt->logfile);
         logger( GM_LOG_DEBUG, "job max age:         %d\n", opt->max_age);
         logger( GM_LOG_DEBUG, "job timeout:         %d\n", opt->job_timeout);
         logger( GM_LOG_DEBUG, "min worker:          %d\n", opt->min_worker);
         logger( GM_LOG_DEBUG, "max worker:          %d\n", opt->max_worker);
         logger( GM_LOG_DEBUG, "fork on exec:        %s\n", opt->fork_on_exec == GM_ENABLED ? "yes" : "no");
     }
-    logger( GM_LOG_DEBUG, "debug result:        %s\n", opt->debug_result == GM_ENABLED ? "yes" : "no");
     if(mode == GM_NEB_MODE) {
-        logger( GM_LOG_DEBUG, "result_queue:        %s\n", opt->result_queue);
+        logger( GM_LOG_DEBUG, "debug result:        %s\n", opt->debug_result == GM_ENABLED ? "yes" : "no");
         logger( GM_LOG_DEBUG, "result_worker:       %d\n", opt->result_workers);
+    }
+    if(mode == GM_NEB_MODE || mode == GM_SEND_GEARMAN_MODE) {
+        logger( GM_LOG_DEBUG, "result_queue:        %s\n", opt->result_queue);
     }
     logger( GM_LOG_DEBUG, "\n" );
 
@@ -566,13 +630,15 @@ void dumpconfig(mod_gm_opt_t *opt, int mode) {
     if(mode == GM_NEB_MODE) {
         logger( GM_LOG_DEBUG, "perfdata:            %s\n", opt->perfdata     == GM_ENABLED ? "yes" : "no");
     }
-    logger( GM_LOG_DEBUG, "hosts:               %s\n", opt->hosts        == GM_ENABLED ? "yes" : "no");
-    logger( GM_LOG_DEBUG, "services:            %s\n", opt->services     == GM_ENABLED ? "yes" : "no");
-    logger( GM_LOG_DEBUG, "eventhandler:        %s\n", opt->events       == GM_ENABLED ? "yes" : "no");
-    for(i=0;i<opt->hostgroups_num;i++)
-        logger( GM_LOG_DEBUG, "hostgroups:          %s\n", opt->hostgroups_list[i]);
-    for(i=0;i<opt->servicegroups_num;i++)
-        logger( GM_LOG_DEBUG, "servicegroups:       %s\n", opt->servicegroups_list[i]);
+    if(mode == GM_NEB_MODE || mode == GM_WORKER_MODE) {
+        logger( GM_LOG_DEBUG, "hosts:               %s\n", opt->hosts        == GM_ENABLED ? "yes" : "no");
+        logger( GM_LOG_DEBUG, "services:            %s\n", opt->services     == GM_ENABLED ? "yes" : "no");
+        logger( GM_LOG_DEBUG, "eventhandler:        %s\n", opt->events       == GM_ENABLED ? "yes" : "no");
+        for(i=0;i<opt->hostgroups_num;i++)
+            logger( GM_LOG_DEBUG, "hostgroups:          %s\n", opt->hostgroups_list[i]);
+        for(i=0;i<opt->servicegroups_num;i++)
+            logger( GM_LOG_DEBUG, "servicegroups:       %s\n", opt->servicegroups_list[i]);
+    }
 
     if(mode == GM_NEB_MODE) {
         for(i=0;i<opt->local_hostgroups_num;i++)
@@ -613,7 +679,13 @@ void mod_gm_free_opt(mod_gm_opt_t *opt) {
     for(i=0;i<opt->local_servicegroups_num;i++)
         free(opt->local_servicegroups_list[i]);
     free(opt->crypt_key);
-    free(opt->result_queue);
+    free(opt->keyfile);
+    free(opt->message);
+    //free(opt->result_queue);
+    free(opt->pidfile);
+    free(opt->logfile);
+    free(opt->host);
+    free(opt->service);
     free(opt);
 }
 
@@ -644,7 +716,7 @@ int read_keyfile(mod_gm_opt_t *opt) {
 
 /* convert number to signal name */
 char * nr2signal(int sig) {
-    char * signame;
+    char * signame = NULL;
     switch(sig) {
         case 1:  signame = "SIGHUP";
                  break;
