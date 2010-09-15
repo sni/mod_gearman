@@ -536,7 +536,7 @@ int write_pid_file() {
         if(fp != NULL) {
             char *pid;
             pid = malloc(GM_BUFFERSIZE);
-            if(fgets(pid, GM_BUFFERSIZE, fp) <= 0)
+            if(fgets(pid, GM_BUFFERSIZE, fp) == NULL)
                 perror("fgets");
             fclose(fp);
             pid = trim(pid);
