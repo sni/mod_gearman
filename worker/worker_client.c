@@ -268,7 +268,7 @@ void do_exec_job( ) {
         exec_job->finish_time = end_time;
 
         if ( !strcmp( exec_job->type, "service" ) || !strcmp( exec_job->type, "host" ) ) {
-            exec_job->output = "(Could Not Start Check In Time)";
+            exec_job->output = strdup("(Could Not Start Check In Time)");
             send_result_back();
         }
 
@@ -290,9 +290,9 @@ void do_exec_job( ) {
         exec_job->return_code   = 2;
         exec_job->early_timeout = 1;
         if ( !strcmp( exec_job->type, "service" ) )
-            exec_job->output = "(Service Check Timed Out)";
+            exec_job->output = strdup("(Service Check Timed Out)");
         if ( !strcmp( exec_job->type, "host" ) )
-            exec_job->output = "(Host Check Timed Out)";
+            exec_job->output = strdup("(Host Check Timed Out)");
     }
 
     if ( !strcmp( exec_job->type, "service" ) || !strcmp( exec_job->type, "host" ) ) {
@@ -323,7 +323,7 @@ void execute_safe_command() {
 
         //fork error
         if( current_child_pid == -1 ) {
-            exec_job->output      = "(Error On Fork)";
+            exec_job->output      = strdup("(Error On Fork)");
             exec_job->return_code = 3;
             return;
         }
@@ -353,7 +353,7 @@ void execute_safe_command() {
             if( fork_exec == GM_ENABLED ) {
                 exit(3);
             } else {
-                exec_job->output      = "exec error";
+                exec_job->output      = strdup("exec error");
                 exec_job->return_code = 3;
                 alarm(0);
                 return;
