@@ -82,10 +82,6 @@ int main (int argc, char **argv) {
 
     /* init crypto functions */
     if(mod_gm_opt->encryption == GM_ENABLED) {
-        if(mod_gm_opt->crypt_key == NULL) {
-            logger( GM_LOG_ERROR, "no encryption key provided, please use --key=... or keyfile=...\n");
-            exit( EXIT_FAILURE );
-        }
         mod_gm_crypt_init(mod_gm_opt->crypt_key);
     } else {
         mod_gm_opt->transportmode = GM_ENCODE_ONLY;
@@ -291,7 +287,7 @@ int verify_options(mod_gm_opt_t *opt) {
     // encryption without key?
     if(opt->encryption == GM_ENABLED) {
         if(opt->crypt_key == NULL && opt->keyfile == NULL) {
-            logger( GM_LOG_ERROR, "no encryption key provided, please use --key=... or keyfile=...\n");
+            logger( GM_LOG_ERROR, "no encryption key provided, please use --key=... or keyfile=... or disable encryption\n");
             return(GM_ERROR);
         }
     }

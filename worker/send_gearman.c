@@ -37,15 +37,12 @@ int main (int argc, char **argv) {
      * and parse command line
      */
     if(parse_arguments(argc, argv) != GM_OK) {
+        print_usage();
         exit( EXIT_FAILURE );
     }
 
     /* init crypto functions */
     if(mod_gm_opt->encryption == GM_ENABLED) {
-        if(mod_gm_opt->crypt_key == NULL) {
-            logger( GM_LOG_ERROR, "no encryption key provided, please use --key=... or keyfile=...\n");
-            exit( EXIT_FAILURE );
-        }
         mod_gm_crypt_init(mod_gm_opt->crypt_key);
     } else {
         mod_gm_opt->transportmode = GM_ENCODE_ONLY;
@@ -53,7 +50,7 @@ int main (int argc, char **argv) {
 
     /* create client */
     if ( create_client( mod_gm_opt->server_list, &client ) != GM_OK ) {
-        logger( GM_LOG_ERROR, "cannot start client\n" );
+        printf( "cannot start client\n" );
         exit( EXIT_FAILURE );
     }
 
@@ -100,13 +97,6 @@ int parse_arguments(int argc, char **argv) {
         errors++;
     }
 
-    if(verify != GM_OK || errors > 0 || mod_gm_opt->debug_level >= GM_LOG_DEBUG) {
-        int old_debug = mod_gm_opt->debug_level;
-        mod_gm_opt->debug_level = GM_LOG_DEBUG;
-        dumpconfig(mod_gm_opt, GM_SEND_GEARMAN_MODE);
-        mod_gm_opt->debug_level = old_debug;
-    }
-
     if(errors > 0 || verify != GM_OK) {
         return(GM_ERROR);
     }
@@ -120,14 +110,14 @@ int verify_options(mod_gm_opt_t *opt) {
 
     // did we get any server?
     if(opt->server_num == 0) {
-        logger( GM_LOG_ERROR, "please specify at least one server\n" );
+        printf("please specify at least one server\n" );
         return(GM_ERROR);
     }
 
     // encryption without key?
     if(opt->encryption == GM_ENABLED) {
         if(opt->crypt_key == NULL && opt->keyfile == NULL) {
-            logger( GM_LOG_ERROR, "no encryption key provided, please use --key=... or keyfile=...\n");
+            printf("no encryption key provided, please use --key=... or keyfile=... or disable encryption\n");
             return(GM_ERROR);
         }
     }
@@ -180,15 +170,15 @@ int send_result() {
     struct timeval finish_time;
 
     if(mod_gm_opt->result_queue == NULL) {
-        logger( GM_LOG_ERROR, "got no result queue, please use --result_queue=...\n" );
+        printf( "got no result queue, please use --result_queue=...\n" );
         return(GM_ERROR);
     }
     if(mod_gm_opt->message == NULL) {
-        logger( GM_LOG_ERROR, "got no plugin output, please use --message=...\n" );
+        printf("got no plugin output, please use --message=...\n" );
         return(GM_ERROR);
     }
     if(mod_gm_opt->host == NULL) {
-        logger( GM_LOG_ERROR, "got no hostname, please use --host=...\n" );
+        printf("got no hostname, please use --host=...\n" );
         return(GM_ERROR);
     }
 
