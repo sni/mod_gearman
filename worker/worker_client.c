@@ -177,8 +177,8 @@ void *get_job( gearman_job_st *job, void *context, size_t *result_size, gearman_
     char *ptr;
     char command[GM_BUFFERSIZE];
     while ( (ptr = strsep(&decrypted_data, "\n" )) != NULL ) {
-        char *key   = str_token( &ptr, '=' );
-        char *value = str_token( &ptr, 0 );
+        char *key   = strsep( &ptr, "=" );
+        char *value = strsep( &ptr, "\x0" );
 
         if ( key == NULL )
             continue;
@@ -203,14 +203,7 @@ void *get_job( gearman_job_st *job, void *context, size_t *result_size, gearman_
         } else if ( !strcmp( key, "latency" ) ) {
             exec_job->latency = atof(value);
         } else if ( !strcmp( key, "start_time" ) ) {
-            char *ptr   = strdup(value);
-            char *ptr_c = ptr;
-            char *sec   = str_token( &ptr, '.' );
-            char *usec  = str_token( &ptr, 0 );
-            if(usec == NULL) { usec = 0; }
-            exec_job->core_start_time.tv_sec  = atoi(sec);
-            exec_job->core_start_time.tv_usec = atoi(usec);
-            free(ptr_c);
+            string2timeval(value, &exec_job->core_start_time);
         } else if ( !strcmp( key, "timeout" ) ) {
             exec_job->timeout = atoi(value);
         } else if ( !strcmp( key, "command_line" ) ) {

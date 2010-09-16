@@ -42,8 +42,8 @@ int create_worker( char ** server_list, gearman_worker_st *worker ) {
     while ( server_list[x] != NULL ) {
         char * server   = strdup( server_list[x] );
         char * server_c = server;
-        char * host     = str_token( &server, ':' );
-        char * port_val = str_token( &server, 0 );
+        char * host     = strsep( &server, ":" );
+        char * port_val = strsep( &server, "\x0" );
         in_port_t port  = GM_SERVER_DEFAULT_PORT;
         if(port_val != NULL) {
             port  = ( in_port_t ) atoi( port_val );
@@ -93,8 +93,8 @@ int create_client( char ** server_list, gearman_client_st *client ) {
     while ( server_list[x] != NULL ) {
         char * server   = strdup( server_list[x] );
         char * server_c = server;
-        char * host     = str_token( &server, ':' );
-        char * port_val = str_token( &server, 0 );
+        char * host     = strsep( &server, ":" );
+        char * port_val = strsep( &server, "\x0" );
         in_port_t port  = GM_SERVER_DEFAULT_PORT;
         if(port_val != NULL) {
             port  = ( in_port_t ) atoi( port_val );

@@ -23,7 +23,6 @@
 
 #include "common.h"
 
-char *str_token( char **c, char delim );
 char *escape_newlines(char *rawbuf);
 int real_exit_code(int code);
 void mod_gm_crypt_init(char * key);
@@ -42,3 +41,4 @@ void dumpconfig(mod_gm_opt_t *opt, int mode);
 void mod_gm_free_opt(mod_gm_opt_t *opt);
 int read_keyfile(mod_gm_opt_t *opt);
 char * nr2signal(int sig);
+void string2timeval(char * value, struct timeval * t);

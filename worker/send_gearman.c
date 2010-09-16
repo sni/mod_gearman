@@ -154,6 +154,8 @@ void print_usage() {
     printf("             [ --key=<string>               ]\n");
     printf("             [ --keyfile=<file>             ]\n");
     printf("\n");
+    printf("             [ --host=<hostname>            ]\n");
+    printf("             [ --service=<servicename>      ]\n");
     printf("             [ --result_queue=<queue>       ]\n");
     printf("             [ --message|-m=<pluginoutput>  ]\n");
     printf("             [ --returncode|-r=<returncode> ]\n");
@@ -185,13 +187,18 @@ int send_result() {
         logger( GM_LOG_ERROR, "got no plugin output, please use --message=...\n" );
         return(GM_ERROR);
     }
+    if(mod_gm_opt->host == NULL) {
+        logger( GM_LOG_ERROR, "got no hostname, please use --host=...\n" );
+        return(GM_ERROR);
+    }
 
     char temp_buffer1[GM_BUFFERSIZE];
     char temp_buffer2[GM_BUFFERSIZE];
 
     logger( GM_LOG_TRACE, "queue: %s\n", mod_gm_opt->result_queue );
     temp_buffer1[0]='\x0';
-    snprintf( temp_buffer1, sizeof( temp_buffer1 )-1, "host_name=%s\nstart_time=%i.%i\nfinish_time=%i.%i\nlatency=%i.%i\nreturn_code=%i\n",
+    snprintf( temp_buffer1, sizeof( temp_buffer1 )-1, "type=%s\nhost_name=%s\nstart_time=%i.%i\nfinish_time=%i.%i\nlatency=%i.%i\nreturn_code=%i\n",
+              mod_gm_opt->active == GM_ENABLED ? "active" : "passive",
               mod_gm_opt->host,
               ( int )mod_gm_opt->time.tv_sec,
               ( int )mod_gm_opt->time.tv_usec,

@@ -134,8 +134,8 @@ void *get_results( gearman_job_st *job, void *context, size_t *result_size, gear
 
     char *ptr;
     while ( (ptr = strsep(&decrypted_data, "\n" )) != NULL ) {
-        char *key   = str_token( &ptr, '=' );
-        char *value = str_token( &ptr, 0 );
+        char *key   = strsep( &ptr, "=" );
+        char *value = strsep( &ptr, "\x0" );
 
         if ( key == NULL )
             continue;
@@ -175,20 +175,11 @@ void *get_results( gearman_job_st *job, void *context, size_t *result_size, gear
         } else if ( !strcmp( key, "return_code" ) ) {
             chk_result->return_code = atoi( value );
         } else if ( !strcmp( key, "core_start_time" ) ) {
-            int sec   = atoi( str_token( &value, '.' ) );
-            int usec  = atoi( str_token( &value, 0 ) );
-            core_start_time.tv_sec  = sec;
-            core_start_time.tv_usec = usec;
+            string2timeval(value, &core_start_time);
         } else if ( !strcmp( key, "start_time" ) ) {
-            int sec   = atoi( str_token( &value, '.' ) );
-            int usec  = atoi( str_token( &value, 0 ) );
-            chk_result->start_time.tv_sec    = sec;
-            chk_result->start_time.tv_usec   = usec;
+            string2timeval(value, &chk_result->start_time);
         } else if ( !strcmp( key, "finish_time" ) ) {
-            int sec   = atoi( str_token( &value, '.' ) );
-            int usec  = atoi( str_token( &value, 0 ) );
-            chk_result->finish_time.tv_sec    = sec;
-            chk_result->finish_time.tv_usec   = usec;
+            string2timeval(value, &chk_result->finish_time);
         } else if ( !strcmp( key, "latency" ) ) {
             chk_result->latency = atof( value );
         }

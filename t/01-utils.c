@@ -9,7 +9,7 @@
 #include <utils.h>
 
 int main(void) {
-    plan_tests(29);
+    plan_tests(37);
 
     /* lowercase */
     char test[100];
@@ -87,6 +87,25 @@ int main(void) {
     if(!ok(!strcmp(signame2, "SIGTERM"), "get SIGTERM for 15"))
         diag("expected: 'SIGTERM' but got: '%s'", signame2);
     free(signame2);
+
+
+    /* string2timeval */
+    struct timeval t;
+    string2timeval("100.50", &t);
+    ok1(t.tv_sec  == 100);
+    ok1(t.tv_usec == 50);
+
+    string2timeval("100", &t);
+    ok1(t.tv_sec  == 100);
+    ok1(t.tv_usec == 0);
+
+    string2timeval("", &t);
+    ok1(t.tv_sec  == 0);
+    ok1(t.tv_usec == 0);
+
+    string2timeval(NULL, &t);
+    ok1(t.tv_sec  == 0);
+    ok1(t.tv_usec == 0);
 
     return exit_status();
 }

@@ -26,24 +26,6 @@
 #include "crypt.h"
 #include "base64.h"
 
-/* return string until token */
-char *str_token( char **c, char delim ) {
-    char *begin = *c;
-    if ( !*begin ) {
-        *c = begin;
-        return 0;
-    }
-
-    char *end = begin;
-    while ( *end && *end != delim ) end++;
-    if ( *end ) {
-        *end = 0;
-        *c = end + 1;
-    } else
-        *c = end;
-    return begin;
-}
-
 
 /* escapes newlines in a string */
 char *escape_newlines(char *rawbuf) {
@@ -286,8 +268,8 @@ int parse_yes_or_no(char*value, int dfl) {
 /* parse one line of args into the given struct */
 int parse_args_line(mod_gm_opt_t *opt, char * arg, int recursion_level) {
     logger( GM_LOG_TRACE, "parse_args_line(%s, %d)\n", arg, recursion_level);
-    char *key   = str_token( &arg, '=' );
-    char *value = str_token( &arg, 0 );
+    char *key   = strsep( &arg, "=" );
+    char *value = strsep( &arg, "\x0" );
 
     if ( key == NULL )
         return(GM_OK);
@@ -406,26 +388,17 @@ int parse_args_line(mod_gm_opt_t *opt, char * arg, int recursion_level) {
 
     /* latency */
     else if ( !strcmp( key, "latency" ) ) {
-        int sec   = atoi( str_token( &value, '.' ) );
-        int usec  = atoi( str_token( &value, 0 ) );
-        opt->latency.tv_sec  = sec;
-        opt->latency.tv_usec = usec;
+        string2timeval(value, &opt->latency);
     }
 
     /* time */
     else if ( !strcmp( key, "time" ) ) {
-        int sec   = atoi( str_token( &value, '.' ) );
-        int usec  = atoi( str_token( &value, 0 ) );
-        opt->time.tv_sec  = sec;
-        opt->time.tv_usec = usec;
+        string2timeval(value, &opt->time);
     }
 
     /* exec time */
     else if ( !strcmp( key, "exec_time" ) ) {
-        int sec   = atoi( str_token( &value, '.' ) );
-        int usec  = atoi( str_token( &value, 0 ) );
-        opt->exec_time.tv_sec  = sec;
-        opt->exec_time.tv_usec = usec;
+        string2timeval(value, &opt->exec_time);
     }
 
     /* configfile */
@@ -754,4 +727,38 @@ char * nr2signal(int sig) {
                  break;
     }
     return strdup(signame);
+}
+
+
+/* convert to time */
+void string2timeval(char * value, struct timeval *t) {
+    t->tv_sec  = 0;
+    t->tv_usec = 0;
+
+    if(value == NULL)
+        return;
+
+    char * v = strdup(value);
+    char * v_c = v;
+
+    char * s = strsep( &v, "." );
+    if(s == NULL) {
+        free(v_c);
+        return;
+    }
+
+    int sec  = atoi( s );
+    t->tv_sec  = sec;
+
+    char * u = strsep( &v, "\x0" );
+
+    if(u == NULL) {
+        free(v_c);
+        return;
+    }
+
+    int usec  = atoi( u );
+
+    t->tv_usec = usec;
+    free(v_c);
 }

@@ -56,7 +56,7 @@
 #define GM_DEFAULT_JOB_TIMEOUT         60
 #define GM_DEFAULT_JOB_RETRIES          1
 #define GM_CHILD_SHUTDOWN_TIMEOUT       5
-#define GM_DEFAULT_RESULT_QUEUE  "result_queue"
+#define GM_DEFAULT_RESULT_QUEUE  "check_results"
 
 /* worker */
 #define GM_DEFAULT_MIN_WORKER           1      // minumum number of worker
