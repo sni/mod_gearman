@@ -391,14 +391,14 @@ int parse_args_line(mod_gm_opt_t *opt, char * arg, int recursion_level) {
         string2timeval(value, &opt->latency);
     }
 
-    /* time */
-    else if ( !strcmp( key, "time" ) ) {
-        string2timeval(value, &opt->time);
+    /* start time */
+    else if ( !strcmp( key, "starttime" ) ) {
+        string2timeval(value, &opt->starttime);
     }
 
-    /* exec time */
-    else if ( !strcmp( key, "exec_time" ) ) {
-        string2timeval(value, &opt->exec_time);
+    /* finish time */
+    else if ( !strcmp( key, "finishtime" ) ) {
+        string2timeval(value, &opt->finishtime);
     }
 
     /* configfile */
@@ -761,4 +761,13 @@ void string2timeval(char * value, struct timeval *t) {
 
     t->tv_usec = usec;
     free(v_c);
+}
+
+/* convert a timeval to double */
+double timeval2double(struct timeval * t) {
+    double val = 0.0;
+    if(t != NULL) {
+        val = (double)t->tv_sec + ((double)t->tv_usec / 1000000);
+    }
+    return val;
 }

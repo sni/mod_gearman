@@ -116,6 +116,7 @@ void *get_results( gearman_job_st *job, void *context, size_t *result_size, gear
         return NULL;
     }
 
+    int active_check                = TRUE;
     chk_result->service_description = NULL;
     chk_result->host_name           = NULL;
     chk_result->output              = NULL;
@@ -166,6 +167,8 @@ void *get_results( gearman_job_st *job, void *context, size_t *result_size, gear
             chk_result->check_options = atoi( value );
         } else if ( !strcmp( key, "scheduled_check" ) ) {
             chk_result->scheduled_check = atoi( value );
+        } else if ( !strcmp( key, "type" ) && !strcmp( value, "passive" ) ) {
+            active_check=FALSE;
         } else if ( !strcmp( key, "reschedule_check" ) ) {
             chk_result->reschedule_check = atoi( value );
         } else if ( !strcmp( key, "exited_ok" ) ) {
@@ -193,9 +196,13 @@ void *get_results( gearman_job_st *job, void *context, size_t *result_size, gear
     if ( chk_result->service_description != NULL ) {
         chk_result->object_check_type    = SERVICE_CHECK;
         chk_result->check_type           = SERVICE_CHECK_ACTIVE;
+        if(active_check == FALSE )
+            chk_result->check_type       = SERVICE_CHECK_PASSIVE;
     } else {
         chk_result->object_check_type    = HOST_CHECK;
         chk_result->check_type           = HOST_CHECK_ACTIVE;
+        if(active_check == FALSE )
+            chk_result->check_type       = HOST_CHECK_PASSIVE;
     }
 
     /* fill some maybe missing options */

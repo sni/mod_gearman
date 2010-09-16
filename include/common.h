@@ -141,9 +141,9 @@ typedef struct mod_gm_opt_struct {
     char         * host;
     char         * service;
     int            active;
-    struct timeval time;
+    struct timeval starttime;
+    struct timeval finishtime;
     struct timeval latency;
-    struct timeval exec_time;
 } mod_gm_opt_t;
 
 

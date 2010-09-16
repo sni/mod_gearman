@@ -55,6 +55,7 @@ int main (int argc, char **argv) {
     }
 
     /* send result message */
+    signal(SIGALRM, alarm_sighandler);
     int rc = send_result();
 
     gearman_client_free( &client );
@@ -152,9 +153,11 @@ void print_usage() {
     printf("\n");
     printf("for sending active checks:\n");
     printf("             [ --active                     ]\n");
-    printf("             [ --time=<unixtime>            ]\n");
+    printf("             [ --starttime=<unixtime>       ]\n");
+    printf("             [ --finishtime=<unixtime>      ]\n");
     printf("             [ --latency=<seconds>          ]\n");
-    printf("             [ --exec_time=<seconds>        ]\n");
+    printf("\n");
+    printf("plugin output is read from stdin unless --message is used.\n");
     printf("\n");
     printf("see README for a detailed explaination of all options.\n");
     printf("\n");
@@ -167,33 +170,56 @@ void print_usage() {
 int send_result() {
     logger( GM_LOG_TRACE, "send_result()\n" );
 
-    struct timeval finish_time;
+
+    struct timeval now;
+    gettimeofday(&now, NULL);
+    if(mod_gm_opt->starttime.tv_sec == 0)
+        mod_gm_opt->starttime = now;
+
+    if(mod_gm_opt->finishtime.tv_sec == 0)
+        mod_gm_opt->finishtime = now;
 
     if(mod_gm_opt->result_queue == NULL) {
         printf( "got no result queue, please use --result_queue=...\n" );
-        return(GM_ERROR);
-    }
-    if(mod_gm_opt->message == NULL) {
-        printf("got no plugin output, please use --message=...\n" );
         return(GM_ERROR);
     }
     if(mod_gm_opt->host == NULL) {
         printf("got no hostname, please use --host=...\n" );
         return(GM_ERROR);
     }
+    if(mod_gm_opt->message == NULL) {
+        /* get all lines from stdin, wait maximum of 5 seconds */
+        alarm(5);
+        char buffer[GM_BUFFERSIZE] = "";
+        mod_gm_opt->message = malloc(GM_BUFFERSIZE);
+        strcpy(buffer,"");
+        int size = GM_MAX_OUTPUT;
+        while(size > 0 && fgets(buffer,sizeof(buffer)-1,stdin)){
+            strncat(mod_gm_opt->message, buffer, size);
+            size -= strlen(buffer);
+        }
+        alarm(0);
+    }
+
+    /* escape newline */
+    char * buf;
+    buf = escape_newlines(mod_gm_opt->message);
+    free(mod_gm_opt->message);
+    mod_gm_opt->message = malloc(GM_BUFFERSIZE);
+    snprintf(mod_gm_opt->message, GM_BUFFERSIZE, "%s", buf);
+    free(buf);
 
     char temp_buffer1[GM_BUFFERSIZE];
     char temp_buffer2[GM_BUFFERSIZE];
-
     logger( GM_LOG_TRACE, "queue: %s\n", mod_gm_opt->result_queue );
     temp_buffer1[0]='\x0';
     snprintf( temp_buffer1, sizeof( temp_buffer1 )-1, "type=%s\nhost_name=%s\nstart_time=%i.%i\nfinish_time=%i.%i\nlatency=%i.%i\nreturn_code=%i\n",
               mod_gm_opt->active == GM_ENABLED ? "active" : "passive",
               mod_gm_opt->host,
-              ( int )mod_gm_opt->time.tv_sec,
-              ( int )mod_gm_opt->time.tv_usec,
-              ( int )finish_time.tv_sec,
-              ( int )finish_time.tv_usec,
+              (int)mod_gm_opt->starttime.tv_sec,
+              (int)mod_gm_opt->starttime.tv_usec,
+              (int)mod_gm_opt->finishtime.tv_sec,
+              (int)mod_gm_opt->finishtime.tv_usec,
               ( int )mod_gm_opt->latency.tv_sec,
               ( int )mod_gm_opt->latency.tv_usec,
               mod_gm_opt->return_code
@@ -234,4 +260,14 @@ int send_result() {
         return(GM_ERROR);
     }
     return(GM_OK);
+}
+
+
+/* called when check runs into timeout */
+void alarm_sighandler(int sig) {
+    logger( GM_LOG_TRACE, "alarm_sighandler(%i)\n", sig );
+
+    printf("got no input! Either send plugin output to stdin or use --message=...\n");
+
+    exit(EXIT_FAILURE);
 }
