@@ -109,6 +109,19 @@ void *get_results( gearman_job_st *job, void *context, size_t *result_size, gear
     }
     logger( GM_LOG_TRACE, "%d --->\n%s\n<---\n", strlen(decrypted_data), decrypted_data );
 
+    /*
+     * save this result to a file, so when nagios crashes,
+     * we have at least the crashed package
+     */
+    if(mod_gm_opt->debug_result == GM_ENABLED) {
+        FILE * fd;
+        fd = fopen( "/tmp/last_result_received.txt", "w+" );
+        if(fd == NULL)
+            perror("fopen");
+        fputs( decrypted_data, fd );
+        fclose( fd );
+    }
+
     /* nagios will free it after processing */
     check_result * chk_result;
     if ( ( chk_result = ( check_result * )malloc( sizeof *chk_result ) ) == 0 ) {
@@ -155,7 +168,6 @@ void *get_results( gearman_job_st *job, void *context, size_t *result_size, gear
         }
 
         if ( !strcmp( value, "") ) {
-            logger( GM_LOG_ERROR, "got empty value for key %s\n", key );
             continue;
         }
 
@@ -190,6 +202,7 @@ void *get_results( gearman_job_st *job, void *context, size_t *result_size, gear
 
     if ( chk_result->host_name == NULL || chk_result->output == NULL ) {
         *ret_ptr= GEARMAN_WORK_FAIL;
+        logger( GM_LOG_ERROR, "discarded invalid result\n" );
         return NULL;
     }
 
