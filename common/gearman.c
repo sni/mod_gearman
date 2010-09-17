@@ -149,7 +149,8 @@ int add_job_to_queue( gearman_client_st *client, char ** server_list, char * que
     if(   ret1 != GEARMAN_SUCCESS
        || ret2 != GEARMAN_SUCCESS
        || task == NULL
-       || (gearman_client_error(client) != NULL && strcmp(gearman_client_error(client), "") != 0)) { // errno is somehow empty, use error instead
+       || gearman_client_error(client) != NULL
+      ) {
 
         if(retries == 0)
             logger( GM_LOG_ERROR, "add_job_to_queue() failed: %s\n", gearman_client_error(client) );

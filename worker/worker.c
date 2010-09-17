@@ -45,7 +45,6 @@ int main (int argc, char **argv) {
      */
     mod_gm_opt = malloc(sizeof(mod_gm_opt_t));
     set_default_options(mod_gm_opt);
-    signal(SIGHUP, reload_config);
     if(parse_arguments(argc, argv) != GM_OK) {
         exit( EXIT_FAILURE );
     }
@@ -73,6 +72,8 @@ int main (int argc, char **argv) {
     /* set signal handlers for a clean exit */
     signal(SIGINT, clean_exit);
     signal(SIGTERM,clean_exit);
+    signal(SIGHUP, reload_config);
+    signal(SIGPIPE, SIG_IGN);
 
 
     /* check and write pid file */

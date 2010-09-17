@@ -87,6 +87,7 @@ void worker_loop() {
         if(worker_run_mode != GM_WORKER_STANDALONE)
             alarm(180);
 
+        signal(SIGPIPE, SIG_IGN);
         ret = gearman_worker_work( &worker );
         if ( ret != GEARMAN_SUCCESS ) {
             logger( GM_LOG_ERROR, "worker error: %s\n", gearman_worker_error( &worker ) );
@@ -621,8 +622,6 @@ void clean_worker_exit(int sig) {
     logger( GM_LOG_TRACE, "clean_worker_exit(%d)\n", sig);
 
     gearman_job_free_all( &worker );
-    gearman_worker_free( &worker );
-    gearman_client_free( &client );
 
     exit( EXIT_SUCCESS );
 }
