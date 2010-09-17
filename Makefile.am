@@ -26,15 +26,24 @@ mod_gearman_so_SOURCES     = $(common_SOURCES) \
                              neb_module/mod_gearman.c
 
 bin_PROGRAMS               = mod_gearman_worker \
-                             send_gearman
+                             send_gearman \
+                             check_gearman
 mod_gearman_worker_SOURCES = $(common_SOURCES) \
                              worker/worker_logger.c   \
                              worker/worker_client.c   \
                              worker/worker.c
 
 send_gearman_SOURCES       = $(common_SOURCES) \
-                             worker/worker_logger.c   \
-                             worker/send_gearman.c
+                             tools/tools_logger.c \
+                             tools/send_gearman.c
+
+check_gearman_SOURCES      = common/utils.c \
+                             common/base64.c \
+                             common/crypt.c  \
+                             common/rijndael.c \
+                             common/gearman_utils.c \
+                             tools/tools_logger.c \
+                             tools/check_gearman.c
 
 # tests
 check_PROGRAMS   = 01_utils 02_full

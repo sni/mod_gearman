@@ -18,3 +18,4 @@ mod_gearman_worker
 02_full
 images
 send_gearman
+check_gearman

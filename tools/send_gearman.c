@@ -89,10 +89,6 @@ int parse_arguments(int argc, char **argv) {
     int verify;
     verify = verify_options(mod_gm_opt);
 
-    /* set new options */
-    if(errors == 0 && verify == GM_OK) {
-    }
-
     /* read keyfile */
     if(mod_gm_opt->keyfile != NULL && read_keyfile(mod_gm_opt) != GM_OK) {
         errors++;
