@@ -33,6 +33,7 @@ NEB_API_VERSION( CURRENT_NEB_API_VERSION );
 
 /* import some global variables */
 extern int currently_running_host_checks;
+extern int currently_running_service_checks;
 extern timed_event *event_list_low;
 extern timed_event *event_list_low_tail;
 extern int process_performance_data;
@@ -298,6 +299,7 @@ static int handle_host_check( int event_type, void *data ) {
         return NEB_OK;
     }
 
+    /* get objects and set target function */
     host * hst = find_host( hostdata->host_name );
     set_target_queue( hst, NULL );
 
@@ -309,7 +311,8 @@ static int handle_host_check( int event_type, void *data ) {
 
     logger( GM_LOG_DEBUG, "received job for queue %s: %s\n", target_queue, hostdata->host_name );
 
-    /* as we have to intercept host checks much earlier than service checks
+    /* as we have to intercept host checks so early
+     * (we cannot cancel checks otherwise)
      * we have to do some host check logic here
      * taken from checks.c:
      */
@@ -331,14 +334,14 @@ static int handle_host_check( int event_type, void *data ) {
     get_raw_command_line(hst->check_command_ptr,hst->host_check_command,&raw_command,0);
     if(raw_command==NULL){
         logger( GM_LOG_ERROR, "Raw check command for host '%s' was NULL - aborting.\n",hst->name );
-        return NEB_OK;
+        return NEBERROR_CALLBACKCANCEL;
     }
 
     /* process any macros contained in the argument */
     process_macros(raw_command,&processed_command,0);
     if(processed_command==NULL){
         logger( GM_LOG_ERROR, "Processed check command for host '%s' was NULL - aborting.\n",hst->name);
-        return NEB_OK;
+        return NEBERROR_CALLBACKCANCEL;
     }
 
     /* get the command start time */
@@ -407,7 +410,7 @@ static int handle_svc_check( int event_type, void *data ) {
         return NEB_OK;
 
     /* ignore non-initiate service checks */
-    if ( svcdata->type != NEBTYPE_SERVICECHECK_INITIATE )
+    if ( svcdata->type != NEBTYPE_SERVICECHECK_ASYNC_PRECHECK )
         return NEB_OK;
 
     /* shouldn't happen - internal Nagios error */
@@ -416,6 +419,7 @@ static int handle_svc_check( int event_type, void *data ) {
         return GM_ERROR;
     }
 
+    /* get objects and set target function */
     service * svc = find_service( svcdata->host_name, svcdata->service_description );
     host * host   = find_host( svcdata->host_name );
     set_target_queue( host, svc );
@@ -426,23 +430,60 @@ static int handle_svc_check( int event_type, void *data ) {
         return NEB_OK;
     }
 
+    /* as we have to intercept host checks so early
+     * (we cannot cancel checks otherwise)
+     * we have to do some host check logic here
+     * taken from checks.c:
+     */
+    char *raw_command=NULL;
+    char *processed_command=NULL;
+    struct timeval start_time;
+
+    /* clear check options - we don't want old check options retained */
+    svc->check_options=CHECK_OPTION_NONE;
+
+    /* grab the host and service macro variables */
+    clear_volatile_macros();
+    grab_host_macros(host);
+    grab_service_macros(svc);
+
+    /* get the raw command line */
+    get_raw_command_line(svc->check_command_ptr,svc->service_check_command,&raw_command,0);
+    if(raw_command==NULL){
+        logger( GM_LOG_ERROR, "Raw check command for service '%s' on host '%s' was NULL - aborting.\n", svc->description, svc->host_name );
+        return NEBERROR_CALLBACKCANCEL;
+    }
+
+    /* process any macros contained in the argument */
+    process_macros(raw_command, &processed_command, 0);
+    if(processed_command==NULL) {
+        logger( GM_LOG_ERROR, "Processed check command for service '%s' on host '%s' was NULL - aborting.\n", svc->description, svc->host_name);
+        my_free(raw_command);
+        return NEBERROR_CALLBACKCANCEL;
+    }
+
+    /* get the command start time */
+    gettimeofday(&start_time,NULL);
+
+    /* increment number of service checks that are currently running... */
+    currently_running_service_checks++;
+
+    /* set the execution flag */
+    svc->is_executing=TRUE;
+
     logger( GM_LOG_DEBUG, "received job for queue %s: %s - %s\n", target_queue, svcdata->host_name, svcdata->service_description );
-    logger( GM_LOG_TRACE, "cmd_line: %s\n", svcdata->command_line );
+    logger( GM_LOG_TRACE, "cmd_line: %s\n", processed_command );
 
     extern check_result check_result_info;
     temp_buffer[0]='\x0';
-    snprintf( temp_buffer,sizeof( temp_buffer )-1,"type=service\nresult_queue=%s\nhost_name=%s\nservice_description=%s\nstart_time=%i.%i\ntimeout=%d\ncheck_options=%i\nscheduled_check=%i\nreschedule_check=%i\nlatency=%f\ncommand_line=%s\n\n\n",
+    snprintf( temp_buffer,sizeof( temp_buffer )-1,"type=service\nresult_queue=%s\nhost_name=%s\nservice_description=%s\nstart_time=%i.%i\ntimeout=%d\ncommand_line=%s\n\n\n",
               mod_gm_opt->result_queue,
               svcdata->host_name,
               svcdata->service_description,
-              ( int )svcdata->start_time.tv_sec,
-              ( int )svcdata->start_time.tv_usec,
+              ( int )start_time.tv_sec,
+              ( int )start_time.tv_usec,
               svcdata->timeout,
-              check_result_info.check_options,
-              check_result_info.scheduled_check,
-              check_result_info.reschedule_check,
-              check_result_info.latency,
-              svcdata->command_line
+              processed_command
             );
     temp_buffer[sizeof( temp_buffer )-1]='\x0';
 
@@ -466,9 +507,22 @@ static int handle_svc_check( int event_type, void *data ) {
         logger( GM_LOG_TRACE, "handle_svc_check() finished successfully\n" );
     }
     else {
+        my_free(raw_command);
+        my_free(processed_command);
+
+        /* unset the execution flag */
+        svc->is_executing=FALSE;
+
+        /* decrement number of host checks that are currently running */
+        currently_running_service_checks--;
+
         logger( GM_LOG_TRACE, "handle_svc_check() finished unsuccessfully\n" );
         return NEBERROR_CALLBACKCANCEL;
     }
+
+    /* clean up */
+    my_free(raw_command);
+    my_free(processed_command);
 
     /* tell nagios to not execute */
     return NEBERROR_CALLBACKOVERRIDE;
