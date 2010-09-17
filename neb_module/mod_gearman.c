@@ -416,12 +416,16 @@ static int handle_svc_check( int event_type, void *data ) {
     /* shouldn't happen - internal Nagios error */
     if ( svcdata == 0 ) {
         logger( GM_LOG_ERROR, "Service handler received NULL service data structure.\n" );
-        return GM_ERROR;
+        return NEBERROR_CALLBACKCANCEL;
     }
 
     /* get objects and set target function */
     service * svc = find_service( svcdata->host_name, svcdata->service_description );
-    host * host   = find_host( svcdata->host_name );
+
+    /* find the host associated with this service */
+    host * host   = NULL;
+    if((host=svc->host_ptr)==NULL)
+        return NEBERROR_CALLBACKCANCEL;
     set_target_queue( host, svc );
 
     /* local check? */
