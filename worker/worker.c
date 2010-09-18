@@ -29,6 +29,7 @@
 
 int current_number_of_workers                = 0;
 volatile sig_atomic_t current_number_of_jobs = 0;  // must be signal safe
+pthread_t status_thr;
 
 int     orig_argc;
 char ** orig_argv;
@@ -90,28 +91,34 @@ int main (int argc, char **argv) {
 
     logger( GM_LOG_DEBUG, "main process started\n");
 
+    /* setup shared memory */
+    setup_child_communicator();
+
+    /* start status worker */
+    make_new_child(GM_WORKER_STATUS);
+
+    /* standalone mode */
     if(mod_gm_opt->max_worker == 1) {
         worker_client(GM_WORKER_STANDALONE);
         exit( EXIT_SUCCESS );
     }
 
-    setup_child_communicator();
-
-    // create initial childs
+    /* setup childs */
     int x;
     for(x=0; x < mod_gm_opt->min_worker; x++) {
-        make_new_child();
+        make_new_child(GM_WORKER_MULTI);
     }
 
-    // maintain the population
+    /* maintain the population */
     int now                 = (int)time(NULL);
     int last_time_checked   = now;
     while (1) {
-        // check number of workers every 30 seconds
-        // sleep gets canceled anyway when receiving signals
-        sleep(30);
+        /* check number of workers every 3 seconds
+         * sleep gets canceled anyway when receiving signals
+         */
+        sleep(3);
 
-        // collect finished workers
+        /* collect finished workers */
         int status;
         while(waitpid(-1, &status, WNOHANG) > 0) {
             current_number_of_workers--;
@@ -121,9 +128,9 @@ int main (int argc, char **argv) {
         if(current_number_of_jobs < 0) { current_number_of_jobs = 0; }
         if(current_number_of_jobs > current_number_of_workers) { current_number_of_jobs = current_number_of_workers; }
 
-        // keep up minimum population
+        /* keep up minimum population */
         for (x = current_number_of_workers; x < mod_gm_opt->min_worker; x++) {
-            make_new_child();
+            make_new_child(GM_WORKER_MULTI);
         }
 
         now = (int)time(NULL);
@@ -133,8 +140,8 @@ int main (int argc, char **argv) {
 
         int target_number_of_workers = adjust_number_of_worker(mod_gm_opt->min_worker, mod_gm_opt->max_worker, current_number_of_workers, current_number_of_jobs);
         for (x = current_number_of_workers; x < target_number_of_workers; x++) {
-            // top up the worker pool
-            make_new_child();
+            /* top up the worker pool */
+            make_new_child(GM_WORKER_MULTI);
         }
     }
 
@@ -144,7 +151,7 @@ int main (int argc, char **argv) {
 
 
 /* start up new worker */
-int make_new_child() {
+int make_new_child(int mode) {
     logger( GM_LOG_TRACE, "make_new_child()\n");
     pid_t pid = 0;
 
@@ -167,14 +174,15 @@ int make_new_child() {
         signal(SIGTERM, SIG_DFL);
 
         // do the real work
-        worker_client(GM_WORKER_MULTI);
+        worker_client(mode);
 
         exit(EXIT_SUCCESS);
     }
 
     /* parent  */
     else if(pid > 0){
-        current_number_of_workers++;
+        if(mode != GM_WORKER_STATUS)
+            current_number_of_workers++;
     }
 
     return GM_OK;
@@ -252,18 +260,18 @@ int parse_arguments(int argc, char **argv) {
 /* verify our option */
 int verify_options(mod_gm_opt_t *opt) {
 
-    // stdout loggin in daemon mode is pointless
+    /* stdout loggin in daemon mode is pointless */
     if( opt->debug_level > GM_LOG_TRACE && opt->daemon_mode == GM_ENABLED) {
         opt->debug_level = GM_LOG_TRACE;
     }
 
-    // did we get any server?
+    /* did we get any server? */
     if(opt->server_num == 0) {
         logger( GM_LOG_ERROR, "please specify at least one server\n" );
         return(GM_ERROR);
     }
 
-    // nothing set by hand -> defaults
+    /* nothing set by hand -> defaults */
     if( opt->set_queues_by_hand == 0 ) {
         logger( GM_LOG_DEBUG, "starting client with default queues\n" );
         opt->hosts    = GM_ENABLED;
@@ -271,7 +279,7 @@ int verify_options(mod_gm_opt_t *opt) {
         opt->events   = GM_ENABLED;
     }
 
-    // do we have queues to serve?
+    /* do we have queues to serve? */
     if(   opt->servicegroups_num == 0
        && opt->hostgroups_num    == 0
        && opt->hosts    == GM_DISABLED
@@ -285,7 +293,7 @@ int verify_options(mod_gm_opt_t *opt) {
     if(opt->min_worker > opt->max_worker)
         opt->min_worker = opt->max_worker;
 
-    // encryption without key?
+    /* encryption without key? */
     if(opt->encryption == GM_ENABLED) {
         if(opt->crypt_key == NULL && opt->keyfile == NULL) {
             logger( GM_LOG_ERROR, "no encryption key provided, please use --key=... or keyfile=... or disable encryption\n");
@@ -340,13 +348,13 @@ void check_signal(int sig) {
     int shmid;
     int *shm;
 
-    // Locate the segment.
+    /* Locate the segment. */
     if ((shmid = shmget(mod_gm_shm_key, GM_SHM_SIZE, 0666)) < 0) {
         perror("shmget");
         exit(1);
     }
 
-    // Now we attach the segment to our data space.
+    /* Now we attach the segment to our data space. */
     if ((shm = shmat(shmid, NULL, 0)) == (int *) -1) {
         perror("shmat");
         exit(1);
@@ -354,8 +362,9 @@ void check_signal(int sig) {
 
     logger( GM_LOG_TRACE, "check_signal: %i\n", shm[0]);
     current_number_of_jobs = shm[0];
+    shm[1] = current_number_of_workers;
 
-    // detach from shared memory
+    /* detach from shared memory */
     if(shmdt(shm) < 0)
         perror("shmdt");
 
@@ -366,7 +375,7 @@ void check_signal(int sig) {
 void setup_child_communicator() {
     logger( GM_LOG_TRACE, "setup_child_communicator()\n");
 
-    // setup signal handler
+    /* setup signal handler */
     struct sigaction usr1_action;
     sigset_t block_mask;
     sigfillset (&block_mask); // block all signals
@@ -378,21 +387,23 @@ void setup_child_communicator() {
     int shmid;
     int * shm;
 
-    // Create the segment.
+    /* Create the segment. */
     mod_gm_shm_key = getpid(); // use pid as shm key
     if ((shmid = shmget(mod_gm_shm_key, GM_SHM_SIZE, IPC_CREAT | 0666)) < 0) {
         perror("shmget");
         exit(1);
     }
 
-    // Now we attach the segment to our data space.
+    /* Now we attach the segment to our data space. */
     if ((shm = shmat(shmid, NULL, 0)) == (int *) -1) {
         perror("shmat");
         exit(1);
     }
-    shm[0] = 0;
+    shm[0] = 0; /* current jobs    */
+    shm[1] = 0; /* current worker  */
+    shm[2] = 0; /* done jobs       */
 
-    // detach from shared memory
+    /* detach from shared memory */
     if(shmdt(shm) < 0)
         perror("shmdt");
 
@@ -410,14 +421,14 @@ int adjust_number_of_worker(int min, int max, int cur_workers, int cur_jobs) {
     if(cur_workers == max)
         return max;
 
-    // > 90% workers running
+    /* > 90% workers running */
     if(cur_jobs > 0 && ( perc_running > 90 || idle <= 2 )) {
-        // increase target number by 2
+        /* increase target number by 2 */
         logger( GM_LOG_TRACE, "starting 2 new workers\n");
         target = cur_workers + 2;
     }
 
-    // dont go over the top
+    /* dont go over the top */
     if(target > max) { target = max; }
 
     if(target != cur_workers)
@@ -453,7 +464,7 @@ void clean_exit(int sig) {
 
 /* stop all childs */
 void stop_childs(int mode) {
-    // ignore some signals for now
+    /* ignore some signals for now */
     signal(SIGTERM, SIG_IGN);
     signal(SIGINT,  SIG_IGN);
 
@@ -472,7 +483,7 @@ void stop_childs(int mode) {
             current_number_of_workers--;
             logger( GM_LOG_TRACE, "wait() %d exited with %d\n", chld, status);
             if(mode == GM_WORKER_RESTART) {
-                make_new_child();
+                make_new_child(GM_WORKER_MULTI);
             }
         }
         sleep(1);

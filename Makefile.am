@@ -17,6 +17,7 @@ common_SOURCES             = common/base64.c \
                              common/crypt.c  \
                              common/rijndael.c \
                              common/gearman.c \
+                             common/gearman_utils.c \
                              common/utils.c
 
 pkglib_LIBRARIES           = mod_gearman.so
@@ -37,11 +38,7 @@ send_gearman_SOURCES       = $(common_SOURCES) \
                              tools/tools_logger.c \
                              tools/send_gearman.c
 
-check_gearman_SOURCES      = common/utils.c \
-                             common/base64.c \
-                             common/crypt.c  \
-                             common/rijndael.c \
-                             common/gearman_utils.c \
+check_gearman_SOURCES      = $(common_SOURCES) \
                              tools/tools_logger.c \
                              tools/check_gearman.c
 

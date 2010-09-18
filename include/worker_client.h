@@ -37,6 +37,7 @@
 
 #define GM_WORKER_MULTI         0
 #define GM_WORKER_STANDALONE    1
+#define GM_WORKER_STATUS        2
 
 typedef struct gm_job_struct {
     char         * host_name;
@@ -68,3 +69,4 @@ void alarm_sighandler(int sig);
 void send_state_to_parent(int status);
 void execute_safe_command(void);
 void clean_worker_exit(int signal);
+void *return_status( gearman_job_st *, void *, size_t *, gearman_return_t *);

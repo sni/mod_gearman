@@ -29,33 +29,6 @@
 #include <errno.h>
 #include <libgearman/gearman.h>
 
-/* function status structure */
-typedef struct mod_gm_status_function {
-    char         * queue;
-    int            total;
-    int            running;
-    int            waiting;
-    int            worker;
-} mod_gm_status_function_t;
-
-/* worker status structure */
-typedef struct mod_gm_status_worker {
-    int            fd;
-    char         * ip;
-    char         * id;
-    char         * function[GM_LISTSIZE];
-} mod_gm_status_worker_t;
-
-
-/* server status structure */
-typedef struct mod_gm_status_server {
-    mod_gm_status_worker_t    * worker[GM_LISTSIZE];
-    int                         worker_num;
-    mod_gm_status_function_t  * function[GM_LISTSIZE];
-    int                         function_num;
-} mod_gm_server_status_t;
-
-
 typedef void*( mod_gm_worker_fn)(gearman_job_st *job, void *context, size_t *result_size, gearman_return_t *ret_ptr);
 
 int create_client( char ** server_list, gearman_client_st * client);
@@ -65,4 +38,3 @@ int worker_add_function( gearman_worker_st * worker, char * queue, gearman_worke
 void *dummy( gearman_job_st *, void *, size_t *, gearman_return_t * );
 void free_client(gearman_client_st *client);
 void free_worker(gearman_worker_st *worker);
-int get_gearman_server_data(mod_gm_server_status_t *stats, char ** message, char * addr);

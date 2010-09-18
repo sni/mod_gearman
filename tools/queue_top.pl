@@ -128,7 +128,7 @@ exit;
 
 #################################################################
 sub print_queue {
-    my($data) = @_;;
+    my($data) = @_;
     return unless defined $data;
     return unless @{$data} > 0;
     my $table = Text::TabularDisplay->new('Queue Name', 'Worker Available', 'Jobs Waiting', 'Jobs Running');

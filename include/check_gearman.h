@@ -27,14 +27,9 @@
 
 #include <stdlib.h>
 #include <signal.h>
-/*
-#include <stdio.h>
-#include <sys/types.h>
-#include <unistd.h>
-#include "common.h"
-*/
 
 int main (int argc, char **argv);
 void print_usage(void);
 void alarm_sighandler(int sig);
 int check_server(char * server, int port);
+int check_worker(char * server, int port, char * queue, char * send, char * expect);

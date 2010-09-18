@@ -400,6 +400,26 @@ image:mod_gearman_performance_1.png["Performance 1"]
 image:mod_gearman_performance_2.png["Performance 2"]
 
 
+How to Monitor Job Server and Worker
+------------------------------------
+Use the supplied check_gearman to monitor your worker and job server.
+Worker have a own queue for status requests.
+
+.......
+ %> ./check_gearman -H <job server hostname> -q worker_<worker hostname> -t 10 -s check
+ check_gearman OK - localhost has 10 worker and is working on 1 jobs|worker=10 running=1 total_jobs_done=1508
+.......
+This will send a test job to the given job server and the worker will
+respond with some statistical data.
+
+
+Job server can be monitored with:
+.......
+ %>./check_gearman -H localhost -t 20
+ check_gearman OK - 6 jobs running and 0 jobs waiting.|check_results=0;0;1;10;100 host=0;0;9;10;100 service=0;6;9;10;100
+.......
+
+
 
 Hints
 -----
