@@ -415,8 +415,21 @@ respond with some statistical data.
 
 Job server can be monitored with:
 .......
- %>./check_gearman -H localhost -t 20
+ %> ./check_gearman -H localhost -t 20
  check_gearman OK - 6 jobs running and 0 jobs waiting.|check_results=0;0;1;10;100 host=0;0;9;10;100 service=0;6;9;10;100
+.......
+
+
+
+How to Submit Passive Checks
+----------------------------
+
+You can use send_gearman to submit active and passive checks to a
+gearman job server where they will be processed just like a finished
+check would do.
+
+.......
+ %> ./send_gearman --server=<job server> --encryption=no --host="<hostname>" --service="<service>" --message="message"
 .......
 
 
