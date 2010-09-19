@@ -426,7 +426,7 @@ void execute_safe_command() {
         /* signaled */
         else if(return_code >= 128 && return_code < 256) {
             char * signame = nr2signal((int)(return_code-128));
-            snprintf( plugin_output, sizeof( plugin_output ), "CRITICAL: Return code of %d is out of bounds. Plugin exited by signal %s", (int)(return_code-128), signame);
+            snprintf( plugin_output, sizeof( plugin_output ), "CRITICAL: Return code of %d is out of bounds. Plugin exited by signal %s", (int)(return_code), signame);
             return_code = STATE_CRITICAL;
             free(signame);
         }

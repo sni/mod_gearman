@@ -6,21 +6,18 @@ General
 -------
 
  - remove debug symbols (-g) and add strip (-s) again
- - verify cancelation of checks
  - remove duplicate errors from logfile
- - handle sync host checks correct
+ - handle sync host checks correctly
 
 Worker
 ------
 
  - SIGTERM on client should finish after current job
  - childs should sent back their final result after SIGTERM
- - add "worker_hostname" queue to directly request worker status
-   * add check_gearman_worker check script
 
 WISH LIST
 =========
 
  - no need to fork for clean plugins. (check_icmp, check_http...)
- - implement some plugins directly into the worker
- - add distributing notifications
+ - implement some plugins directly into worker
+ - add distributing notifications ( maybe not that useful... )
