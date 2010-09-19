@@ -492,7 +492,7 @@ void send_result_back() {
             strncat(temp_buffer2, ") - ", (sizeof(temp_buffer2)-1));
         }
         strncat(temp_buffer2, exec_job->output, (sizeof(temp_buffer2)-1));
-        strncat(temp_buffer2, "\n", (sizeof(temp_buffer2)-1));
+        strncat(temp_buffer2, "\n\n\n", (sizeof(temp_buffer2)-1));
         strncat(temp_buffer1, temp_buffer2, (sizeof(temp_buffer1)-1));
         free(exec_job->output);
     }

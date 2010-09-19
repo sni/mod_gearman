@@ -23,7 +23,7 @@ WHO=`whoami`
 case "$1" in
     start)
         echo -n "Starting $NAME "
-        if [ $WHO == "root" ]; then
+        if [ "$WHO" = "root" ]; then
             su - $USER -c  "$DAEMON -d --config=$CONFIG"
         else
             $DAEMON -d --config=$CONFIG
