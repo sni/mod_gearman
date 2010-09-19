@@ -1988,6 +1988,34 @@ KDbtRmPFymH3raTLnwiCOAq/gRvo1BMGM6ZTVAFBEBmfAW5GJgiCIAiCIAjCCHIDDc28VnEDIXdk
 gMw7k+2u395ybcANFFXyzGvW3HUhF8qEMCVltPow/AO6YdR5sPTQ4wAAAABJRU5ErkJggg==" />
 </span></p></div>
 </div>
+<h2 id="_how_to_monitor_job_server_and_worker">How to Monitor Job Server and Worker</h2>
+<div class="sectionbody">
+<div class="paragraph"><p>Use the supplied check_gearman to monitor your worker and job server.
+Worker have a own queue for status requests.</p></div>
+<div class="literalblock">
+<div class="content">
+<pre><tt> %&gt; ./check_gearman -H &lt;job server hostname&gt; -q worker_&lt;worker hostname&gt; -t 10 -s check
+ check_gearman OK - localhost has 10 worker and is working on 1 jobs|worker=10 running=1 total_jobs_done=1508</tt></pre>
+</div></div>
+<div class="paragraph"><p>This will send a test job to the given job server and the worker will
+respond with some statistical data.</p></div>
+<div class="paragraph"><p>Job server can be monitored with:</p></div>
+<div class="literalblock">
+<div class="content">
+<pre><tt> %&gt; ./check_gearman -H localhost -t 20
+ check_gearman OK - 6 jobs running and 0 jobs waiting.|check_results=0;0;1;10;100 host=0;0;9;10;100 service=0;6;9;10;100</tt></pre>
+</div></div>
+</div>
+<h2 id="_how_to_submit_passive_checks">How to Submit Passive Checks</h2>
+<div class="sectionbody">
+<div class="paragraph"><p>You can use send_gearman to submit active and passive checks to a
+gearman job server where they will be processed just like a finished
+check would do.</p></div>
+<div class="literalblock">
+<div class="content">
+<pre><tt> %&gt; ./send_gearman --server=&lt;job server&gt; --encryption=no --host="&lt;hostname&gt;" --service="&lt;service&gt;" --message="message"</tt></pre>
+</div></div>
+</div>
 <h2 id="_hints">Hints</h2>
 <div class="sectionbody">
 <div class="ulist"><ul>
@@ -2032,7 +2060,7 @@ If you have some checks which should not run parallel, just setup a
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2010-09-14 18:52:42 CEST
+Last updated 2010-09-19 16:48:22 CEST
 </div>
 </div>
 </body>
