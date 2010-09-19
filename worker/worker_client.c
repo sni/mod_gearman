@@ -252,6 +252,11 @@ void do_exec_job( ) {
         logger( GM_LOG_DEBUG, "got eventhandler job\n");
     }
 
+    /* check proper timeout value */
+    if( exec_job->timeout <= 0 ) {
+        exec_job->timeout = mod_gm_opt->job_timeout;
+    }
+
     logger( GM_LOG_TRACE, "timeout %i\n", exec_job->timeout);
 
     /* get the check start time */

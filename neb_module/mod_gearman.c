@@ -32,11 +32,13 @@
 NEB_API_VERSION( CURRENT_NEB_API_VERSION );
 
 /* import some global variables */
-extern int currently_running_host_checks;
-extern int currently_running_service_checks;
+extern int          currently_running_host_checks;
+extern int          currently_running_service_checks;
+extern int          service_check_timeout;
+extern int          host_check_timeout;
 extern timed_event *event_list_low;
 extern timed_event *event_list_low_tail;
-extern int process_performance_data;
+extern int          process_performance_data;
 
 /* global variables */
 void *gearman_module_handle=NULL;
@@ -361,7 +363,7 @@ static int handle_host_check( int event_type, void *data ) {
               hst->name,
               ( int )start_time.tv_sec,
               ( int )start_time.tv_usec,
-              hostdata->timeout,
+              host_check_timeout,
               processed_command
             );
     temp_buffer[sizeof( temp_buffer )-1]='\x0';
@@ -486,7 +488,7 @@ static int handle_svc_check( int event_type, void *data ) {
               svcdata->service_description,
               ( int )start_time.tv_sec,
               ( int )start_time.tv_usec,
-              svcdata->timeout,
+              service_check_timeout,
               processed_command
             );
     temp_buffer[sizeof( temp_buffer )-1]='\x0';
