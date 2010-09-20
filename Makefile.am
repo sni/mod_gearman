@@ -51,9 +51,9 @@ TESTS            = 01_utils 02_full
 
 replace_vars = sed 's:%CONFIG%:$(DESTDIR)$(sysconfdir)/mod_gearman.conf:g' | \
                sed 's:%PIDFILE%:$(DESTDIR)$(localstatedir)/mod_gearman/mod_gearman_worker.pid:g' | \
+               sed 's:%LOGFILE%:$(DESTDIR)$(localstatedir)/mod_gearman/mod_gearman_worker.log:g' | \
                sed 's:%WORKERBIN%:$(DESTDIR)$(bindir)/mod_gearman_worker:g' | \
-               sed 's:%USER%:$(user):g' | \
-               sed 's:%LOGFILE%:$(DESTDIR)$(localstatedir)/log/mod_gearman_worker.log:g'
+               sed 's:%USER%:$(user):g'
 
 EXTRA_DIST = COPYING etc extras tools/queue_top.pl include autogen.sh \
              THANKS README README.html mod_gearman.png patches Changes \
@@ -123,7 +123,6 @@ install-exec-local:
 
 install-data-local:
 	$(MKDIR_P) $(DESTDIR)$(localstatedir)/mod_gearman/
-	$(MKDIR_P) $(DESTDIR)$(localstatedir)/log/
 	$(install_sh_PROGRAM) extras/example.conf $(DESTDIR)$(datarootdir)/examples/example.conf
 	@echo ""
 	@echo "################################################################"

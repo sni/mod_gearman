@@ -568,8 +568,12 @@ int write_pid_file() {
 
     /* now write new pidfile */
     fp = fopen(mod_gm_opt->pidfile,"w+");
-    if(fp == NULL)
-        perror("fopen");
+    if(fp == NULL) {
+        perror(mod_gm_opt->pidfile);
+        logger( GM_LOG_ERROR, "cannot write pidfile\n");
+        return(GM_ERROR);
+    }
+
 
     fprintf(fp, "%d\n", getpid());
     fclose(fp);
