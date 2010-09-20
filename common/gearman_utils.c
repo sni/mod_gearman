@@ -92,3 +92,4 @@ int get_gearman_server_data(mod_gm_server_status_t *stats, char ** message, char
 
     return( STATE_OK );
 }
+

@@ -43,3 +43,4 @@ int read_keyfile(mod_gm_opt_t *opt);
 char * nr2signal(int sig);
 void string2timeval(char * value, struct timeval * t);
 double timeval2double(struct timeval * t);
+
