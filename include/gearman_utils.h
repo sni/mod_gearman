@@ -58,3 +58,4 @@ typedef struct mod_gm_status_server {
 
 
 int get_gearman_server_data(mod_gm_server_status_t *stats, char ** message, char * hostname, int port);
+

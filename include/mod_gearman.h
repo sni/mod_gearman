@@ -52,3 +52,4 @@ int nebmodule_deinit( int, int );
 
 /* global variables */
 mod_gm_opt_t *mod_gm_opt;
+

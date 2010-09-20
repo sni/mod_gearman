@@ -40,3 +40,4 @@ void print_usage(void);
 int verify_options(mod_gm_opt_t *opt);
 int send_result(void);
 void alarm_sighandler(int sig);
+

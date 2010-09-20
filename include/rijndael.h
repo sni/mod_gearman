@@ -19,3 +19,4 @@ void rijndaelDecrypt(const unsigned long *rk, int nrounds,
 #define NROUNDS(keybits)   ((keybits)/32+6)
 
 #endif
+

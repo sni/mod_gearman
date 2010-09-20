@@ -289,3 +289,4 @@ int check_worker(char * hostname, int port, char * queue, char * send, char * ex
     printf("%s OK - %s\n", PLUGIN_NAME, result );
     return( STATE_OK );
 }
+

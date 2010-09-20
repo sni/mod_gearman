@@ -38,3 +38,4 @@ int worker_add_function( gearman_worker_st * worker, char * queue, gearman_worke
 void *dummy( gearman_job_st *, void *, size_t *, gearman_return_t * );
 void free_client(gearman_client_st *client);
 void free_worker(gearman_worker_st *worker);
+

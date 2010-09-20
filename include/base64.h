@@ -50,3 +50,4 @@ int _base64_decode_triple(char quadruple[4], unsigned char *result);
  * @return length of converted data on success, -1 otherwise
  */
 size_t base64_decode(char *source, unsigned char *target, size_t targetlen);
+
