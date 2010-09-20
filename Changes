@@ -1,6 +1,7 @@
 This file documents the revision history for mod_gearman.
 
 0.3    Mon Sep 20 09:43:55 CEST 2010
+          - added check_gearman to monitor job server and worker
           - added send_gearman to submit passive results
           - fixed make dist
 
