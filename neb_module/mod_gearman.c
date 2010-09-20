@@ -701,7 +701,7 @@ static void start_threads(void) {
         int x;
         for(x = 0; x < mod_gm_opt->result_workers; x++) {
             result_threads_running++;
-            pthread_create ( &result_thr[x], NULL, result_worker, (void *)result_threads_running);
+            pthread_create ( &result_thr[x], NULL, result_worker, (void *)&result_threads_running);
         }
     }
 }
