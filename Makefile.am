@@ -57,7 +57,7 @@ replace_vars = sed 's:%CONFIG%:$(DESTDIR)$(sysconfdir)/mod_gearman.conf:g' | \
 
 EXTRA_DIST = COPYING etc extras tools/queue_top.pl include autogen.sh \
              THANKS README README.html mod_gearman.png patches Changes \
-             mod_gearman_performance_1.png mod_gearman_performance_2.png
+             worker/initscript.in
 
 # other targets
 mod_gearman.o: $(mod_gearman_so_OBJECTS) $(mod_gearman_so_DEPENDENCIES)

@@ -1,7 +1,8 @@
 This file documents the revision history for mod_gearman.
 
-0.3    Tue ...
+0.3    Mon Sep 20 09:43:55 CEST 2010
           - added send_gearman to submit passive results
+          - fixed make dist
 
 0.2    Tue Sep 14 09:30:31 CEST 2010
           - added support for config files
