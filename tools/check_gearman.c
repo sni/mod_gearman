@@ -35,7 +35,9 @@ char * opt_server  = NULL;
 char * opt_queue   = NULL;
 char * opt_send    = NULL;
 char * opt_expect  = NULL;
-in_port_t opt_port = GM_SERVER_DEFAULT_PORT;
+
+char * server_list[GM_LISTSIZE];
+int server_list_num = 0;
 
 gearman_client_st client;
 
@@ -46,7 +48,6 @@ int main (int argc, char **argv) {
     /*
      * and parse command line
      */
-
     int opt;
     while((opt = getopt(argc, argv, "hvH:t:w:c:q:s:e:p:")) != -1) {
         switch(opt) {
@@ -61,6 +62,7 @@ int main (int argc, char **argv) {
             case 'c':   opt_critical = atoi(optarg);
                         break;
             case 'H':   opt_server = optarg;
+                        server_list[server_list_num++] = optarg;
                         break;
             case 's':   opt_send = optarg;
                         break;
@@ -68,13 +70,12 @@ int main (int argc, char **argv) {
                         break;
             case 'q':   opt_queue = optarg;
                         break;
-            case 'p':   opt_port = atoi(optarg);
-                        break;
             case '?':   printf("Error - No such option: `%c'\n\n", optopt);
                         print_usage();
                         break;
         }
     }
+    server_list[server_list_num] = NULL;
 
     if(opt_server == NULL) {
         printf("Error - no hostname given\n\n");
@@ -91,13 +92,13 @@ int main (int argc, char **argv) {
 
     int result;
     if(opt_send != NULL ) {
-        alarm(opt_timeout+1);
-        result = check_worker(opt_server, opt_port, opt_queue, opt_send, opt_expect);
+        alarm(opt_timeout);
+        result = check_worker(opt_queue, opt_send, opt_expect);
     }
     else {
         /* get gearman server statistics */
         alarm(opt_timeout);
-        result = check_server(opt_server, opt_port);
+        result = check_server(opt_server);
     }
     alarm(0);
 
@@ -111,7 +112,6 @@ void print_usage() {
     printf("usage:\n");
     printf("\n");
     printf("check_gearman [ -H=<hostname>                ]\n");
-    printf("              [ -p=<port>                    ]\n");
     printf("              [ -t=<timeout>                 ]\n");
     printf("              [ -w=<jobs warning level>      ]\n");
     printf("              [ -c=<jobs critical level>     ]\n");
@@ -154,25 +154,33 @@ void print_usage() {
 void alarm_sighandler(int sig) {
     logger( GM_LOG_TRACE, "alarm_sighandler(%i)\n", sig );
 
-    printf("timeout while connecting to %s:%i\n", opt_server, opt_port);
+    printf("timeout while waiting for %s\n", opt_server);
 
     exit( STATE_CRITICAL );
 }
 
 
 /* check gearman server */
-int check_server(char * hostname, int port) {
+int check_server(char * hostname) {
+    int port = GM_SERVER_DEFAULT_PORT;
+    char * server = strsep(&hostname, ":");
+    char * port_c = strsep(&hostname, "\x0");
+    if(port_c != NULL)
+        port = atoi(port_c);
+
     mod_gm_server_status_t *stats;
     int x;
     stats = malloc(sizeof(mod_gm_server_status_t));
     char * message = NULL;
-    int rc = get_gearman_server_data(stats, &message, hostname, port);
+    int rc = get_gearman_server_data(stats, &message, server, port);
     int total_running = 0;
     int total_waiting = 0;
+    int checked       = 0;
     if( rc == STATE_OK ) {
         for(x=0; x<stats->function_num;x++) {
             if(opt_queue != NULL && strcmp(opt_queue, stats->function[x]->queue))
                 continue;
+            checked++;
             total_running += stats->function[x]->running;
             total_waiting += stats->function[x]->waiting;
             if(stats->function[x]->waiting > 0 && stats->function[x]->worker == 0) {
@@ -194,6 +202,12 @@ int check_server(char * hostname, int port) {
                 strncat(message, buf, GM_BUFFERSIZE);
             }
         }
+    }
+    if(opt_queue != NULL && checked == 0) {
+        char * buf = malloc(GM_BUFFERSIZE);
+        snprintf(buf, GM_BUFFERSIZE, "Queue %s not found", opt_queue );
+        strncat(message, buf, GM_BUFFERSIZE);
+        rc = STATE_WARNING;
     }
 
     /* print plugin name and state */
@@ -226,20 +240,14 @@ int check_server(char * hostname, int port) {
 
 
 /* send job to worker and check result */
-int check_worker(char * hostname, int port, char * queue, char * send, char * expect) {
-
-    char * server_list[2];
-    char server[256];
-    snprintf(server, 256, "%s:%i", hostname, port);
-    server_list[0] = server;
-    server_list[1] = NULL;
+int check_worker(char * queue, char * send, char * expect) {
 
     /* create client */
     if ( create_client( server_list, &client ) != GM_OK ) {
-        printf("%s UNKNOWN - cannot start client for %s\n", PLUGIN_NAME, server);
+        printf("%s UNKNOWN - cannot create gearman client\n", PLUGIN_NAME);
         return( STATE_UNKNOWN );
     }
-    gearman_client_set_timeout(&client, opt_timeout*1000);
+    gearman_client_set_timeout(&client, (opt_timeout-1)*1000/server_list_num);
 
     gearman_return_t ret;
     char * result;
@@ -277,11 +285,11 @@ int check_worker(char * hostname, int port, char * queue, char * send, char * ex
 
     if( expect != NULL ) {
         if( strstr(result, expect) != NULL) {
-            printf("%s OK - send worker %s: '%s' response: '%s'\n", PLUGIN_NAME, server, send, result);
+            printf("%s OK - send worker '%s' response: '%s'\n", PLUGIN_NAME, send, result);
             return( STATE_OK );
         }
         else {
-            printf("%s CRITICAL - send worker %s: '%s' response: '%s', expected '%s'\n", PLUGIN_NAME, server, send, result, expect);
+            printf("%s CRITICAL - send worker: '%s' response: '%s', expected '%s'\n", PLUGIN_NAME, send, result, expect);
             return( STATE_CRITICAL );
         }
     }
@@ -289,4 +297,3 @@ int check_worker(char * hostname, int port, char * queue, char * send, char * ex
     printf("%s OK - %s\n", PLUGIN_NAME, result );
     return( STATE_OK );
 }
-

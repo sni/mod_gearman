@@ -123,6 +123,7 @@ int main (int argc, char **argv) {
         while(waitpid(-1, &status, WNOHANG) > 0) {
             current_number_of_workers--;
             logger( GM_LOG_TRACE, "waitpid() %d\n", status);
+            update_runtime_data();
         }
 
         if(current_number_of_jobs < 0) { current_number_of_jobs = 0; }
@@ -183,6 +184,7 @@ int make_new_child(int mode) {
     else if(pid > 0){
         if(mode != GM_WORKER_STATUS)
             current_number_of_workers++;
+            update_runtime_data();
     }
 
     return GM_OK;
@@ -344,30 +346,7 @@ void print_usage() {
 /* check child signal pipe */
 void check_signal(int sig) {
     logger( GM_LOG_TRACE, "check_signal(%i)\n", sig);
-
-    int shmid;
-    int *shm;
-
-    /* Locate the segment. */
-    if ((shmid = shmget(mod_gm_shm_key, GM_SHM_SIZE, 0666)) < 0) {
-        perror("shmget");
-        exit(1);
-    }
-
-    /* Now we attach the segment to our data space. */
-    if ((shm = shmat(shmid, NULL, 0)) == (int *) -1) {
-        perror("shmat");
-        exit(1);
-    }
-
-    logger( GM_LOG_TRACE, "check_signal: %i\n", shm[0]);
-    current_number_of_jobs = shm[0];
-    shm[1] = current_number_of_workers;
-
-    /* detach from shared memory */
-    if(shmdt(shm) < 0)
-        perror("shmdt");
-
+    update_runtime_data();
     return;
 }
 
@@ -606,6 +585,37 @@ void reload_config(int sig) {
     stop_childs(GM_WORKER_RESTART);
 
     logger( GM_LOG_INFO, "reloading config was successful\n");
+
+    return;
+}
+
+
+/* update the number of worker and jobs */
+void update_runtime_data() {
+    logger( GM_LOG_TRACE, "update_worker_num()\n");
+
+    int shmid;
+    int *shm;
+
+    /* Locate the segment. */
+    if ((shmid = shmget(mod_gm_shm_key, GM_SHM_SIZE, 0666)) < 0) {
+        perror("shmget");
+        exit(1);
+    }
+
+    /* Now we attach the segment to our data space. */
+    if ((shm = shmat(shmid, NULL, 0)) == (int *) -1) {
+        perror("shmat");
+        exit(1);
+    }
+
+    logger( GM_LOG_TRACE, "update_runtime_data: %i\n", shm[0]);
+    current_number_of_jobs = shm[0];
+    shm[1] = current_number_of_workers;
+
+    /* detach from shared memory */
+    if(shmdt(shm) < 0)
+        perror("shmdt");
 
     return;
 }

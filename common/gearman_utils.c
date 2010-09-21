@@ -75,11 +75,19 @@ int get_gearman_server_data(mod_gm_server_status_t *stats, char ** message, char
     while ( (line = strsep( &output, "\n" )) != NULL ) {
         logger( GM_LOG_TRACE, "%s\n", line );
         if(!strcmp( line, "."))
-            break;
+            return( STATE_OK );
         char * name    = strsep(&line, "\t");
+        if(name == NULL)
+            break;
         char * total   = strsep(&line, "\t");
+        if(total == NULL)
+            break;
         char * running = strsep(&line, "\t");
+        if(running == NULL)
+            break;
         char * worker  = strsep(&line, "\x0");
+        if(worker == NULL)
+            break;
         mod_gm_status_function_t *func = malloc(sizeof(mod_gm_status_function_t));
         func->queue   = name;
         func->running = atoi(running);
@@ -90,6 +98,6 @@ int get_gearman_server_data(mod_gm_server_status_t *stats, char ** message, char
         logger( GM_LOG_DEBUG, "%i: name:%-20s worker:%-5i waiting:%-5i running:%-5i\n", stats->function_num, func->queue, func->worker, func->waiting, func->running );
     }
 
-    return( STATE_OK );
+    snprintf(*message, GM_BUFFERSIZE, "got no valid data from %s:%i\n", hostname, (int)port);
+    return( STATE_UNKNOWN );
 }
-
