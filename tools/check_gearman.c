@@ -52,11 +52,11 @@ int main (int argc, char **argv) {
     while((opt = getopt(argc, argv, "vVhH:t:w:c:q:s:e:p:")) != -1) {
         switch(opt) {
             case 'h':   print_usage();
-                        exit( STATE_UNKNOWN );
+                        break;
             case 'v':   opt_verbose++;
                         break;
             case 'V':   print_version();
-                        exit( STATE_OK );
+                        break;
             case 't':   opt_timeout = atoi(optarg);
                         break;
             case 'w':   opt_warning = atoi(optarg);
@@ -113,6 +113,7 @@ int main (int argc, char **argv) {
 void print_version() {
     printf("check_gearman: version %s running on libgearman %s\n", GM_VERSION, gearman_version());
     printf("\n");
+    exit( STATE_UNKNOWN );
 }
 
 
