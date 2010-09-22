@@ -57,5 +57,4 @@ typedef struct mod_gm_status_server {
 } mod_gm_server_status_t;
 
 
-int get_gearman_server_data(mod_gm_server_status_t *stats, char ** message, char * hostname, int port);
-
+int get_gearman_server_data(mod_gm_server_status_t *stats, char ** message, char **version, char * hostname, int port);

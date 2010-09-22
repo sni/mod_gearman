@@ -27,12 +27,13 @@
 
 
 /* get worker/jobs data from gearman server */
-int get_gearman_server_data(mod_gm_server_status_t *stats, char ** message, char * hostname, int port) {
+int get_gearman_server_data(mod_gm_server_status_t *stats, char ** message, char ** version, char * hostname, int port) {
     int sockfd;
     struct sockaddr_in serv_addr;
     struct hostent *server;
 
     *message = malloc(GM_BUFFERSIZE);
+    *version = malloc(GM_BUFFERSIZE);
 
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if( sockfd < 0 ) {
@@ -55,7 +56,7 @@ int get_gearman_server_data(mod_gm_server_status_t *stats, char ** message, char
         return( STATE_CRITICAL );
     }
 
-    char * cmd = "status\n";
+    char * cmd = "status\nversion\n";
     int n = write(sockfd,cmd,strlen(cmd));
     if (n < 0) {
         snprintf(*message, GM_BUFFERSIZE, "failed to send to %s:%i - %s\n", hostname, (int)port, strerror(errno));
@@ -74,8 +75,13 @@ int get_gearman_server_data(mod_gm_server_status_t *stats, char ** message, char
     char * output = strdup(buf);
     while ( (line = strsep( &output, "\n" )) != NULL ) {
         logger( GM_LOG_TRACE, "%s\n", line );
-        if(!strcmp( line, "."))
+        if(!strcmp( line, ".")) {
+            if((line = strsep( &output, "\n" )) != NULL) {
+                logger( GM_LOG_TRACE, "%s\n", line );
+                snprintf(*version, GM_BUFFERSIZE, "%s", line);
+            }
             return( STATE_OK );
+        }
         char * name    = strsep(&line, "\t");
         if(name == NULL)
             break;

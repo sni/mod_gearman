@@ -45,6 +45,9 @@ gearman_client_st client;
 /* work starts here */
 int main (int argc, char **argv) {
 
+    mod_gm_opt = malloc(sizeof(mod_gm_opt_t));
+    set_default_options(mod_gm_opt);
+
     /*
      * and parse command line
      */
@@ -77,6 +80,7 @@ int main (int argc, char **argv) {
                         break;
         }
     }
+    mod_gm_opt->debug_level = opt_verbose;
     server_list[server_list_num] = NULL;
 
     if(opt_server == NULL) {
@@ -183,7 +187,8 @@ int check_server(char * hostname) {
     int x;
     stats = malloc(sizeof(mod_gm_server_status_t));
     char * message = NULL;
-    int rc = get_gearman_server_data(stats, &message, server, port);
+    char * version = NULL;
+    int rc = get_gearman_server_data(stats, &message, &version, server, port);
     int total_running = 0;
     int total_waiting = 0;
     int checked       = 0;
@@ -224,7 +229,7 @@ int check_server(char * hostname) {
     /* print plugin name and state */
     printf("%s ", PLUGIN_NAME);
     if(rc == STATE_OK)
-        printf("OK - %i job%s running and %i job%s waiting.", total_running, total_running==1?"":"s", total_waiting, total_waiting==1?"":"s");
+        printf("OK - %i job%s running and %i job%s waiting. Version: %s", total_running, total_running==1?"":"s", total_waiting, total_waiting==1?"":"s", version);
     if(rc == STATE_WARNING)
         printf("WARNING - ");
     if(rc == STATE_CRITICAL)

@@ -27,6 +27,9 @@
 
 #include <stdlib.h>
 #include <signal.h>
+#include "common.h"
+
+mod_gm_opt_t *mod_gm_opt;
 
 int main (int argc, char **argv);
 void print_usage(void);
