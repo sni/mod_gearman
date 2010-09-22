@@ -121,6 +121,7 @@ install-exec-local:
 	$(install_sh_PROGRAM) worker/initscript $(DESTDIR)$(initrddir)/mod_gearman_worker
 
 install-data-local:
+	rm -f $(DESTDIR)$(pkglibdir)/mod_gearman.so
 	$(MKDIR_P) $(DESTDIR)$(localstatedir)/mod_gearman/
 	$(install_sh_PROGRAM) extras/example.conf $(DESTDIR)$(datarootdir)/examples/example.conf
 	@echo ""

@@ -58,7 +58,7 @@ int main (int argc, char **argv) {
             perror("fork");
             exit( EXIT_FAILURE );
         }
-        /* we are in the child process */
+        /* we are the child process */
         else if(pid == 0) {
             logger( GM_LOG_INFO, "mod_gearman worker daemon started with pid %d\n", getpid());
 
