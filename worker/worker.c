@@ -61,6 +61,22 @@ int main (int argc, char **argv) {
         /* we are in the child process */
         else if(pid == 0) {
             logger( GM_LOG_INFO, "mod_gearman worker daemon started with pid %d\n", getpid());
+
+            /* Create a new SID for the child process */
+            int sid = setsid();
+            if ( sid < 0 ) {
+                exit( EXIT_FAILURE );
+            }
+
+            /* Change the current working directory */
+            if ((chdir("/")) < 0) {
+                exit(EXIT_FAILURE);
+            }
+
+            /* Close out the standard file descriptors */
+            close(STDIN_FILENO);
+            close(STDOUT_FILENO);
+            close(STDERR_FILENO);
         }
         /* we are the parent. So forking into daemon mode worked */
         else {
