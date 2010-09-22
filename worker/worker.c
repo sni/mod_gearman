@@ -387,7 +387,7 @@ void setup_child_communicator() {
 
     /* Create the segment. */
     mod_gm_shm_key = getpid(); // use pid as shm key
-    if ((shmid = shmget(mod_gm_shm_key, GM_SHM_SIZE, IPC_CREAT | 0666)) < 0) {
+    if ((shmid = shmget(mod_gm_shm_key, GM_SHM_SIZE, IPC_CREAT | 0600)) < 0) {
         perror("shmget");
         exit(1);
     }
