@@ -1,5 +1,11 @@
 This file documents the revision history for mod_gearman.
 
+0.4    ...
+          - added version to check_gearman and send_gearman
+          - added version to output of worker status
+          - added worker name to error output of plugins
+          - fixed daemon mode
+
 0.3    Mon Sep 20 09:43:55 CEST 2010
           - added check_gearman to monitor job server and worker
           - added send_gearman to submit passive results

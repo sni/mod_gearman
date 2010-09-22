@@ -392,7 +392,7 @@ void execute_safe_command() {
 
             if(pclose_result == -1) {
                 char error[GM_BUFFERSIZE];
-                snprintf(error, sizeof(error), "error: %s", strerror(errno));
+                snprintf(error, sizeof(error), "error on %s: %s", hostname, strerror(errno));
                 if(write(pdes[1], error, strlen(error)+1) <= 0)
                     perror("write");
             }
@@ -421,17 +421,17 @@ void execute_safe_command() {
         /* file not executable? */
         if(return_code == 126) {
             return_code = STATE_CRITICAL;
-            strncat( plugin_output, "CRITICAL: Return code of 126 is out of bounds. Make sure the plugin you're trying to run is executable.", sizeof( plugin_output ));
+            snprintf( plugin_output, sizeof( plugin_output ), "CRITICAL: Return code of 126 is out of bounds. Make sure the plugin you're trying to run is executable. (worker: %s)", hostname);
         }
         /* file not found errors? */
         else if(return_code == 127) {
             return_code = STATE_CRITICAL;
-            strncat( plugin_output, "CRITICAL: Return code of 127 is out of bounds. Make sure the plugin you're trying to run actually exists.", sizeof( plugin_output ));
+            snprintf( plugin_output, sizeof( plugin_output ), "CRITICAL: Return code of 127 is out of bounds. Make sure the plugin you're trying to run actually exists. (worker: %s)", hostname);
         }
         /* signaled */
         else if(return_code >= 128 && return_code < 256) {
             char * signame = nr2signal((int)(return_code-128));
-            snprintf( plugin_output, sizeof( plugin_output ), "CRITICAL: Return code of %d is out of bounds. Plugin exited by signal %s", (int)(return_code), signame);
+            snprintf( plugin_output, sizeof( plugin_output ), "CRITICAL: Return code of %d is out of bounds. Plugin exited by signal %s. (worker: %s)", (int)(return_code), signame, hostname);
             return_code = STATE_CRITICAL;
             free(signame);
         }
