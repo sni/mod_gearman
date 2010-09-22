@@ -28,7 +28,7 @@
 #define MOD_GM_COMMON_H
 
 /* constants */
-#define GM_VERSION                  "0.2"
+#define GM_VERSION                  "0.4"
 #define GM_ENABLED                      1
 #define GM_DISABLED                     0
 #define GM_BUFFERSIZE                8192
@@ -155,4 +155,3 @@ void logger( int lvl, const char *text, ... );
 
 
 #endif
-

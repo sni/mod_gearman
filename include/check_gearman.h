@@ -30,6 +30,7 @@
 
 int main (int argc, char **argv);
 void print_usage(void);
+void print_version(void);
 void alarm_sighandler(int sig);
 int check_server(char * server);
 int check_worker(char * queue, char * send, char * expect);

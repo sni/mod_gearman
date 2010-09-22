@@ -49,12 +49,14 @@ int main (int argc, char **argv) {
      * and parse command line
      */
     int opt;
-    while((opt = getopt(argc, argv, "hvH:t:w:c:q:s:e:p:")) != -1) {
+    while((opt = getopt(argc, argv, "vVhH:t:w:c:q:s:e:p:")) != -1) {
         switch(opt) {
             case 'h':   print_usage();
                         exit( STATE_UNKNOWN );
             case 'v':   opt_verbose++;
                         break;
+            case 'V':   print_version();
+                        exit( STATE_OK );
             case 't':   opt_timeout = atoi(optarg);
                         break;
             case 'w':   opt_warning = atoi(optarg);
@@ -107,6 +109,13 @@ int main (int argc, char **argv) {
 }
 
 
+/* print version */
+void print_version() {
+    printf("check_gearman: version %s running on libgearman %s\n", GM_VERSION, gearman_version());
+    printf("\n");
+}
+
+
 /* print usage */
 void print_usage() {
     printf("usage:\n");
@@ -122,8 +131,9 @@ void print_usage() {
     printf("              [ -s=<send text>               ]\n");
     printf("              [ -e=<expect text>             ]\n");
     printf("\n");
-    printf("              [ -v           verbose output  ]\n");
     printf("              [ -h           print help      ]\n");
+    printf("              [ -v           verbose output  ]\n");
+    printf("              [ -V           print version   ]\n");
     printf("\n");
     printf("perfdata format when checking job server:\n");
     printf(" |queue=waiting jobs;running jobs;worker;jobs warning;jobs critical\n");
