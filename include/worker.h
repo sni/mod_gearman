@@ -42,6 +42,7 @@ int store_original_comandline(int argc, char **argv);
 int parse_arguments(int argc, char **argv);
 int make_new_child(int mode);
 void print_usage(void);
+void print_version(void);
 int  adjust_number_of_worker(int min, int max, int cur_workers, int cur_jobs);
 void check_signal(int sig);
 void setup_child_communicator(void);

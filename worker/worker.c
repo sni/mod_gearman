@@ -201,10 +201,13 @@ int parse_arguments(int argc, char **argv) {
     for(i=1;i<argc;i++) {
         char * arg   = strdup( argv[i] );
         char * arg_c = arg;
-        lc(arg);
+        if ( !strcmp( arg, "version" ) || !strcmp( arg, "--version" )  || !strcmp( arg, "-V" ) ) {
+            print_version();
+        }
         if ( !strcmp( arg, "help" ) || !strcmp( arg, "--help" )  || !strcmp( arg, "-h" ) ) {
             print_usage();
         }
+        lc(arg);
         if(parse_args_line(mod_gm_new_opt, arg, 0) != GM_OK) {
             errors++;
             free(arg_c);
@@ -618,4 +621,12 @@ void update_runtime_data() {
         perror("shmdt");
 
     return;
+}
+
+
+/* print version */
+void print_version() {
+    printf("mod_gearman_worker: version %s running on libgearman %s\n", GM_VERSION, gearman_version());
+    printf("\n");
+    exit( STATE_UNKNOWN );
 }
