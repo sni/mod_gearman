@@ -47,6 +47,7 @@ int main (int argc, char **argv) {
     mod_gm_opt = malloc(sizeof(mod_gm_opt_t));
     set_default_options(mod_gm_opt);
     if(parse_arguments(argc, argv) != GM_OK) {
+        mod_gm_free_opt(mod_gm_opt);
         exit( EXIT_FAILURE );
     }
 
@@ -65,11 +66,13 @@ int main (int argc, char **argv) {
             /* Create a new SID for the child process */
             int sid = setsid();
             if ( sid < 0 ) {
+                mod_gm_free_opt(mod_gm_opt);
                 exit( EXIT_FAILURE );
             }
 
             /* Change the current working directory */
             if ((chdir("/")) < 0) {
+                mod_gm_free_opt(mod_gm_opt);
                 exit(EXIT_FAILURE);
             }
 
@@ -80,6 +83,7 @@ int main (int argc, char **argv) {
         }
         /* we are the parent. So forking into daemon mode worked */
         else {
+            mod_gm_free_opt(mod_gm_opt);
             exit( EXIT_SUCCESS );
         }
     } else {
@@ -116,6 +120,7 @@ int main (int argc, char **argv) {
     /* standalone mode */
     if(mod_gm_opt->max_worker == 1) {
         worker_client(GM_WORKER_STANDALONE);
+        mod_gm_free_opt(mod_gm_opt);
         exit( EXIT_SUCCESS );
     }
 

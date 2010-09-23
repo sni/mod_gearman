@@ -654,7 +654,6 @@ void mod_gm_free_opt(mod_gm_opt_t *opt) {
     free(opt->crypt_key);
     free(opt->keyfile);
     free(opt->message);
-    //free(opt->result_queue);
     free(opt->pidfile);
     free(opt->logfile);
     free(opt->host);
@@ -771,4 +770,3 @@ double timeval2double(struct timeval * t) {
     }
     return val;
 }
-

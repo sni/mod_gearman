@@ -70,4 +70,5 @@ void send_state_to_parent(int status);
 void execute_safe_command(void);
 void clean_worker_exit(int signal);
 void *return_status( gearman_job_st *, void *, size_t *, gearman_return_t *);
-
+int set_default_job(gm_job_t *job);
+int free_job(gm_job_t *job);

@@ -56,7 +56,6 @@ void worker_client(int worker_mode) {
     signal(SIGTERM,clean_worker_exit);
 
     worker_run_mode = worker_mode;
-    exec_job    = ( gm_job_t * )malloc( sizeof *exec_job );
 
     gethostname(hostname, GM_BUFFERSIZE-1);
 
@@ -76,6 +75,7 @@ void worker_client(int worker_mode) {
 
     return;
 }
+
 
 /* main loop of jobs */
 void worker_loop() {
@@ -113,6 +113,9 @@ void worker_loop() {
 
 /* get a job */
 void *get_job( gearman_job_st *job, void *context, size_t *result_size, gearman_return_t *ret_ptr ) {
+
+    /* increase counter */
+    number_jobs_done++;
 
     /* send start signal to parent */
     send_state_to_parent(GM_JOB_START);
@@ -160,20 +163,8 @@ void *get_job( gearman_job_st *job, void *context, size_t *result_size, gearman_
     /* set result pointer to success */
     *ret_ptr= GEARMAN_SUCCESS;
 
-    exec_job->type                = NULL;
-    exec_job->host_name           = NULL;
-    exec_job->service_description = NULL;
-    exec_job->result_queue        = NULL;
-    exec_job->command_line        = NULL;
-    exec_job->output              = NULL;
-    exec_job->exited_ok           = TRUE;
-    exec_job->scheduled_check     = TRUE;
-    exec_job->reschedule_check    = TRUE;
-    exec_job->return_code         = STATE_OK;
-    exec_job->latency             = 0.0;
-    exec_job->timeout             = mod_gm_opt->job_timeout;
-    exec_job->start_time.tv_sec   = 0L;
-    exec_job->start_time.tv_usec  = 0L;
+    exec_job = ( gm_job_t * )malloc( sizeof *exec_job );
+    set_default_job(exec_job);
 
     char *ptr;
     char command[GM_BUFFERSIZE];
@@ -188,13 +179,13 @@ void *get_job( gearman_job_st *job, void *context, size_t *result_size, gearman_
             continue;
 
         if ( !strcmp( key, "host_name" ) ) {
-            exec_job->host_name = value;
+            exec_job->host_name = strdup(value);
         } else if ( !strcmp( key, "service_description" ) ) {
-            exec_job->service_description = value;
+            exec_job->service_description = strdup(value);
         } else if ( !strcmp( key, "type" ) ) {
-            exec_job->type = value;
+            exec_job->type = strdup(value);
         } else if ( !strcmp( key, "result_queue" ) ) {
-            exec_job->result_queue = value;
+            exec_job->result_queue = strdup(value);
         } else if ( !strcmp( key, "check_options" ) ) {
             exec_job->check_options = atoi(value);
         } else if ( !strcmp( key, "scheduled_check" ) ) {
@@ -209,7 +200,7 @@ void *get_job( gearman_job_st *job, void *context, size_t *result_size, gearman_
             exec_job->timeout = atoi(value);
         } else if ( !strcmp( key, "command_line" ) ) {
             snprintf(command, sizeof(command), "%s 2>&1", value);
-            exec_job->command_line = command;
+            exec_job->command_line = strdup(command);
         }
     }
 
@@ -219,6 +210,7 @@ void *get_job( gearman_job_st *job, void *context, size_t *result_size, gearman_
     sigprocmask(SIG_SETMASK, &old_mask, NULL);
 
     free(decrypted_data_c);
+    free_job(exec_job);
 
     /* send finish signal to parent */
     send_state_to_parent(GM_JOB_END);
@@ -473,6 +465,7 @@ void send_result_back() {
               exec_job->return_code,
               exec_job->exited_ok
             );
+    temp_buffer1[sizeof( temp_buffer1 )-1]='\x0';
 
     if(exec_job->service_description != NULL) {
         temp_buffer2[0]='\x0';
@@ -482,6 +475,7 @@ void send_result_back() {
 
         strncat(temp_buffer1, temp_buffer2, (sizeof(temp_buffer1)-1));
     }
+    temp_buffer1[sizeof( temp_buffer1 )-1]='\x0';
 
     if(exec_job->output != NULL) {
         temp_buffer2[0]='\x0';
@@ -494,9 +488,9 @@ void send_result_back() {
         strncat(temp_buffer2, exec_job->output, (sizeof(temp_buffer2)-1));
         strncat(temp_buffer2, "\n\n\n", (sizeof(temp_buffer2)-1));
         strncat(temp_buffer1, temp_buffer2, (sizeof(temp_buffer1)-1));
-        free(exec_job->output);
     }
     strncat(temp_buffer1, "\n", (sizeof(temp_buffer1)-2));
+    temp_buffer1[sizeof( temp_buffer1 )-1]='\x0';
 
     logger( GM_LOG_TRACE, "data:\n%s\n", temp_buffer1);
 
@@ -637,7 +631,11 @@ void send_state_to_parent(int status) {
 void clean_worker_exit(int sig) {
     logger( GM_LOG_TRACE, "clean_worker_exit(%d)\n", sig);
 
+    gearman_worker_unregister_all(&worker);
     gearman_job_free_all( &worker );
+    gearman_client_free( &client );
+
+    mod_gm_free_opt(mod_gm_opt);
 
     if(worker_run_mode != GM_WORKER_STANDALONE)
         exit( EXIT_SUCCESS );
@@ -706,4 +704,41 @@ void *return_status( gearman_job_st *job, void *context, size_t *result_size, ge
         perror("shmdt");
 
     return((void*)result);
+}
+
+
+/* set empty default job */
+int set_default_job(gm_job_t *job) {
+
+    job->type                = NULL;
+    job->host_name           = NULL;
+    job->service_description = NULL;
+    job->result_queue        = NULL;
+    job->command_line        = NULL;
+    job->output              = NULL;
+    job->exited_ok           = TRUE;
+    job->scheduled_check     = TRUE;
+    job->reschedule_check    = TRUE;
+    job->return_code         = STATE_OK;
+    job->latency             = 0.0;
+    job->timeout             = mod_gm_opt->job_timeout;
+    job->start_time.tv_sec   = 0L;
+    job->start_time.tv_usec  = 0L;
+
+    return(GM_OK);
+}
+
+
+/* free the job structure */
+int free_job(gm_job_t *job) {
+
+    free(job->type);
+    free(job->host_name);
+    free(job->service_description);
+    free(job->result_queue);
+    free(job->command_line);
+    free(job->output);
+    free(job);
+
+    return(GM_OK);
 }
