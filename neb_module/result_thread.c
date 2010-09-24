@@ -134,20 +134,12 @@ void *get_results( gearman_job_st *job, void *context, size_t *result_size, gear
         *ret_ptr = GEARMAN_WORK_FAIL;
         return NULL;
     }
-
-    chk_result->service_description = NULL;
-    chk_result->host_name           = NULL;
-    chk_result->output              = NULL;
-    chk_result->return_code         = 0;
-    chk_result->exited_ok           = 1;
-    chk_result->early_timeout       = 0;
-    chk_result->latency             = 0;
-    chk_result->start_time.tv_sec   = 0;
-    chk_result->start_time.tv_usec  = 0;
-    chk_result->finish_time.tv_sec  = 0;
-    chk_result->finish_time.tv_usec = 0;
+    init_check_result(chk_result);
     chk_result->scheduled_check     = TRUE;
     chk_result->reschedule_check    = TRUE;
+    chk_result->output_file         = 0;
+    chk_result->output_file_fd      = -1;
+
     core_start_time.tv_sec          = 0;
     core_start_time.tv_usec         = 0;
 
@@ -259,18 +251,14 @@ void *get_results( gearman_job_st *job, void *context, size_t *result_size, gear
     /* this check is not a freshnes check */
     chk_result->check_options    = chk_result->check_options & ! CHECK_OPTION_FRESHNESS_CHECK;
 
-    /* initialize and fill with result info */
-    chk_result->output_file    = 0;
-    chk_result->output_file_fd = -1;
-
     if ( chk_result->service_description != NULL ) {
         logger( GM_LOG_DEBUG, "service job completed: %s %s: %d\n", chk_result->host_name, chk_result->service_description, chk_result->return_code );
     } else {
         logger( GM_LOG_DEBUG, "host job completed: %s: %d\n", chk_result->host_name, chk_result->return_code );
     }
 
-    /* nagios internal function */
-    add_check_result_to_list( chk_result );
+    /* add result to result list */
+    mod_gm_add_result_to_list( chk_result );
 
     /* reset pointer */
     chk_result = NULL;

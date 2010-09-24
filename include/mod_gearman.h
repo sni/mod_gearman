@@ -49,6 +49,7 @@
 /* functions */
 int nebmodule_init( int, char *, nebmodule * );
 int nebmodule_deinit( int, int );
+void mod_gm_add_result_to_list(check_result * newcr);
 
 /* global variables */
 mod_gm_opt_t *mod_gm_opt;

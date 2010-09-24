@@ -32,16 +32,19 @@
 NEB_API_VERSION( CURRENT_NEB_API_VERSION )
 
 /* import some global variables */
-extern int          currently_running_host_checks;
-extern int          currently_running_service_checks;
-extern int          service_check_timeout;
-extern int          host_check_timeout;
-extern timed_event *event_list_low;
-extern timed_event *event_list_low_tail;
-extern int          process_performance_data;
-extern check_result check_result_info;
+extern int            currently_running_host_checks;
+extern int            currently_running_service_checks;
+extern int            service_check_timeout;
+extern int            host_check_timeout;
+extern timed_event  * event_list_low;
+extern timed_event  * event_list_low_tail;
+extern int            process_performance_data;
+extern check_result   check_result_info;
+extern check_result * check_result_list;
 
 /* global variables */
+static check_result * mod_gm_result_list = 0;
+static pthread_mutex_t mod_gm_result_list_mutex = PTHREAD_MUTEX_INITIALIZER;
 void *gearman_module_handle=NULL;
 gearman_client_st client;
 
@@ -60,7 +63,10 @@ static int   handle_eventhandler( int,void * );
 static int   handle_perfdata(int e, void *);
 static void  set_target_queue( host *, service * );
 static int   handle_process_events( int, void * );
+static int   handle_timed_events( int, void * );
 static void  start_threads(void);
+static check_result * merge_result_lists(check_result * lista, check_result * listb);
+static void move_results_to_core(void);
 
 
 /* this function gets initally called when loading the module */
@@ -112,6 +118,7 @@ int nebmodule_init( int flags, char *args, nebmodule *handle ) {
 
     /* register callback for process event where everything else starts */
     neb_register_callback( NEBCALLBACK_PROCESS_DATA, gearman_module_handle, 0, handle_process_events );
+    neb_register_callback( NEBCALLBACK_TIMED_EVENT_DATA, gearman_module_handle, 0, handle_timed_events );
 
     logger( GM_LOG_DEBUG, "finished initializing\n" );
 
@@ -150,6 +157,7 @@ int nebmodule_deinit( int flags, int reason ) {
 
     /* should be removed already, but just for the case it wasn't */
     neb_deregister_callback( NEBCALLBACK_PROCESS_DATA, gearman_module_handle );
+    neb_deregister_callback( NEBCALLBACK_TIMED_EVENT_DATA, gearman_module_handle );
 
     /* only if we have hostgroups defined or general hosts enabled */
     if ( mod_gm_opt->hostgroups_num > 0 || mod_gm_opt->hosts == GM_ENABLED )
@@ -179,6 +187,79 @@ int nebmodule_deinit( int flags, int reason ) {
     free_client(&client);
 
     return NEB_OK;
+}
+
+
+/* handle timed events */
+static int handle_timed_events( int event_type, void *data ) {
+    nebstruct_timed_event_data * ted = (nebstruct_timed_event_data *)data;
+
+    /* sanity checks */
+    if (event_type != NEBCALLBACK_TIMED_EVENT_DATA || ted == 0)
+        return NEB_ERROR;
+
+    /* we only care about REAPER events */
+    if (ted->event_type != EVENT_CHECK_REAPER)
+        return NEB_OK;
+
+    logger( GM_LOG_TRACE, "handle_timed_events(%i, data)\n", event_type );
+
+    move_results_to_core();
+
+    return NEB_OK;
+}
+
+
+/* merge results with core */
+static check_result * merge_result_lists(check_result * lista, check_result * listb) {
+    check_result * result = 0;
+
+    check_result ** iter;
+    for (iter = &result; lista && listb; iter = &(*iter)->next) {
+        if (mod_gm_time_compare(&lista->finish_time, &listb->finish_time) <= 0) {
+            *iter = lista; lista = lista->next;
+        } else {
+            *iter = listb; listb = listb->next;
+        }
+    }
+
+    *iter = lista? lista: listb;
+
+    return result;
+}
+
+
+/* insert results list into core */
+static void move_results_to_core(void) {
+   check_result * local;
+
+   /* safely save off currently local list */
+   pthread_mutex_lock(&mod_gm_result_list_mutex);
+   local = mod_gm_result_list;
+   mod_gm_result_list = 0;
+   pthread_mutex_unlock(&mod_gm_result_list_mutex);
+
+   /* merge local into check_result_list, store in check_result_list */
+   check_result_list = merge_result_lists(local, check_result_list);
+}
+
+
+/* add list to gearman result list */
+void mod_gm_add_result_to_list(check_result * newcr) {
+   check_result ** curp;
+
+   assert(newcr);
+
+   pthread_mutex_lock(&mod_gm_result_list_mutex);
+
+   for (curp = &mod_gm_result_list; *curp; curp = &(*curp)->next)
+      if (mod_gm_time_compare(&(*curp)->finish_time, &newcr->finish_time) >= 0)
+         break;
+
+   newcr->next = *curp;
+   *curp = newcr;
+
+   pthread_mutex_unlock(&mod_gm_result_list_mutex);
 }
 
 

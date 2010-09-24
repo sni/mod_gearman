@@ -746,8 +746,6 @@ void string2timeval(char * value, struct timeval *t) {
     char * v_c;
     char * s;
     char * u;
-    int sec;
-    int usec;
 
     t->tv_sec  = 0;
     t->tv_usec = 0;
@@ -764,8 +762,7 @@ void string2timeval(char * value, struct timeval *t) {
         return;
     }
 
-    sec  = atoi( s );
-    t->tv_sec  = sec;
+    t->tv_sec  = strtoul(s,NULL,0);
 
     u = strsep( &v, "\x0" );
 
@@ -774,9 +771,7 @@ void string2timeval(char * value, struct timeval *t) {
         return;
     }
 
-    usec  = atoi( u );
-
-    t->tv_usec = usec;
+    t->tv_usec = strtoul(u,NULL,0);
     free(v_c);
 }
 
@@ -788,3 +783,12 @@ double timeval2double(struct timeval * t) {
     }
     return val;
 }
+
+
+/* compare 2 timestructs */
+long mod_gm_time_compare(struct timeval * tv1, struct timeval * tv2) {
+   long secdiff = (long)(tv1->tv_sec - tv2->tv_sec);
+   long usecdiff = (long)(tv1->tv_usec - tv2->tv_usec);
+   return secdiff? secdiff: usecdiff;
+}
+
