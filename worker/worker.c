@@ -28,7 +28,7 @@
 #include "worker_client.h"
 
 int current_number_of_workers                = 0;
-volatile sig_atomic_t current_number_of_jobs = 0;  // must be signal safe
+volatile sig_atomic_t current_number_of_jobs = 0;  /* must be signal safe */
 pthread_t status_thr;
 
 int     orig_argc;
@@ -36,6 +36,7 @@ char ** orig_argv;
 
 /* work starts here */
 int main (int argc, char **argv) {
+    int sid, x, status, now, last_time_checked, target_number_of_workers;
 
     /* store the original command line for later reloads */
     store_original_comandline(argc, argv);
@@ -64,7 +65,7 @@ int main (int argc, char **argv) {
             logger( GM_LOG_INFO, "mod_gearman worker daemon started with pid %d\n", getpid());
 
             /* Create a new SID for the child process */
-            int sid = setsid();
+            sid = setsid();
             if ( sid < 0 ) {
                 mod_gm_free_opt(mod_gm_opt);
                 exit( EXIT_FAILURE );
@@ -125,14 +126,13 @@ int main (int argc, char **argv) {
     }
 
     /* setup childs */
-    int x;
     for(x=0; x < mod_gm_opt->min_worker; x++) {
         make_new_child(GM_WORKER_MULTI);
     }
 
     /* maintain the population */
-    int now                 = (int)time(NULL);
-    int last_time_checked   = now;
+    now                 = (int)time(NULL);
+    last_time_checked   = now;
     while (1) {
         /* check number of workers every 3 seconds
          * sleep gets canceled anyway when receiving signals
@@ -140,7 +140,6 @@ int main (int argc, char **argv) {
         sleep(3);
 
         /* collect finished workers */
-        int status;
         while(waitpid(-1, &status, WNOHANG) > 0) {
             current_number_of_workers--;
             logger( GM_LOG_TRACE, "waitpid() %d\n", status);
@@ -160,7 +159,7 @@ int main (int argc, char **argv) {
             continue;
         last_time_checked = time(NULL);
 
-        int target_number_of_workers = adjust_number_of_worker(mod_gm_opt->min_worker, mod_gm_opt->max_worker, current_number_of_workers, current_number_of_jobs);
+        target_number_of_workers = adjust_number_of_worker(mod_gm_opt->min_worker, mod_gm_opt->max_worker, current_number_of_workers, current_number_of_jobs);
         for (x = current_number_of_workers; x < target_number_of_workers; x++) {
             /* top up the worker pool */
             make_new_child(GM_WORKER_MULTI);
@@ -174,8 +173,9 @@ int main (int argc, char **argv) {
 
 /* start up new worker */
 int make_new_child(int mode) {
-    logger( GM_LOG_TRACE, "make_new_child()\n");
     pid_t pid = 0;
+
+    logger( GM_LOG_TRACE, "make_new_child()\n");
 
     /* fork a child process */
     pid=fork();
@@ -195,7 +195,7 @@ int make_new_child(int mode) {
         signal(SIGINT,  SIG_DFL);
         signal(SIGTERM, SIG_DFL);
 
-        // do the real work
+        /* do the real work */
         worker_client(mode);
 
         exit(EXIT_SUCCESS);
@@ -216,6 +216,7 @@ int make_new_child(int mode) {
 int parse_arguments(int argc, char **argv) {
     int i;
     int errors = 0;
+    int verify;
     mod_gm_opt_t * mod_gm_new_opt;
     mod_gm_new_opt = malloc(sizeof(mod_gm_opt_t));
     set_default_options(mod_gm_new_opt);
@@ -244,7 +245,6 @@ int parse_arguments(int argc, char **argv) {
     }
 
     /* verify options */
-    int verify;
     verify = verify_options(mod_gm_new_opt);
 
     /* set new options */
@@ -376,22 +376,22 @@ void check_signal(int sig) {
 
 /* create shared memory segments */
 void setup_child_communicator() {
+    struct sigaction usr1_action;
+    sigset_t block_mask;
+    int shmid;
+    int * shm;
+
     logger( GM_LOG_TRACE, "setup_child_communicator()\n");
 
     /* setup signal handler */
-    struct sigaction usr1_action;
-    sigset_t block_mask;
-    sigfillset (&block_mask); // block all signals
+    sigfillset (&block_mask); /* block all signals */
     usr1_action.sa_handler = check_signal;
     usr1_action.sa_mask    = block_mask;
     usr1_action.sa_flags   = 0;
     sigaction (SIGUSR1, &usr1_action, NULL);
 
-    int shmid;
-    int * shm;
-
     /* Create the segment. */
-    mod_gm_shm_key = getpid(); // use pid as shm key
+    mod_gm_shm_key = getpid(); /* use pid as shm key */
     if ((shmid = shmget(mod_gm_shm_key, GM_SHM_SIZE, IPC_CREAT | 0600)) < 0) {
         perror("shmget");
         exit(1);
@@ -416,10 +416,13 @@ void setup_child_communicator() {
 
 /* set new number of workers */
 int adjust_number_of_worker(int min, int max, int cur_workers, int cur_jobs) {
-    int perc_running = (int)cur_jobs*100/cur_workers;
-    int idle         = (int)cur_workers - cur_jobs;
-    logger( GM_LOG_TRACE, "adjust_number_of_worker(min %d, max %d, worker %d, jobs %d) = %d%% running\n", min, max, cur_workers, cur_jobs, perc_running);
+    int perc_running;
+    int idle;
     int target = min;
+    perc_running = (int)cur_jobs*100/cur_workers;
+    idle         = (int)cur_workers - cur_jobs;
+
+    logger( GM_LOG_TRACE, "adjust_number_of_worker(min %d, max %d, worker %d, jobs %d) = %d%% running\n", min, max, cur_workers, cur_jobs, perc_running);
 
     if(cur_workers == max)
         return max;
@@ -467,6 +470,10 @@ void clean_exit(int sig) {
 
 /* stop all childs */
 void stop_childs(int mode) {
+    int status, chld;
+    int waited = 0;
+    int shmid;
+
     /* ignore some signals for now */
     signal(SIGTERM, SIG_IGN);
     signal(SIGINT,  SIG_IGN);
@@ -479,8 +486,6 @@ void stop_childs(int mode) {
     killpg(0, SIGTERM);
 
     logger( GM_LOG_TRACE, "waiting for childs to exit...\n");
-    int status, chld;
-    int waited = 0;
     while(current_number_of_workers > 0) {
         while((chld = waitpid(-1, &status, WNOHANG)) != -1 && chld > 0) {
             current_number_of_workers--;
@@ -512,7 +517,6 @@ void stop_childs(int mode) {
          * clean up shared memory
          * will be removed when last client detaches
          */
-        int shmid;
         if ((shmid = shmget(mod_gm_shm_key, GM_SHM_SIZE, 0666)) < 0) {
             perror("shmget");
         }
@@ -537,6 +541,7 @@ void stop_childs(int mode) {
 /* check for pid file and write new one */
 int write_pid_file() {
     FILE *fp;
+    char pid_path[GM_BUFFERSIZE];
 
     /* no pidfile given */
     if(mod_gm_opt->pidfile == NULL)
@@ -552,7 +557,6 @@ int write_pid_file() {
             fclose(fp);
             pid = trim(pid);
             logger( GM_LOG_INFO, "found pid file for: %s\n", pid);
-            char pid_path[GM_BUFFERSIZE];
             snprintf(pid_path, GM_BUFFERSIZE, "/proc/%s/status", pid);
             free(pid);
             if(file_exists(pid_path)) {
@@ -616,10 +620,10 @@ void reload_config(int sig) {
 
 /* update the number of worker and jobs */
 void update_runtime_data() {
-    logger( GM_LOG_TRACE, "update_worker_num()\n");
-
     int shmid;
     int *shm;
+
+    logger( GM_LOG_TRACE, "update_worker_num()\n");
 
     /* Locate the segment. */
     if ((shmid = shmget(mod_gm_shm_key, GM_SHM_SIZE, 0666)) < 0) {

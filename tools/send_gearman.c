@@ -31,6 +31,7 @@ gearman_client_st client;
 
 /* work starts here */
 int main (int argc, char **argv) {
+    int rc;
 
     /*
      * allocate options structure
@@ -56,7 +57,7 @@ int main (int argc, char **argv) {
 
     /* send result message */
     signal(SIGALRM, alarm_sighandler);
-    int rc = send_result();
+    rc = send_result();
 
     gearman_client_free( &client );
     mod_gm_free_opt(mod_gm_opt);
@@ -67,6 +68,7 @@ int main (int argc, char **argv) {
 /* parse command line arguments */
 int parse_arguments(int argc, char **argv) {
     int i;
+    int verify;
     int errors = 0;
     mod_gm_opt = malloc(sizeof(mod_gm_opt_t));
     set_default_options(mod_gm_opt);
@@ -89,7 +91,6 @@ int parse_arguments(int argc, char **argv) {
     }
 
     /* verify options */
-    int verify;
     verify = verify_options(mod_gm_opt);
 
     /* read keyfile */
@@ -108,13 +109,13 @@ int parse_arguments(int argc, char **argv) {
 /* verify our option */
 int verify_options(mod_gm_opt_t *opt) {
 
-    // did we get any server?
+    /* did we get any server? */
     if(opt->server_num == 0) {
         printf("please specify at least one server\n" );
         return(GM_ERROR);
     }
 
-    // encryption without key?
+    /* encryption without key? */
     if(opt->encryption == GM_ENABLED) {
         if(opt->crypt_key == NULL && opt->keyfile == NULL) {
             printf("no encryption key provided, please use --key=... or keyfile=... or disable encryption\n");
@@ -167,10 +168,15 @@ void print_usage() {
 
 /* send message to job server */
 int send_result() {
+    struct timeval now;
+    char buffer[GM_BUFFERSIZE] = "";
+    char * buf;
+    char temp_buffer1[GM_BUFFERSIZE];
+    char temp_buffer2[GM_BUFFERSIZE];
+    int size;
+
     logger( GM_LOG_TRACE, "send_result()\n" );
 
-
-    struct timeval now;
     gettimeofday(&now, NULL);
     if(mod_gm_opt->starttime.tv_sec == 0)
         mod_gm_opt->starttime = now;
@@ -189,10 +195,9 @@ int send_result() {
     if(mod_gm_opt->message == NULL) {
         /* get all lines from stdin, wait maximum of 5 seconds */
         alarm(5);
-        char buffer[GM_BUFFERSIZE] = "";
         mod_gm_opt->message = malloc(GM_BUFFERSIZE);
         strcpy(buffer,"");
-        int size = GM_MAX_OUTPUT;
+        size = GM_MAX_OUTPUT;
         while(size > 0 && fgets(buffer,sizeof(buffer)-1,stdin)){
             strncat(mod_gm_opt->message, buffer, size);
             size -= strlen(buffer);
@@ -201,15 +206,12 @@ int send_result() {
     }
 
     /* escape newline */
-    char * buf;
     buf = escape_newlines(mod_gm_opt->message);
     free(mod_gm_opt->message);
     mod_gm_opt->message = malloc(GM_BUFFERSIZE);
     snprintf(mod_gm_opt->message, GM_BUFFERSIZE, "%s", buf);
     free(buf);
 
-    char temp_buffer1[GM_BUFFERSIZE];
-    char temp_buffer2[GM_BUFFERSIZE];
     logger( GM_LOG_TRACE, "queue: %s\n", mod_gm_opt->result_queue );
     temp_buffer1[0]='\x0';
     snprintf( temp_buffer1, sizeof( temp_buffer1 )-1, "type=%s\nhost_name=%s\nstart_time=%i.%i\nfinish_time=%i.%i\nlatency=%i.%i\nreturn_code=%i\n",

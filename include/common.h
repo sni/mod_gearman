@@ -32,7 +32,7 @@
 #define GM_ENABLED                      1
 #define GM_DISABLED                     0
 #define GM_BUFFERSIZE                8192
-#define GM_MAX_OUTPUT                5000  // must be ~30% below GM_BUFFERSIZE for base64/encryption
+#define GM_MAX_OUTPUT                5000  /* must be ~30% below GM_BUFFERSIZE for base64/encryption */
 #define GM_LISTSIZE                   512
 
 #define GM_MIN_LIB_GEARMAN_VERSION   0.14
@@ -59,9 +59,9 @@
 #define GM_DEFAULT_RESULT_QUEUE  "check_results"
 
 /* worker */
-#define GM_DEFAULT_MIN_WORKER           1      // minumum number of worker
-#define GM_DEFAULT_MAX_WORKER          20      // maximum number of concurrent worker
-#define GM_DEFAULT_JOB_MAX_AGE        600      // discard jobs older than that
+#define GM_DEFAULT_MIN_WORKER           1      /* minumum number of worker            */
+#define GM_DEFAULT_MAX_WORKER          20      /* maximum number of concurrent worker */
+#define GM_DEFAULT_JOB_MAX_AGE        600      /* discard jobs older than that        */
 #define GM_MAX_JOBS_PER_CLIENT         20
 
 /* transport modes */

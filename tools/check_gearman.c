@@ -44,6 +44,8 @@ gearman_client_st client;
 
 /* work starts here */
 int main (int argc, char **argv) {
+    int opt;
+    int result;
 
     mod_gm_opt = malloc(sizeof(mod_gm_opt_t));
     set_default_options(mod_gm_opt);
@@ -51,7 +53,6 @@ int main (int argc, char **argv) {
     /*
      * and parse command line
      */
-    int opt;
     while((opt = getopt(argc, argv, "vVhH:t:w:c:q:s:e:p:")) != -1) {
         switch(opt) {
             case 'h':   print_usage();
@@ -96,7 +97,6 @@ int main (int argc, char **argv) {
     /* set alarm signal handler */
     signal(SIGALRM, alarm_sighandler);
 
-    int result;
     if(opt_send != NULL ) {
         alarm(opt_timeout);
         result = check_worker(opt_queue, opt_send, opt_expect);
@@ -107,7 +107,6 @@ int main (int argc, char **argv) {
         result = check_server(opt_server);
     }
     alarm(0);
-
 
     exit( result );
 }
@@ -178,20 +177,25 @@ void alarm_sighandler(int sig) {
 /* check gearman server */
 int check_server(char * hostname) {
     int port = GM_SERVER_DEFAULT_PORT;
-    char * server = strsep(&hostname, ":");
-    char * port_c = strsep(&hostname, "\x0");
-    if(port_c != NULL)
-        port = atoi(port_c);
-
     mod_gm_server_status_t *stats;
     int x;
-    stats = malloc(sizeof(mod_gm_server_status_t));
     char * message = NULL;
     char * version = NULL;
-    int rc = get_gearman_server_data(stats, &message, &version, server, port);
+    char * server = NULL;
+    char * port_c = NULL;
     int total_running = 0;
     int total_waiting = 0;
     int checked       = 0;
+    int rc;
+    char *buf;
+
+    server = strsep(&hostname, ":");
+    port_c = strsep(&hostname, "\x0");
+    if(port_c != NULL)
+        port = atoi(port_c);
+
+    stats = malloc(sizeof(mod_gm_server_status_t));
+    rc = get_gearman_server_data(stats, &message, &version, server, port);
     if( rc == STATE_OK ) {
         for(x=0; x<stats->function_num;x++) {
             if(opt_queue != NULL && strcmp(opt_queue, stats->function[x]->queue))
@@ -201,26 +205,26 @@ int check_server(char * hostname) {
             total_waiting += stats->function[x]->waiting;
             if(stats->function[x]->waiting > 0 && stats->function[x]->worker == 0) {
                 rc = STATE_CRITICAL;
-                char * buf = malloc(GM_BUFFERSIZE);
+                buf = malloc(GM_BUFFERSIZE);
                 snprintf(buf, GM_BUFFERSIZE, "Queue %s has %i job%s without any worker. ", stats->function[x]->queue, stats->function[x]->waiting, stats->function[x]->waiting > 1 ? "s":"" );
                 strncat(message, buf, GM_BUFFERSIZE);
             }
             else if(stats->function[x]->waiting >= opt_critical) {
                 rc = STATE_CRITICAL;
-                char * buf = malloc(GM_BUFFERSIZE);
+                buf = malloc(GM_BUFFERSIZE);
                 snprintf(buf, GM_BUFFERSIZE, "Queue %s has %i waiting job%s. ", stats->function[x]->queue, stats->function[x]->waiting, stats->function[x]->waiting > 1 ? "s":"" );
                 strncat(message, buf, GM_BUFFERSIZE);
             }
             else if(stats->function[x]->waiting >= opt_warning) {
                 rc = STATE_WARNING;
-                char * buf = malloc(GM_BUFFERSIZE);
+                buf = malloc(GM_BUFFERSIZE);
                 snprintf(buf, GM_BUFFERSIZE, "Queue %s has %i waiting job%s. ", stats->function[x]->queue, stats->function[x]->waiting, stats->function[x]->waiting > 1 ? "s":"" );
                 strncat(message, buf, GM_BUFFERSIZE);
             }
         }
     }
     if(opt_queue != NULL && checked == 0) {
-        char * buf = malloc(GM_BUFFERSIZE);
+        buf = malloc(GM_BUFFERSIZE);
         snprintf(buf, GM_BUFFERSIZE, "Queue %s not found", opt_queue );
         strncat(message, buf, GM_BUFFERSIZE);
         rc = STATE_WARNING;
@@ -257,6 +261,9 @@ int check_server(char * hostname) {
 
 /* send job to worker and check result */
 int check_worker(char * queue, char * to_send, char * expect) {
+    gearman_return_t ret;
+    char * result;
+    size_t result_size;
 
     /* create client */
     if ( create_client( server_list, &client ) != GM_OK ) {
@@ -265,9 +272,6 @@ int check_worker(char * queue, char * to_send, char * expect) {
     }
     gearman_client_set_timeout(&client, (opt_timeout-1)*1000/server_list_num);
 
-    gearman_return_t ret;
-    char * result;
-    size_t result_size;
     while (1) {
         result= (char *)gearman_client_do_high( &client,
                                                 queue,

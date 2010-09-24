@@ -28,6 +28,7 @@
 
 /* create the gearman worker */
 int create_worker( char ** server_list, gearman_worker_st *worker ) {
+    int x = 0;
 
     gearman_return_t ret;
     signal(SIGPIPE, SIG_IGN);
@@ -38,7 +39,6 @@ int create_worker( char ** server_list, gearman_worker_st *worker ) {
         return GM_ERROR;
     }
 
-    int x = 0;
     while ( server_list[x] != NULL ) {
         char * server   = strdup( server_list[x] );
         char * server_c = server;
@@ -78,9 +78,11 @@ int worker_add_function( gearman_worker_st * worker, char * queue, gearman_worke
 
 /* create the gearman client */
 int create_client( char ** server_list, gearman_client_st *client ) {
+    gearman_return_t ret;
+    int x = 0;
+
     logger( GM_LOG_TRACE, "create_gearman_client()\n" );
 
-    gearman_return_t ret;
     signal(SIGPIPE, SIG_IGN);
 
     client = gearman_client_create(client);
@@ -89,7 +91,6 @@ int create_client( char ** server_list, gearman_client_st *client ) {
         return GM_ERROR;
     }
 
-    int x = 0;
     while ( server_list[x] != NULL ) {
         char * server   = strdup( server_list[x] );
         char * server_c = server;
@@ -118,14 +119,16 @@ int create_client( char ** server_list, gearman_client_st *client ) {
 int add_job_to_queue( gearman_client_st *client, char ** server_list, char * queue, char * uniq, char * data, int priority, int retries, int transport_mode ) {
     gearman_task_st *task = NULL;
     gearman_return_t ret1, ret2;
+    char * crypted_data;
+    int size;
 
     signal(SIGPIPE, SIG_IGN);
 
     logger( GM_LOG_TRACE, "add_job_to_queue(%s, %s, %d, %d, %d)\n", queue, uniq, priority, retries, transport_mode );
     logger( GM_LOG_TRACE, "%d --->%s<---\n", strlen(data), data );
 
-    char * crypted_data = malloc(GM_BUFFERSIZE);
-    int size = mod_gm_encrypt(&crypted_data, data, transport_mode);
+    crypted_data = malloc(GM_BUFFERSIZE);
+    size = mod_gm_encrypt(&crypted_data, data, transport_mode);
     logger( GM_LOG_TRACE, "%d +++>\n%s\n<+++\n", size, crypted_data );
 
     if( priority == GM_JOB_PRIO_LOW ) {
@@ -155,17 +158,17 @@ int add_job_to_queue( gearman_client_st *client, char ** server_list, char * que
         if(retries == 0)
             logger( GM_LOG_ERROR, "add_job_to_queue() failed: %s\n", gearman_client_error(client) );
 
-        // recreate client, otherwise gearman sigsegvs
+        /* recreate client, otherwise gearman sigsegvs */
         gearman_client_free( client );
         create_client( server_list, client );
 
-        // retry as long as we have retries
+        /* retry as long as we have retries */
         if(retries > 0) {
             retries--;
             logger( GM_LOG_TRACE, "add_job_to_queue() retrying... %d\n", retries );
             return(add_job_to_queue( client, server_list, queue, uniq, data, priority, retries, transport_mode));
         }
-        // no more retries...
+        /* no more retries... */
         else {
             logger( GM_LOG_TRACE, "add_job_to_queue() finished with errors: %d %d\n", ret1, ret2 );
             return GM_ERROR;
@@ -178,7 +181,7 @@ int add_job_to_queue( gearman_client_st *client, char ** server_list, char * que
 
 void *dummy( gearman_job_st *job, void *context, size_t *result_size, gearman_return_t *ret_ptr ) {
 
-    // avoid "unused parameter" warning
+    /* avoid "unused parameter" warning */
     job         = job;
     context     = context;
     result_size = 0;

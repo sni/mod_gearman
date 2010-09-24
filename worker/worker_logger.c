@@ -28,23 +28,26 @@
 struct tm now;
 
 void logger( int lvl, const char *text, ... ) {
-
     FILE * fp       = NULL;
     int debug_level = GM_LOG_ERROR;
+    char buffer[GM_BUFFERSIZE];
+    char * level;
+    char buffer2[GM_BUFFERSIZE];
+    time_t t;
+    va_list ap;
+
     if(mod_gm_opt != NULL) {
         debug_level = mod_gm_opt->debug_level;
         fp          = mod_gm_opt->logfile_fp;
     }
 
-    // check log level
+    /* check log level */
     if ( lvl != GM_LOG_ERROR && lvl > debug_level ) {
         return;
     }
 
-    char buffer[GM_BUFFERSIZE];
-    time_t t = time(NULL);
+    t = time(NULL);
 
-    char * level;
     if ( lvl == GM_LOG_ERROR )
         level = "ERROR";
     else if ( lvl == GM_LOG_INFO )
@@ -60,11 +63,9 @@ void logger( int lvl, const char *text, ... ) {
 
     strftime(buffer, sizeof(buffer), "[%Y-%m-%d %H:%M:%S]", &now );
 
-    char buffer2[GM_BUFFERSIZE];
     snprintf(buffer2, sizeof(buffer2), "[%i][%s] ", getpid(), level );
     strncat(buffer, buffer2, (sizeof(buffer)-1));
 
-    va_list ap;
     va_start( ap, text );
     vsnprintf( buffer + strlen( buffer ), sizeof( buffer ) - strlen( buffer ), text, ap );
     va_end( ap );

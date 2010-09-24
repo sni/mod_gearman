@@ -25,7 +25,7 @@ extern "C" {
 struct gearman_command_info_st
 {
   const char *name;
-  const uint8_t argc; // Number of arguments to commands.
+  const uint8_t argc; /* Number of arguments to commands. */
   const bool data;
 };
 #endif /* GEARMAN_CORE */

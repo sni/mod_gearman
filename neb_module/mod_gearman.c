@@ -29,7 +29,7 @@
 #include "gearman.h"
 
 /* specify event broker API version (required) */
-NEB_API_VERSION( CURRENT_NEB_API_VERSION );
+NEB_API_VERSION( CURRENT_NEB_API_VERSION )
 
 /* import some global variables */
 extern int          currently_running_host_checks;
@@ -144,6 +144,7 @@ static void register_neb_callbacks(void) {
 
 /* deregister all events */
 int nebmodule_deinit( int flags, int reason ) {
+    int x;
 
     logger( GM_LOG_TRACE, "nebmodule_deinit(%i, %i)\n", flags, reason );
 
@@ -169,7 +170,6 @@ int nebmodule_deinit( int flags, int reason ) {
     logger( GM_LOG_DEBUG, "deregistered callbacks\n" );
 
     /* stop result threads */
-    int x;
     for(x = 0; x < mod_gm_opt->result_workers; x++) {
         pthread_cancel(result_thr[x]);
         pthread_join(result_thr[x], NULL);
@@ -184,10 +184,12 @@ int nebmodule_deinit( int flags, int reason ) {
 
 /* handle process events */
 static int handle_process_events( int event_type, void *data ) {
+    int x=0;
+    struct nebstruct_process_struct *ps;
 
     logger( GM_LOG_TRACE, "handle_process_events(%i, data)\n", event_type );
 
-    struct nebstruct_process_struct *ps = ( struct nebstruct_process_struct * )data;
+    ps = ( struct nebstruct_process_struct * )data;
     if ( ps->type == NEBTYPE_PROCESS_EVENTLOOPSTART ) {
         register_neb_callbacks();
         start_threads();
@@ -198,7 +200,6 @@ static int handle_process_events( int event_type, void *data ) {
          * this cannot be done befor nagios has finished reading his config
          * verify local servicegroups names
          */
-        int x=0;
         while ( mod_gm_opt->local_servicegroups_list[x] != NULL ) {
             servicegroup * temp_servicegroup = find_servicegroup( mod_gm_opt->local_servicegroups_list[x] );
             if( temp_servicegroup == NULL ) {
@@ -244,6 +245,7 @@ static int handle_process_events( int event_type, void *data ) {
 
 /* handle eventhandler events */
 static int handle_eventhandler( int event_type, void *data ) {
+    nebstruct_event_handler_data * ds;
 
     logger( GM_LOG_DEBUG, "got eventhandler event\n" );
     logger( GM_LOG_TRACE, "handle_eventhandler(%i, data)\n", event_type );
@@ -251,7 +253,7 @@ static int handle_eventhandler( int event_type, void *data ) {
     if ( event_type != NEBTYPE_EVENTHANDLER_START )
         return NEB_OK;
 
-    nebstruct_event_handler_data * ds = ( nebstruct_event_handler_data * )data;
+    ds = ( nebstruct_event_handler_data * )data;
 
     logger( GM_LOG_TRACE, "got eventhandler event: %s\n", ds->command_line );
 
@@ -274,17 +276,22 @@ static int handle_eventhandler( int event_type, void *data ) {
         logger( GM_LOG_TRACE, "handle_eventhandler() finished unsuccessfully\n" );
     }
 
-    // tell nagios to not execute
+    /* tell nagios to not execute */
     return NEBERROR_CALLBACKOVERRIDE;
 }
 
 
 /* handle host check events */
 static int handle_host_check( int event_type, void *data ) {
+    nebstruct_host_check_data * hostdata;
+    char *raw_command=NULL;
+    char *processed_command=NULL;
+    struct timeval start_time;
+    host * hst;
 
     logger( GM_LOG_TRACE, "handle_host_check(%i)\n", event_type );
 
-    nebstruct_host_check_data * hostdata = ( nebstruct_host_check_data * )data;
+    hostdata = ( nebstruct_host_check_data * )data;
 
     logger( GM_LOG_TRACE, "---------------\nhost Job -> %i, %i\n", event_type, hostdata->type );
 
@@ -303,7 +310,7 @@ static int handle_host_check( int event_type, void *data ) {
     }
 
     /* get objects and set target function */
-    host * hst = find_host( hostdata->host_name );
+    hst = find_host( hostdata->host_name );
     set_target_queue( hst, NULL );
 
     /* local check? */
@@ -319,10 +326,6 @@ static int handle_host_check( int event_type, void *data ) {
      * we have to do some host check logic here
      * taken from checks.c:
      */
-    char *raw_command=NULL;
-    char *processed_command=NULL;
-    struct timeval start_time;
-
     /* clear check options - we don't want old check options retained */
     hst->check_options = CHECK_OPTION_NONE;
 
@@ -406,12 +409,15 @@ static int handle_host_check( int event_type, void *data ) {
 /* handle service check events */
 static int handle_svc_check( int event_type, void *data ) {
     host * hst   = NULL;
+    service * svc = NULL;
     char *raw_command=NULL;
     char *processed_command=NULL;
     struct timeval start_time;
+    nebstruct_service_check_data * svcdata;
+    int prio = GM_JOB_PRIO_LOW;
 
     logger( GM_LOG_TRACE, "handle_svc_check(%i, data)\n", event_type );
-    nebstruct_service_check_data * svcdata = ( nebstruct_service_check_data * )data;
+    svcdata = ( nebstruct_service_check_data * )data;
 
     if ( event_type != NEBCALLBACK_SERVICE_CHECK_DATA )
         return NEB_OK;
@@ -427,7 +433,7 @@ static int handle_svc_check( int event_type, void *data ) {
     }
 
     /* get objects and set target function */
-    service * svc = find_service( svcdata->host_name, svcdata->service_description );
+    svc = find_service( svcdata->host_name, svcdata->service_description );
 
     /* find the host associated with this service */
     if((hst=svc->host_ptr)==NULL)
@@ -496,7 +502,6 @@ static int handle_svc_check( int event_type, void *data ) {
     snprintf( uniq,sizeof( temp_buffer )-1,"%s-%s", svcdata->host_name, svcdata->service_description);
 
     /* execute forced checks with high prio as they are propably user requested */
-    int prio = GM_JOB_PRIO_LOW;
     if(check_result_info.check_options & CHECK_OPTION_FORCE_EXECUTION)
         prio = GM_JOB_PRIO_HIGH;
 
@@ -536,7 +541,7 @@ static int handle_svc_check( int event_type, void *data ) {
 
 /* parse the module arguments */
 static int read_arguments( const char *args_orig ) {
-
+    int verify;
     int errors = 0;
     char *ptr;
     char *args   = strdup(args_orig);
@@ -548,7 +553,6 @@ static int read_arguments( const char *args_orig ) {
         }
     }
 
-    int verify;
     verify = verify_options(mod_gm_opt);
 
     if(mod_gm_opt->debug_level >= GM_LOG_DEBUG) {
@@ -616,12 +620,12 @@ static int verify_options(mod_gm_opt_t *opt) {
 
 /* return the prefered target function for our worker */
 static void set_target_queue( host *hst, service *svc ) {
+    int x=0;
 
     /* empty our target */
     target_queue[0] = '\x0';
 
     /* look for matching local servicegroups */
-    int x=0;
     if ( svc ) {
         while ( mod_gm_opt->local_servicegroups_list[x] != NULL ) {
             servicegroup * temp_servicegroup = find_servicegroup( mod_gm_opt->local_servicegroups_list[x] );
