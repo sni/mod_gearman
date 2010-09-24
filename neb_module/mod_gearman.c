@@ -39,6 +39,7 @@ extern int          host_check_timeout;
 extern timed_event *event_list_low;
 extern timed_event *event_list_low_tail;
 extern int          process_performance_data;
+extern check_result check_result_info;
 
 /* global variables */
 void *gearman_module_handle=NULL;
@@ -404,6 +405,10 @@ static int handle_host_check( int event_type, void *data ) {
 
 /* handle service check events */
 static int handle_svc_check( int event_type, void *data ) {
+    host * hst   = NULL;
+    char *raw_command=NULL;
+    char *processed_command=NULL;
+    struct timeval start_time;
 
     logger( GM_LOG_TRACE, "handle_svc_check(%i, data)\n", event_type );
     nebstruct_service_check_data * svcdata = ( nebstruct_service_check_data * )data;
@@ -425,10 +430,9 @@ static int handle_svc_check( int event_type, void *data ) {
     service * svc = find_service( svcdata->host_name, svcdata->service_description );
 
     /* find the host associated with this service */
-    host * host   = NULL;
-    if((host=svc->host_ptr)==NULL)
+    if((hst=svc->host_ptr)==NULL)
         return NEBERROR_CALLBACKCANCEL;
-    set_target_queue( host, svc );
+    set_target_queue( hst, svc );
 
     /* local check? */
     if(!strcmp( target_queue, "" )) {
@@ -441,16 +445,12 @@ static int handle_svc_check( int event_type, void *data ) {
      * we have to do some host check logic here
      * taken from checks.c:
      */
-    char *raw_command=NULL;
-    char *processed_command=NULL;
-    struct timeval start_time;
-
     /* clear check options - we don't want old check options retained */
     svc->check_options=CHECK_OPTION_NONE;
 
     /* grab the host and service macro variables */
     clear_volatile_macros();
-    grab_host_macros(host);
+    grab_host_macros(hst);
     grab_service_macros(svc);
 
     /* get the raw command line */
@@ -480,7 +480,6 @@ static int handle_svc_check( int event_type, void *data ) {
     logger( GM_LOG_DEBUG, "received job for queue %s: %s - %s\n", target_queue, svcdata->host_name, svcdata->service_description );
     logger( GM_LOG_TRACE, "cmd_line: %s\n", processed_command );
 
-    extern check_result check_result_info;
     temp_buffer[0]='\x0';
     snprintf( temp_buffer,sizeof( temp_buffer )-1,"type=service\nresult_queue=%s\nhost_name=%s\nservice_description=%s\nstart_time=%i.%i\ntimeout=%d\ncommand_line=%s\n\n\n",
               mod_gm_opt->result_queue,
@@ -616,7 +615,7 @@ static int verify_options(mod_gm_opt_t *opt) {
 
 
 /* return the prefered target function for our worker */
-static void set_target_queue( host *host, service *svc ) {
+static void set_target_queue( host *hst, service *svc ) {
 
     /* empty our target */
     target_queue[0] = '\x0';
@@ -638,7 +637,7 @@ static void set_target_queue( host *host, service *svc ) {
     x = 0;
     while ( mod_gm_opt->local_hostgroups_list[x] != NULL ) {
         hostgroup * temp_hostgroup = find_hostgroup( mod_gm_opt->local_hostgroups_list[x] );
-        if ( is_host_member_of_hostgroup( temp_hostgroup,host )==TRUE ) {
+        if ( is_host_member_of_hostgroup( temp_hostgroup,hst )==TRUE ) {
             logger( GM_LOG_TRACE, "server is member of local hostgroup: %s\n", mod_gm_opt->local_hostgroups_list[x] );
             return;
         }
@@ -664,7 +663,7 @@ static void set_target_queue( host *host, service *svc ) {
     x = 0;
     while ( mod_gm_opt->hostgroups_list[x] != NULL ) {
         hostgroup * temp_hostgroup = find_hostgroup( mod_gm_opt->hostgroups_list[x] );
-        if ( is_host_member_of_hostgroup( temp_hostgroup,host )==TRUE ) {
+        if ( is_host_member_of_hostgroup( temp_hostgroup,hst )==TRUE ) {
             logger( GM_LOG_TRACE, "server is member of hostgroup: %s\n", mod_gm_opt->hostgroups_list[x] );
             snprintf( target_queue, sizeof(target_queue)-1, "hostgroup_%s", mod_gm_opt->hostgroups_list[x] );
             target_queue[sizeof( target_queue )-1]='\x0';
@@ -709,19 +708,17 @@ static void start_threads(void) {
 
 /* handle performance data */
 int handle_perfdata(int event_type, void *data) {
+    nebstruct_host_check_data *hostchkdata   = NULL;
+    nebstruct_service_check_data *srvchkdata = NULL;
+    host *hst        = NULL;
+    service *svc     = NULL;
+    int has_perfdata = FALSE;
+
     logger( GM_LOG_TRACE, "handle_perfdata(%d)\n", event_type );
     if(process_performance_data == 0) {
         logger( GM_LOG_TRACE, "handle_perfdata() process_performance_data disabled globally\n" );
         return 0;
     }
-
-    nebstruct_host_check_data *hostchkdata   = NULL;
-    nebstruct_service_check_data *srvchkdata = NULL;
-
-    host *host       = NULL;
-    service *service = NULL;
-
-    int has_perfdata = FALSE;
 
     /* what type of event/data do we have? */
     switch (event_type) {
@@ -734,9 +731,9 @@ int handle_perfdata(int event_type, void *data) {
                     break;
                 }
 
-                host = find_host(hostchkdata->host_name);
-                if(host->process_performance_data == 0) {
-                    logger( GM_LOG_TRACE, "handle_perfdata() process_performance_data disabled for: %s\n", host->name );
+                hst = find_host(hostchkdata->host_name);
+                if(hst->process_performance_data == 0) {
+                    logger( GM_LOG_TRACE, "handle_perfdata() process_performance_data disabled for: %s\n", hst->name );
                     break;
                 }
 
@@ -767,9 +764,9 @@ int handle_perfdata(int event_type, void *data) {
                 }
 
                 /* find the nagios service object for this service */
-                service = find_service(srvchkdata->host_name, srvchkdata->service_description);
-                if(service->process_performance_data == 0) {
-                    logger( GM_LOG_TRACE, "handle_perfdata() process_performance_data disabled for: %s - %s\n", service->host_name, service->description );
+                svc = find_service(srvchkdata->host_name, srvchkdata->service_description);
+                if(svc->process_performance_data == 0) {
+                    logger( GM_LOG_TRACE, "handle_perfdata() process_performance_data disabled for: %s - %s\n", svc->host_name, svc->description );
                     break;
                 }
 
@@ -785,7 +782,7 @@ int handle_perfdata(int event_type, void *data) {
                             "SERVICESTATETYPE::%d\n\n\n",
                             (int)srvchkdata->timestamp.tv_sec,
                             srvchkdata->host_name, srvchkdata->service_description,
-                            srvchkdata->perf_data, service->service_check_command,
+                            srvchkdata->perf_data, svc->service_check_command,
                             srvchkdata->state, srvchkdata->state_type);
                 temp_buffer[sizeof( temp_buffer )-1]='\x0';
                 has_perfdata = TRUE;

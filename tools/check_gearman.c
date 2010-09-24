@@ -256,7 +256,7 @@ int check_server(char * hostname) {
 
 
 /* send job to worker and check result */
-int check_worker(char * queue, char * send, char * expect) {
+int check_worker(char * queue, char * to_send, char * expect) {
 
     /* create client */
     if ( create_client( server_list, &client ) != GM_OK ) {
@@ -272,8 +272,8 @@ int check_worker(char * queue, char * send, char * expect) {
         result= (char *)gearman_client_do_high( &client,
                                                 queue,
                                                 "check",
-                                                (void *)send,
-                                                (size_t)strlen(send),
+                                                (void *)to_send,
+                                                (size_t)strlen(to_send),
                                                 &result_size,
                                                 &ret);
         if (ret == GEARMAN_WORK_DATA) {
@@ -301,11 +301,11 @@ int check_worker(char * queue, char * send, char * expect) {
 
     if( expect != NULL ) {
         if( strstr(result, expect) != NULL) {
-            printf("%s OK - send worker '%s' response: '%s'\n", PLUGIN_NAME, send, result);
+            printf("%s OK - send worker '%s' response: '%s'\n", PLUGIN_NAME, to_send, result);
             return( STATE_OK );
         }
         else {
-            printf("%s CRITICAL - send worker: '%s' response: '%s', expected '%s'\n", PLUGIN_NAME, send, result, expect);
+            printf("%s CRITICAL - send worker: '%s' response: '%s', expected '%s'\n", PLUGIN_NAME, to_send, result, expect);
             return( STATE_CRITICAL );
         }
     }

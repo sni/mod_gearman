@@ -93,7 +93,7 @@ void *get_results( gearman_job_st *job, void *context, size_t *result_size, gear
     /* get the data */
     int wsize = gearman_job_workload_size(job);
     char workload[GM_BUFFERSIZE];
-    strncpy(workload, (char*)gearman_job_workload(job), wsize);
+    strncpy(workload, (const char*)gearman_job_workload(job), wsize);
     workload[wsize] = '\0';
     logger( GM_LOG_TRACE, "got result %s\n", gearman_job_handle( job ));
     logger( GM_LOG_TRACE, "%d +++>\n%s\n<+++\n", strlen(workload), workload );

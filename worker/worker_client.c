@@ -144,7 +144,7 @@ void *get_job( gearman_job_st *job, void *context, size_t *result_size, gearman_
     /* get the data */
     int wsize = gearman_job_workload_size(job);
     char workload[GM_BUFFERSIZE];
-    strncpy(workload, (char*)gearman_job_workload(job), wsize);
+    strncpy(workload, (const char*)gearman_job_workload(job), wsize);
     workload[wsize] = '\0';
     logger( GM_LOG_TRACE, "got new job %s\n", gearman_job_handle( job ) );
     logger( GM_LOG_TRACE, "%d +++>\n%s\n<+++\n", strlen(workload), workload );
@@ -514,33 +514,33 @@ void send_result_back() {
 
 
 /* create the worker */
-int set_worker( gearman_worker_st *worker ) {
+int set_worker( gearman_worker_st *w ) {
     logger( GM_LOG_TRACE, "set_worker()\n" );
 
-    create_worker( mod_gm_opt->server_list, worker );
+    create_worker( mod_gm_opt->server_list, w );
 
     if(worker_run_mode == GM_WORKER_STATUS) {
         /* register status function */
         char status_queue[GM_BUFFERSIZE];
         snprintf(status_queue, GM_BUFFERSIZE, "worker_%s", hostname);
-        worker_add_function( worker, status_queue, return_status );
+        worker_add_function( w, status_queue, return_status );
     }
     else {
         /* normal worker */
         if(mod_gm_opt->hosts == GM_ENABLED)
-            worker_add_function( worker, "host", get_job );
+            worker_add_function( w, "host", get_job );
 
         if(mod_gm_opt->services == GM_ENABLED)
-            worker_add_function( worker, "service", get_job );
+            worker_add_function( w, "service", get_job );
 
         if(mod_gm_opt->events == GM_ENABLED)
-            worker_add_function( worker, "eventhandler", get_job );
+            worker_add_function( w, "eventhandler", get_job );
 
         int x = 0;
         while ( mod_gm_opt->hostgroups_list[x] != NULL ) {
             char buffer[GM_BUFFERSIZE];
             snprintf( buffer, (sizeof(buffer)-1), "hostgroup_%s", mod_gm_opt->hostgroups_list[x] );
-            worker_add_function( worker, buffer, get_job );
+            worker_add_function( w, buffer, get_job );
             x++;
         }
 
@@ -548,13 +548,13 @@ int set_worker( gearman_worker_st *worker ) {
         while ( mod_gm_opt->servicegroups_list[x] != NULL ) {
             char buffer[GM_BUFFERSIZE];
             snprintf( buffer, (sizeof(buffer)-1), "servicegroup_%s", mod_gm_opt->servicegroups_list[x] );
-            worker_add_function( worker, buffer, get_job );
+            worker_add_function( w, buffer, get_job );
             x++;
         }
     }
 
     /* add our dummy queue, gearman sometimes forgets the last added queue */
-    worker_add_function( worker, "dummy", dummy);
+    worker_add_function( w, "dummy", dummy);
 
     return GM_OK;
 }
@@ -667,7 +667,7 @@ void *return_status( gearman_job_st *job, void *context, size_t *result_size, ge
     /* get the data */
     int wsize = gearman_job_workload_size(job);
     char workload[GM_BUFFERSIZE];
-    strncpy(workload, (char*)gearman_job_workload(job), wsize);
+    strncpy(workload, (const char*)gearman_job_workload(job), wsize);
     workload[wsize] = '\0';
     logger( GM_LOG_TRACE, "got status job %s\n", gearman_job_handle( job ) );
     logger( GM_LOG_TRACE, "%d +++>\n%s\n<+++\n", strlen(workload), workload );

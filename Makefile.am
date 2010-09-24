@@ -8,7 +8,7 @@
 ###############################################################################
 
 # -g adds debug symbols, -s strips
-CFLAGS=-Wall -W -Wstrict-prototypes -g3 -O -fPIC
+CFLAGS=-Wall -W -Wstrict-prototypes -Wshadow -Wpointer-arith -Wcast-qual -Wcast-align -Wstrict-prototypes -Wmissing-prototypes -Wnested-externs -g3 -O -fPIC
 AM_CPPFLAGS=-Iinclude
 OS=`uname`
 
