@@ -36,8 +36,6 @@ char hostname[GM_BUFFERSIZE];
 gearman_worker_st worker;
 gearman_client_st client;
 
-int number_jobs_done = 0;
-
 gm_job_t * current_job;
 pid_t current_child_pid;
 gm_job_t * exec_job;
@@ -113,9 +111,6 @@ void worker_loop() {
 
 /* get a job */
 void *get_job( gearman_job_st *job, void *context, size_t *result_size, gearman_return_t *ret_ptr ) {
-
-    /* increase counter */
-    number_jobs_done++;
 
     /* send start signal to parent */
     send_state_to_parent(GM_JOB_START);
@@ -617,11 +612,6 @@ void send_state_to_parent(int status) {
 
     /* wake up parent */
     kill(getppid(), SIGUSR1);
-
-    if(number_jobs_done >= GM_MAX_JOBS_PER_CLIENT) {
-        logger( GM_LOG_TRACE, "worker finished: %d\n", getpid() );
-        exit(EXIT_SUCCESS);
-    }
 
     return;
 }

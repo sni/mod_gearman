@@ -94,7 +94,7 @@ void *get_results( gearman_job_st *job, void *context, size_t *result_size, gear
     int wsize = gearman_job_workload_size(job);
     char workload[GM_BUFFERSIZE];
     strncpy(workload, (char*)gearman_job_workload(job), wsize);
-    workload[wsize] = '\0';
+    workload[wsize] = '\x0';
     logger( GM_LOG_TRACE, "got result %s\n", gearman_job_handle( job ));
     logger( GM_LOG_TRACE, "%d +++>\n%s\n<+++\n", strlen(workload), workload );
 
@@ -207,11 +207,25 @@ void *get_results( gearman_job_st *job, void *context, size_t *result_size, gear
     }
 
     if ( chk_result->service_description != NULL ) {
+        /* does this services exist */
+        service * svc = find_service( chk_result->host_name, chk_result->service_description );
+        if(svc == NULL) {
+            logger( GM_LOG_ERROR, "service '%s' on host '%s' could not be found\n", chk_result->service_description, chk_result->host_name );
+            return NULL;
+        }
+
         chk_result->object_check_type    = SERVICE_CHECK;
         chk_result->check_type           = SERVICE_CHECK_ACTIVE;
         if(active_check == FALSE )
             chk_result->check_type       = SERVICE_CHECK_PASSIVE;
     } else {
+        /* does this host exist */
+        host * hst = find_host( chk_result->host_name );
+        if(hst == NULL) {
+            logger( GM_LOG_ERROR, "host '%s' could not be found\n", chk_result->host_name );
+            return NULL;
+        }
+
         chk_result->object_check_type    = HOST_CHECK;
         chk_result->check_type           = HOST_CHECK_ACTIVE;
         if(active_check == FALSE )

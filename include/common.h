@@ -62,7 +62,6 @@
 #define GM_DEFAULT_MIN_WORKER           1      // minumum number of worker
 #define GM_DEFAULT_MAX_WORKER          20      // maximum number of concurrent worker
 #define GM_DEFAULT_JOB_MAX_AGE        600      // discard jobs older than that
-#define GM_MAX_JOBS_PER_CLIENT         20
 
 /* transport modes */
 #define GM_ENCODE_AND_ENCRYPT           1
