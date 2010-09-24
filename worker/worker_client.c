@@ -111,6 +111,14 @@ void worker_loop() {
 
 /* get a job */
 void *get_job( gearman_job_st *job, void *context, size_t *result_size, gearman_return_t *ret_ptr ) {
+    sigset_t block_mask;
+    sigset_t old_mask;
+    int wsize;
+    char workload[GM_BUFFERSIZE];
+    char * decrypted_data;
+    char * decrypted_data_c;
+    char *ptr;
+    char command[GM_BUFFERSIZE];
 
     /* send start signal to parent */
     send_state_to_parent(GM_JOB_START);
@@ -130,23 +138,20 @@ void *get_job( gearman_job_st *job, void *context, size_t *result_size, gearman_
     sleep_time_after_error = 1;
 
     /* ignore sigterms while running job */
-    sigset_t block_mask;
-    sigset_t old_mask;
     sigemptyset(&block_mask);
     sigaddset(&block_mask, SIGTERM);
     sigprocmask(SIG_BLOCK, &block_mask, &old_mask);
 
     /* get the data */
-    int wsize = gearman_job_workload_size(job);
-    char workload[GM_BUFFERSIZE];
-    strncpy(workload, (char*)gearman_job_workload(job), wsize);
+    wsize = gearman_job_workload_size(job);
+    strncpy(workload, (const char*)gearman_job_workload(job), wsize);
     workload[wsize] = '\0';
     logger( GM_LOG_TRACE, "got new job %s\n", gearman_job_handle( job ) );
     logger( GM_LOG_TRACE, "%d +++>\n%s\n<+++\n", strlen(workload), workload );
 
     /* decrypt data */
-    char * decrypted_data = malloc(GM_BUFFERSIZE);
-    char * decrypted_data_c = decrypted_data;
+    decrypted_data = malloc(GM_BUFFERSIZE);
+    decrypted_data_c = decrypted_data;
     mod_gm_decrypt(&decrypted_data, workload, mod_gm_opt->transportmode);
 
     if(decrypted_data == NULL) {
@@ -161,8 +166,6 @@ void *get_job( gearman_job_st *job, void *context, size_t *result_size, gearman_
     exec_job = ( gm_job_t * )malloc( sizeof *exec_job );
     set_default_job(exec_job);
 
-    char *ptr;
-    char command[GM_BUFFERSIZE];
     while ( (ptr = strsep(&decrypted_data, "\n" )) != NULL ) {
         char *key   = strsep( &ptr, "=" );
         char *value = strsep( &ptr, "\x0" );
@@ -216,9 +219,10 @@ void *get_job( gearman_job_st *job, void *context, size_t *result_size, gearman_
 
 /* do some job */
 void do_exec_job( ) {
-    logger( GM_LOG_TRACE, "do_exec_job()\n" );
-
     struct timeval start_time,end_time;
+    int latency;
+
+    logger( GM_LOG_TRACE, "do_exec_job()\n" );
 
     if(exec_job->type == NULL) {
         logger( GM_LOG_ERROR, "discarded invalid job\n" );
@@ -249,7 +253,7 @@ void do_exec_job( ) {
     /* get the check start time */
     gettimeofday(&start_time,NULL);
     exec_job->start_time = start_time;
-    int latency = exec_job->core_start_time.tv_sec - start_time.tv_sec;
+    latency = exec_job->core_start_time.tv_sec - start_time.tv_sec;
 
     /* job is too old */
     if(latency > mod_gm_opt->max_age) {
@@ -298,14 +302,20 @@ void do_exec_job( ) {
 
 /* execute this command with given timeout */
 void execute_safe_command() {
-    logger( GM_LOG_TRACE, "execute_safe_command()\n" );
-
     int pdes[2];
     int return_code;
-    char plugin_output[GM_BUFFERSIZE];
-    strcpy(plugin_output,"");
-
+    int pclose_result;
+    int size;
     int fork_exec = mod_gm_opt->fork_on_exec;
+    char plugin_output[GM_BUFFERSIZE];
+    char buffer[GM_BUFFERSIZE] = "";
+    char output[GM_BUFFERSIZE] = "";
+    char *buf;
+    sigset_t mask;
+    FILE *fp = NULL;
+
+    logger( GM_LOG_TRACE, "execute_safe_command()\n" );
+    strcpy(plugin_output,"");
 
     /* fork a child process */
     if(fork_exec == GM_ENABLED) {
@@ -330,7 +340,6 @@ void execute_safe_command() {
         current_child_pid = getpid();
 
         /* remove all customn signal handler */
-        sigset_t mask;
         sigfillset(&mask);
         sigprocmask(SIG_UNBLOCK, &mask, NULL);
 
@@ -340,7 +349,6 @@ void execute_safe_command() {
         alarm(exec_job->timeout);
 
         /* run the plugin check command */
-        FILE *fp = NULL;
         fp = popen(exec_job->command_line, "r");
         if( fp == NULL ) {
             if( fork_exec == GM_ENABLED ) {
@@ -354,22 +362,18 @@ void execute_safe_command() {
         }
 
         /* get all lines of plugin output - escape newlines */
-        char buffer[GM_BUFFERSIZE] = "";
-        char output[GM_BUFFERSIZE] = "";
         strcpy(buffer,"");
         strcpy(output,"");
-        int size = GM_MAX_OUTPUT;
+        size = GM_MAX_OUTPUT;
         while(size > 0 && fgets(buffer,sizeof(buffer)-1,fp)){
             strncat(output, buffer, size);
             size -= strlen(buffer);
         }
-        char * buf;
         buf = escape_newlines(output);
         snprintf(plugin_output, sizeof(plugin_output), "%s", buf);
         free(buf);
 
         /* close the process */
-        int pclose_result;
         pclose_result = pclose(fp);
         return_code   = real_exit_code(pclose_result);
 
@@ -509,33 +513,34 @@ void send_result_back() {
 
 
 /* create the worker */
-int set_worker( gearman_worker_st *worker ) {
+int set_worker( gearman_worker_st *w ) {
+    int x = 0;
+
     logger( GM_LOG_TRACE, "set_worker()\n" );
 
-    create_worker( mod_gm_opt->server_list, worker );
+    create_worker( mod_gm_opt->server_list, w );
 
     if(worker_run_mode == GM_WORKER_STATUS) {
         /* register status function */
         char status_queue[GM_BUFFERSIZE];
         snprintf(status_queue, GM_BUFFERSIZE, "worker_%s", hostname);
-        worker_add_function( worker, status_queue, return_status );
+        worker_add_function( w, status_queue, return_status );
     }
     else {
         /* normal worker */
         if(mod_gm_opt->hosts == GM_ENABLED)
-            worker_add_function( worker, "host", get_job );
+            worker_add_function( w, "host", get_job );
 
         if(mod_gm_opt->services == GM_ENABLED)
-            worker_add_function( worker, "service", get_job );
+            worker_add_function( w, "service", get_job );
 
         if(mod_gm_opt->events == GM_ENABLED)
-            worker_add_function( worker, "eventhandler", get_job );
+            worker_add_function( w, "eventhandler", get_job );
 
-        int x = 0;
         while ( mod_gm_opt->hostgroups_list[x] != NULL ) {
             char buffer[GM_BUFFERSIZE];
             snprintf( buffer, (sizeof(buffer)-1), "hostgroup_%s", mod_gm_opt->hostgroups_list[x] );
-            worker_add_function( worker, buffer, get_job );
+            worker_add_function( w, buffer, get_job );
             x++;
         }
 
@@ -543,13 +548,13 @@ int set_worker( gearman_worker_st *worker ) {
         while ( mod_gm_opt->servicegroups_list[x] != NULL ) {
             char buffer[GM_BUFFERSIZE];
             snprintf( buffer, (sizeof(buffer)-1), "servicegroup_%s", mod_gm_opt->servicegroups_list[x] );
-            worker_add_function( worker, buffer, get_job );
+            worker_add_function( w, buffer, get_job );
             x++;
         }
     }
 
     /* add our dummy queue, gearman sometimes forgets the last added queue */
-    worker_add_function( worker, "dummy", dummy);
+    worker_add_function( w, "dummy", dummy);
 
     return GM_OK;
 }
@@ -557,9 +562,10 @@ int set_worker( gearman_worker_st *worker ) {
 
 /* called when check runs into timeout */
 void alarm_sighandler(int sig) {
+    pid_t pid = getpid();
+
     logger( GM_LOG_TRACE, "alarm_sighandler(%i)\n", sig );
 
-    pid_t pid = getpid();
     signal(SIGINT, SIG_IGN);
     logger( GM_LOG_TRACE, "send SIGINT to %d\n", pid);
     kill(-pid, SIGINT);
@@ -576,10 +582,10 @@ void alarm_sighandler(int sig) {
 
 /* tell parent our state */
 void send_state_to_parent(int status) {
-    logger( GM_LOG_TRACE, "send_state_to_parent(%d)\n", status );
-
     int shmid;
     int *shm;
+
+    logger( GM_LOG_TRACE, "send_state_to_parent(%d)\n", status );
 
     /* Locate the segment */
     if ((shmid = shmget(mod_gm_shm_key, GM_SHM_SIZE, 0666)) < 0) {
@@ -619,6 +625,8 @@ void send_state_to_parent(int status) {
 
 /* do a clean exit */
 void clean_worker_exit(int sig) {
+    int shmid;
+
     logger( GM_LOG_TRACE, "clean_worker_exit(%d)\n", sig);
 
     gearman_worker_unregister_all(&worker);
@@ -634,7 +642,6 @@ void clean_worker_exit(int sig) {
      * clean up shared memory
      * will be removed when last client detaches
      */
-    int shmid;
     if ((shmid = shmget(mod_gm_shm_key, GM_SHM_SIZE, 0666)) < 0) {
         perror("shmget");
     }
@@ -648,6 +655,11 @@ void clean_worker_exit(int sig) {
 
 /* answer status querys */
 void *return_status( gearman_job_st *job, void *context, size_t *result_size, gearman_return_t *ret_ptr ) {
+    int wsize;
+    char workload[GM_BUFFERSIZE];
+    int shmid;
+    int *shm;
+    char * result;
 
     logger( GM_LOG_TRACE, "return_status()\n" );
 
@@ -655,9 +667,8 @@ void *return_status( gearman_job_st *job, void *context, size_t *result_size, ge
     context = context;
 
     /* get the data */
-    int wsize = gearman_job_workload_size(job);
-    char workload[GM_BUFFERSIZE];
-    strncpy(workload, (char*)gearman_job_workload(job), wsize);
+    wsize = gearman_job_workload_size(job);
+    strncpy(workload, (const char*)gearman_job_workload(job), wsize);
     workload[wsize] = '\0';
     logger( GM_LOG_TRACE, "got status job %s\n", gearman_job_handle( job ) );
     logger( GM_LOG_TRACE, "%d +++>\n%s\n<+++\n", strlen(workload), workload );
@@ -665,13 +676,9 @@ void *return_status( gearman_job_st *job, void *context, size_t *result_size, ge
     /* set result pointer to success */
     *ret_ptr= GEARMAN_SUCCESS;
 
-    char * result = malloc(GM_BUFFERSIZE);
-
     /* set size of result */
+    result = malloc(GM_BUFFERSIZE);
     *result_size = GM_BUFFERSIZE;
-
-    int shmid;
-    int *shm;
 
     /* Locate the segment */
     if ((shmid = shmget(mod_gm_shm_key, GM_SHM_SIZE, 0666)) < 0) {

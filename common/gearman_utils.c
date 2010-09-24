@@ -28,9 +28,18 @@
 
 /* get worker/jobs data from gearman server */
 int get_gearman_server_data(mod_gm_server_status_t *stats, char ** message, char ** version, char * hostname, int port) {
-    int sockfd;
+    int sockfd, n;
     struct sockaddr_in serv_addr;
     struct hostent *server;
+    char * cmd;
+    char buf[GM_BUFFERSIZE];
+    char * line;
+    char * output;
+    char * name;
+    char * total;
+    char * running;
+    char * worker;
+    mod_gm_status_function_t *func;
 
     *message = malloc(GM_BUFFERSIZE);
     *version = malloc(GM_BUFFERSIZE);
@@ -56,14 +65,13 @@ int get_gearman_server_data(mod_gm_server_status_t *stats, char ** message, char
         return( STATE_CRITICAL );
     }
 
-    char * cmd = "status\nversion\n";
-    int n = write(sockfd,cmd,strlen(cmd));
+    cmd = "status\nversion\n";
+    n = write(sockfd,cmd,strlen(cmd));
     if (n < 0) {
         snprintf(*message, GM_BUFFERSIZE, "failed to send to %s:%i - %s\n", hostname, (int)port, strerror(errno));
         return( STATE_CRITICAL );
     }
 
-    char buf[GM_BUFFERSIZE];
     n = read( sockfd, buf, GM_BUFFERSIZE-1 );
     buf[n] = '\x0';
     if (n < 0) {
@@ -71,8 +79,7 @@ int get_gearman_server_data(mod_gm_server_status_t *stats, char ** message, char
         return( STATE_CRITICAL );
     }
 
-    char * line;
-    char * output = strdup(buf);
+    output = strdup(buf);
     while ( (line = strsep( &output, "\n" )) != NULL ) {
         logger( GM_LOG_TRACE, "%s\n", line );
         if(!strcmp( line, ".")) {
@@ -82,19 +89,19 @@ int get_gearman_server_data(mod_gm_server_status_t *stats, char ** message, char
             }
             return( STATE_OK );
         }
-        char * name    = strsep(&line, "\t");
+        name = strsep(&line, "\t");
         if(name == NULL)
             break;
-        char * total   = strsep(&line, "\t");
+        total   = strsep(&line, "\t");
         if(total == NULL)
             break;
-        char * running = strsep(&line, "\t");
+        running = strsep(&line, "\t");
         if(running == NULL)
             break;
-        char * worker  = strsep(&line, "\x0");
+        worker  = strsep(&line, "\x0");
         if(worker == NULL)
             break;
-        mod_gm_status_function_t *func = malloc(sizeof(mod_gm_status_function_t));
+        func = malloc(sizeof(mod_gm_status_function_t));
         func->queue   = name;
         func->running = atoi(running);
         func->total   = atoi(total);

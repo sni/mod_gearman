@@ -92,6 +92,7 @@ void mod_gm_crypt_init(char * key) {
 int mod_gm_encrypt(char ** encrypted, char * text, int mode) {
     int size;
     unsigned char * crypted;
+    char * base64;
 
     if(mode == GM_ENCODE_AND_ENCRYPT) {
         size = mod_gm_aes_encrypt(&crypted, text);
@@ -102,7 +103,7 @@ int mod_gm_encrypt(char ** encrypted, char * text, int mode) {
     }
 
     /* now encode in base64 */
-    char * base64 = malloc(GM_BUFFERSIZE);
+    base64 = malloc(GM_BUFFERSIZE);
     base64[0] = 0;
     base64_encode(crypted, size, base64, GM_BUFFERSIZE);
     free(*encrypted);
@@ -157,9 +158,10 @@ char *ltrim(char *s) {
 
 /* trim right spaces */
 char *rtrim(char *s) {
+    char *back;
     if(s == NULL)
         return NULL;
-    char* back = s + strlen(s);
+    back = s + strlen(s);
     while(isspace(*--back));
     *(back+1) = '\0';
     return s;
@@ -176,9 +178,9 @@ char *trim(char *s) {
 
 /* make string lowercase */
 char * lc(char * str) {
+    int i;
     if(str == NULL)
         return NULL;
-    int i;
     for( i = 0; str[ i ]; i++)
         str[ i ] = tolower( str[ i ] );
     return str;
@@ -187,6 +189,8 @@ char * lc(char * str) {
 
 /* set empty default options */
 int set_default_options(mod_gm_opt_t *opt) {
+    int i;
+
     opt->set_queues_by_hand = 0;
     opt->result_workers     = 1;
     opt->crypt_key          = NULL;
@@ -217,7 +221,6 @@ int set_default_options(mod_gm_opt_t *opt) {
     opt->service            = NULL;
 
     opt->server_num         = 0;
-    int i;
     for(i=0;i<=GM_LISTSIZE;i++)
         opt->server_list[i] = NULL;
     opt->hostgroups_num     = 0;
@@ -267,9 +270,13 @@ int parse_yes_or_no(char*value, int dfl) {
 
 /* parse one line of args into the given struct */
 int parse_args_line(mod_gm_opt_t *opt, char * arg, int recursion_level) {
+    char *key;
+    char *value;
+
     logger( GM_LOG_TRACE, "parse_args_line(%s, %d)\n", arg, recursion_level);
-    char *key   = strsep( &arg, "=" );
-    char *value = strsep( &arg, "\x0" );
+
+    key   = strsep( &arg, "=" );
+    value = strsep( &arg, "\x0" );
 
     if ( key == NULL )
         return(GM_OK);
@@ -532,21 +539,25 @@ int parse_args_line(mod_gm_opt_t *opt, char * arg, int recursion_level) {
 
 /* read an entire config file */
 int read_config_file(mod_gm_opt_t *opt, char*filename, int recursion_level) {
+    FILE * fp;
+    int errors = 0;
+    char *line;
+    char *line_c;
+
     logger( GM_LOG_TRACE, "read_config_file(%s, %d)\n", filename, recursion_level );
+
     if(recursion_level > 10) {
         logger( GM_LOG_ERROR, "deep recursion in config files!\n" );
         return GM_ERROR;
     }
-    FILE * fp;
     fp = fopen(filename, "r");
     if(fp == NULL) {
         perror(filename);
         return GM_ERROR;
     }
 
-    int errors = 0;
-    char *line = malloc(GM_BUFFERSIZE);
-    char *line_c = line;
+    line = malloc(GM_BUFFERSIZE);
+    line_c = line;
     line[0] = '\0';
     while(fgets(line, GM_BUFFERSIZE, fp) != NULL) {
         /* trim comments */
@@ -664,18 +675,18 @@ void mod_gm_free_opt(mod_gm_opt_t *opt) {
 
 /* read keyfile */
 int read_keyfile(mod_gm_opt_t *opt) {
+    FILE *fp;
+    int i;
 
     if(opt->keyfile == NULL)
         return(GM_ERROR);
 
 
-    FILE *fp;
     fp = fopen(opt->keyfile,"rb");
     if(fp == NULL) {
         perror(opt->keyfile);
         return(GM_ERROR);
     }
-    int i;
     if(opt->crypt_key != NULL)
         free(opt->crypt_key);
     opt->crypt_key = malloc(GM_BUFFERSIZE);
@@ -731,32 +742,39 @@ char * nr2signal(int sig) {
 
 /* convert to time */
 void string2timeval(char * value, struct timeval *t) {
+    char * v;
+    char * v_c;
+    char * s;
+    char * u;
+    int sec;
+    int usec;
+
     t->tv_sec  = 0;
     t->tv_usec = 0;
 
     if(value == NULL)
         return;
 
-    char * v = strdup(value);
-    char * v_c = v;
+    v = strdup(value);
+    v_c = v;
 
-    char * s = strsep( &v, "." );
+    s = strsep( &v, "." );
     if(s == NULL) {
         free(v_c);
         return;
     }
 
-    int sec  = atoi( s );
+    sec  = atoi( s );
     t->tv_sec  = sec;
 
-    char * u = strsep( &v, "\x0" );
+    u = strsep( &v, "\x0" );
 
     if(u == NULL) {
         free(v_c);
         return;
     }
 
-    int usec  = atoi( u );
+    usec  = atoi( u );
 
     t->tv_usec = usec;
     free(v_c);

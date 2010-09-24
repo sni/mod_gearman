@@ -1,5 +1,6 @@
 #include <string.h>
 #include <stdlib.h>
+#include "base64.h"
 
 /*
  * http://freecode-freecode.blogspot.com/2008/02/base64c.html

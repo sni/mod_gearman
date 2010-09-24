@@ -24,7 +24,7 @@ extern "C" {
 struct gearman_universal_st
 {
   struct {
-    bool allocated LIBGEARMAN_BITFIELD; // Not Used (will remove later)
+    bool allocated LIBGEARMAN_BITFIELD; /* Not Used (will remove later) */
     bool dont_track_packets LIBGEARMAN_BITFIELD;
     bool non_blocking LIBGEARMAN_BITFIELD;
     bool stored_non_blocking LIBGEARMAN_BITFIELD;
@@ -35,7 +35,7 @@ struct gearman_universal_st
   uint32_t pfds_size;
   uint32_t sending;
   int last_errno;
-  int timeout; // Used by poll()
+  int timeout; /* Used by poll() */
   gearman_connection_st *con_list;
   gearman_packet_st *packet_list;
   struct pollfd *pfds;

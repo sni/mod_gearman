@@ -45,14 +45,14 @@ static void cancel_worker_thread (void * data) {
 
 /* callback for task completed */
 void *result_worker( void * data ) {
-
+    gearman_worker_st worker;
     int *worker_num = (int*)data;
+
     logger( GM_LOG_TRACE, "worker %d started\n", *worker_num );
 
     pthread_setcancelstate (PTHREAD_CANCEL_ENABLE, NULL);
     pthread_setcanceltype (PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
 
-    gearman_worker_st worker;
     set_worker(&worker);
 
     pthread_cleanup_push ( cancel_worker_thread, (void*) &worker);
@@ -76,9 +76,17 @@ void *result_worker( void * data ) {
 
 /* put back the result into the core */
 void *get_results( gearman_job_st *job, void *context, size_t *result_size, gearman_return_t *ret_ptr ) {
+    int wsize;
+    char workload[GM_BUFFERSIZE];
+    char *decrypted_data;
+    char *decrypted_data_c;
+    struct timeval now, core_start_time;
+    check_result * chk_result;
+    int active_check = TRUE;
+    char *ptr;
+    double now_f, core_starttime_f, starttime_f, finishtime_f, exec_time, latency;
 
     /* for calculating real latency */
-    struct timeval now, core_start_time;
     gettimeofday(&now,NULL);
 
     /* contect is unused */
@@ -91,16 +99,15 @@ void *get_results( gearman_job_st *job, void *context, size_t *result_size, gear
     *ret_ptr = GEARMAN_SUCCESS;
 
     /* get the data */
-    int wsize = gearman_job_workload_size(job);
-    char workload[GM_BUFFERSIZE];
-    strncpy(workload, (char*)gearman_job_workload(job), wsize);
+    wsize = gearman_job_workload_size(job);
+    strncpy(workload, (const char*)gearman_job_workload(job), wsize);
     workload[wsize] = '\x0';
     logger( GM_LOG_TRACE, "got result %s\n", gearman_job_handle( job ));
     logger( GM_LOG_TRACE, "%d +++>\n%s\n<+++\n", strlen(workload), workload );
 
     /* decrypt data */
-    char *decrypted_data   = malloc(GM_BUFFERSIZE);
-    char *decrypted_data_c = decrypted_data;
+    decrypted_data   = malloc(GM_BUFFERSIZE);
+    decrypted_data_c = decrypted_data;
     mod_gm_decrypt(&decrypted_data, workload, mod_gm_opt->transportmode);
 
     if(decrypted_data == NULL) {
@@ -123,13 +130,11 @@ void *get_results( gearman_job_st *job, void *context, size_t *result_size, gear
     }
 
     /* nagios will free it after processing */
-    check_result * chk_result;
     if ( ( chk_result = ( check_result * )malloc( sizeof *chk_result ) ) == 0 ) {
         *ret_ptr = GEARMAN_WORK_FAIL;
         return NULL;
     }
 
-    int active_check                = TRUE;
     chk_result->service_description = NULL;
     chk_result->host_name           = NULL;
     chk_result->output              = NULL;
@@ -146,7 +151,6 @@ void *get_results( gearman_job_st *job, void *context, size_t *result_size, gear
     core_start_time.tv_sec          = 0;
     core_start_time.tv_usec         = 0;
 
-    char *ptr;
     while ( (ptr = strsep(&decrypted_data, "\n" )) != NULL ) {
         char *key   = strsep( &ptr, "=" );
         char *value = strsep( &ptr, "\x0" );
@@ -244,12 +248,12 @@ void *get_results( gearman_job_st *job, void *context, size_t *result_size, gear
     }
 
     /* calculate real latency */
-    double now_f            = (double)now.tv_sec + (double)now.tv_usec / 1000000;
-    double core_starttime_f = (double)core_start_time.tv_sec + (double)core_start_time.tv_usec / 1000000;
-    double starttime_f      = (double)chk_result->start_time.tv_sec + (double)chk_result->start_time.tv_usec / 1000000;
-    double finishtime_f     = (double)chk_result->finish_time.tv_sec + (double)chk_result->finish_time.tv_usec / 1000000;
-    double exec_time        = finishtime_f - starttime_f;
-    double latency          = now_f - exec_time - core_starttime_f;
+    now_f            = (double)now.tv_sec + (double)now.tv_usec / 1000000;
+    core_starttime_f = (double)core_start_time.tv_sec + (double)core_start_time.tv_usec / 1000000;
+    starttime_f      = (double)chk_result->start_time.tv_sec + (double)chk_result->start_time.tv_usec / 1000000;
+    finishtime_f     = (double)chk_result->finish_time.tv_sec + (double)chk_result->finish_time.tv_usec / 1000000;
+    exec_time        = finishtime_f - starttime_f;
+    latency          = now_f - exec_time - core_starttime_f;
     chk_result->latency    += latency;
 
     /* this check is not a freshnes check */
@@ -292,7 +296,7 @@ int set_worker( gearman_worker_st *worker ) {
         return GM_ERROR;
     }
 
-    // add our dummy queue, gearman sometimes forgets the last added queue
+    /* add our dummy queue, gearman sometimes forgets the last added queue */
     worker_add_function( worker, "dummy", dummy);
 
     return GM_OK;
