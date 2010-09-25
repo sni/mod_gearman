@@ -1,6 +1,6 @@
 This file documents the revision history for mod_gearman.
 
-0.4    ...
+0.4    Sat Sep 25 23:15:26 CEST 2010
           - added gearman_top
           - added version to check_gearman and send_gearman
           - added version to output of worker status
