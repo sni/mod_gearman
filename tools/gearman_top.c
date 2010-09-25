@@ -172,6 +172,8 @@ void print_stats(char * hostname) {
         printw(" Queue Name           | Worker Available   | Jobs Waiting  | Jobs Running\n");
         printw("--------------------------------------------------------------------------\n");
         for(x=0; x<stats->function_num;x++) {
+            if(opt_quiet == GM_ENABLED && stats->function[x]->worker == 0 && stats->function[x]->total == 0)
+                continue;
             printw(" %-20s |      %10i    |  %10i   |  %10i\n", stats->function[x]->queue, stats->function[x]->worker, stats->function[x]->waiting, stats->function[x]->running);
         }
         if(stats->function_num == 0)

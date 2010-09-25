@@ -120,6 +120,13 @@ int get_gearman_server_data(mod_gm_server_status_t *stats, char ** message, char
         func->total   = atoi(total);
         func->worker  = atoi(worker);
         func->waiting = func->total - func->running;
+
+        /* skip the dummy queue if its empty */
+        if(!strcmp( name, "dummy") && func->total == 0) {
+            free(func);
+            continue;
+        }
+
         stats->function[stats->function_num++] = func;
         logger( GM_LOG_DEBUG, "%i: name:%-20s worker:%-5i waiting:%-5i running:%-5i\n", stats->function_num, func->queue, func->worker, func->waiting, func->running );
     }
