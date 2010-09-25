@@ -5,15 +5,8 @@ TODO LIST
 General
 -------
 
- - remove debug symbols (-g) and add strip (-s) again
  - remove duplicate errors from logfile
  - handle sync host checks correctly
-
-Worker
-------
-
- - SIGTERM on client should finish after current job
- - childs should sent back their final result after SIGTERM
 
 WISH LIST
 =========
@@ -21,3 +14,4 @@ WISH LIST
  - no need to fork for clean plugins. (check_icmp, check_http...)
  - implement some plugins directly into worker
  - add distributing notifications ( maybe not that useful... )
+ - queue_top rewrite in C
