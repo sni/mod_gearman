@@ -48,7 +48,6 @@ int main (int argc, char **argv) {
     mod_gm_opt = malloc(sizeof(mod_gm_opt_t));
     set_default_options(mod_gm_opt);
     if(parse_arguments(argc, argv) != GM_OK) {
-        mod_gm_free_opt(mod_gm_opt);
         exit( EXIT_FAILURE );
     }
 
