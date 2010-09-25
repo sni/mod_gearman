@@ -5,7 +5,7 @@
 AC_PREREQ([2.61])
 AC_INIT([mod_gearman], [0.4], [sven@consol.de])
 AM_INIT_AUTOMAKE([-Wall foreign subdir-objects])
-AC_CONFIG_SRCDIR([neb_module/mod_gearman.c],[worker/worker.c],[tools/send_gearman.c],[tools/check_gearman.c])
+AC_CONFIG_SRCDIR([neb_module/mod_gearman.c],[worker/worker.c],[tools/send_gearman.c],[tools/check_gearman.c],[tools/gearman_top.c])
 AC_CONFIG_HEADER([config.h])
 
 ##############################################
@@ -56,7 +56,7 @@ AC_SUBST(user)
 
 ##############################################
 # Check some functions
-AC_CHECK_FUNCS([gettimeofday strdup strchr alarm gethostname memset strcspn strerror atexit gethostbyname socket])
+AC_CHECK_FUNCS([gettimeofday strdup strchr strstr strtoul alarm gethostname memset strcspn strerror atexit gethostbyname socket])
 AC_PROG_LN_S
 
 ##############################################

@@ -35,6 +35,7 @@ int get_gearman_server_data(mod_gm_server_status_t *stats, char ** message, char
     char buf[GM_BUFFERSIZE];
     char * line;
     char * output;
+    char * output_c;
     char * name;
     char * total;
     char * running;
@@ -80,6 +81,7 @@ int get_gearman_server_data(mod_gm_server_status_t *stats, char ** message, char
     }
 
     output = strdup(buf);
+    output_c = output;
     while ( (line = strsep( &output, "\n" )) != NULL ) {
         logger( GM_LOG_TRACE, "%s\n", line );
         if(!strcmp( line, ".")) {
@@ -87,6 +89,11 @@ int get_gearman_server_data(mod_gm_server_status_t *stats, char ** message, char
                 logger( GM_LOG_TRACE, "%s\n", line );
                 snprintf(*version, GM_BUFFERSIZE, "%s", line);
             }
+
+            /* sort our array by queue name */
+            qsort(stats->function, stats->function_num, sizeof(mod_gm_status_function_t*), struct_cmp_by_queue);
+
+            close(sockfd);
             return( STATE_OK );
         }
         name = strsep(&line, "\t");
@@ -110,7 +117,38 @@ int get_gearman_server_data(mod_gm_server_status_t *stats, char ** message, char
         stats->function[stats->function_num++] = func;
         logger( GM_LOG_DEBUG, "%i: name:%-20s worker:%-5i waiting:%-5i running:%-5i\n", stats->function_num, func->queue, func->worker, func->waiting, func->running );
     }
+    free(output_c);
 
     snprintf(*message, GM_BUFFERSIZE, "got no valid data from %s:%i\n", hostname, (int)port);
+    close(sockfd);
     return( STATE_UNKNOWN );
+}
+
+
+/* free a status structure */
+void free_mod_gm_status_server(mod_gm_server_status_t *stats) {
+    int x = 0;
+
+    for(x=0; x<stats->function_num;x++) {
+        free(stats->function[x]->queue);
+        free(stats->function[x]);
+    }
+
+    for(x=0; x<stats->worker_num;x++) {
+        free(stats->worker[x]->ip);
+        free(stats->worker[x]->id);
+        free(stats->worker[x]);
+    }
+
+    free(stats);
+}
+
+
+/* qsort struct comparision function for queue name */
+int struct_cmp_by_queue(const void *a, const void *b) {
+    mod_gm_status_function_t *ia = (mod_gm_status_function_t *)a;
+    mod_gm_status_function_t *ib = (mod_gm_status_function_t *)b;
+    return strcmp(ib->queue, ia->queue);
+    /* strcmp functions works exactly as expected from
+    comparison function */
 }

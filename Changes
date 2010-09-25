@@ -1,6 +1,7 @@
 This file documents the revision history for mod_gearman.
 
 0.4    ...
+          - added gearman_top
           - added version to check_gearman and send_gearman
           - added version to output of worker status
           - added worker name to error output of plugins

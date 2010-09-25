@@ -254,7 +254,8 @@ int check_server(char * hostname) {
     printf("\n");
 
     free(message);
-    free(stats);
+    free(version);
+    free_mod_gm_status_server(stats);
     return( rc );
 }
 

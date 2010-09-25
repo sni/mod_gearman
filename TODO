@@ -14,4 +14,3 @@ WISH LIST
  - no need to fork for clean plugins. (check_icmp, check_http...)
  - implement some plugins directly into worker
  - add distributing notifications ( maybe not that useful... )
- - queue_top rewrite in C

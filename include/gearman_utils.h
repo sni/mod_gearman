@@ -58,3 +58,5 @@ typedef struct mod_gm_status_server {
 
 
 int get_gearman_server_data(mod_gm_server_status_t *stats, char ** message, char **version, char * hostname, int port);
+void free_mod_gm_status_server(mod_gm_server_status_t *stats);
+int struct_cmp_by_queue(const void *a, const void *b);

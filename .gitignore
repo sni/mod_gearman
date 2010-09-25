@@ -19,3 +19,4 @@ mod_gearman_worker
 images
 send_gearman
 check_gearman
+gearman_top

@@ -30,7 +30,9 @@ mod_gearman_so_SOURCES     = $(common_SOURCES) \
 
 bin_PROGRAMS               = mod_gearman_worker \
                              send_gearman \
-                             check_gearman
+                             check_gearman \
+                             gearman_top
+
 mod_gearman_worker_SOURCES = $(common_SOURCES) \
                              worker/worker_logger.c   \
                              worker/worker_client.c   \
@@ -43,6 +45,11 @@ send_gearman_SOURCES       = $(common_SOURCES) \
 check_gearman_SOURCES      = $(common_SOURCES) \
                              tools/tools_logger.c \
                              tools/check_gearman.c
+
+gearman_top_SOURCES        = $(common_SOURCES) \
+                             tools/tools_logger.c \
+                             tools/gearman_top.c
+gearman_top_LDFLAGS        = -lncurses
 
 # tests
 check_PROGRAMS   = 01_utils 02_full
@@ -57,7 +64,7 @@ replace_vars = sed 's:%CONFIG%:$(DESTDIR)$(sysconfdir)/mod_gearman.conf:g' | \
                sed 's:%WORKERBIN%:$(DESTDIR)$(bindir)/mod_gearman_worker:g' | \
                sed 's:%USER%:$(user):g'
 
-EXTRA_DIST = COPYING etc extras tools/queue_top.pl include autogen.sh \
+EXTRA_DIST = COPYING etc extras include \
              THANKS README README.html patches Changes worker/initscript.in
 
 # other targets
