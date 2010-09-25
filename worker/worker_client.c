@@ -591,7 +591,7 @@ void send_state_to_parent(int status) {
     logger( GM_LOG_TRACE, "send_state_to_parent(%d)\n", status );
 
     /* Locate the segment */
-    if ((shmid = shmget(mod_gm_shm_key, GM_SHM_SIZE, 0666)) < 0) {
+    if ((shmid = shmget(mod_gm_shm_key, GM_SHM_SIZE, 0600)) < 0) {
         perror("shmget");
         logger( GM_LOG_TRACE, "worker finished: %d\n", getpid() );
         exit( EXIT_FAILURE );
@@ -645,7 +645,7 @@ void clean_worker_exit(int sig) {
      * clean up shared memory
      * will be removed when last client detaches
      */
-    if ((shmid = shmget(mod_gm_shm_key, GM_SHM_SIZE, 0666)) < 0) {
+    if ((shmid = shmget(mod_gm_shm_key, GM_SHM_SIZE, 0600)) < 0) {
         perror("shmget");
     }
     if( shmctl( shmid, IPC_RMID, 0 ) == -1 ) {
@@ -684,7 +684,7 @@ void *return_status( gearman_job_st *job, void *context, size_t *result_size, ge
     *result_size = GM_BUFFERSIZE;
 
     /* Locate the segment */
-    if ((shmid = shmget(mod_gm_shm_key, GM_SHM_SIZE, 0666)) < 0) {
+    if ((shmid = shmget(mod_gm_shm_key, GM_SHM_SIZE, 0600)) < 0) {
         perror("shmget");
         *result_size = 0;
         return NULL;

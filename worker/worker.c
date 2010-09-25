@@ -516,7 +516,7 @@ void stop_childs(int mode) {
          * clean up shared memory
          * will be removed when last client detaches
          */
-        if ((shmid = shmget(mod_gm_shm_key, GM_SHM_SIZE, 0666)) < 0) {
+        if ((shmid = shmget(mod_gm_shm_key, GM_SHM_SIZE, 0600)) < 0) {
             perror("shmget");
         }
         if( shmctl( shmid, IPC_RMID, 0 ) == -1 ) {
@@ -625,7 +625,7 @@ void update_runtime_data() {
     logger( GM_LOG_TRACE, "update_worker_num()\n");
 
     /* Locate the segment. */
-    if ((shmid = shmget(mod_gm_shm_key, GM_SHM_SIZE, 0666)) < 0) {
+    if ((shmid = shmget(mod_gm_shm_key, GM_SHM_SIZE, 0600)) < 0) {
         perror("shmget");
         exit(1);
     }
