@@ -23,10 +23,11 @@ WHO=`whoami`
 case "$1" in
     start)
         echo -n "Starting $NAME "
+        CMD="$DAEMON -d --config=$CONFIG --pidfile=$PIDFILE"
         if [ "$WHO" = "root" ]; then
-            su - $USER -c  "$DAEMON -d --config=$CONFIG"
+            su - $USER -c  "$CMD"
         else
-            $DAEMON -d --config=$CONFIG
+            $CMD
         fi
         if [ $? -eq 0 ]; then
             echo "done"

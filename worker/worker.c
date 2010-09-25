@@ -580,7 +580,6 @@ int write_pid_file() {
         return(GM_ERROR);
     }
 
-
     fprintf(fp, "%d\n", getpid());
     fclose(fp);
     logger( GM_LOG_DEBUG, "pid file %s written\n", mod_gm_opt->pidfile );

@@ -121,8 +121,8 @@ perfdata=no
 #
 ###############################################################################
 
-# Path to the pidfile.
-pidfile=%PIDFILE%
+# Path to the pidfile. Usually set by the init script
+#pidfile=%PIDFILE%
 
 # Path to the logfile.
 logfile=%LOGFILE%
