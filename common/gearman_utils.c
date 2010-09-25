@@ -44,6 +44,8 @@ int get_gearman_server_data(mod_gm_server_status_t *stats, char ** message, char
 
     *message = malloc(GM_BUFFERSIZE);
     *version = malloc(GM_BUFFERSIZE);
+    snprintf(*message, GM_BUFFERSIZE, "%s", "" );
+    snprintf(*version, GM_BUFFERSIZE, "%s", "" );
 
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if( sockfd < 0 ) {
@@ -63,6 +65,7 @@ int get_gearman_server_data(mod_gm_server_status_t *stats, char ** message, char
     serv_addr.sin_port = htons(port);
     if (connect(sockfd,(const struct sockaddr *)&serv_addr,sizeof(serv_addr)) < 0) {
         snprintf(*message, GM_BUFFERSIZE, "failed to connect to %s:%i - %s\n", hostname, (int)port, strerror(errno));
+        close(sockfd);
         return( STATE_CRITICAL );
     }
 
@@ -70,6 +73,7 @@ int get_gearman_server_data(mod_gm_server_status_t *stats, char ** message, char
     n = write(sockfd,cmd,strlen(cmd));
     if (n < 0) {
         snprintf(*message, GM_BUFFERSIZE, "failed to send to %s:%i - %s\n", hostname, (int)port, strerror(errno));
+        close(sockfd);
         return( STATE_CRITICAL );
     }
 
@@ -77,6 +81,7 @@ int get_gearman_server_data(mod_gm_server_status_t *stats, char ** message, char
     buf[n] = '\x0';
     if (n < 0) {
         snprintf(*message, GM_BUFFERSIZE, "error reading from %s:%i - %s\n", hostname, (int)port, strerror(errno));
+        close(sockfd);
         return( STATE_CRITICAL );
     }
 
@@ -94,6 +99,7 @@ int get_gearman_server_data(mod_gm_server_status_t *stats, char ** message, char
             qsort(stats->function, stats->function_num, sizeof(mod_gm_status_function_t*), struct_cmp_by_queue);
 
             close(sockfd);
+            free(output_c);
             return( STATE_OK );
         }
         name = strsep(&line, "\t");
@@ -109,7 +115,7 @@ int get_gearman_server_data(mod_gm_server_status_t *stats, char ** message, char
         if(worker == NULL)
             break;
         func = malloc(sizeof(mod_gm_status_function_t));
-        func->queue   = name;
+        func->queue   = strdup(name);
         func->running = atoi(running);
         func->total   = atoi(total);
         func->worker  = atoi(worker);
@@ -117,9 +123,9 @@ int get_gearman_server_data(mod_gm_server_status_t *stats, char ** message, char
         stats->function[stats->function_num++] = func;
         logger( GM_LOG_DEBUG, "%i: name:%-20s worker:%-5i waiting:%-5i running:%-5i\n", stats->function_num, func->queue, func->worker, func->waiting, func->running );
     }
-    free(output_c);
 
     snprintf(*message, GM_BUFFERSIZE, "got no valid data from %s:%i\n", hostname, (int)port);
+    free(output_c);
     close(sockfd);
     return( STATE_UNKNOWN );
 }
@@ -146,9 +152,11 @@ void free_mod_gm_status_server(mod_gm_server_status_t *stats) {
 
 /* qsort struct comparision function for queue name */
 int struct_cmp_by_queue(const void *a, const void *b) {
-    mod_gm_status_function_t *ia = (mod_gm_status_function_t *)a;
-    mod_gm_status_function_t *ib = (mod_gm_status_function_t *)b;
-    return strcmp(ib->queue, ia->queue);
-    /* strcmp functions works exactly as expected from
-    comparison function */
+    mod_gm_status_function_t **pa = (mod_gm_status_function_t **)a;
+    mod_gm_status_function_t *ia  = (mod_gm_status_function_t *)*pa;
+
+    mod_gm_status_function_t **pb = (mod_gm_status_function_t **)b;
+    mod_gm_status_function_t *ib  = (mod_gm_status_function_t *)*pb;
+
+    return strcmp(ia->queue, ib->queue);
 }

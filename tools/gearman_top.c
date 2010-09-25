@@ -132,6 +132,8 @@ void print_usage() {
 
 /* print stats */
 void print_stats(char * hostname) {
+    char * hst    = strdup(hostname);
+    char * hst_c  = hst;
     char * server = NULL;
     char * port_c = NULL;
     char * message = NULL;
@@ -146,8 +148,8 @@ void print_stats(char * hostname) {
 
     logger( GM_LOG_DEBUG, "print_stats()\n");
 
-    server = strsep(&hostname, ":");
-    port_c = strsep(&hostname, "\x0");
+    server = strsep(&hst, ":");
+    port_c = strsep(&hst, "\x0");
     if(port_c != NULL)
         port = atoi(port_c);
 
@@ -181,6 +183,7 @@ void print_stats(char * hostname) {
     }
     refresh();
 
+    free(hst_c);
     free(message);
     free(version);
     free_mod_gm_status_server(stats);

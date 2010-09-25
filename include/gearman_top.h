@@ -24,6 +24,7 @@
 #include <stdlib.h>
 #include <signal.h>
 #include <curses.h>
+#include <time.h>
 #include "common.h"
 
 mod_gm_opt_t *mod_gm_opt;
