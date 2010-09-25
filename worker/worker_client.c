@@ -221,6 +221,8 @@ void *get_job( gearman_job_st *job, void *context, size_t *result_size, gearman_
 void do_exec_job( ) {
     struct timeval start_time,end_time;
     int latency;
+    char plugin_output[GM_BUFFERSIZE];
+    strcpy(plugin_output,"");
 
     logger( GM_LOG_TRACE, "do_exec_job()\n" );
 
@@ -287,9 +289,10 @@ void do_exec_job( ) {
         exec_job->return_code   = 2;
         exec_job->early_timeout = 1;
         if ( !strcmp( exec_job->type, "service" ) )
-            exec_job->output = strdup("(Service Check Timed Out)");
+            snprintf( plugin_output, sizeof( plugin_output ), "(Service Check Timed Out On Worker: %s)", hostname);
         if ( !strcmp( exec_job->type, "host" ) )
-            exec_job->output = strdup("(Host Check Timed Out)");
+            snprintf( plugin_output, sizeof( plugin_output ), "(Host Check Timed Out On Worker: %s)", hostname);
+        exec_job->output = strdup( plugin_output );
     }
 
     if ( !strcmp( exec_job->type, "service" ) || !strcmp( exec_job->type, "host" ) ) {
