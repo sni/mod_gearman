@@ -57,6 +57,8 @@
 #define GM_DEFAULT_JOB_RETRIES          1
 #define GM_CHILD_SHUTDOWN_TIMEOUT       5
 #define GM_DEFAULT_RESULT_QUEUE  "check_results"
+#define GM_DEFAULT_IDLE_TIMEOUT        30
+#define GM_DEFAULT_MAX_JOBS            50
 
 /* worker */
 #define GM_DEFAULT_MIN_WORKER           1      /* minumum number of worker            */
@@ -133,6 +135,8 @@ typedef struct mod_gm_opt_struct {
     int            min_worker;
     int            max_worker;
     int            fork_on_exec;
+    int            idle_timeout;
+    int            max_jobs;
 /* send_gearman */
     int            timeout;
     int            return_code;

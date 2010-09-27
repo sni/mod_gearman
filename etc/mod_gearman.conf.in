@@ -1,11 +1,11 @@
 ###############################################################################
-# 
+#
 #  mod_gearman - distribute checks with gearman
-# 
+#
 #  Copyright (c) 2010 Sven Nierlein
-# 
+#
 #  Sample Worker / NEB Module Config
-# 
+#
 ###############################################################################
 
 # use debug to increase the verbosity of the module.
@@ -137,3 +137,13 @@ min-worker=1
 # workers. When setting this to 1, all services from
 # this worker will be executed one after another.
 max-worker=20
+
+# Time after which an idling worker exists
+# This parameter controls how fast your waiting workers will
+# exit if there are no jobs waiting.
+idle-timeout=30
+
+# Controls the amount of jobs a worker will do before he exits
+# Use this to control how fast the amount of workers will go down
+# after high load times
+max-jobs=50

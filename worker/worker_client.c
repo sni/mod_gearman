@@ -40,6 +40,7 @@ gm_job_t * current_job;
 pid_t current_child_pid;
 gm_job_t * exec_job;
 
+int jobs_done = 0;
 int sleep_time_after_error = 1;
 int worker_run_mode;
 
@@ -83,7 +84,7 @@ void worker_loop() {
 
         /* wait three minutes for a job, otherwise exit */
         if(worker_run_mode == GM_WORKER_MULTI)
-            alarm(180);
+            alarm(mod_gm_opt->idle_timeout);
 
         signal(SIGPIPE, SIG_IGN);
         ret = gearman_worker_work( &worker );
@@ -119,6 +120,8 @@ void *get_job( gearman_job_st *job, void *context, size_t *result_size, gearman_
     char * decrypted_data_c;
     char *ptr;
     char command[GM_BUFFERSIZE];
+
+    jobs_done++;
 
     /* send start signal to parent */
     send_state_to_parent(GM_JOB_START);
@@ -212,6 +215,15 @@ void *get_job( gearman_job_st *job, void *context, size_t *result_size, gearman_
 
     /* send finish signal to parent */
     send_state_to_parent(GM_JOB_END);
+
+    if(jobs_done > mod_gm_opt->max_jobs) {
+        logger( GM_LOG_TRACE, "jobs done: %i -> exiting...\n", jobs_done );
+        gearman_worker_unregister_all(&worker);
+        gearman_job_free_all( &worker );
+        gearman_client_free( &client );
+        mod_gm_free_opt(mod_gm_opt);
+        exit( EXIT_SUCCESS );
+    }
 
     return NULL;
 }

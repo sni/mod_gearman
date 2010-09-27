@@ -216,6 +216,8 @@ int set_default_options(mod_gm_opt_t *opt) {
     opt->transportmode      = GM_ENCODE_AND_ENCRYPT;
     opt->daemon_mode        = GM_DISABLED;
     opt->fork_on_exec       = GM_ENABLED;
+    opt->idle_timeout       = GM_DEFAULT_IDLE_TIMEOUT;
+    opt->max_jobs           = GM_DEFAULT_MAX_JOBS;
 
     opt->host               = NULL;
     opt->service            = NULL;
@@ -464,6 +466,18 @@ int parse_args_line(mod_gm_opt_t *opt, char * arg, int recursion_level) {
     else if ( !strcmp( key, "max-age" ) ) {
         opt->max_age = atoi( value );
         if(opt->max_age <= 0) { opt->max_age = 1; }
+    }
+
+    /* idle-timeout */
+    else if ( !strcmp( key, "idle-timeout" ) ) {
+        opt->idle_timeout = atoi( value );
+        if(opt->idle_timeout < 0) { opt->job_timeout = GM_DEFAULT_IDLE_TIMEOUT; }
+    }
+
+    /* max-jobs */
+    else if ( !strcmp( key, "max-jobs" ) ) {
+        opt->max_jobs = atoi( value );
+        if(opt->max_jobs < 0) { opt->max_jobs = GM_DEFAULT_MAX_JOBS; }
     }
 
     /* server */
@@ -791,4 +805,3 @@ long mod_gm_time_compare(struct timeval * tv1, struct timeval * tv2) {
    long usecdiff = (long)(tv1->tv_usec - tv2->tv_usec);
    return secdiff? secdiff: usecdiff;
 }
-
