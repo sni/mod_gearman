@@ -1,0 +1,144 @@
+#!/bin/sh
+
+### BEGIN INIT INFO
+# Provides:          gearmand
+# Required-Start:    $local_fs
+# Required-Stop:     $local_fs
+# Should-Start:
+# Should-Stop:
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Start/Stop the gearman daemon
+### END INIT INFO
+
+NAME=gearmand
+DAEMON="/usr/sbin/gearmand"
+OPTIONS="-d -t 10 -j 0"
+PORT=4730
+LISTEN=0.0.0.0
+PIDFILE=/var/run/gearmand.pid
+LOGFILE=/var/log/gearmand.log
+USER=%USER%
+GRACEFUL_SHUTDOWN_TIME=30
+
+function get_status() {
+        pid=`cat $PIDFILE 2>/dev/null`
+        if [ "$pid" != "" ]; then
+            ps -p $pid > /dev/null 2>&1
+            if [ $? -eq 0 ]; then
+                echo "$NAME is running with pid $pid"
+                return 0;
+            fi
+        fi
+        echo "$NAME is not running"
+        return 1;
+}
+
+function kill_gearmand() {
+    echo -n "Killing $NAME"
+    pid=`cat $PIDFILE 2>/dev/null`
+    if [ -z $pid ]; then
+        echo ". Not running."
+    else
+        # do a kill if still now down
+        ps -p $pid > /dev/null 2>&1 && kill $pid
+        for x in 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5; do
+            echo -n "."
+            ps -p $pid > /dev/null 2>&1 && sleep 1;
+        done
+        ps -p $pid > /dev/null 2>&1;
+        if [ $? -ne 0 ]; then
+            echo "done"
+            exit 0;
+        else
+            echo "failed"
+            exit 1;
+        fi
+    fi
+}
+
+WHO=`whoami`
+case "$1" in
+    start)
+        echo -n "Starting $NAME "
+        get_status > /dev/null;
+        if [ $? = 0 ]; then
+            echo "failed"
+            echo "$NAME already running"
+            exit 0;
+        fi
+
+        CMD="$DAEMON -p $PORT -P $PIDFILE $OPTIONS --log-file=$LOGFILE -v -v --listen=$LISTEN"
+        if [ "$WHO" = "root" ]; then
+            su - $USER -c  "$CMD"
+        else
+            $CMD
+        fi
+        if [ $? -eq 0 ]; then
+            echo "done"
+            exit 0;
+        else
+            echo "failed"
+            exit 1;
+        fi
+        ;;
+    stop)
+        echo -n "Stopping $NAME"
+        pid=`cat $PIDFILE 2>/dev/null`
+        if [ -z $pid ]; then
+            echo ". Not running."
+        else
+            # do a graceful shutdown
+            echo -n " gracefully "
+            echo "shutdown graceful" | nc $LISTEN $PORT
+            x=$GRACEFUL_SHUTDOWN_TIME
+            while [ $x -gt 0 ]; do
+                echo -n "."
+                ps -p $pid > /dev/null 2>&1 && sleep 1 || x=0;
+                let "x=x-1"
+            done
+
+            ps -p $pid > /dev/null 2>&1;
+            if [ $? -ne 0 ]; then
+                echo "done"
+                exit 0;
+            else
+                echo "failed"
+                exit 1;
+            fi
+
+            # kill if still running
+            ps -p $pid > /dev/null 2>&1 && kill_gearmand;
+        fi
+        ;;
+    kill)
+        kill_gearmand;
+        ;;
+    reload|force-reload)
+        echo -n "Reloading $NAME configuration files "
+        pid=`cat $PIDFILE 2>/dev/null`
+        if [ "$pid" != "" ]; then
+            kill -HUP $pid
+            echo "OK"
+            exit 0;
+        else
+            echo ""
+            echo "$NAME is not running"
+            exit 1;
+        fi
+    ;;
+    status)
+        get_status;
+        exit $?;
+    ;;
+    restart)
+        $0 stop && sleep 1 && $0 start
+        exit $?
+        ;;
+    *)
+        echo "Usage: $NAME {start|stop|kill|status|restart}"
+        exit 1
+        ;;
+esac
+
+exit 0

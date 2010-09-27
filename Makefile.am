@@ -84,7 +84,11 @@ initscript-local:
 	cat worker/initscript.in | $(replace_vars) > worker/initscript
 	chmod 755 worker/initscript
 
-all-local: mod_gearman.o initscript-local mod_gearman.conf-local
+gearmand-init-local:
+	cat extras/gearmand-init.in | $(replace_vars) > extras/gearmand-init
+	chmod 755 extras/gearmand-init
+
+all-local: mod_gearman.o initscript-local mod_gearman.conf-local gearmand-init-local
 	@echo ""
 	@echo "################################################################"
 	@echo ""

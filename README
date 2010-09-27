@@ -120,6 +120,15 @@ configuration file as for the neb module.
 or use the supplied init script.
 
 
+NOTE: Make sure you have started your gearmand job server. Usually
+it can be started with 
+======
+ /usr/sbin/gearmand -t 10 -j 0
+======
+or a supplied init script (extras/gearmand-init).
+
+
+
 Patch Nagios
 ~~~~~~~~~~~~
 
@@ -434,10 +443,17 @@ check would do.
 
 
 
+What About Notifications
+------------------------
+Notifications are very difficult to distribute. And i think its not
+very useful too. So this feature will not be implemented.
+
+
+
 Hints
 -----
  - Make sure you have at least one worker for every queue. You should
-   monitor that.
+   monitor that (check_gearman).
 
  - Add Logfile checks for your gearmand server and mod_gearman
    worker.

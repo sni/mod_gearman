@@ -13,4 +13,4 @@ WISH LIST
 
  - no need to fork for clean plugins. (check_icmp, check_http...)
  - implement some plugins directly into worker
- - add distributing notifications ( maybe not that useful... )
+ - sync command for worker
