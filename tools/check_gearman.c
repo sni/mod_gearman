@@ -27,14 +27,16 @@
 #include "gearman.h"
 #include "gearman_utils.h"
 
-int opt_verbose    =   0;
-int opt_timeout    =  10;
-int opt_warning    =  10;
-int opt_critical   = 100;
-char * opt_server  = NULL;
-char * opt_queue   = NULL;
-char * opt_send    = NULL;
-char * opt_expect  = NULL;
+int opt_verbose         =   0;
+int opt_timeout         =  10;
+int opt_job_warning     =  10;
+int opt_job_critical    = 100;
+int opt_worker_warning  =  25;
+int opt_worker_critical =  50;
+char * opt_server       = NULL;
+char * opt_queue        = NULL;
+char * opt_send         = NULL;
+char * opt_expect       = NULL;
 
 char * server_list[GM_LISTSIZE];
 int server_list_num = 0;
@@ -53,7 +55,7 @@ int main (int argc, char **argv) {
     /*
      * and parse command line
      */
-    while((opt = getopt(argc, argv, "vVhH:t:w:c:q:s:e:p:")) != -1) {
+    while((opt = getopt(argc, argv, "vVhH:t:w:c:W:C:q:s:e:p:")) != -1) {
         switch(opt) {
             case 'h':   print_usage();
                         break;
@@ -63,9 +65,13 @@ int main (int argc, char **argv) {
                         break;
             case 't':   opt_timeout = atoi(optarg);
                         break;
-            case 'w':   opt_warning = atoi(optarg);
+            case 'w':   opt_job_warning = atoi(optarg);
                         break;
-            case 'c':   opt_critical = atoi(optarg);
+            case 'c':   opt_job_critical = atoi(optarg);
+                        break;
+            case 'W':   opt_worker_warning = atoi(optarg);
+                        break;
+            case 'C':   opt_worker_critical = atoi(optarg);
                         break;
             case 'H':   opt_server = optarg;
                         server_list[server_list_num++] = optarg;
@@ -126,8 +132,10 @@ void print_usage() {
     printf("\n");
     printf("check_gearman [ -H=<hostname>                ]\n");
     printf("              [ -t=<timeout>                 ]\n");
-    printf("              [ -w=<jobs warning level>      ]\n");
-    printf("              [ -c=<jobs critical level>     ]\n");
+    printf("              [ -w=<jobs warning level>      ]  default: 10\n");
+    printf("              [ -c=<jobs critical level>     ]  default: 100\n");
+    printf("              [ -W=<worker warning level>    ]  default: 25\n");
+    printf("              [ -C=<worker critical level>   ]  default: 50\n");
     printf("              [ -q=<queue>                   ]\n");
     printf("\n");
     printf("\n");
@@ -139,11 +147,17 @@ void print_usage() {
     printf("              [ -v           verbose output  ]\n");
     printf("              [ -V           print version   ]\n");
     printf("\n");
+    printf(" - You may set thresholds to 0 to disable them.\n");
+    printf(" - Thresholds are only for server checks, worker checks are availability only\n");
+    printf("\n");
     printf("perfdata format when checking job server:\n");
-    printf(" |queue=waiting jobs;running jobs;worker;jobs warning;jobs critical\n");
+    printf(" |'queue waiting'=current waiting jobs;warn;crit;0 'queue running'=current running jobs 'queue worker'=current num worker;warn;crit;0\n");
+    printf("\n");
+    printf("Note: set your pnp RRD_STORAGE_TYPE to MULTIPLE to support changeing numbers of queues.\n");
+    printf("      see http://docs.pnp4nagios.org/de/pnp-0.6/tpl_custom for detailed information\n");
     printf("\n");
     printf("perfdata format when checking mod gearman worker:\n");
-    printf(" |worker=10 running=1 total_jobs_done=1508\n");
+    printf(" |worker=10 jobs=1508c\n");
     printf("\n");
     printf("Note: Job thresholds are per queue not totals.\n");
     printf("\n");
@@ -151,13 +165,13 @@ void print_usage() {
     printf("\n");
     printf("Check job server:\n");
     printf("\n");
-    printf("%%>./check_gearman -H localhost -t 20\n");
-    printf("check_gearman OK - 6 jobs running and 0 jobs waiting.|check_results=0;0;1;10;100 host=0;0;9;10;100\n");
+    printf("%%>./check_gearman -H localhost -q host\n");
+    printf("check_gearman OK - 0 jobs running and 0 jobs waiting. Version: 0.14|'host_waiting'=0;10;15;0 'host_running'=0 'host_worker'=3;5;10;0\n");
     printf("\n");
     printf("Check worker:\n");
     printf("\n");
     printf("%%> ./check_gearman -H <job server hostname> -q worker_<worker hostname> -t 10 -s check\n");
-    printf("check_gearman OK - localhost has 10 worker and is working on 1 jobs|worker=10 running=1 total_jobs_done=1508\n");
+    printf("check_gearman OK - host has 5 worker and is working on 0 jobs|worker=5 jobs=96132c\n");
     printf("\n");
 
     exit( STATE_UNKNOWN );
@@ -209,16 +223,28 @@ int check_server(char * hostname) {
                 snprintf(buf, GM_BUFFERSIZE, "Queue %s has %i job%s without any worker. ", stats->function[x]->queue, stats->function[x]->waiting, stats->function[x]->waiting > 1 ? "s":"" );
                 strncat(message, buf, GM_BUFFERSIZE);
             }
-            else if(stats->function[x]->waiting >= opt_critical) {
+            else if(opt_job_critical > 0 && stats->function[x]->waiting >= opt_job_critical) {
                 rc = STATE_CRITICAL;
                 buf = malloc(GM_BUFFERSIZE);
                 snprintf(buf, GM_BUFFERSIZE, "Queue %s has %i waiting job%s. ", stats->function[x]->queue, stats->function[x]->waiting, stats->function[x]->waiting > 1 ? "s":"" );
                 strncat(message, buf, GM_BUFFERSIZE);
             }
-            else if(stats->function[x]->waiting >= opt_warning) {
+            else if(opt_worker_critical > 0 && stats->function[x]->worker >= opt_worker_critical) {
+                rc = STATE_CRITICAL;
+                buf = malloc(GM_BUFFERSIZE);
+                snprintf(buf, GM_BUFFERSIZE, "Queue %s has %i worker. ", stats->function[x]->queue, stats->function[x]->worker );
+                strncat(message, buf, GM_BUFFERSIZE);
+            }
+            else if(opt_job_warning > 0 && stats->function[x]->waiting >= opt_job_warning) {
                 rc = STATE_WARNING;
                 buf = malloc(GM_BUFFERSIZE);
                 snprintf(buf, GM_BUFFERSIZE, "Queue %s has %i waiting job%s. ", stats->function[x]->queue, stats->function[x]->waiting, stats->function[x]->waiting > 1 ? "s":"" );
+                strncat(message, buf, GM_BUFFERSIZE);
+            }
+            else if(opt_worker_warning > 0 && stats->function[x]->worker >= opt_worker_warning) {
+                rc = STATE_WARNING;
+                buf = malloc(GM_BUFFERSIZE);
+                snprintf(buf, GM_BUFFERSIZE, "Queue %s has %i worker. ", stats->function[x]->queue, stats->function[x]->worker );
                 strncat(message, buf, GM_BUFFERSIZE);
             }
         }
@@ -248,7 +274,18 @@ int check_server(char * hostname) {
         for(x=0; x<stats->function_num;x++) {
             if(opt_queue != NULL && strcmp(opt_queue, stats->function[x]->queue))
                 continue;
-            printf( "%s=%i;%i;%i;%i;%i ", stats->function[x]->queue, stats->function[x]->waiting, stats->function[x]->running, stats->function[x]->worker, opt_warning, opt_critical);
+            printf( "'%s_waiting'=%i;%i;%i;0 '%s_running'=%i '%s_worker'=%i;%i;%i;0",
+                      stats->function[x]->queue,
+                      stats->function[x]->waiting,
+                      opt_job_warning,
+                      opt_job_critical,
+                      stats->function[x]->queue,
+                      stats->function[x]->running,
+                      stats->function[x]->queue,
+                      stats->function[x]->worker,
+                      opt_worker_warning,
+                      opt_worker_critical
+                  );
         }
     }
     printf("\n");
