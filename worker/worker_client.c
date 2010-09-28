@@ -709,7 +709,7 @@ void *return_status( gearman_job_st *job, void *context, size_t *result_size, ge
         return NULL;
     }
 
-    snprintf(result, GM_BUFFERSIZE, "%s has %i worker and is working on %i jobs|worker=%i running=%i total_jobs_done=%i", hostname, shm[1], shm[0], shm[1], shm[0], shm[2] );
+    snprintf(result, GM_BUFFERSIZE, "%s has %i worker and is working on %i jobs|worker=%i jobs=%ic", hostname, shm[1], shm[0], shm[1], shm[2] );
 
     /* detach from shared memory */
     if(shmdt(shm) < 0)
