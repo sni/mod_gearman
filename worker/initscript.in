@@ -18,14 +18,14 @@ NAME=mod_gm_worker
 CONFIG=%CONFIG%
 PIDFILE=%PIDFILE%
 USER=%USER%
-WHO=`whoami`
+USERID=`id -u`
 
 case "$1" in
     start)
         echo -n "Starting $NAME "
         CMD="$DAEMON -d --config=$CONFIG --pidfile=$PIDFILE"
-        if [ "$WHO" = "root" ]; then
-            su - $USER -c  "$CMD"
+        if [ "$USERID" -eq 0 ]; then
+            su -s $SHELL - $USER -c  "$CMD"
         else
             $CMD
         fi
