@@ -32,6 +32,7 @@
 NEB_API_VERSION( CURRENT_NEB_API_VERSION )
 
 /* import some global variables */
+extern int            event_broker_options;
 extern int            currently_running_host_checks;
 extern int            currently_running_service_checks;
 extern int            service_check_timeout;
@@ -93,6 +94,32 @@ int nebmodule_init( int flags, char *args, nebmodule *handle ) {
     logger( GM_LOG_TRACE, "nebmodule_init(%i, %i)\n", flags );
     logger( GM_LOG_DEBUG, "running on libgearman %s\n", gearman_version() );
 
+    /* check for minimum eventbroker options */
+    if(!(event_broker_options & BROKER_PROGRAM_STATE)) {
+        logger( GM_LOG_ERROR, "mod_gearman needs BROKER_PROGRAM_STATE (%i) event_broker_options enabled to work\n", BROKER_PROGRAM_STATE );
+        return NEB_ERROR;
+    }
+    if(    (    mod_gm_opt->perfdata == GM_ENABLED
+             || mod_gm_opt->hostgroups_num > 0
+             || mod_gm_opt->hosts == GM_ENABLED
+           )
+        && !(event_broker_options & BROKER_HOST_CHECKS)) {
+        logger( GM_LOG_ERROR, "mod_gearman needs BROKER_HOST_CHECKS (%i) event_broker_options enabled to work\n", BROKER_HOST_CHECKS );
+        return NEB_ERROR;
+    }
+    if(    (    mod_gm_opt->perfdata == GM_ENABLED
+             || mod_gm_opt->servicegroups_num > 0
+             || mod_gm_opt->services == GM_ENABLED
+           )
+        && !(event_broker_options & BROKER_SERVICE_CHECKS)) {
+        logger( GM_LOG_ERROR, "mod_gearman needs BROKER_SERVICE_CHECKS (%i) event_broker_options enabled to work\n", BROKER_SERVICE_CHECKS );
+        return NEB_ERROR;
+    }
+    if(mod_gm_opt->events == GM_ENABLED && !(event_broker_options & BROKER_EVENT_HANDLERS)) {
+        logger( GM_LOG_ERROR, "mod_gearman needs BROKER_EVENT_HANDLERS (%i) event_broker option enabled to work\n", BROKER_EVENT_HANDLERS );
+        return NEB_ERROR;
+    }
+
     /* check the minimal gearman version */
     if((float)atof(gearman_version()) < (float)GM_MIN_LIB_GEARMAN_VERSION) {
         logger( GM_LOG_ERROR, "minimum version of libgearman is %.2f, yours is %.2f\n", (float)GM_MIN_LIB_GEARMAN_VERSION, (float)atof(gearman_version()) );
@@ -103,7 +130,7 @@ int nebmodule_init( int flags, char *args, nebmodule *handle ) {
     if(mod_gm_opt->encryption == GM_ENABLED) {
         if(mod_gm_opt->crypt_key == NULL) {
             logger( GM_LOG_ERROR, "no encryption key provided, please use --key=... or keyfile=...\n");
-            exit( EXIT_FAILURE );
+            return NEB_ERROR;
         }
         mod_gm_crypt_init(mod_gm_opt->crypt_key);
     } else {

@@ -1,6 +1,7 @@
 This file documents the revision history for mod_gearman.
 
 0.5    ...
+          - added check for minimum event broker options
           - added worker thresholds to check_gearman
           - added check in configure if users exists
           - changed performance data for check_gearman
