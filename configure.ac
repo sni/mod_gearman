@@ -54,6 +54,15 @@ AC_ARG_WITH([user],
 user="$with_user"
 AC_SUBST(user)
 
+AC_MSG_CHECKING(if user $user exists)
+id -a $user > /dev/null 2>&1
+if test "$?" != "0" ; then
+    AC_MSG_RESULT(no)
+    AC_MSG_ERROR(user $user does not exist) 
+else
+    AC_MSG_RESULT(yes)
+fi
+
 ##############################################
 # Check some functions
 AC_CHECK_FUNCS([gettimeofday strdup strchr strstr strtoul alarm gethostname memset strcspn strerror atexit gethostbyname socket])

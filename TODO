@@ -7,6 +7,11 @@ General
 
  - remove duplicate errors from logfile
  - handle sync host checks correctly
+ - check "if(!(event_broker_options & BROKER_PROGRAM_STATE))" on load
+
+Bugs
+----
+ none known
 
 WISH LIST
 =========
