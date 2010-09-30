@@ -59,6 +59,7 @@
 #define GM_DEFAULT_RESULT_QUEUE  "check_results"
 #define GM_DEFAULT_IDLE_TIMEOUT        30
 #define GM_DEFAULT_MAX_JOBS            50
+#define MAX_CMD_ARGS                 4096
 
 /* worker */
 #define GM_DEFAULT_MIN_WORKER           1      /* minumum number of worker            */

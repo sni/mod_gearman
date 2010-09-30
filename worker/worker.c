@@ -117,13 +117,6 @@ int main (int argc, char **argv) {
     /* start status worker */
     make_new_child(GM_WORKER_STATUS);
 
-    /* standalone mode */
-    if(mod_gm_opt->max_worker == 1) {
-        worker_client(GM_WORKER_STANDALONE);
-        mod_gm_free_opt(mod_gm_opt);
-        exit( EXIT_SUCCESS );
-    }
-
     /* setup childs */
     for(x=0; x < mod_gm_opt->min_worker; x++) {
         make_new_child(GM_WORKER_MULTI);

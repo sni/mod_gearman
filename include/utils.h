@@ -44,4 +44,6 @@ char * nr2signal(int sig);
 void string2timeval(char * value, struct timeval * t);
 double timeval2double(struct timeval * t);
 long mod_gm_time_compare(struct timeval * tv1, struct timeval * tv2);
-
+char *extract_check_result(FILE *fp);
+int parse_command_line(char *cmd, char *argv[GM_LISTSIZE]);
+int run_check(char *processed_command, char **plugin_output);

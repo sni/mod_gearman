@@ -805,3 +805,133 @@ long mod_gm_time_compare(struct timeval * tv1, struct timeval * tv2) {
    long usecdiff = (long)(tv1->tv_usec - tv2->tv_usec);
    return secdiff? secdiff: usecdiff;
 }
+
+
+/* extract check result */
+char *extract_check_result(FILE *fp) {
+    int size;
+    char buffer[GM_BUFFERSIZE] = "";
+    char output[GM_BUFFERSIZE] = "";
+
+    /* get all lines of plugin output - escape newlines */
+    strcpy(buffer,"");
+    strcpy(output,"");
+    size = GM_MAX_OUTPUT;
+    while(size > 0 && fgets(buffer,sizeof(buffer)-1,fp)){
+        strncat(output, buffer, size);
+        size -= strlen(buffer);
+    }
+    return(escape_newlines(output));
+}
+
+
+/* convert a command line to an array of arguments, suitable for exec* functions */
+int parse_command_line(char *cmd, char *argv[MAX_CMD_ARGS]) {
+    unsigned int argc=0;
+    char *parsed_cmd;
+
+    /* Skip initial white-space characters. */
+    for(parsed_cmd=cmd;isspace(*cmd);++cmd)
+        ;
+
+    /* Parse command line. */
+    while(*cmd&&(argc<MAX_CMD_ARGS-1)){
+        argv[argc++]=parsed_cmd;
+        switch(*cmd){
+        case '\'':
+            while((*cmd)&&(*cmd!='\''))
+                *(parsed_cmd++)=*(cmd++);
+            if(*cmd)
+                ++cmd;
+            break;
+        case '"':
+            while((*cmd)&&(*cmd!='"')){
+                if((*cmd=='\\')&&cmd[1]&&strchr("\"\\\n",cmd[1]))
+                    ++cmd;
+                *(parsed_cmd++)=*(cmd++);
+                }
+            if(*cmd)
+                ++cmd;
+            break;
+        default:
+            while((*cmd)&&!isspace(*cmd)){
+                if((*cmd=='\\')&&cmd[1])
+                    ++cmd;
+                *(parsed_cmd++)=*(cmd++);
+                }
+            }
+        while(isspace(*cmd))
+            ++cmd;
+        *(parsed_cmd++)='\0';
+        }
+    argv[argc]=NULL;
+
+    return GM_OK;
+}
+
+
+/* run a check */
+int run_check(char *processed_command, char **ret) {
+    char *argv[MAX_CMD_ARGS];
+    FILE *fp;
+    pid_t pid;
+    int pipefds[2];
+    int retval;
+
+    /* check for check execution method (shell or execvp) */
+    if(!strpbrk(processed_command,"!$^&*()~[]|{};<>?`\"'")) {
+        logger( GM_LOG_TRACE, "using execvp\n" );
+        if(pipe(pipefds)) {
+            logger( GM_LOG_ERROR, "error creating pipe: %s\n", strerror(errno));
+            _exit(STATE_UNKNOWN);
+        }
+        if((pid=fork())<0){
+            logger( GM_LOG_ERROR, "fork error\n");
+            _exit(STATE_UNKNOWN);
+        }
+        else if(!pid){
+            if((dup2(pipefds[1],STDOUT_FILENO)<0)||(dup2(pipefds[1],STDERR_FILENO)<0)){
+                logger( GM_LOG_ERROR, "dup2 error\n");
+                _exit(STATE_UNKNOWN);
+            }
+            close(pipefds[1]);
+            parse_command_line(processed_command,argv);
+            if(!argv[0])
+                _exit(STATE_UNKNOWN);
+            execvp(argv[0], argv);
+            _exit(STATE_UNKNOWN);
+        }
+
+        /* prepare pipe reading */
+        close(pipefds[1]);
+        fp=fdopen(pipefds[0],"r");
+        if(!fp){
+            logger( GM_LOG_ERROR, "fdopen error\n");
+            _exit(STATE_UNKNOWN);
+        }
+
+        /* extract check result */
+        *ret = extract_check_result(fp);
+
+        /* close the process */
+        fclose(fp);
+        close(pipefds[0]);
+        if(waitpid(pid,&retval,0)!=pid)
+            retval=-1;
+    }
+    else {
+        logger( GM_LOG_TRACE, "using popen\n" );
+        fp=popen(processed_command,"r");
+        if(fp==NULL)
+            _exit(STATE_UNKNOWN);
+
+        /* extract check result */
+        *ret = extract_check_result(fp);
+
+
+        /* close the process */
+        retval=pclose(fp);
+     }
+
+    return retval;
+}

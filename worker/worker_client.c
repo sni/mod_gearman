@@ -216,7 +216,7 @@ void *get_job( gearman_job_st *job, void *context, size_t *result_size, gearman_
     /* send finish signal to parent */
     send_state_to_parent(GM_JOB_END);
 
-    if(jobs_done > mod_gm_opt->max_jobs) {
+    if(jobs_done >= mod_gm_opt->max_jobs) {
         logger( GM_LOG_TRACE, "jobs done: %i -> exiting...\n", jobs_done );
         gearman_worker_unregister_all(&worker);
         gearman_job_free_all( &worker );
@@ -320,17 +320,12 @@ void execute_safe_command() {
     int pdes[2];
     int return_code;
     int pclose_result;
-    int size;
     int fork_exec = mod_gm_opt->fork_on_exec;
-    char plugin_output[GM_BUFFERSIZE];
-    char buffer[GM_BUFFERSIZE] = "";
-    char output[GM_BUFFERSIZE] = "";
-    char *buf;
+    char *plugin_output;
+    char buffer[GM_BUFFERSIZE];
     sigset_t mask;
-    FILE *fp = NULL;
 
     logger( GM_LOG_TRACE, "execute_safe_command()\n" );
-    strcpy(plugin_output,"");
 
     /* fork a child process */
     if(fork_exec == GM_ENABLED) {
@@ -364,32 +359,7 @@ void execute_safe_command() {
         alarm(exec_job->timeout);
 
         /* run the plugin check command */
-        fp = popen(exec_job->command_line, "r");
-        if( fp == NULL ) {
-            if( fork_exec == GM_ENABLED ) {
-                exit(3);
-            } else {
-                exec_job->output      = strdup("exec error");
-                exec_job->return_code = 3;
-                alarm(0);
-                return;
-            }
-        }
-
-        /* get all lines of plugin output - escape newlines */
-        strcpy(buffer,"");
-        strcpy(output,"");
-        size = GM_MAX_OUTPUT;
-        while(size > 0 && fgets(buffer,sizeof(buffer)-1,fp)){
-            strncat(output, buffer, size);
-            size -= strlen(buffer);
-        }
-        buf = escape_newlines(output);
-        snprintf(plugin_output, sizeof(plugin_output), "%s", buf);
-        free(buf);
-
-        /* close the process */
-        pclose_result = pclose(fp);
+        pclose_result = run_check(exec_job->command_line, &plugin_output);
         return_code   = real_exit_code(pclose_result);
 
         if(fork_exec == GM_ENABLED) {
@@ -405,6 +375,9 @@ void execute_safe_command() {
 
             exit(return_code);
         }
+        else {
+            snprintf( buffer, sizeof( buffer )-1, "%s", plugin_output );
+        }
     }
 
     /* we are the parent */
@@ -419,29 +392,28 @@ void execute_safe_command() {
             return_code = real_exit_code(return_code);
             logger( GM_LOG_TRACE, "finished check from pid: %d with status: %d\n", current_child_pid, return_code);
             /* get all lines of plugin output */
-            if(read(pdes[0], plugin_output, sizeof(plugin_output)-1) < 0)
+            if(read(pdes[0], buffer, sizeof(buffer)-1) < 0)
                 perror("read");
-
         }
 
         /* file not executable? */
         if(return_code == 126) {
             return_code = STATE_CRITICAL;
-            snprintf( plugin_output, sizeof( plugin_output ), "CRITICAL: Return code of 126 is out of bounds. Make sure the plugin you're trying to run is executable. (worker: %s)", hostname);
+            snprintf( buffer, sizeof( buffer )-1, "CRITICAL: Return code of 126 is out of bounds. Make sure the plugin you're trying to run is executable. (worker: %s)", hostname);
         }
         /* file not found errors? */
         else if(return_code == 127) {
             return_code = STATE_CRITICAL;
-            snprintf( plugin_output, sizeof( plugin_output ), "CRITICAL: Return code of 127 is out of bounds. Make sure the plugin you're trying to run actually exists. (worker: %s)", hostname);
+            snprintf( buffer, sizeof( buffer )-1, "CRITICAL: Return code of 127 is out of bounds. Make sure the plugin you're trying to run actually exists. (worker: %s)", hostname);
         }
         /* signaled */
         else if(return_code >= 128 && return_code < 256) {
             char * signame = nr2signal((int)(return_code-128));
-            snprintf( plugin_output, sizeof( plugin_output ), "CRITICAL: Return code of %d is out of bounds. Plugin exited by signal %s. (worker: %s)", (int)(return_code), signame, hostname);
+            snprintf( buffer, sizeof( buffer )-1, "CRITICAL: Return code of %d is out of bounds. Plugin exited by signal %s. (worker: %s)", (int)(return_code), signame, hostname);
             return_code = STATE_CRITICAL;
             free(signame);
         }
-        exec_job->output      = strdup(plugin_output);
+        exec_job->output      = strdup(buffer);
         exec_job->return_code = return_code;
         if( fork_exec == GM_ENABLED) {
             close(pdes[0]);
@@ -590,7 +562,7 @@ void alarm_sighandler(int sig) {
     kill(-pid, SIGKILL);
 
     if(worker_run_mode != GM_WORKER_STANDALONE)
-        _exit(EXIT_SUCCESS);
+        exit(EXIT_SUCCESS);
 
     return;
 }
