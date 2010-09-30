@@ -99,6 +99,10 @@ int nebmodule_init( int flags, char *args, nebmodule *handle ) {
         logger( GM_LOG_ERROR, "mod_gearman needs BROKER_PROGRAM_STATE (%i) event_broker_options enabled to work\n", BROKER_PROGRAM_STATE );
         return NEB_ERROR;
     }
+    if(!(event_broker_options & BROKER_TIMED_EVENTS)) {
+        logger( GM_LOG_ERROR, "mod_gearman needs BROKER_TIMED_EVENTS (%i) event_broker_options enabled to work\n", BROKER_TIMED_EVENTS );
+        return NEB_ERROR;
+    }
     if(    (    mod_gm_opt->perfdata == GM_ENABLED
              || mod_gm_opt->hostgroups_num > 0
              || mod_gm_opt->hosts == GM_ENABLED
@@ -229,7 +233,7 @@ static int handle_timed_events( int event_type, void *data ) {
     if (ted->event_type != EVENT_CHECK_REAPER)
         return NEB_OK;
 
-    logger( GM_LOG_TRACE, "handle_timed_events(%i, data)\n", event_type );
+    logger( GM_LOG_TRACE, "handle_timed_events(%i, data)\n", event_type, ted->event_type );
 
     move_results_to_core();
 
@@ -257,7 +261,7 @@ static check_result * merge_result_lists(check_result * lista, check_result * li
 
 
 /* insert results list into core */
-static void move_results_to_core(void) {
+static void move_results_to_core() {
    check_result * local;
 
    /* safely save off currently local list */
