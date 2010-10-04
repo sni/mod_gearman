@@ -194,9 +194,9 @@ void print_stats(char * hostname) {
         }
         if(found == 0)
             for(x=0; x < max_length + 25; x++) {
-                printw("-");
-                printw("no queues found\n");
+                printw(" ");
             }
+            printw("no queues found\n");
         for(x=0; x < max_length + 51; x++) 
             printw("-");
         printw("\n");
