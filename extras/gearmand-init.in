@@ -90,7 +90,7 @@ case "$1" in
         else
             # do a graceful shutdown
             echo -n " gracefully "
-            echo "shutdown graceful" | nc $LISTEN $PORT
+            echo "shutdown graceful" | nc -q 1 $LISTEN $PORT
             x=$GRACEFUL_SHUTDOWN_TIME
             while [ $x -gt 0 ]; do
                 echo -n "."
@@ -104,7 +104,6 @@ case "$1" in
                 exit 0;
             else
                 echo "failed"
-                exit 1;
             fi
 
             # kill if still running
