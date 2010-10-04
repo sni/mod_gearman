@@ -138,11 +138,15 @@ void print_stats(char * hostname) {
     char * port_c = NULL;
     char * message = NULL;
     char * version = NULL;
+    char format1[GM_BUFFERSIZE];
+    char format2[GM_BUFFERSIZE];
     char cur_time[GM_BUFFERSIZE];
     mod_gm_server_status_t *stats;
     int port = GM_SERVER_DEFAULT_PORT;
     int rc;
     int x;
+    int max_length = 12;
+    int found      = 0;
     struct tm now;
     time_t t;
 
@@ -169,16 +173,33 @@ void print_stats(char * hostname) {
     printw("\n\n");
 
     if( rc == STATE_OK ) {
-        printw(" Queue Name           | Worker Available   | Jobs Waiting  | Jobs Running\n");
-        printw("--------------------------------------------------------------------------\n");
         for(x=0; x<stats->function_num;x++) {
             if(opt_quiet == GM_ENABLED && stats->function[x]->worker == 0 && stats->function[x]->total == 0)
                 continue;
-            printw(" %-20s |      %10i    |  %10i   |  %10i\n", stats->function[x]->queue, stats->function[x]->worker, stats->function[x]->waiting, stats->function[x]->running);
+            if((int)strlen(stats->function[x]->queue) > max_length) {
+                max_length = (int)strlen(stats->function[x]->queue);
+            }
         }
-        if(stats->function_num == 0)
-            printw("                             no queues found\n");
-        printw("--------------------------------------------------------------------------\n");
+        snprintf(format1, sizeof(format1), " %%-%is | %%16s | %%12s | %%12s\n", max_length);
+        snprintf(format2, sizeof(format2), " %%-%is |%%16i  |%%12i  |%%12i \n", max_length);
+        printw(format1, "Queue Name", "Worker Available", "Jobs Waiting", "Jobs Running");
+        for(x=0; x < max_length + 51; x++) 
+            printw("-");
+        printw("\n");
+        for(x=0; x<stats->function_num;x++) {
+            if(opt_quiet == GM_ENABLED && stats->function[x]->worker == 0 && stats->function[x]->total == 0)
+                continue;
+            printw(format2, stats->function[x]->queue, stats->function[x]->worker, stats->function[x]->waiting, stats->function[x]->running);
+            found++;
+        }
+        if(found == 0)
+            for(x=0; x < max_length + 25; x++) {
+                printw("-");
+                printw("no queues found\n");
+            }
+        for(x=0; x < max_length + 51; x++) 
+            printw("-");
+        printw("\n");
     }
     else {
         printw(" %s\n", message);
