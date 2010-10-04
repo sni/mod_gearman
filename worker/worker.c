@@ -603,6 +603,9 @@ void reload_config(int sig) {
      */
     stop_childs(GM_WORKER_RESTART);
 
+    /* start status worker */
+    make_new_child(GM_WORKER_STATUS);
+
     logger( GM_LOG_INFO, "reloading config was successful\n");
 
     return;
