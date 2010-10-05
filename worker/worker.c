@@ -465,6 +465,7 @@ void stop_childs(int mode) {
     int status, chld;
     int waited = 0;
     int shmid;
+    int skipfirst = 0;
 
     /* ignore some signals for now */
     signal(SIGTERM, SIG_IGN);
@@ -482,9 +483,11 @@ void stop_childs(int mode) {
         while((chld = waitpid(-1, &status, WNOHANG)) != -1 && chld > 0) {
             current_number_of_workers--;
             logger( GM_LOG_TRACE, "wait() %d exited with %d\n", chld, status);
-            if(mode == GM_WORKER_RESTART) {
+            /* start one worker less than exited, because of the status worker */
+            if(skipfirst == 0 && mode == GM_WORKER_RESTART) {
                 make_new_child(GM_WORKER_MULTI);
             }
+            skipfirst = 1;
         }
         sleep(1);
         waited++;
