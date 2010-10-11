@@ -233,6 +233,8 @@ void *get_results( gearman_job_st *job, void *context, size_t *result_size, gear
     exec_time        = finishtime_f - starttime_f;
     latency          = now_f - exec_time - core_starttime_f;
     chk_result->latency    += latency;
+    if(chk_result->latency > 1000)
+        write_debug_file(decrypted_data);
 
     /* this check is not a freshnes check */
     chk_result->check_options    = chk_result->check_options & ! CHECK_OPTION_FRESHNESS_CHECK;
