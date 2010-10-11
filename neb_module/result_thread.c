@@ -238,8 +238,22 @@ void *get_results( gearman_job_st *job, void *context, size_t *result_size, gear
     chk_result->check_options    = chk_result->check_options & ! CHECK_OPTION_FRESHNESS_CHECK;
 
     if ( chk_result->service_description != NULL ) {
+        /* does this services exist */
+        service * svc = find_service( chk_result->host_name, chk_result->service_description );
+        if(svc == NULL) {
+            write_debug_file(decrypted_data);
+            logger( GM_LOG_ERROR, "service '%s' on host '%s' could not be found\n", chk_result->service_description, chk_result->host_name );
+            return NULL;
+        }
         logger( GM_LOG_DEBUG, "service job completed: %s %s: %d\n", chk_result->host_name, chk_result->service_description, chk_result->return_code );
     } else {
+        /* does this host exist */
+        host * hst = find_host( chk_result->host_name );
+        if(hst == NULL) {
+            write_debug_file(decrypted_data);
+            logger( GM_LOG_ERROR, "host '%s' could not be found\n", chk_result->host_name );
+            return NULL;
+        }
         logger( GM_LOG_DEBUG, "host job completed: %s: %d\n", chk_result->host_name, chk_result->return_code );
     }
 
@@ -274,4 +288,15 @@ int set_worker( gearman_worker_st *worker ) {
     worker_add_function( worker, "dummy", dummy);
 
     return GM_OK;
+}
+
+/* write text to a debug file */
+void write_debug_file(char * text) {
+    FILE * fd;
+    fd = fopen( "/tmp/mod_gearman_result.txt", "a+" );
+    if(fd == NULL)
+        perror("fopen");
+    fputs( "-------------\n", fd );
+    fputs( text, fd );
+    fclose( fd );
 }

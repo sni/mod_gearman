@@ -8,6 +8,7 @@ config.log
 config.status
 configure
 depcomp
+compile
 install-sh
 missing
 mod_gearman.o
