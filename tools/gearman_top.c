@@ -183,7 +183,7 @@ void print_stats(char * hostname) {
         snprintf(format1, sizeof(format1), " %%-%is | %%16s | %%12s | %%12s\n", max_length);
         snprintf(format2, sizeof(format2), " %%-%is |%%16i  |%%12i  |%%12i \n", max_length);
         printw(format1, "Queue Name", "Worker Available", "Jobs Waiting", "Jobs Running");
-        for(x=0; x < max_length + 51; x++) 
+        for(x=0; x < max_length + 51; x++)
             printw("-");
         printw("\n");
         for(x=0; x<stats->function_num;x++) {
@@ -192,12 +192,13 @@ void print_stats(char * hostname) {
             printw(format2, stats->function[x]->queue, stats->function[x]->worker, stats->function[x]->waiting, stats->function[x]->running);
             found++;
         }
-        if(found == 0)
+        if(found == 0) {
             for(x=0; x < max_length + 25; x++) {
                 printw(" ");
             }
             printw("no queues found\n");
-        for(x=0; x < max_length + 51; x++) 
+        }
+        for(x=0; x < max_length + 51; x++)
             printw("-");
         printw("\n");
     }
