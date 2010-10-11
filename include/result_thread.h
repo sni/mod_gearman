@@ -29,4 +29,4 @@
 void *result_worker(void *);
 int set_worker( gearman_worker_st *worker );
 void *get_results( gearman_job_st *, void *, size_t *, gearman_return_t * );
-void write_debug_file(char * text);
+void write_debug_file(char ** text);

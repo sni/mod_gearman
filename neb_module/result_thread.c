@@ -234,7 +234,7 @@ void *get_results( gearman_job_st *job, void *context, size_t *result_size, gear
     latency          = now_f - exec_time - core_starttime_f;
     chk_result->latency    += latency;
     if(chk_result->latency > 1000)
-        write_debug_file(decrypted_data);
+        write_debug_file(&decrypted_data_c);
 
     /* this check is not a freshnes check */
     chk_result->check_options    = chk_result->check_options & ! CHECK_OPTION_FRESHNESS_CHECK;
@@ -243,7 +243,7 @@ void *get_results( gearman_job_st *job, void *context, size_t *result_size, gear
         /* does this services exist */
         service * svc = find_service( chk_result->host_name, chk_result->service_description );
         if(svc == NULL) {
-            write_debug_file(decrypted_data);
+            write_debug_file(&decrypted_data_c);
             logger( GM_LOG_ERROR, "service '%s' on host '%s' could not be found\n", chk_result->service_description, chk_result->host_name );
             return NULL;
         }
@@ -252,7 +252,7 @@ void *get_results( gearman_job_st *job, void *context, size_t *result_size, gear
         /* does this host exist */
         host * hst = find_host( chk_result->host_name );
         if(hst == NULL) {
-            write_debug_file(decrypted_data);
+            write_debug_file(&decrypted_data_c);
             logger( GM_LOG_ERROR, "host '%s' could not be found\n", chk_result->host_name );
             return NULL;
         }
@@ -293,12 +293,12 @@ int set_worker( gearman_worker_st *worker ) {
 }
 
 /* write text to a debug file */
-void write_debug_file(char * text) {
+void write_debug_file(char ** text) {
     FILE * fd;
     fd = fopen( "/tmp/mod_gearman_result.txt", "a+" );
     if(fd == NULL)
         perror("fopen");
     fputs( "-------------\n", fd );
-    fputs( text, fd );
+    fputs( *text, fd );
     fclose( fd );
 }
