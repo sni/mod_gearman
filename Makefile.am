@@ -132,12 +132,12 @@ install-exec-local:
 	rm -f $(DESTDIR)$(pkglibdir)/mod_gearman.so
 	$(install_sh_PROGRAM) mod_gearman.o $(DESTDIR)$(pkglibdir)/mod_gearman.o
 	$(install_sh_PROGRAM) worker/initscript $(DESTDIR)$(initrddir)/mod_gearman_worker
-	$(MKDIR_P) $(DESTDIR)$(localstatedir)/mod_gearman/
+	$(mkdir_p) $(DESTDIR)$(localstatedir)/mod_gearman/
 	chown $(user): $(DESTDIR)$(localstatedir)/mod_gearman/
 
 install-data-local:
 	rm -f $(DESTDIR)$(pkglibdir)/mod_gearman.so
-	$(MKDIR_P) $(DESTDIR)$(localstatedir)/mod_gearman/
+	$(mkdir_p) $(DESTDIR)$(localstatedir)/mod_gearman/
 	$(install_sh_PROGRAM) extras/example.conf $(DESTDIR)$(datarootdir)/examples/example.conf
 	@echo ""
 	@echo "################################################################"
