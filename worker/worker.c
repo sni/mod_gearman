@@ -221,7 +221,6 @@ int parse_arguments(int argc, char **argv) {
         if ( !strcmp( arg, "help" ) || !strcmp( arg, "--help" )  || !strcmp( arg, "-h" ) ) {
             print_usage();
         }
-        lc(arg);
         if(parse_args_line(mod_gm_new_opt, arg, 0) != GM_OK) {
             errors++;
             free(arg_c);
