@@ -1,9 +1,11 @@
 This file documents the revision history for mod_gearman.
 
-0.6    ...
+0.6    Wed Oct 13 09:25:14 CEST 2010
           - added flexible column size for gearman_top
           - fixed starting status worker on reload
           - fixed graceful shutdown of gearmand
+          - fixed bug in latency calculation
+          - fixed bug in returing results
 
 0.5    Fri Oct  1 08:18:06 CEST 2010
           - added check for minimum event broker options
