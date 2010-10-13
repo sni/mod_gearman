@@ -118,6 +118,7 @@ void *get_job( gearman_job_st *job, void *context, size_t *result_size, gearman_
     char workload[GM_BUFFERSIZE];
     char * decrypted_data;
     char * decrypted_data_c;
+    char * decrypted_orig;
     char *ptr;
     char command[GM_BUFFERSIZE];
 
@@ -156,6 +157,7 @@ void *get_job( gearman_job_st *job, void *context, size_t *result_size, gearman_
     decrypted_data = malloc(GM_BUFFERSIZE);
     decrypted_data_c = decrypted_data;
     mod_gm_decrypt(&decrypted_data, workload, mod_gm_opt->transportmode);
+    decrypted_orig = strdup(decrypted_data);
 
     if(decrypted_data == NULL) {
         *ret_ptr = GEARMAN_WORK_FAIL;
@@ -177,7 +179,7 @@ void *get_job( gearman_job_st *job, void *context, size_t *result_size, gearman_
             continue;
 
         if ( value == NULL || !strcmp( value, "") )
-            continue;
+            break;
 
         if ( !strcmp( key, "host_name" ) ) {
             exec_job->host_name = strdup(value);
@@ -205,11 +207,17 @@ void *get_job( gearman_job_st *job, void *context, size_t *result_size, gearman_
         }
     }
 
+#ifdef GM_DEBUG
+    if(exec_job->core_start_time.tv_sec < 10000)
+        write_debug_file(&decrypted_orig);
+#endif
+
     do_exec_job();
 
     /* start listening to SIGTERMs */
     sigprocmask(SIG_SETMASK, &old_mask, NULL);
 
+    free(decrypted_orig);
     free(decrypted_data_c);
     free_job(exec_job);
 
@@ -726,3 +734,19 @@ int free_job(gm_job_t *job) {
 
     return(GM_OK);
 }
+
+
+#ifdef GM_DEBUG
+/* write text to a debug file */
+void write_debug_file(char ** text) {
+    FILE * fd;
+    fd = fopen( "/tmp/mod_gearman_worker.txt", "a+" );
+    if(fd == NULL)
+        perror("fopen");
+    fputs( "------------->\n", fd );
+    fputs( *text, fd );
+    fputs( "\n<-------------\n", fd );
+    fclose( fd );
+}
+#endif
+
