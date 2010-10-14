@@ -66,12 +66,9 @@ int main (int argc, char **argv) {
         }
     }
     mod_gm_opt->debug_level = opt_verbose;
+    if(server_list_num == 0)
+        server_list[server_list_num++] = "localhost";
     server_list[server_list_num] = NULL;
-
-    if(server_list_num == 0) {
-        printf("Error - no hostname given\n\n");
-        print_usage();
-    }
 
     if(opt_interval <= 0)
         opt_interval = 1;
