@@ -127,6 +127,7 @@ typedef struct mod_gm_opt_struct {
     char         * local_servicegroups_list[GM_LISTSIZE];
     int            local_servicegroups_num;
 /* worker */
+    char         * identifier;
     char         * pidfile;
     char         * logfile;
     FILE         * logfile_fp;

@@ -518,7 +518,7 @@ int set_worker( gearman_worker_st *w ) {
     if(worker_run_mode == GM_WORKER_STATUS) {
         /* register status function */
         char status_queue[GM_BUFFERSIZE];
-        snprintf(status_queue, GM_BUFFERSIZE, "worker_%s", hostname);
+        snprintf(status_queue, GM_BUFFERSIZE, "worker_%s", mod_gm_opt->identifier );
         worker_add_function( w, status_queue, return_status );
     }
     else {
@@ -749,4 +749,3 @@ void write_debug_file(char ** text) {
     fclose( fd );
 }
 #endif
-

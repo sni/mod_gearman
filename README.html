@@ -3,8 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-<meta name="generator" content="AsciiDoc 8.5.2" />
-<title>Gearman Module for Nagios</title>
+<meta name="generator" content="AsciiDoc 8.2.7" />
 <style type="text/css">
 /* Debug borders */
 p, li, dt, dd, div, pre, h1, h2, h3, h4, h5, h6 {
@@ -91,7 +90,7 @@ span#author {
 }
 span#email {
 }
-span#revnumber, span#revdate, span#revremark {
+span#revision {
   font-family: sans-serif;
 }
 
@@ -111,21 +110,17 @@ div#footer-badges {
   padding-bottom: 0.5em;
 }
 
-div#preamble {
-  margin-top: 1.5em;
-  margin-bottom: 1.5em;
-}
+div#preamble,
 div.tableblock, div.imageblock, div.exampleblock, div.verseblock,
 div.quoteblock, div.literalblock, div.listingblock, div.sidebarblock,
 div.admonitionblock {
-  margin-top: 1.0em;
+  margin-right: 10%;
+  margin-top: 1.5em;
   margin-bottom: 1.5em;
 }
 div.admonitionblock {
-  margin-top: 2.0em;
-  margin-bottom: 2.0em;
-  margin-right: 10%;
-  color: #606060;
+  margin-top: 2.5em;
+  margin-bottom: 2.5em;
 }
 
 div.content { /* Block element content. */
@@ -161,25 +156,26 @@ div.sidebarblock > div.content {
   padding: 0.5em;
 }
 
+div.listingblock {
+  margin-right: 0%;
+}
 div.listingblock > div.content {
   border: 1px solid silver;
   background: #f4f4f4;
   padding: 0.5em;
 }
 
-div.quoteblock, div.verseblock {
-  padding-left: 1.0em;
-  margin-left: 1.0em;
-  margin-right: 10%;
-  border-left: 5px solid #dddddd;
-  color: #777777;
+div.quoteblock {
+  padding-left: 2.0em;
 }
-
 div.quoteblock > div.attribution {
   padding-top: 0.5em;
   text-align: right;
 }
 
+div.verseblock {
+  padding-left: 2.0em;
+}
 div.verseblock > div.content {
   white-space: pre;
 }
@@ -202,17 +198,17 @@ div.admonitionblock .icon {
 }
 div.admonitionblock td.content {
   padding-left: 0.5em;
-  border-left: 3px solid #dddddd;
+  border-left: 2px solid silver;
 }
 
 div.exampleblock > div.content {
-  border-left: 3px solid #dddddd;
-  padding-left: 0.5em;
+  border-left: 2px solid silver;
+  padding: 0.5em;
 }
 
 div.imageblock div.content { padding-left: 0; }
+div.imageblock img { border: 1px solid silver; }
 span.image img { border-style: none; }
-a.image:visited { color: white; }
 
 dl {
   margin-top: 0.8em;
@@ -222,7 +218,6 @@ dt {
   margin-top: 0.5em;
   margin-bottom: 0;
   font-style: normal;
-  color: navy;
 }
 dd > *:first-child {
   margin-top: 0.1em;
@@ -231,121 +226,42 @@ dd > *:first-child {
 ul, ol {
     list-style-position: outside;
 }
-ol.arabic {
+div.olist > ol {
   list-style-type: decimal;
 }
-ol.loweralpha {
+div.olist2 > ol {
   list-style-type: lower-alpha;
-}
-ol.upperalpha {
-  list-style-type: upper-alpha;
-}
-ol.lowerroman {
-  list-style-type: lower-roman;
-}
-ol.upperroman {
-  list-style-type: upper-roman;
-}
-
-div.compact ul, div.compact ol,
-div.compact p, div.compact p,
-div.compact div, div.compact div {
-  margin-top: 0.1em;
-  margin-bottom: 0.1em;
 }
 
 div.tableblock > table {
   border: 3px solid #527bbd;
 }
-thead, p.table.header {
+thead {
   font-family: sans-serif;
   font-weight: bold;
 }
 tfoot {
   font-weight: bold;
 }
-td > div.verse {
-  white-space: pre;
-}
-p.table {
-  margin-top: 0;
-}
-/* Because the table frame attribute is overriden by CSS in most browsers. */
-div.tableblock > table[frame="void"] {
-  border-style: none;
-}
-div.tableblock > table[frame="hsides"] {
-  border-left-style: none;
-  border-right-style: none;
-}
-div.tableblock > table[frame="vsides"] {
-  border-top-style: none;
-  border-bottom-style: none;
-}
 
-
-div.hdlist {
+div.hlist {
   margin-top: 0.8em;
   margin-bottom: 0.8em;
 }
-div.hdlist tr {
+div.hlist td {
   padding-bottom: 15px;
 }
-dt.hdlist1.strong, td.hdlist1.strong {
-  font-weight: bold;
-}
-td.hdlist1 {
+td.hlist1 {
   vertical-align: top;
   font-style: normal;
   padding-right: 0.8em;
-  color: navy;
 }
-td.hdlist2 {
+td.hlist2 {
   vertical-align: top;
 }
-div.hdlist.compact tr {
-  margin: 0;
-  padding-bottom: 0;
-}
-
-.comment {
-  background: yellow;
-}
-
-.footnote, .footnoteref {
-  font-size: 0.8em;
-}
-
-span.footnote, span.footnoteref {
-  vertical-align: super;
-}
-
-#footnotes {
-  margin: 20px 0 20px 0;
-  padding: 7px 0 0 0;
-}
-
-#footnotes div.footnote {
-  margin: 0 0 5px 0;
-}
-
-#footnotes hr {
-  border: none;
-  border-top: 1px solid silver;
-  height: 1px;
-  text-align: left;
-  margin-left: 0;
-  width: 20%;
-  min-width: 100px;
-}
-
 
 @media print {
   div#footer-badges { display: none; }
-}
-
-div#toc {
-  margin-bottom: 2.5em;
 }
 
 div#toctitle {
@@ -408,22 +324,24 @@ div.verseblock-attribution {
 }
 
 div.exampleblock-content {
-  border-left: 3px solid #dddddd;
+  border-left: 2px solid silver;
   padding-left: 0.5em;
 }
 
 /* IE6 sets dynamically generated links as visited. */
 div#toc a:visited { color: blue; }
+
+/* Because IE6 child selector is broken. */
+div.olist2 ol {
+  list-style-type: lower-alpha;
+}
+div.olist2 div.olist ol {
+  list-style-type: decimal;
+}
 </style>
 <script type="text/javascript">
 /*<![CDATA[*/
-window.onload = function(){asciidoc.footnotes(); asciidoc.toc(2);}
-var asciidoc = {  // Namespace.
-
-/////////////////////////////////////////////////////////////////////
-// Table Of Contents generator
-/////////////////////////////////////////////////////////////////////
-
+window.onload = function(){generateToc(2)}
 /* Author: Mihai Bazon, September 2002
  * http://students.infoiasi.ro/~mishoo
  *
@@ -435,55 +353,53 @@ var asciidoc = {  // Namespace.
  */
 
  /* modified by Troy D. Hanson, September 2006. License: GPL */
- /* modified by Stuart Rackham, 2006, 2009. License: GPL */
+ /* modified by Stuart Rackham, October 2006. License: GPL */
 
-// toclevels = 1..4.
-toc: function (toclevels) {
+function getText(el) {
+  var text = "";
+  for (var i = el.firstChild; i != null; i = i.nextSibling) {
+    if (i.nodeType == 3 /* Node.TEXT_NODE */) // IE doesn't speak constants.
+      text += i.data;
+    else if (i.firstChild != null)
+      text += getText(i);
+  }
+  return text;
+}
 
-  function getText(el) {
-    var text = "";
+function TocEntry(el, text, toclevel) {
+  this.element = el;
+  this.text = text;
+  this.toclevel = toclevel;
+}
+
+function tocEntries(el, toclevels) {
+  var result = new Array;
+  var re = new RegExp('[hH]([2-'+(toclevels+1)+'])');
+  // Function that scans the DOM tree for header elements (the DOM2
+  // nodeIterator API would be a better technique but not supported by all
+  // browsers).
+  var iterate = function (el) {
     for (var i = el.firstChild; i != null; i = i.nextSibling) {
-      if (i.nodeType == 3 /* Node.TEXT_NODE */) // IE doesn't speak constants.
-        text += i.data;
-      else if (i.firstChild != null)
-        text += getText(i);
-    }
-    return text;
-  }
-
-  function TocEntry(el, text, toclevel) {
-    this.element = el;
-    this.text = text;
-    this.toclevel = toclevel;
-  }
-
-  function tocEntries(el, toclevels) {
-    var result = new Array;
-    var re = new RegExp('[hH]([2-'+(toclevels+1)+'])');
-    // Function that scans the DOM tree for header elements (the DOM2
-    // nodeIterator API would be a better technique but not supported by all
-    // browsers).
-    var iterate = function (el) {
-      for (var i = el.firstChild; i != null; i = i.nextSibling) {
-        if (i.nodeType == 1 /* Node.ELEMENT_NODE */) {
-          var mo = re.exec(i.tagName);
-          if (mo && (i.getAttribute("class") || i.getAttribute("className")) != "float") {
-            result[result.length] = new TocEntry(i, getText(i), mo[1]-1);
-          }
-          iterate(i);
-        }
+      if (i.nodeType == 1 /* Node.ELEMENT_NODE */) {
+        var mo = re.exec(i.tagName)
+        if (mo)
+          result[result.length] = new TocEntry(i, getText(i), mo[1]-1);
+        iterate(i);
       }
     }
-    iterate(el);
-    return result;
   }
+  iterate(el);
+  return result;
+}
 
+// This function does the work. toclevels = 1..4.
+function generateToc(toclevels) {
   var toc = document.getElementById("toc");
-  var entries = tocEntries(document.getElementById("content"), toclevels);
+  var entries = tocEntries(document.getElementsByTagName("body")[0], toclevels);
   for (var i = 0; i < entries.length; ++i) {
     var entry = entries[i];
     if (entry.element.id == "")
-      entry.element.id = "_toc_" + i;
+      entry.element.id = "toc" + i;
     var a = document.createElement("a");
     a.href = "#" + entry.element.id;
     a.appendChild(document.createTextNode(entry.text));
@@ -493,63 +409,13 @@ toc: function (toclevels) {
     toc.appendChild(div);
   }
   if (entries.length == 0)
-    toc.parentNode.removeChild(toc);
-},
-
-
-/////////////////////////////////////////////////////////////////////
-// Footnotes generator
-/////////////////////////////////////////////////////////////////////
-
-/* Based on footnote generation code from:
- * http://www.brandspankingnew.net/archive/2005/07/format_footnote.html
- */
-
-footnotes: function () {
-  var cont = document.getElementById("content");
-  var noteholder = document.getElementById("footnotes");
-  var spans = cont.getElementsByTagName("span");
-  var refs = {};
-  var n = 0;
-  for (i=0; i<spans.length; i++) {
-    if (spans[i].className == "footnote") {
-      n++;
-      // Use [\s\S] in place of . so multi-line matches work.
-      // Because JavaScript has no s (dotall) regex flag.
-      note = spans[i].innerHTML.match(/\s*\[([\s\S]*)]\s*/)[1];
-      noteholder.innerHTML +=
-        "<div class='footnote' id='_footnote_" + n + "'>" +
-        "<a href='#_footnoteref_" + n + "' title='Return to text'>" +
-        n + "</a>. " + note + "</div>";
-      spans[i].innerHTML =
-        "[<a id='_footnoteref_" + n + "' href='#_footnote_" + n +
-        "' title='View footnote' class='footnote'>" + n + "</a>]";
-      var id =spans[i].getAttribute("id");
-      if (id != null) refs["#"+id] = n;
-    }
-  }
-  if (n == 0)
-    noteholder.parentNode.removeChild(noteholder);
-  else {
-    // Process footnoterefs.
-    for (i=0; i<spans.length; i++) {
-      if (spans[i].className == "footnoteref") {
-        var href = spans[i].getElementsByTagName("a")[0].getAttribute("href");
-        href = href.match(/#.*/)[0];  // Because IE return full URL.
-        n = refs[href];
-        spans[i].innerHTML =
-          "[<a href='#_footnote_" + n +
-          "' title='View footnote' class='footnote'>" + n + "</a>]";
-      }
-    }
-  }
-}
-
+    document.getElementById("header").removeChild(toc);
 }
 /*]]>*/
 </script>
+<title>Gearman Module for Nagios</title>
 </head>
-<body style="max-width:800">
+<body>
 <div id="header">
 <h1>Gearman Module for Nagios</h1>
 <div id="toc">
@@ -557,10 +423,9 @@ footnotes: function () {
   <noscript><p><b>JavaScript must be enabled in your browser to display the table of contents.</b></p></noscript>
 </div>
 </div>
-<div id="content">
 <div id="preamble">
 <div class="sectionbody">
-<div class="paragraph"><p>Mod_Gearman (<a href="http://labs.consol.de/nagios/mod-gearman">http://labs.consol.de/nagios/mod-gearman</a>) is a new
+<div class="para"><p>Mod_Gearman (<a href="http://labs.consol.de/nagios/mod-gearman">http://labs.consol.de/nagios/mod-gearman</a>) is a new
 way of distributing active Nagios checks across your network. It
 consists of two parts: There is a NEB module which resides in the
 Nagios core and adds servicechecks, hostchecks and eventhandler to a
@@ -571,7 +436,7 @@ the checks itself. They can be bound to host and servicegroups.</p></div>
 </div>
 <h2 id="_how_does_it_work">How does it work</h2>
 <div class="sectionbody">
-<div class="paragraph"><p>When the broker module is loaded, it captures all servicecheck,
+<div class="para"><p>When the broker module is loaded, it captures all servicecheck,
 hostcheck and the eventhandler events. Eventhandler are sent to a
 generic <em>eventhandler</em> queue. Checks for hosts which are in one of the
 specified hostgroups, are sent into a seperate hostgroup queue. All
@@ -581,8 +446,8 @@ against the hostgroups and if none matches they will be sent into a
 generic <em>service</em> queue.
 The NEB module starts a single thread, which monitors the
 <em>check_results</em> where all results come in.</p></div>
-<div class="paragraph"><p><span class="image">
-<img alt="Workflow" src="data:image/png;base64,
+<div class="para"><p><span class="image">
+<img alt="Workflow" title="Workflow" src="data:image/png;base64,
 iVBORw0KGgoAAAANSUhEUgAAA8AAAAJYCAMAAACaSn8zAAAAAXNSR0IArs4c6QAAAitQTFRFAAAA
 OF2KOF6MOl+NOV6NOmCPPmaXPWSUPmeYPmKOO2KSO2GRPWWWOmCNPmKPP2mcPWeYPGSVP2ibPGOU
 OmCOP2qdTU1NUXGZQGqcQWudS2yVQGiaV3acQGWSQWyfRWqYQ2iVS3GeRWeRXnygQ2+jSHatSXix
@@ -834,7 +699,7 @@ CIARQgCMEAAjhAAYIQTACCEARgiAEUIAjBACYIQAGCEEwAghAEYIATBCAIwQAmCEEAAjhAAYIQBG
 CAEwQgiAEQJghBAAI4QAGCEEwAgBMEIIgBFCAIwQAmCEABghBMAIIQBGCIARQgCMEAJghFBF/X8G
 SPly1XmHYgAAAABJRU5ErkJggg==" />
 </span></p></div>
-<div class="paragraph"><p>A simple example queue would look like:</p></div>
+<div class="para"><p>A simple example queue would look like:</p></div>
 <div class="exampleblock">
 <div class="exampleblock-content">
 <div class="literalblock">
@@ -849,10 +714,10 @@ SPly1XmHYgAAAABJRU5ErkJggg==" />
 +---------------+------------------+--------------+--------------+</tt></pre>
 </div></div>
 </div></div>
-<div class="paragraph"><p>There is one queue for the results and two for the checks plus the
+<div class="para"><p>There is one queue for the results and two for the checks plus the
 eventhandler.</p></div>
-<div class="paragraph"><p>The workflow is simple:</p></div>
-<div class="olist arabic"><ol class="arabic">
+<div class="para"><p>The workflow is simple:</p></div>
+<div class="olist"><ol>
 <li>
 <p>
 Nagios wants to execute a service check.
@@ -886,10 +751,10 @@ The reaper reads all checks from the result list and updates hosts / services
 </p>
 </li>
 </ol></div>
-<div class="paragraph"><p>You can set some host or servicegroups for special worker. This
+<div class="para"><p>You can set some host or servicegroups for special worker. This
 example uses a seperate hostgroup for Japan and a seperate
 servicegroup for jmx4perl.</p></div>
-<div class="paragraph"><p>It would look like this:</p></div>
+<div class="para"><p>It would look like this:</p></div>
 <div class="exampleblock">
 <div class="exampleblock-content">
 <div class="literalblock">
@@ -906,9 +771,9 @@ servicegroup for jmx4perl.</p></div>
 +-----------------------+------------------+--------------+--------------+</tt></pre>
 </div></div>
 </div></div>
-<div class="paragraph"><p>You still have the generic queues and in addition there are two queues
+<div class="para"><p>You still have the generic queues and in addition there are two queues
 for the specific groups.</p></div>
-<div class="paragraph"><p>The worker processes will take jobs from the queues and put the result
+<div class="para"><p>The worker processes will take jobs from the queues and put the result
 back into the check_result queue which will then be taken back by the
 neb module and put back into the nagios core. A worker can work on one
 or more queues. So you could start a worker which only handles the
@@ -918,8 +783,8 @@ worker on each queue to share the load.</p></div>
 </div>
 <h2 id="_installation">Installation</h2>
 <div class="sectionbody">
-<div class="paragraph"><p>Pre Requirements:</p></div>
-<div class="ulist"><ul>
+<div class="para"><p>Pre Requirements:</p></div>
+<div class="ilist"><ul>
 <li>
 <p>
 gcc / g++
@@ -941,14 +806,14 @@ libgearman (&gt;= 0.14)
 </p>
 </li>
 </ul></div>
-<div class="paragraph"><p>Download the tarball and perform the following steps:</p></div>
+<div class="para"><p>Download the tarball and perform the following steps:</p></div>
 <div class="literalblock">
 <div class="content">
 <pre><tt> #&gt; ./configure
  #&gt; make
  #&gt; make install</tt></pre>
 </div></div>
-<div class="paragraph"><p>Then add the mod_gearman.o to your nagios installation and add a
+<div class="para"><p>Then add the mod_gearman.o to your nagios installation and add a
 broker line to your nagios.cfg:</p></div>
 <div class="exampleblock">
 <div class="exampleblock-content">
@@ -957,8 +822,8 @@ broker line to your nagios.cfg:</p></div>
 <pre><tt>broker_module=.../mod_gearman.o server=localhost:4730 eventhandler=yes services=yes hosts=yes</tt></pre>
 </div></div>
 </div></div>
-<div class="paragraph"><p>see <a href="#_configuration">Configuration</a> for details on all parameters</p></div>
-<div class="paragraph"><p>The last step is to start one or more worker. You may use the same
+<div class="para"><p>see <a href="#_configuration">Configuration</a> for details on all parameters</p></div>
+<div class="para"><p>The last step is to start one or more worker. You may use the same
 configuration file as for the neb module.</p></div>
 <div class="exampleblock">
 <div class="exampleblock-content">
@@ -967,55 +832,59 @@ configuration file as for the neb module.</p></div>
 <pre><tt>./mod_gearman_worker --server=localhost:4730 --services --hosts</tt></pre>
 </div></div>
 </div></div>
-<div class="paragraph"><p>or use the supplied init script.</p></div>
+<div class="para"><p>or use the supplied init script.</p></div>
 <div class="admonitionblock">
 <table><tr>
 <td class="icon">
 <img alt="Note" src="data:image/png;base64,
-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" />
+iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAIAAADYYG7QAAAAAXNSR0IArs4c6QAAAARnQU1BAACx
+jwv8YQUAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAACihJREFU
+WEftmAtQU1cax6u1uq2OM1arLlbF9YXKqLuz7UwfttUuS7tt6a7WjrRVa5XtCrooVBRBXvIssAjK
+Q1FQeSUQHgLySAIh4SGElwlJSEKSe5N7b573FRXd7WO7X2BEZ3c7lJSd6c70m//cOfeew7k//uc7
+59yTGd99990TP6kAoJ9UPPGTonEN189AkzgwNYe4XK6vr++zYwEFuJ12g6cAFB4evnv5gsHDu9Uf
+vKb8nXf7K55wCw+nl+mHAoEZ8PqR/b6qd34r27x4aNOzyi2LNC8thYccDmcamX4oEAyQ7POd2j1v
+DHk/q/z1c+oXlmhe+qVum0fv79ZB1T/HYlqwfigQJA0a/JEKUF5con3ZQ7/teWT7CqOPJ35gB1R9
+880340w/HmtyIFjGZ8yY8cwzz+j3vDryiof+9eeRHStMvp74O6st76+1Re6Fqn9b6qH9zJkzn3os
+5s6dC9yLxwIK8+bN+z47JweC3p12+RvbXpC+uQ59cyXmu4p4dwxllxd58CV95MHFixcOdJQgyjrS
+KLxna7/v6HxAdrlE9TzULVeB7v070w96QPcvXLjw+7ycHAj+T4eu7FzcLshfo6+n5U/rbbs3kP4b
+2dA/UMlHwnxf+8WcpyRVn8tbgo3SU3b5GUoZRauiaVXsIw3H05ovmZEsVpcLYnQ5Hh4eMMr/1aTJ
+gZ5++mmHjqvtijng/yowyd/zdgTtYJIPI1EBAb/xCly9cPbsJ4XcQ7cFwYbuMJssEoBIZQyliqfU
+KROitZmMLo81XGGRQriuWrXqq6++chNo/vz5Nh1PJ03q5Ud5rfV44bn5C+bNBb29Zln25iVNLy7d
+usmjpmCftOGI7tYp8yDQxJHKs9Rw0oRoTTq4AhxOpMiJlrBokZeX14MHD9wEWrJkicNQjQ6kyyWJ
+eWn7Z8+eBRCG7ctBUJg1a2ZwwLaS7I8lVUFqSTg+GEOqEklVEqVOozVZE2L0+SzQGDlOI9eJcry9
+vUdHR90EWrFiBYXUYfLzyq60jrrItJjdWzYte2rWzFlPzoTJtf3lNRHBPgUZ/nxuYG/jF/qeaIss
+0a5MoTQZE6JHshl9AYuWOU0VTlOl08TbsmXLvXv33ARavXo1gzXiirzhnswefvzN0uPXLxzISdr9
+rs+mdb96zs/XOyb07auZe5u5R6TNJxXiKKQv0SJPdQxnAseEGMN11ljuNFU7TTVw3bp1q/tA69at
+Y3EBoSrQ9V8cFKe1Vp+uuRZYnP1pVvyu08G/DwvyyUz4sDT3Mz43eEAQqe46a+hNMg2mEkP/CcRz
+YjVOrBaYNm/efPfuXTcd2rBhA0u0WjXFiOyKojOzpzlOwAutKwqqKvgL91JASc7B0tyA6mtB4pqw
+fkGUQhI/0p2Cy88RiguPHDIUM2glY+KzploWq2exWsgh94HWr1/P4iKrpgRXFmn7cmSSlO6mM5Ib
+YS2VIQJeSAvvC1H1yc76iO6GM4r2RGVHsr433XQ7y6LIcwEZisc1BgQooJsMVr9x40b3gZYvX37H
+LLZrSy3qYvT2ZU3POZk4cbAlto8f1ceP7hfG9gvj5OJE9a1UZCATGThvlGVDwtk1hZS+hEKqx0Uj
+PABiMCGLNTOmRpj27gMtW7bsjkVC6rkWdRmhKkQGsnXSdG136nBXiqY7VSf9m7Y7XSvN0Pdnobez
+CcVFRWcGvzKKNFSP65bwwk1eslVXR5sEDN7K4AIGa4K8dB8IHLpr6yINPLu+wqouKb10XNuTUXU1
+pJ4TSwwXm9WlZVfCjwfurC4KwxT5UmHqxXPHQ4/sloryKPRm6tnAimtxnfycpJjDDM6nAYhoZUyC
+tWvXug+0aeP6ew4pbaqjjTV2Lfd8yuepMfuKLp4ouXSSUxDeL87OSgkk1Jz0hCNS0eXW+qzC3IiK
+ogQSvQkKO/aRA6mnjI3X8iJpQsjgYoZoAyxYSqYHyKbhcAvCPvvY16opA52N2Jeb/tdBSa5Zw0WG
+Ss5GHHDoq3pEl6tKk4HGgTYnRh8OOfpJTkY4MlRHE6L/CVBbfWJI0K5xoAupQV8c/UDWkQdABnlx
+zKn9LqDWXE5hNABdy4torEyz6WvFjdnaQd70AMGO8/iQOfS16t6rR//8/jhQxdUISKCY8H0l+eGR
+Jz7pbbsMQP2SS4W5pwDoQtpxSVO2yyrkpkLKGQOSMITkRw2Z2Wx++63XR8lBJ9FMmxootMahKzcM
+5tt1vIeqxFXcAcklTFXuMNSQSC2urrzBSYa8seoar12MzvwyNCPpmKAuh8YggdoZswQK7udQX1/f
+Xn+/UUruJFqdkJUYMFXB95pdW2TTXLdqrtu0JXZ9jV1XbdffINE6Eq0nUWjTRBn5j2QSUlgrjUto
+ooPGOwDI09PTzb0MjjgnQw6O0kqnWeIk2hismUJvkIYKh45j05ZZ1LBallk0HIuGaxupgPEiDS4s
+CpgAyNQyIRqTMIBCdLiuuAQ+0NwESkhISEsKuc8MOy0drFnMYHx4n0NXadeVAwc+XGZSgqBQbtFW
+glUOA5gEDoE9wkcytblQiFuMudt1xTtgYXQTKCDgUHlx2iijdlo6WUJMYwIYFIe+2jbCI4YrjEou
+Iucgcq5RySPUNTZdrcPQQKJNpAuohcLEE6KJTsbSw1r7WEsvY+6CzdUdoJaWljVr1jiI26OMhjV3
+MJiIMvFJpN5huGEdqSbUVaiiwiArB6EKF5B1BIBgPWyC4wdpEk2IwjoYSzdrlrLWfqelD0xyE6io
+qCj8RMAoPcwSXYy5ncJFFCogkUaHoR7MMGtqTKpKZKgCBAW4tenqHAg4xKfQVvCGIaSPC7wBGtbc
+y+BdsNvfuXNnCt9D44emEydOtAkrR2k1Q3RBJlKmVhJtJpEGALLr68APgMDV1SAowK1dXz8G1Owa
+L5OYIjonBMPEmnvAJ5q4RWHtMMucTufUgIBp6dKl9yigcc0LVV/lUHdZ6ZXYzJRjh/a/d3DvO8cO
+fxh96sD1vNMDkoLB9gJABFDAHRsyAWUSwfSeEJC55hfWLpdWcAqTFyxYwLLs1IC+/fbblStX3iWV
++Tkxl86f2em340hgwOmTxxMS4hLiY69cvnjh/LnExNj4szEf7fmj31sv79m549Cn78WeDigriFP0
+lLnS6KHk3eX8utycc+EnQz71/+Ct7a+/mJ+fP+Uhg5MlHIDgzLto0SI/P7+cnJyqqio+ny8QCEQi
+UXNzMxTa2tog8RsaGpqamqA2NDQ0KirK399/zpw5cLzcsMFrXJDCPj4+R48ezczMFAqFMplMo9Hc
+v39/Cg5B06+//hrOcjRNw+6BoqjBYEDGQq/Xj4yM6MZi/CGGYdDGbrdTFAXtYSwYhrFYLI6HAVXQ
+AMfx8ZYkSYI90L87QNC71WolxgIK0Nf4W+GVUAX9QsCXDSwq8B//47GAh7AxjwdUQQPI4onGcI6G
+lJga0LT8+uRGJ5P/2OBGpz/mT34Gmsy9nx36v3PoX1H4mIUGLCOSAAAAAElFTkSuQmCC" />
 </td>
 <td class="content">Make sure you have started your gearmand job server. Usually
 it can be started with</td>
@@ -1028,62 +897,66 @@ it can be started with</td>
 <pre><tt>/usr/sbin/gearmand -t 10 -j 0</tt></pre>
 </div></div>
 </div></div>
-<div class="paragraph"><p>or a supplied init script (extras/gearmand-init).</p></div>
+<div class="para"><p>or a supplied init script (extras/gearmand-init).</p></div>
 <h3 id="_patch_nagios">Patch Nagios</h3><div style="clear:left"></div>
 <div class="admonitionblock">
 <table><tr>
 <td class="icon">
 <img alt="Note" src="data:image/png;base64,
-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" />
+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" />
 </td>
 <td class="content">The needed patch is already included since Nagios 3.2.2. Use the patch if you
 use an older version.</td>
 </tr></table>
 </div>
-<div class="paragraph"><p>It is not possible to distribute eventhandler with Nagios versions
+<div class="para"><p>It is not possible to distribute eventhandler with Nagios versions
 prior 3.2.2. Just apply the patch from the patches directory to your
 Nagios sources and build Nagios again if you want to use an older
 version. You only need to replace the nagios binary. Nothing else has
@@ -1093,7 +966,7 @@ is needed.</p></div>
 <h2 id="_configuration">Configuration</h2>
 <div class="sectionbody">
 <h3 id="_neb_module">NEB Module</h3><div style="clear:left"></div>
-<div class="paragraph"><p>A sample broker in your nagios.cfg could look like:</p></div>
+<div class="para"><p>A sample broker in your nagios.cfg could look like:</p></div>
 <div class="exampleblock">
 <div class="exampleblock-content">
 <div class="literalblock">
@@ -1101,9 +974,9 @@ is needed.</p></div>
 <pre><tt>broker=/usr/local/share/nagios/mod_gearman.o keyfile=/usr/local/share/nagios/secret.txt server=localhost eventhandler=yes hosts=yes services=yes</tt></pre>
 </div></div>
 </div></div>
-<div class="paragraph"><p>See the following list for a detailed explaination of available
+<div class="para"><p>See the following list for a detailed explaination of available
 options:</p></div>
-<div class="paragraph"><p>Shared options for worker and the NEB module:</p></div>
+<div class="para"><p>Shared options for worker and the NEB module:</p></div>
 <div class="literalblock">
 <div class="content">
 <pre><tt>config:             read config from this file. Options are the same
@@ -1185,7 +1058,7 @@ keyfile:            The shared password will be read from this file.
 
                     Example: keyfile=/path/to/secret.file</tt></pre>
 </div></div>
-<div class="paragraph"><p>Additional options for the NEB module:</p></div>
+<div class="para"><p>Additional options for the NEB module:</p></div>
 <div class="literalblock">
 <div class="content">
 <pre><tt>localhostgroups:    sets a list of hostgroups which will not be executed
@@ -1217,10 +1090,19 @@ perfdata:           defines if the module should distribute perfdata
 
                     Example: perfdata=yes</tt></pre>
 </div></div>
-<div class="paragraph"><p>Additional options for worker:</p></div>
+<div class="para"><p>Additional options for worker:</p></div>
 <div class="literalblock">
 <div class="content">
-<pre><tt>pidfile:            Path to the pidfile.
+<pre><tt>identifier:         Identifier for this worker. Will be used for the
+                    'worker_identifier' queue for status requests. You
+                    may want to change it if you are using more than
+                    one worker on a single host.
+                    Default: current hostname
+
+                    Example: identifier=hostname_test
+
+
+pidfile:            Path to the pidfile.
 
                     Example: pidfile=/path/to/pid.file
 
@@ -1244,12 +1126,28 @@ max-worker:         Maximum number of worker processes which should
                     this worker will be executed one after another.
                     Default: 20
 
-                    Example: max-worker=20</tt></pre>
+                    Example: max-worker=20
+
+
+idle-timeout:       Time after which an idling worker exists
+                    This parameter controls how fast your waiting
+                    workers will exit if there are no jobs waiting.
+                    Default: 30
+
+                    Example: idle-timeout=30
+
+
+max-jobs:           Controls the amount of jobs a worker will do before he exits
+                    Use this to control how fast the amount of workers will go down
+                    after high load times.
+                    Default: 50
+
+                    Example: max-jobs=50</tt></pre>
 </div></div>
 </div>
 <h2 id="_queue_names">Queue Names</h2>
 <div class="sectionbody">
-<div class="paragraph"><p>You may want to watch your gearman server job queue. The shipped
+<div class="para"><p>You may want to watch your gearman server job queue. The shipped
 tools/queue_top.pl does this. It polls the gearman server every second
 and displays the current queue statistics.</p></div>
 <div class="exampleblock">
@@ -1326,7 +1224,7 @@ perfdata              This is the generic queue for all performance
 </div>
 <h2 id="_performance">Performance</h2>
 <div class="sectionbody">
-<div class="paragraph"><p>While the main motivation was to ease distributed configuration, this
+<div class="para"><p>While the main motivation was to ease distributed configuration, this
 plugin also helps to spread the load on multiple worker. Throughput is
 mainly limited by the amount of jobs a single nagios instance can put
 onto the Gearman job server. Keep the Gearman job server close to the
@@ -1338,8 +1236,8 @@ interval and a sample plugin which returns just a single line of
 output. I got over 300 Servicechecks per second, which means you could
 easily setup 100.000 services at a 5 minute interval with a single
 nagios box. The amount of worker boxes depends on your check types.</p></div>
-<div class="paragraph"><p><span class="image">
-<img alt="Performance 1" src="data:image/png;base64,
+<div class="para"><p><span class="image">
+<img alt="Performance 1" title="Performance 1" src="data:image/png;base64,
 iVBORw0KGgoAAAANSUhEUgAAA1AAAAFhCAIAAADxwNxHAAAAAXNSR0IArs4c6QAAAAlwSFlzAAAO
 xAAADsQBlSsOGwAAAAd0SU1FB9oJDhAiFt3+0KoAAAAZdEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRo
 IEdJTVBXgQ4XAAAgAElEQVR42uzdZ0AT2fow8JMEkgACIh17Q4oiJbEgl6IoILC6CgqWxVUWGwKK
@@ -1960,7 +1858,7 @@ AAAAAICCDwAAAABQ8AEAAAAACj4AAAAAQMEHAAAAACj4AAAAAOD/+H/WBPWgZ+B7CQAAAABJRU5E
 rkJggg==" />
 </span>
 <span class="image">
-<img alt="Performance 2" src="data:image/png;base64,
+<img alt="Performance 2" title="Performance 2" src="data:image/png;base64,
 iVBORw0KGgoAAAANSUhEUgAAAdkAAAB6CAIAAAB82r6hAAAAAXNSR0IArs4c6QAAAAlwSFlzAAAO
 xAAADsQBlSsOGwAAAAd0SU1FB9oJDhAiIvxKJB8AAAAZdEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRo
 IEdJTVBXgQ4XAAASjklEQVR42u1d0bYkJwjsmTP//8ubh5tMehWxQFDbW/WQc3fSrQhoI2p5XQRB
@@ -2051,16 +1949,16 @@ gMw7k+2u395ybcANFFXyzGvW3HUhF8qEMCVltPow/AO6YdR5sPTQ4wAAAABJRU5ErkJggg==" />
 </div>
 <h2 id="_how_to_monitor_job_server_and_worker">How to Monitor Job Server and Worker</h2>
 <div class="sectionbody">
-<div class="paragraph"><p>Use the supplied check_gearman to monitor your worker and job server.
+<div class="para"><p>Use the supplied check_gearman to monitor your worker and job server.
 Worker have a own queue for status requests.</p></div>
 <div class="literalblock">
 <div class="content">
 <pre><tt> %&gt; ./check_gearman -H &lt;job server hostname&gt; -q worker_&lt;worker hostname&gt; -t 10 -s check
  check_gearman OK - localhost has 10 worker and is working on 1 jobs|worker=10 running=1 total_jobs_done=1508</tt></pre>
 </div></div>
-<div class="paragraph"><p>This will send a test job to the given job server and the worker will
+<div class="para"><p>This will send a test job to the given job server and the worker will
 respond with some statistical data.</p></div>
-<div class="paragraph"><p>Job server can be monitored with:</p></div>
+<div class="para"><p>Job server can be monitored with:</p></div>
 <div class="literalblock">
 <div class="content">
 <pre><tt> %&gt; ./check_gearman -H localhost -t 20
@@ -2069,7 +1967,7 @@ respond with some statistical data.</p></div>
 </div>
 <h2 id="_how_to_submit_passive_checks">How to Submit Passive Checks</h2>
 <div class="sectionbody">
-<div class="paragraph"><p>You can use send_gearman to submit active and passive checks to a
+<div class="para"><p>You can use send_gearman to submit active and passive checks to a
 gearman job server where they will be processed just like a finished
 check would do.</p></div>
 <div class="literalblock">
@@ -2079,12 +1977,12 @@ check would do.</p></div>
 </div>
 <h2 id="_what_about_notifications">What About Notifications</h2>
 <div class="sectionbody">
-<div class="paragraph"><p>Notifications are very difficult to distribute. And i think its not
+<div class="para"><p>Notifications are very difficult to distribute. And i think its not
 very useful too. So this feature will not be implemented.</p></div>
 </div>
 <h2 id="_hints">Hints</h2>
 <div class="sectionbody">
-<div class="ulist"><ul>
+<div class="ilist"><ul>
 <li>
 <p>
 Make sure you have at least one worker for every queue. You should
@@ -2111,7 +2009,7 @@ Keep the gearmand server close to Nagios for better performance.
 <li>
 <p>
 If you have some checks which should not run parallel, just setup a
-   single worker with --max-worker=1 and they will be executed one
+   single worker with &#8212;max-worker=1 and they will be executed one
    after another. For example for cpu intesive checks with selenium.
 </p>
 </li>
@@ -2119,14 +2017,12 @@ If you have some checks which should not run parallel, just setup a
 </div>
 <h2 id="_download">Download</h2>
 <div class="sectionbody">
-<div class="paragraph"><p>Mod Gearman is available for download at: <a href="http://labs.consol.de/nagios/mod-gearman">http://labs.consol.de/nagios/mod-gearman</a></p></div>
-<div class="paragraph"><p>The source is available at GitHub: <a href="http://github.com/sni/mod_gearman">http://github.com/sni/mod_gearman</a></p></div>
+<div class="para"><p>Mod Gearman is available for download at: <a href="http://labs.consol.de/nagios/mod-gearman">http://labs.consol.de/nagios/mod-gearman</a></p></div>
+<div class="para"><p>The source is available at GitHub: <a href="http://github.com/sni/mod_gearman">http://github.com/sni/mod_gearman</a></p></div>
 </div>
-</div>
-<div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2010-09-27 09:23:20 CEST
+Last updated 2010-10-14 10:25:20 CEST
 </div>
 </div>
 </body>
