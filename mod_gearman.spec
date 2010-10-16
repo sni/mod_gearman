@@ -1,19 +1,19 @@
-Name:         mod_gearman
-Version:      0.5
-Release:      1
-License:      GNU Public License version 2
-Packager:     Olivier Raginel <babar@cern.ch>
-Vendor:       Icinga team
-URL:          http://labs.consol.de/nagios/mod-gearman/
-Prefix:       /opt/mod_gearman
-Source:       http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-%{version}.tar.gz
-Group:        Applications/Monitoring
+Name:          mod_gearman
+Version:       0.7
+Release:       2
+License:       GNU Public License version 2
+Packager:      Olivier Raginel <babar@cern.ch>
+Vendor:        Icinga team
+URL:           http://labs.consol.de/nagios/mod-gearman/
+Prefix:        /opt/mod_gearman
+Source:        http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-%{version}.tar.gz
+Group:         Applications/Monitoring
 Requires:      libgearman
-BuildRoot:    %{_tmppath}/%{name}-%{version}-root-%(%{__id_u} -n)
+BuildRoot:     %{_tmppath}/%{name}-%{version}-root-%(%{__id_u} -n)
 BuildRequires: autoconf, automake
 BuildRequires: libtool, libtool-ltdl-devel, libevent-devel
 BuildRequires: libgearman-devel
-Summary:      Gearman module for Nagios / Icinga
+Summary:       Gearman module for Nagios / Icinga
 Requires(pre,post): /sbin/ldconfig
 
 Provides:      mod_gearman
@@ -34,7 +34,7 @@ and servicegroups.
 [ -f ./configure ] || ./autogen.sh
 
 %build
-./configure --with-user=icinga \
+./configure --with-user=nagios \
     --prefix=%{_prefix} \
     --libdir=%{_libdir} \
     --sysconfdir=%{_sysconfdir} \
@@ -60,7 +60,7 @@ rm -rf $RPM_BUILD_ROOT
 %docdir %{_defaultdocdir}
 %{_prefix}
 %{_sysconfdir}
-%defattr(-,icinga,root)
+%defattr(-,nagios,root)
 %{_localstatedir}
 
 %changelog

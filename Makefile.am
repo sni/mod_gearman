@@ -7,6 +7,8 @@
 #
 ###############################################################################
 
+RPM_TOPDIR=$$(pwd)/rpm.topdir
+
 # -g adds debug symbols, -s strips
 CFLAGS=-Wall -W -Wstrict-prototypes -Wmissing-prototypes -Wnested-externs -s -O -fPIC
 # for debugging
@@ -107,10 +109,10 @@ all-local: mod_gearman.o initscript-local mod_gearman.conf-local gearmand-init-l
 	@echo "################################################################"
 
 distclean-local: clean
-	for file in .deps/ Makefile.in aclocal.m4 autom4te.cache config.* configure depcomp install-sh missing; do test -e $$file && $(RM)r $$file; done
+	$(RM) -r .deps/ Makefile.in aclocal.m4 autom4te.cache config.* configure depcomp install-sh missing *.gz
 
 clean-local:
-	$(RM) worker.static worker/initscript etc/mod_gearman.conf *.o */*.o
+	$(RM) -r worker.static worker/initscript etc/mod_gearman.conf rpm.topdir *.o */*.o
 
 worker.static: worker
 	@echo "################################################################"
@@ -181,3 +183,12 @@ docs:
 	ln -s /usr/share/asciidoc/images .
 	asciidoc --unsafe -a toc -a toclevels=2 -a icons -a data-uri -a max-width=800 README
 	chmod 644 README.html
+
+rpm: dist
+	mkdir -p $(RPM_TOPDIR)/{SOURCES,BUILD,RPMS,SRPMS,SPECS}
+	cp mod_gearman-$(VERSION).tar.gz $(RPM_TOPDIR)/SOURCES
+	rpmbuild -ba --define "_topdir $(RPM_TOPDIR)" \
+	    --buildroot=$$(pwd)/rpm.buildroot mod_gearman.spec
+	mv -v $(RPM_TOPDIR)/RPMS/*/*.rpm .
+	mv -v $(RPM_TOPDIR)/SRPMS/*.src.rpm .
+	rm -rf $(RPM_TOPDIR) rpm.buildroot
