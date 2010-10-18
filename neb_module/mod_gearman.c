@@ -25,7 +25,7 @@
 #include "utils.h"
 #include "result_thread.h"
 #include "mod_gearman.h"
-#include "logger.h"
+#include "gm_log.h"
 #include "gearman.h"
 
 /* specify event broker API version (required) */
@@ -86,21 +86,21 @@ int nebmodule_init( int flags, char *args, nebmodule *handle ) {
 
     mod_gm_opt = malloc(sizeof(mod_gm_opt_t));
     set_default_options(mod_gm_opt);
-    logger( GM_LOG_INFO,  "Version %s\n", GM_VERSION );
+    gm_log( GM_LOG_INFO,  "Version %s\n", GM_VERSION );
 
     /* parse arguments */
     read_arguments( args );
-    logger( GM_LOG_TRACE, "args: %s\n", args );
-    logger( GM_LOG_TRACE, "nebmodule_init(%i, %i)\n", flags );
-    logger( GM_LOG_DEBUG, "running on libgearman %s\n", gearman_version() );
+    gm_log( GM_LOG_TRACE, "args: %s\n", args );
+    gm_log( GM_LOG_TRACE, "nebmodule_init(%i, %i)\n", flags );
+    gm_log( GM_LOG_DEBUG, "running on libgearman %s\n", gearman_version() );
 
     /* check for minimum eventbroker options */
     if(!(event_broker_options & BROKER_PROGRAM_STATE)) {
-        logger( GM_LOG_ERROR, "mod_gearman needs BROKER_PROGRAM_STATE (%i) event_broker_options enabled to work\n", BROKER_PROGRAM_STATE );
+        gm_log( GM_LOG_ERROR, "mod_gearman needs BROKER_PROGRAM_STATE (%i) event_broker_options enabled to work\n", BROKER_PROGRAM_STATE );
         return NEB_ERROR;
     }
     if(!(event_broker_options & BROKER_TIMED_EVENTS)) {
-        logger( GM_LOG_ERROR, "mod_gearman needs BROKER_TIMED_EVENTS (%i) event_broker_options enabled to work\n", BROKER_TIMED_EVENTS );
+        gm_log( GM_LOG_ERROR, "mod_gearman needs BROKER_TIMED_EVENTS (%i) event_broker_options enabled to work\n", BROKER_TIMED_EVENTS );
         return NEB_ERROR;
     }
     if(    (    mod_gm_opt->perfdata == GM_ENABLED
@@ -108,7 +108,7 @@ int nebmodule_init( int flags, char *args, nebmodule *handle ) {
              || mod_gm_opt->hosts == GM_ENABLED
            )
         && !(event_broker_options & BROKER_HOST_CHECKS)) {
-        logger( GM_LOG_ERROR, "mod_gearman needs BROKER_HOST_CHECKS (%i) event_broker_options enabled to work\n", BROKER_HOST_CHECKS );
+        gm_log( GM_LOG_ERROR, "mod_gearman needs BROKER_HOST_CHECKS (%i) event_broker_options enabled to work\n", BROKER_HOST_CHECKS );
         return NEB_ERROR;
     }
     if(    (    mod_gm_opt->perfdata == GM_ENABLED
@@ -116,24 +116,24 @@ int nebmodule_init( int flags, char *args, nebmodule *handle ) {
              || mod_gm_opt->services == GM_ENABLED
            )
         && !(event_broker_options & BROKER_SERVICE_CHECKS)) {
-        logger( GM_LOG_ERROR, "mod_gearman needs BROKER_SERVICE_CHECKS (%i) event_broker_options enabled to work\n", BROKER_SERVICE_CHECKS );
+        gm_log( GM_LOG_ERROR, "mod_gearman needs BROKER_SERVICE_CHECKS (%i) event_broker_options enabled to work\n", BROKER_SERVICE_CHECKS );
         return NEB_ERROR;
     }
     if(mod_gm_opt->events == GM_ENABLED && !(event_broker_options & BROKER_EVENT_HANDLERS)) {
-        logger( GM_LOG_ERROR, "mod_gearman needs BROKER_EVENT_HANDLERS (%i) event_broker option enabled to work\n", BROKER_EVENT_HANDLERS );
+        gm_log( GM_LOG_ERROR, "mod_gearman needs BROKER_EVENT_HANDLERS (%i) event_broker option enabled to work\n", BROKER_EVENT_HANDLERS );
         return NEB_ERROR;
     }
 
     /* check the minimal gearman version */
     if((float)atof(gearman_version()) < (float)GM_MIN_LIB_GEARMAN_VERSION) {
-        logger( GM_LOG_ERROR, "minimum version of libgearman is %.2f, yours is %.2f\n", (float)GM_MIN_LIB_GEARMAN_VERSION, (float)atof(gearman_version()) );
+        gm_log( GM_LOG_ERROR, "minimum version of libgearman is %.2f, yours is %.2f\n", (float)GM_MIN_LIB_GEARMAN_VERSION, (float)atof(gearman_version()) );
         return NEB_ERROR;
     }
 
     /* init crypto functions */
     if(mod_gm_opt->encryption == GM_ENABLED) {
         if(mod_gm_opt->crypt_key == NULL) {
-            logger( GM_LOG_ERROR, "no encryption key provided, please use --key=... or keyfile=...\n");
+            gm_log( GM_LOG_ERROR, "no encryption key provided, please use --key=... or keyfile=...\n");
             return NEB_ERROR;
         }
         mod_gm_crypt_init(mod_gm_opt->crypt_key);
@@ -143,7 +143,7 @@ int nebmodule_init( int flags, char *args, nebmodule *handle ) {
 
     /* create client */
     if ( create_client( mod_gm_opt->server_list, &client ) != GM_OK ) {
-        logger( GM_LOG_ERROR, "cannot start client\n" );
+        gm_log( GM_LOG_ERROR, "cannot start client\n" );
         return NEB_ERROR;
     }
 
@@ -151,7 +151,7 @@ int nebmodule_init( int flags, char *args, nebmodule *handle ) {
     neb_register_callback( NEBCALLBACK_PROCESS_DATA, gearman_module_handle, 0, handle_process_events );
     neb_register_callback( NEBCALLBACK_TIMED_EVENT_DATA, gearman_module_handle, 0, handle_timed_events );
 
-    logger( GM_LOG_DEBUG, "finished initializing\n" );
+    gm_log( GM_LOG_DEBUG, "finished initializing\n" );
 
     return NEB_OK;
 }
@@ -176,7 +176,7 @@ static void register_neb_callbacks(void) {
         neb_register_callback( NEBCALLBACK_SERVICE_CHECK_DATA, gearman_module_handle, 0, handle_perfdata );
     }
 
-    logger( GM_LOG_DEBUG, "registered neb callbacks\n" );
+    gm_log( GM_LOG_DEBUG, "registered neb callbacks\n" );
 }
 
 
@@ -184,7 +184,7 @@ static void register_neb_callbacks(void) {
 int nebmodule_deinit( int flags, int reason ) {
     int x;
 
-    logger( GM_LOG_TRACE, "nebmodule_deinit(%i, %i)\n", flags, reason );
+    gm_log( GM_LOG_TRACE, "nebmodule_deinit(%i, %i)\n", flags, reason );
 
     /* should be removed already, but just for the case it wasn't */
     neb_deregister_callback( NEBCALLBACK_PROCESS_DATA, gearman_module_handle );
@@ -206,7 +206,7 @@ int nebmodule_deinit( int flags, int reason ) {
         neb_deregister_callback( NEBCALLBACK_SERVICE_CHECK_DATA, gearman_module_handle );
     }
 
-    logger( GM_LOG_DEBUG, "deregistered callbacks\n" );
+    gm_log( GM_LOG_DEBUG, "deregistered callbacks\n" );
 
     /* stop result threads */
     for(x = 0; x < mod_gm_opt->result_workers; x++) {
@@ -233,7 +233,7 @@ static int handle_timed_events( int event_type, void *data ) {
     if (ted->event_type != EVENT_CHECK_REAPER)
         return NEB_OK;
 
-    logger( GM_LOG_TRACE, "handle_timed_events(%i, data)\n", event_type, ted->event_type );
+    gm_log( GM_LOG_TRACE, "handle_timed_events(%i, data)\n", event_type, ted->event_type );
 
     move_results_to_core();
 
@@ -299,7 +299,7 @@ static int handle_process_events( int event_type, void *data ) {
     int x=0;
     struct nebstruct_process_struct *ps;
 
-    logger( GM_LOG_TRACE, "handle_process_events(%i, data)\n", event_type );
+    gm_log( GM_LOG_TRACE, "handle_process_events(%i, data)\n", event_type );
 
     ps = ( struct nebstruct_process_struct * )data;
     if ( ps->type == NEBTYPE_PROCESS_EVENTLOOPSTART ) {
@@ -315,7 +315,7 @@ static int handle_process_events( int event_type, void *data ) {
         while ( mod_gm_opt->local_servicegroups_list[x] != NULL ) {
             servicegroup * temp_servicegroup = find_servicegroup( mod_gm_opt->local_servicegroups_list[x] );
             if( temp_servicegroup == NULL ) {
-                logger( GM_LOG_INFO, "Warning: servicegroup '%s' does not exist, possible typo?\n", mod_gm_opt->local_servicegroups_list[x] );
+                gm_log( GM_LOG_INFO, "Warning: servicegroup '%s' does not exist, possible typo?\n", mod_gm_opt->local_servicegroups_list[x] );
             }
             x++;
         }
@@ -325,7 +325,7 @@ static int handle_process_events( int event_type, void *data ) {
         while ( mod_gm_opt->local_hostgroups_list[x] != NULL ) {
             hostgroup * temp_hostgroup = find_hostgroup( mod_gm_opt->local_hostgroups_list[x] );
             if( temp_hostgroup == NULL ) {
-                logger( GM_LOG_INFO, "Warning: hostgroup '%s' does not exist, possible typo?\n", mod_gm_opt->local_hostgroups_list[x] );
+                gm_log( GM_LOG_INFO, "Warning: hostgroup '%s' does not exist, possible typo?\n", mod_gm_opt->local_hostgroups_list[x] );
             }
             x++;
         }
@@ -335,7 +335,7 @@ static int handle_process_events( int event_type, void *data ) {
         while ( mod_gm_opt->servicegroups_list[x] != NULL ) {
             servicegroup * temp_servicegroup = find_servicegroup( mod_gm_opt->servicegroups_list[x] );
             if( temp_servicegroup == NULL ) {
-                logger( GM_LOG_INFO, "Warning: servicegroup '%s' does not exist, possible typo?\n", mod_gm_opt->servicegroups_list[x] );
+                gm_log( GM_LOG_INFO, "Warning: servicegroup '%s' does not exist, possible typo?\n", mod_gm_opt->servicegroups_list[x] );
             }
             x++;
         }
@@ -345,7 +345,7 @@ static int handle_process_events( int event_type, void *data ) {
         while ( mod_gm_opt->hostgroups_list[x] != NULL ) {
             hostgroup * temp_hostgroup = find_hostgroup( mod_gm_opt->hostgroups_list[x] );
             if( temp_hostgroup == NULL ) {
-                logger( GM_LOG_INFO, "Warning: hostgroup '%s' does not exist, possible typo?\n", mod_gm_opt->hostgroups_list[x] );
+                gm_log( GM_LOG_INFO, "Warning: hostgroup '%s' does not exist, possible typo?\n", mod_gm_opt->hostgroups_list[x] );
             }
             x++;
         }
@@ -359,15 +359,15 @@ static int handle_process_events( int event_type, void *data ) {
 static int handle_eventhandler( int event_type, void *data ) {
     nebstruct_event_handler_data * ds;
 
-    logger( GM_LOG_DEBUG, "got eventhandler event\n" );
-    logger( GM_LOG_TRACE, "handle_eventhandler(%i, data)\n", event_type );
+    gm_log( GM_LOG_DEBUG, "got eventhandler event\n" );
+    gm_log( GM_LOG_TRACE, "handle_eventhandler(%i, data)\n", event_type );
 
     if ( event_type != NEBTYPE_EVENTHANDLER_START )
         return NEB_OK;
 
     ds = ( nebstruct_event_handler_data * )data;
 
-    logger( GM_LOG_TRACE, "got eventhandler event: %s\n", ds->command_line );
+    gm_log( GM_LOG_TRACE, "got eventhandler event: %s\n", ds->command_line );
 
     temp_buffer[0]='\x0';
     snprintf( temp_buffer,sizeof( temp_buffer )-1,"type=eventhandler\ncommand_line=%s\n\n\n",ds->command_line );
@@ -382,10 +382,10 @@ static int handle_eventhandler( int event_type, void *data ) {
                          GM_DEFAULT_JOB_RETRIES,
                          mod_gm_opt->transportmode
                         ) == GM_OK) {
-        logger( GM_LOG_TRACE, "handle_eventhandler() finished successfully\n" );
+        gm_log( GM_LOG_TRACE, "handle_eventhandler() finished successfully\n" );
     }
     else {
-        logger( GM_LOG_TRACE, "handle_eventhandler() finished unsuccessfully\n" );
+        gm_log( GM_LOG_TRACE, "handle_eventhandler() finished unsuccessfully\n" );
     }
 
     /* tell nagios to not execute */
@@ -401,11 +401,11 @@ static int handle_host_check( int event_type, void *data ) {
     struct timeval start_time;
     host * hst;
 
-    logger( GM_LOG_TRACE, "handle_host_check(%i)\n", event_type );
+    gm_log( GM_LOG_TRACE, "handle_host_check(%i)\n", event_type );
 
     hostdata = ( nebstruct_host_check_data * )data;
 
-    logger( GM_LOG_TRACE, "---------------\nhost Job -> %i, %i\n", event_type, hostdata->type );
+    gm_log( GM_LOG_TRACE, "---------------\nhost Job -> %i, %i\n", event_type, hostdata->type );
 
     if ( event_type != NEBCALLBACK_HOST_CHECK_DATA )
         return NEB_OK;
@@ -417,7 +417,7 @@ static int handle_host_check( int event_type, void *data ) {
 
     /* shouldn't happen - internal Nagios error */
     if ( hostdata == 0 ) {
-        logger( GM_LOG_ERROR, "Host handler received NULL host data structure.\n" );
+        gm_log( GM_LOG_ERROR, "Host handler received NULL host data structure.\n" );
         return NEB_OK;
     }
 
@@ -427,11 +427,11 @@ static int handle_host_check( int event_type, void *data ) {
 
     /* local check? */
     if(!strcmp( target_queue, "" )) {
-        logger( GM_LOG_DEBUG, "passing by local hostcheck: %s\n", hostdata->host_name );
+        gm_log( GM_LOG_DEBUG, "passing by local hostcheck: %s\n", hostdata->host_name );
         return NEB_OK;
     }
 
-    logger( GM_LOG_DEBUG, "received job for queue %s: %s\n", target_queue, hostdata->host_name );
+    gm_log( GM_LOG_DEBUG, "received job for queue %s: %s\n", target_queue, hostdata->host_name );
 
     /* as we have to intercept host checks so early
      * (we cannot cancel checks otherwise)
@@ -451,14 +451,14 @@ static int handle_host_check( int event_type, void *data ) {
     /* get the raw command line */
     get_raw_command_line(hst->check_command_ptr,hst->host_check_command,&raw_command,0);
     if(raw_command==NULL){
-        logger( GM_LOG_ERROR, "Raw check command for host '%s' was NULL - aborting.\n",hst->name );
+        gm_log( GM_LOG_ERROR, "Raw check command for host '%s' was NULL - aborting.\n",hst->name );
         return NEBERROR_CALLBACKCANCEL;
     }
 
     /* process any macros contained in the argument */
     process_macros(raw_command,&processed_command,0);
     if(processed_command==NULL){
-        logger( GM_LOG_ERROR, "Processed check command for host '%s' was NULL - aborting.\n",hst->name);
+        gm_log( GM_LOG_ERROR, "Processed check command for host '%s' was NULL - aborting.\n",hst->name);
         return NEBERROR_CALLBACKCANCEL;
     }
 
@@ -471,7 +471,7 @@ static int handle_host_check( int event_type, void *data ) {
     /* set the execution flag */
     hst->is_executing=TRUE;
 
-    logger( GM_LOG_TRACE, "cmd_line: %s\n", processed_command );
+    gm_log( GM_LOG_TRACE, "cmd_line: %s\n", processed_command );
 
     temp_buffer[0]='\x0';
     snprintf( temp_buffer,sizeof( temp_buffer )-1,"type=host\nresult_queue=%s\nhost_name=%s\nstart_time=%i.%i\ntimeout=%d\ncommand_line=%s\n\n\n",
@@ -504,7 +504,7 @@ static int handle_host_check( int event_type, void *data ) {
         /* decrement number of host checks that are currently running */
         currently_running_host_checks--;
 
-        logger( GM_LOG_TRACE, "handle_host_check() finished unsuccessfully -> %d\n", NEBERROR_CALLBACKCANCEL );
+        gm_log( GM_LOG_TRACE, "handle_host_check() finished unsuccessfully -> %d\n", NEBERROR_CALLBACKCANCEL );
         return NEBERROR_CALLBACKCANCEL;
     }
 
@@ -513,7 +513,7 @@ static int handle_host_check( int event_type, void *data ) {
     my_free(processed_command);
 
     /* tell nagios to not execute */
-    logger( GM_LOG_TRACE, "handle_host_check() finished successfully -> %d\n", NEBERROR_CALLBACKOVERRIDE );
+    gm_log( GM_LOG_TRACE, "handle_host_check() finished successfully -> %d\n", NEBERROR_CALLBACKOVERRIDE );
     return NEBERROR_CALLBACKOVERRIDE;
 }
 
@@ -528,7 +528,7 @@ static int handle_svc_check( int event_type, void *data ) {
     nebstruct_service_check_data * svcdata;
     int prio = GM_JOB_PRIO_LOW;
 
-    logger( GM_LOG_TRACE, "handle_svc_check(%i, data)\n", event_type );
+    gm_log( GM_LOG_TRACE, "handle_svc_check(%i, data)\n", event_type );
     svcdata = ( nebstruct_service_check_data * )data;
 
     if ( event_type != NEBCALLBACK_SERVICE_CHECK_DATA )
@@ -540,7 +540,7 @@ static int handle_svc_check( int event_type, void *data ) {
 
     /* shouldn't happen - internal Nagios error */
     if ( svcdata == 0 ) {
-        logger( GM_LOG_ERROR, "Service handler received NULL service data structure.\n" );
+        gm_log( GM_LOG_ERROR, "Service handler received NULL service data structure.\n" );
         return NEBERROR_CALLBACKCANCEL;
     }
 
@@ -554,7 +554,7 @@ static int handle_svc_check( int event_type, void *data ) {
 
     /* local check? */
     if(!strcmp( target_queue, "" )) {
-        logger( GM_LOG_DEBUG, "passing by local servicecheck: %s - %s\n", svcdata->host_name, svcdata->service_description);
+        gm_log( GM_LOG_DEBUG, "passing by local servicecheck: %s - %s\n", svcdata->host_name, svcdata->service_description);
         return NEB_OK;
     }
 
@@ -574,14 +574,14 @@ static int handle_svc_check( int event_type, void *data ) {
     /* get the raw command line */
     get_raw_command_line(svc->check_command_ptr,svc->service_check_command,&raw_command,0);
     if(raw_command==NULL){
-        logger( GM_LOG_ERROR, "Raw check command for service '%s' on host '%s' was NULL - aborting.\n", svc->description, svc->host_name );
+        gm_log( GM_LOG_ERROR, "Raw check command for service '%s' on host '%s' was NULL - aborting.\n", svc->description, svc->host_name );
         return NEBERROR_CALLBACKCANCEL;
     }
 
     /* process any macros contained in the argument */
     process_macros(raw_command, &processed_command, 0);
     if(processed_command==NULL) {
-        logger( GM_LOG_ERROR, "Processed check command for service '%s' on host '%s' was NULL - aborting.\n", svc->description, svc->host_name);
+        gm_log( GM_LOG_ERROR, "Processed check command for service '%s' on host '%s' was NULL - aborting.\n", svc->description, svc->host_name);
         my_free(raw_command);
         return NEBERROR_CALLBACKCANCEL;
     }
@@ -595,8 +595,8 @@ static int handle_svc_check( int event_type, void *data ) {
     /* set the execution flag */
     svc->is_executing=TRUE;
 
-    logger( GM_LOG_DEBUG, "received job for queue %s: %s - %s\n", target_queue, svcdata->host_name, svcdata->service_description );
-    logger( GM_LOG_TRACE, "cmd_line: %s\n", processed_command );
+    gm_log( GM_LOG_DEBUG, "received job for queue %s: %s - %s\n", target_queue, svcdata->host_name, svcdata->service_description );
+    gm_log( GM_LOG_TRACE, "cmd_line: %s\n", processed_command );
 
     temp_buffer[0]='\x0';
     snprintf( temp_buffer,sizeof( temp_buffer )-1,"type=service\nresult_queue=%s\nhost_name=%s\nservice_description=%s\nstart_time=%i.%i\ntimeout=%d\ncommand_line=%s\n\n\n",
@@ -626,7 +626,7 @@ static int handle_svc_check( int event_type, void *data ) {
                          GM_DEFAULT_JOB_RETRIES,
                          mod_gm_opt->transportmode
                         ) == GM_OK) {
-        logger( GM_LOG_TRACE, "handle_svc_check() finished successfully\n" );
+        gm_log( GM_LOG_TRACE, "handle_svc_check() finished successfully\n" );
     }
     else {
         my_free(raw_command);
@@ -638,7 +638,7 @@ static int handle_svc_check( int event_type, void *data ) {
         /* decrement number of host checks that are currently running */
         currently_running_service_checks--;
 
-        logger( GM_LOG_TRACE, "handle_svc_check() finished unsuccessfully\n" );
+        gm_log( GM_LOG_TRACE, "handle_svc_check() finished unsuccessfully\n" );
         return NEBERROR_CALLBACKCANCEL;
     }
 
@@ -690,13 +690,13 @@ static int read_arguments( const char *args_orig ) {
 static int verify_options(mod_gm_opt_t *opt) {
     /* did we get any server? */
     if(opt->server_num == 0) {
-        logger( GM_LOG_ERROR, "please specify at least one server\n" );
+        gm_log( GM_LOG_ERROR, "please specify at least one server\n" );
         return(GM_ERROR);
     }
 
     /* nothing set by hand -> defaults */
     if( opt->set_queues_by_hand == 0 ) {
-        logger( GM_LOG_DEBUG, "starting client with default queues\n" );
+        gm_log( GM_LOG_DEBUG, "starting client with default queues\n" );
         opt->hosts    = GM_ENABLED;
         opt->services = GM_ENABLED;
         opt->events   = GM_ENABLED;
@@ -709,7 +709,7 @@ static int verify_options(mod_gm_opt_t *opt) {
        && opt->events   == GM_DISABLED
        && opt->perfdata == GM_DISABLED
       ) {
-        logger( GM_LOG_ERROR, "starting worker without any queues is useless\n" );
+        gm_log( GM_LOG_ERROR, "starting worker without any queues is useless\n" );
         return(GM_ERROR);
     }
 
@@ -722,7 +722,7 @@ static int verify_options(mod_gm_opt_t *opt) {
        && opt->hosts    == GM_DISABLED
        && opt->services == GM_DISABLED
       ) {
-        logger( GM_LOG_DEBUG, "disabled unused result threads\n" );
+        gm_log( GM_LOG_DEBUG, "disabled unused result threads\n" );
         mod_gm_opt->result_workers = 0;
     }
 
@@ -742,7 +742,7 @@ static void set_target_queue( host *hst, service *svc ) {
         while ( mod_gm_opt->local_servicegroups_list[x] != NULL ) {
             servicegroup * temp_servicegroup = find_servicegroup( mod_gm_opt->local_servicegroups_list[x] );
             if ( is_service_member_of_servicegroup( temp_servicegroup,svc )==TRUE ) {
-                logger( GM_LOG_TRACE, "service is member of local servicegroup: %s\n", mod_gm_opt->local_servicegroups_list[x] );
+                gm_log( GM_LOG_TRACE, "service is member of local servicegroup: %s\n", mod_gm_opt->local_servicegroups_list[x] );
                 return;
             }
             x++;
@@ -754,7 +754,7 @@ static void set_target_queue( host *hst, service *svc ) {
     while ( mod_gm_opt->local_hostgroups_list[x] != NULL ) {
         hostgroup * temp_hostgroup = find_hostgroup( mod_gm_opt->local_hostgroups_list[x] );
         if ( is_host_member_of_hostgroup( temp_hostgroup,hst )==TRUE ) {
-            logger( GM_LOG_TRACE, "server is member of local hostgroup: %s\n", mod_gm_opt->local_hostgroups_list[x] );
+            gm_log( GM_LOG_TRACE, "server is member of local hostgroup: %s\n", mod_gm_opt->local_hostgroups_list[x] );
             return;
         }
         x++;
@@ -766,7 +766,7 @@ static void set_target_queue( host *hst, service *svc ) {
         while ( mod_gm_opt->servicegroups_list[x] != NULL ) {
             servicegroup * temp_servicegroup = find_servicegroup( mod_gm_opt->servicegroups_list[x] );
             if ( is_service_member_of_servicegroup( temp_servicegroup,svc )==TRUE ) {
-                logger( GM_LOG_TRACE, "service is member of servicegroup: %s\n", mod_gm_opt->servicegroups_list[x] );
+                gm_log( GM_LOG_TRACE, "service is member of servicegroup: %s\n", mod_gm_opt->servicegroups_list[x] );
                 snprintf( target_queue, sizeof(target_queue)-1, "servicegroup_%s", mod_gm_opt->servicegroups_list[x] );
                 target_queue[sizeof( target_queue )-1]='\x0';
                 return;
@@ -780,7 +780,7 @@ static void set_target_queue( host *hst, service *svc ) {
     while ( mod_gm_opt->hostgroups_list[x] != NULL ) {
         hostgroup * temp_hostgroup = find_hostgroup( mod_gm_opt->hostgroups_list[x] );
         if ( is_host_member_of_hostgroup( temp_hostgroup,hst )==TRUE ) {
-            logger( GM_LOG_TRACE, "server is member of hostgroup: %s\n", mod_gm_opt->hostgroups_list[x] );
+            gm_log( GM_LOG_TRACE, "server is member of hostgroup: %s\n", mod_gm_opt->hostgroups_list[x] );
             snprintf( target_queue, sizeof(target_queue)-1, "hostgroup_%s", mod_gm_opt->hostgroups_list[x] );
             target_queue[sizeof( target_queue )-1]='\x0';
             return;
@@ -830,9 +830,9 @@ int handle_perfdata(int event_type, void *data) {
     service *svc     = NULL;
     int has_perfdata = FALSE;
 
-    logger( GM_LOG_TRACE, "handle_perfdata(%d)\n", event_type );
+    gm_log( GM_LOG_TRACE, "handle_perfdata(%d)\n", event_type );
     if(process_performance_data == 0) {
-        logger( GM_LOG_TRACE, "handle_perfdata() process_performance_data disabled globally\n" );
+        gm_log( GM_LOG_TRACE, "handle_perfdata() process_performance_data disabled globally\n" );
         return 0;
     }
 
@@ -849,7 +849,7 @@ int handle_perfdata(int event_type, void *data) {
 
                 hst = find_host(hostchkdata->host_name);
                 if(hst->process_performance_data == 0) {
-                    logger( GM_LOG_TRACE, "handle_perfdata() process_performance_data disabled for: %s\n", hst->name );
+                    gm_log( GM_LOG_TRACE, "handle_perfdata() process_performance_data disabled for: %s\n", hst->name );
                     break;
                 }
 
@@ -882,7 +882,7 @@ int handle_perfdata(int event_type, void *data) {
                 /* find the nagios service object for this service */
                 svc = find_service(srvchkdata->host_name, srvchkdata->service_description);
                 if(svc->process_performance_data == 0) {
-                    logger( GM_LOG_TRACE, "handle_perfdata() process_performance_data disabled for: %s - %s\n", svc->host_name, svc->description );
+                    gm_log( GM_LOG_TRACE, "handle_perfdata() process_performance_data disabled for: %s - %s\n", svc->host_name, svc->description );
                     break;
                 }
 
@@ -920,10 +920,10 @@ int handle_perfdata(int event_type, void *data) {
                              GM_DEFAULT_JOB_RETRIES,
                              mod_gm_opt->transportmode
                             ) == GM_OK) {
-            logger( GM_LOG_TRACE, "handle_perfdata() finished successfully\n" );
+            gm_log( GM_LOG_TRACE, "handle_perfdata() finished successfully\n" );
         }
         else {
-            logger( GM_LOG_TRACE, "handle_perfdata() finished unsuccessfully\n" );
+            gm_log( GM_LOG_TRACE, "handle_perfdata() finished unsuccessfully\n" );
         }
     }
 

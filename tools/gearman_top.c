@@ -96,7 +96,7 @@ int main (int argc, char **argv) {
 
 /* clean exit */
 void clean_exit(int sig) {
-    logger( GM_LOG_DEBUG, "clean_exit(%i)\n", sig );
+    gm_log( GM_LOG_DEBUG, "clean_exit(%i)\n", sig );
 
     endwin();
     exit( EXIT_SUCCESS );
@@ -147,7 +147,7 @@ void print_stats(char * hostname) {
     struct tm now;
     time_t t;
 
-    logger( GM_LOG_DEBUG, "print_stats()\n");
+    gm_log( GM_LOG_DEBUG, "print_stats()\n");
 
     server = strsep(&hst, ":");
     port_c = strsep(&hst, "\x0");

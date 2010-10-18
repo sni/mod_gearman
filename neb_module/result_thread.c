@@ -26,7 +26,7 @@
 #include "result_thread.h"
 #include "utils.h"
 #include "mod_gearman.h"
-#include "logger.h"
+#include "gm_log.h"
 #include "gearman.h"
 
 /* cleanup and exit this thread */
@@ -38,7 +38,7 @@ static void cancel_worker_thread (void * data) {
     gearman_worker_remove_servers(worker);
     gearman_worker_free(worker);
 
-    logger( GM_LOG_DEBUG, "worker thread finished\n" );
+    gm_log( GM_LOG_DEBUG, "worker thread finished\n" );
 
     return;
 }
@@ -48,7 +48,7 @@ void *result_worker( void * data ) {
     gearman_worker_st worker;
     int *worker_num = (int*)data;
 
-    logger( GM_LOG_TRACE, "worker %d started\n", *worker_num );
+    gm_log( GM_LOG_TRACE, "worker %d started\n", *worker_num );
 
     pthread_setcancelstate (PTHREAD_CANCEL_ENABLE, NULL);
     pthread_setcanceltype (PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
@@ -61,7 +61,7 @@ void *result_worker( void * data ) {
         gearman_return_t ret;
         ret = gearman_worker_work( &worker );
         if ( ret != GEARMAN_SUCCESS ) {
-            logger( GM_LOG_ERROR, "worker error: %s\n", gearman_worker_error( &worker ) );
+            gm_log( GM_LOG_ERROR, "worker error: %s\n", gearman_worker_error( &worker ) );
             gearman_job_free_all( &worker );
             gearman_worker_free( &worker );
 
@@ -105,8 +105,8 @@ void *get_results( gearman_job_st *job, void *context, size_t *result_size, gear
     wsize = gearman_job_workload_size(job);
     strncpy(workload, (const char*)gearman_job_workload(job), wsize);
     workload[wsize] = '\x0';
-    logger( GM_LOG_TRACE, "got result %s\n", gearman_job_handle( job ));
-    logger( GM_LOG_TRACE, "%d +++>\n%s\n<+++\n", strlen(workload), workload );
+    gm_log( GM_LOG_TRACE, "got result %s\n", gearman_job_handle( job ));
+    gm_log( GM_LOG_TRACE, "%d +++>\n%s\n<+++\n", strlen(workload), workload );
 
     /* decrypt data */
     decrypted_data   = malloc(GM_BUFFERSIZE);
@@ -117,7 +117,7 @@ void *get_results( gearman_job_st *job, void *context, size_t *result_size, gear
         *ret_ptr = GEARMAN_WORK_FAIL;
         return NULL;
     }
-    logger( GM_LOG_TRACE, "%d --->\n%s\n<---\n", strlen(decrypted_data), decrypted_data );
+    gm_log( GM_LOG_TRACE, "%d --->\n%s\n<---\n", strlen(decrypted_data), decrypted_data );
 #ifdef GM_DEBUG
     decrypted_orig   = strdup(decrypted_data);
 #endif
@@ -199,7 +199,7 @@ void *get_results( gearman_job_st *job, void *context, size_t *result_size, gear
 
     if ( chk_result->host_name == NULL || chk_result->output == NULL ) {
         *ret_ptr= GEARMAN_WORK_FAIL;
-        logger( GM_LOG_ERROR, "discarded invalid result\n" );
+        gm_log( GM_LOG_ERROR, "discarded invalid result\n" );
         return NULL;
     }
 
@@ -248,22 +248,22 @@ void *get_results( gearman_job_st *job, void *context, size_t *result_size, gear
         service * svc = find_service( chk_result->host_name, chk_result->service_description );
         if(svc == NULL) {
             write_debug_file(&decrypted_orig);
-            logger( GM_LOG_ERROR, "service '%s' on host '%s' could not be found\n", chk_result->service_description, chk_result->host_name );
+            gm_log( GM_LOG_ERROR, "service '%s' on host '%s' could not be found\n", chk_result->service_description, chk_result->host_name );
             return NULL;
         }
 #endif
-        logger( GM_LOG_DEBUG, "service job completed: %s %s: %d\n", chk_result->host_name, chk_result->service_description, chk_result->return_code );
+        gm_log( GM_LOG_DEBUG, "service job completed: %s %s: %d\n", chk_result->host_name, chk_result->service_description, chk_result->return_code );
     } else {
 #ifdef GM_DEBUG
         /* does this host exist */
         host * hst = find_host( chk_result->host_name );
         if(hst == NULL) {
             write_debug_file(&decrypted_orig);
-            logger( GM_LOG_ERROR, "host '%s' could not be found\n", chk_result->host_name );
+            gm_log( GM_LOG_ERROR, "host '%s' could not be found\n", chk_result->host_name );
             return NULL;
         }
 #endif
-        logger( GM_LOG_DEBUG, "host job completed: %s: %d\n", chk_result->host_name, chk_result->return_code );
+        gm_log( GM_LOG_DEBUG, "host job completed: %s: %d\n", chk_result->host_name, chk_result->return_code );
     }
 
     /* add result to result list */
@@ -287,10 +287,10 @@ int set_worker( gearman_worker_st *worker ) {
     create_worker( mod_gm_opt->server_list, worker );
 
     if ( mod_gm_opt->result_queue == NULL ) {
-        logger( GM_LOG_ERROR, "got no result queue!\n" );
+        gm_log( GM_LOG_ERROR, "got no result queue!\n" );
         return GM_ERROR;
     }
-    logger( GM_LOG_DEBUG, "started result_worker thread for queue: %s\n", mod_gm_opt->result_queue );
+    gm_log( GM_LOG_DEBUG, "started result_worker thread for queue: %s\n", mod_gm_opt->result_queue );
 
     if(worker_add_function( worker, mod_gm_opt->result_queue, get_results ) != GM_OK) {
         return GM_ERROR;

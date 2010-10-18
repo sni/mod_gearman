@@ -26,7 +26,7 @@ common_SOURCES             = common/base64.c \
 
 pkglib_LIBRARIES           = mod_gearman.so
 mod_gearman_so_SOURCES     = $(common_SOURCES) \
-                             neb_module/logger.c \
+                             neb_module/gm_log.c \
                              neb_module/result_thread.c \
                              neb_module/mod_gearman.c
 

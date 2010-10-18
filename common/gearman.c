@@ -37,7 +37,7 @@ int create_worker( char ** server_list, gearman_worker_st *worker ) {
 
     worker = gearman_worker_create( worker );
     if ( worker == NULL ) {
-        logger( GM_LOG_ERROR, "Memory allocation failure on worker creation\n" );
+        gm_log( GM_LOG_ERROR, "Memory allocation failure on worker creation\n" );
         return GM_ERROR;
     }
 
@@ -52,7 +52,7 @@ int create_worker( char ** server_list, gearman_worker_st *worker ) {
         }
         ret = gearman_worker_add_server( worker, host, port );
         if ( ret != GEARMAN_SUCCESS ) {
-            logger( GM_LOG_ERROR, "worker error: %s\n", gearman_worker_error( worker ) );
+            gm_log( GM_LOG_ERROR, "worker error: %s\n", gearman_worker_error( worker ) );
             free(server_c);
             return GM_ERROR;
         }
@@ -70,7 +70,7 @@ int worker_add_function( gearman_worker_st * worker, char * queue, gearman_worke
     gearman_return_t ret;
     ret = gearman_worker_add_function( worker, queue, 0, function, NULL );
     if ( ret != GEARMAN_SUCCESS ) {
-        logger( GM_LOG_ERROR, "worker error: %s\n", gearman_worker_error( worker ) );
+        gm_log( GM_LOG_ERROR, "worker error: %s\n", gearman_worker_error( worker ) );
         return GM_ERROR;
     }
 
@@ -83,13 +83,13 @@ int create_client( char ** server_list, gearman_client_st *client ) {
     gearman_return_t ret;
     int x = 0;
 
-    logger( GM_LOG_TRACE, "create_gearman_client()\n" );
+    gm_log( GM_LOG_TRACE, "create_gearman_client()\n" );
 
     signal(SIGPIPE, SIG_IGN);
 
     client = gearman_client_create(client);
     if ( client == NULL ) {
-        logger( GM_LOG_ERROR, "Memory allocation failure on client creation\n" );
+        gm_log( GM_LOG_ERROR, "Memory allocation failure on client creation\n" );
         return GM_ERROR;
     }
 
@@ -104,7 +104,7 @@ int create_client( char ** server_list, gearman_client_st *client ) {
         }
         ret = gearman_client_add_server( client, host, port );
         if ( ret != GEARMAN_SUCCESS ) {
-            logger( GM_LOG_ERROR, "client error: %s\n", gearman_client_error( client ) );
+            gm_log( GM_LOG_ERROR, "client error: %s\n", gearman_client_error( client ) );
             free(server_c);
             return GM_ERROR;
         }
@@ -127,12 +127,12 @@ int add_job_to_queue( gearman_client_st *client, char ** server_list, char * que
 
     signal(SIGPIPE, SIG_IGN);
 
-    logger( GM_LOG_TRACE, "add_job_to_queue(%s, %s, %d, %d, %d)\n", queue, uniq, priority, retries, transport_mode );
-    logger( GM_LOG_TRACE, "%d --->%s<---\n", strlen(data), data );
+    gm_log( GM_LOG_TRACE, "add_job_to_queue(%s, %s, %d, %d, %d)\n", queue, uniq, priority, retries, transport_mode );
+    gm_log( GM_LOG_TRACE, "%d --->%s<---\n", strlen(data), data );
 
     crypted_data = malloc(GM_BUFFERSIZE);
     size = mod_gm_encrypt(&crypted_data, data, transport_mode);
-    logger( GM_LOG_TRACE, "%d +++>\n%s\n<+++\n", size, crypted_data );
+    gm_log( GM_LOG_TRACE, "%d +++>\n%s\n<+++\n", size, crypted_data );
 
     if( priority == GM_JOB_PRIO_LOW ) {
         task = gearman_client_add_task_low_background( client, NULL, NULL, queue, uniq, ( void * )crypted_data, ( size_t )size, &ret1 );
@@ -147,7 +147,7 @@ int add_job_to_queue( gearman_client_st *client, char ** server_list, char * que
         gearman_task_give_workload(task,crypted_data,size);
     }
     else {
-        logger( GM_LOG_ERROR, "add_job_to_queue() wrong priority: %d\n", priority );
+        gm_log( GM_LOG_ERROR, "add_job_to_queue() wrong priority: %d\n", priority );
     }
 
     ret2 = gearman_client_run_tasks( client );
@@ -164,12 +164,12 @@ int add_job_to_queue( gearman_client_st *client, char ** server_list, char * que
             /* only log the first error, otherwise we would fill the log very quickly */
             if( mod_gm_con_errors == 0 ) {
                 gettimeofday(&mod_gm_error_time,NULL);
-                logger( GM_LOG_ERROR, "sending job to gearmand failed: %s\n", gearman_client_error(client) );
+                gm_log( GM_LOG_ERROR, "sending job to gearmand failed: %s\n", gearman_client_error(client) );
             }
             /* or every minute to give an update */
             else if( now.tv_sec >= mod_gm_error_time.tv_sec + 60) {
                 gettimeofday(&mod_gm_error_time,NULL);
-                logger( GM_LOG_ERROR, "sending job to gearmand failed: %s (%i lost jobs so far)\n", gearman_client_error(client), mod_gm_con_errors );
+                gm_log( GM_LOG_ERROR, "sending job to gearmand failed: %s (%i lost jobs so far)\n", gearman_client_error(client), mod_gm_con_errors );
             }
             mod_gm_con_errors++;
         }
@@ -181,12 +181,12 @@ int add_job_to_queue( gearman_client_st *client, char ** server_list, char * que
         /* retry as long as we have retries */
         if(retries > 0) {
             retries--;
-            logger( GM_LOG_TRACE, "add_job_to_queue() retrying... %d\n", retries );
+            gm_log( GM_LOG_TRACE, "add_job_to_queue() retrying... %d\n", retries );
             return(add_job_to_queue( client, server_list, queue, uniq, data, priority, retries, transport_mode));
         }
         /* no more retries... */
         else {
-            logger( GM_LOG_TRACE, "add_job_to_queue() finished with errors: %d %d\n", ret1, ret2 );
+            gm_log( GM_LOG_TRACE, "add_job_to_queue() finished with errors: %d %d\n", ret1, ret2 );
             return GM_ERROR;
         }
     }
@@ -194,7 +194,7 @@ int add_job_to_queue( gearman_client_st *client, char ** server_list, char * que
     /* reset error counter */
     mod_gm_con_errors = 0;
 
-    logger( GM_LOG_TRACE, "add_job_to_queue() finished sucessfully: %d %d\n", ret1, ret2 );
+    gm_log( GM_LOG_TRACE, "add_job_to_queue() finished sucessfully: %d %d\n", ret1, ret2 );
     return GM_OK;
 }
 
