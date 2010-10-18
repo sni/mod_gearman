@@ -66,12 +66,9 @@ int main (int argc, char **argv) {
         }
     }
     mod_gm_opt->debug_level = opt_verbose;
+    if(server_list_num == 0)
+        server_list[server_list_num++] = "localhost";
     server_list[server_list_num] = NULL;
-
-    if(server_list_num == 0) {
-        printf("Error - no hostname given\n\n");
-        print_usage();
-    }
 
     if(opt_interval <= 0)
         opt_interval = 1;
@@ -183,7 +180,7 @@ void print_stats(char * hostname) {
         snprintf(format1, sizeof(format1), " %%-%is | %%16s | %%12s | %%12s\n", max_length);
         snprintf(format2, sizeof(format2), " %%-%is |%%16i  |%%12i  |%%12i \n", max_length);
         printw(format1, "Queue Name", "Worker Available", "Jobs Waiting", "Jobs Running");
-        for(x=0; x < max_length + 51; x++) 
+        for(x=0; x < max_length + 51; x++)
             printw("-");
         printw("\n");
         for(x=0; x<stats->function_num;x++) {
@@ -192,12 +189,13 @@ void print_stats(char * hostname) {
             printw(format2, stats->function[x]->queue, stats->function[x]->worker, stats->function[x]->waiting, stats->function[x]->running);
             found++;
         }
-        if(found == 0)
+        if(found == 0) {
             for(x=0; x < max_length + 25; x++) {
                 printw(" ");
             }
             printw("no queues found\n");
-        for(x=0; x < max_length + 51; x++) 
+        }
+        for(x=0; x < max_length + 51; x++)
             printw("-");
         printw("\n");
     }

@@ -274,7 +274,7 @@ int check_server(char * hostname) {
         for(x=0; x<stats->function_num;x++) {
             if(opt_queue != NULL && strcmp(opt_queue, stats->function[x]->queue))
                 continue;
-            printf( "'%s_waiting'=%i;%i;%i;0 '%s_running'=%i '%s_worker'=%i;%i;%i;0",
+            printf( "'%s_waiting'=%i;%i;%i;0 '%s_running'=%i '%s_worker'=%i;%i;%i;0 ",
                       stats->function[x]->queue,
                       stats->function[x]->waiting,
                       opt_job_warning,

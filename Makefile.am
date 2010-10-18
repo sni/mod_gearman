@@ -7,6 +7,8 @@
 #
 ###############################################################################
 
+RPM_TOPDIR=$$(pwd)/rpm.topdir
+
 # -g adds debug symbols, -s strips
 CFLAGS=-Wall -W -Wstrict-prototypes -Wmissing-prototypes -Wnested-externs -s -O -fPIC
 # for debugging
@@ -58,11 +60,11 @@ check_PROGRAMS   = 01_utils 02_full
 TESTS            = 01_utils 02_full
 
 
-replace_vars = sed 's:%CONFIG%:$(DESTDIR)$(sysconfdir)/mod_gearman.conf:g' | \
-               sed 's:%PIDFILE%:$(DESTDIR)$(localstatedir)/mod_gearman/mod_gearman_worker.pid:g' | \
-               sed 's:%LOGFILE%:$(DESTDIR)$(localstatedir)/mod_gearman/mod_gearman_worker.log:g' | \
-               sed 's:%WORKERBIN%:$(DESTDIR)$(bindir)/mod_gearman_worker:g' | \
-               sed 's:%USER%:$(user):g'
+replace_vars = sed -e 's:%CONFIG%:$(sysconfdir)/mod_gearman.conf:g' \
+               -e 's:%PIDFILE%:$(localstatedir)/mod_gearman/mod_gearman_worker.pid:g' \
+               -e 's:%LOGFILE%:$(localstatedir)/mod_gearman/mod_gearman_worker.log:g' \
+               -e 's:%WORKERBIN%:$(bindir)/mod_gearman_worker:g' \
+               -e 's:%USER%:$(user):g'
 
 EXTRA_DIST = COPYING etc extras include \
              THANKS README README.html patches Changes worker/initscript.in
@@ -74,19 +76,16 @@ mod_gearman.o: $(mod_gearman_so_OBJECTS) $(mod_gearman_so_DEPENDENCIES)
 	else \
 	    $(CXX) $(LDFLAGS) -fPIC -shared $(mod_gearman_so_OBJECTS) -o $@ -lpthread -lgearman; \
 	fi
-	rm -f mod_gearman.so
+	$(RM) mod_gearman.so
 
 mod_gearman.conf-local:
-	cat etc/mod_gearman.conf.in | $(replace_vars) > etc/mod_gearman.conf
-	chmod 644 etc/mod_gearman.conf
+	$(replace_vars) etc/mod_gearman.conf.in > etc/mod_gearman.conf
 
 initscript-local:
-	cat worker/initscript.in | $(replace_vars) > worker/initscript
-	chmod 755 worker/initscript
+	$(replace_vars) worker/initscript.in > worker/initscript
 
 gearmand-init-local:
-	cat extras/gearmand-init.in | $(replace_vars) > extras/gearmand-init
-	chmod 755 extras/gearmand-init
+	$(replace_vars) extras/gearmand-init.in > extras/gearmand-init
 
 all-local: mod_gearman.o initscript-local mod_gearman.conf-local gearmand-init-local
 	@echo ""
@@ -110,11 +109,10 @@ all-local: mod_gearman.o initscript-local mod_gearman.conf-local gearmand-init-l
 	@echo "################################################################"
 
 distclean-local: clean
-	for file in .deps/ Makefile.in aclocal.m4 autom4te.cache config.* configure depcomp install-sh missing; do test -e $$file && rm -fr $$file; done
+	$(RM) -r .deps/ Makefile.in aclocal.m4 autom4te.cache config.* configure depcomp install-sh missing *.gz
 
 clean-local:
-	rm -f worker.static worker/initscript etc/mod_gearman.conf
-	rm -f *.o */*.o
+	$(RM) -r worker.static worker/initscript etc/mod_gearman.conf rpm.topdir *.o */*.o
 
 worker.static: worker
 	@echo "################################################################"
@@ -128,17 +126,21 @@ worker.static: worker
 	@echo " worker.static created."
 	@echo ""
 
-install-exec-local:
-	rm -f $(DESTDIR)$(pkglibdir)/mod_gearman.so
+install-exec-local: install-local-state-dir
 	$(install_sh_PROGRAM) mod_gearman.o $(DESTDIR)$(pkglibdir)/mod_gearman.o
-	$(install_sh_PROGRAM) worker/initscript $(DESTDIR)$(initrddir)/mod_gearman_worker
-	$(MKDIR_P) $(DESTDIR)$(localstatedir)/mod_gearman/
-	chown $(user): $(DESTDIR)$(localstatedir)/mod_gearman/
+	$(install_sh_PROGRAM) -m 755 worker/initscript $(DESTDIR)$(initrddir)/mod_gearman_worker
 
-install-data-local:
-	rm -f $(DESTDIR)$(pkglibdir)/mod_gearman.so
-	$(MKDIR_P) $(DESTDIR)$(localstatedir)/mod_gearman/
-	$(install_sh_PROGRAM) extras/example.conf $(DESTDIR)$(datarootdir)/examples/example.conf
+install-local-state-dir:
+	$(RM) $(DESTDIR)$(pkglibdir)/mod_gearman.so
+	if [ `id -u` -eq 0 ]; then \
+	    $(install_sh) -o $(user) -d $(DESTDIR)$(localstatedir)/mod_gearman/; \
+    else \
+	    $(install_sh) -o $(user) -d $(DESTDIR)$(localstatedir)/mod_gearman/; \
+        echo "*** You should run: sudo chown $(user) $(DESTDIR)$(localstatedir)/mod_gearman/"; \
+    fi
+
+install-data-local: install-local-state-dir
+	$(install_sh_PROGRAM) -m 644 extras/example.conf $(DESTDIR)$(datadir)/mod_gearman/example.conf
 	@echo ""
 	@echo "################################################################"
 	@echo ""
@@ -177,7 +179,16 @@ test: check
 	@echo "################################################################"
 
 docs:
-	rm -f images
+	$(RM) images
 	ln -s /usr/share/asciidoc/images .
 	asciidoc --unsafe -a toc -a toclevels=2 -a icons -a data-uri -a max-width=800 README
 	chmod 644 README.html
+
+rpm: dist
+	mkdir -p $(RPM_TOPDIR)/{SOURCES,BUILD,RPMS,SRPMS,SPECS}
+	cp mod_gearman-$(VERSION).tar.gz $(RPM_TOPDIR)/SOURCES
+	rpmbuild -ba --define "_topdir $(RPM_TOPDIR)" \
+	    --buildroot=$$(pwd)/rpm.buildroot mod_gearman.spec
+	mv -v $(RPM_TOPDIR)/RPMS/*/*.rpm .
+	mv -v $(RPM_TOPDIR)/SRPMS/*.src.rpm .
+	rm -rf $(RPM_TOPDIR) rpm.buildroot

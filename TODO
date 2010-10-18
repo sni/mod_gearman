@@ -5,8 +5,8 @@ TODO LIST
 General
 -------
 
- - remove duplicate errors from logfile
  - handle sync host checks correctly
+ - add example configs for standalone worker
 
 Bugs
 ----

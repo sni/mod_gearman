@@ -281,6 +281,15 @@ perfdata:           defines if the module should distribute perfdata
 Additional options for worker:
 
 .......
+identifier:         Identifier for this worker. Will be used for the
+                    'worker_identifier' queue for status requests. You
+                    may want to change it if you are using more than
+                    one worker on a single host.
+                    Default: current hostname
+
+                    Example: identifier=hostname_test
+
+
 pidfile:            Path to the pidfile.
 
                     Example: pidfile=/path/to/pid.file

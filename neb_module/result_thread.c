@@ -80,6 +80,9 @@ void *get_results( gearman_job_st *job, void *context, size_t *result_size, gear
     char workload[GM_BUFFERSIZE];
     char *decrypted_data;
     char *decrypted_data_c;
+#ifdef GM_DEBUG
+    char *decrypted_orig;
+#endif
     struct timeval now, core_start_time;
     check_result * chk_result;
     int active_check = TRUE;
@@ -115,6 +118,9 @@ void *get_results( gearman_job_st *job, void *context, size_t *result_size, gear
         return NULL;
     }
     logger( GM_LOG_TRACE, "%d --->\n%s\n<---\n", strlen(decrypted_data), decrypted_data );
+#ifdef GM_DEBUG
+    decrypted_orig   = strdup(decrypted_data);
+#endif
 
     /*
      * save this result to a file, so when nagios crashes,
@@ -159,13 +165,8 @@ void *get_results( gearman_job_st *job, void *context, size_t *result_size, gear
             }
         }
 
-        if ( value == NULL ) {
+        if ( value == NULL || !strcmp( value, "") )
             break;
-        }
-
-        if ( !strcmp( value, "") ) {
-            continue;
-        }
 
         if ( !strcmp( key, "host_name" ) ) {
             chk_result->host_name = strdup( value );
@@ -233,13 +234,35 @@ void *get_results( gearman_job_st *job, void *context, size_t *result_size, gear
     exec_time        = finishtime_f - starttime_f;
     latency          = now_f - exec_time - core_starttime_f;
     chk_result->latency    += latency;
+#ifdef GM_DEBUG
+    if(chk_result->latency > 1000)
+        write_debug_file(&decrypted_orig);
+#endif
 
     /* this check is not a freshnes check */
     chk_result->check_options    = chk_result->check_options & ! CHECK_OPTION_FRESHNESS_CHECK;
 
     if ( chk_result->service_description != NULL ) {
+#ifdef GM_DEBUG
+        /* does this services exist */
+        service * svc = find_service( chk_result->host_name, chk_result->service_description );
+        if(svc == NULL) {
+            write_debug_file(&decrypted_orig);
+            logger( GM_LOG_ERROR, "service '%s' on host '%s' could not be found\n", chk_result->service_description, chk_result->host_name );
+            return NULL;
+        }
+#endif
         logger( GM_LOG_DEBUG, "service job completed: %s %s: %d\n", chk_result->host_name, chk_result->service_description, chk_result->return_code );
     } else {
+#ifdef GM_DEBUG
+        /* does this host exist */
+        host * hst = find_host( chk_result->host_name );
+        if(hst == NULL) {
+            write_debug_file(&decrypted_orig);
+            logger( GM_LOG_ERROR, "host '%s' could not be found\n", chk_result->host_name );
+            return NULL;
+        }
+#endif
         logger( GM_LOG_DEBUG, "host job completed: %s: %d\n", chk_result->host_name, chk_result->return_code );
     }
 
@@ -250,6 +273,9 @@ void *get_results( gearman_job_st *job, void *context, size_t *result_size, gear
     chk_result = NULL;
 
     free(decrypted_data_c);
+#ifdef GM_DEBUG
+    free(decrypted_orig);
+#endif
 
     return NULL;
 }
@@ -275,3 +301,18 @@ int set_worker( gearman_worker_st *worker ) {
 
     return GM_OK;
 }
+
+#ifdef GM_DEBUG
+/* write text to a debug file */
+void write_debug_file(char ** text) {
+    FILE * fd;
+    fd = fopen( "/tmp/mod_gearman_result.txt", "a+" );
+    if(fd == NULL)
+        perror("fopen");
+    fputs( "------------->\n", fd );
+    fputs( *text, fd );
+    fputs( "\n<-------------\n", fd );
+    fclose( fd );
+}
+#endif
+

@@ -25,6 +25,8 @@
 #include "gearman.h"
 #include "utils.h"
 
+int mod_gm_con_errors = 0;
+struct timeval mod_gm_error_time;
 
 /* create the gearman worker */
 int create_worker( char ** server_list, gearman_worker_st *worker ) {
@@ -121,6 +123,7 @@ int add_job_to_queue( gearman_client_st *client, char ** server_list, char * que
     gearman_return_t ret1, ret2;
     char * crypted_data;
     int size;
+    struct timeval now;
 
     signal(SIGPIPE, SIG_IGN);
 
@@ -155,8 +158,21 @@ int add_job_to_queue( gearman_client_st *client, char ** server_list, char * que
        || gearman_client_error(client) != NULL
       ) {
 
-        if(retries == 0)
-            logger( GM_LOG_ERROR, "add_job_to_queue() failed: %s\n", gearman_client_error(client) );
+        /* log the error */
+        if(retries == 0) {
+            gettimeofday(&now,NULL);
+            /* only log the first error, otherwise we would fill the log very quickly */
+            if( mod_gm_con_errors == 0 ) {
+                gettimeofday(&mod_gm_error_time,NULL);
+                logger( GM_LOG_ERROR, "sending job to gearmand failed: %s\n", gearman_client_error(client) );
+            }
+            /* or every minute to give an update */
+            else if( now.tv_sec >= mod_gm_error_time.tv_sec + 60) {
+                gettimeofday(&mod_gm_error_time,NULL);
+                logger( GM_LOG_ERROR, "sending job to gearmand failed: %s (%i lost jobs so far)\n", gearman_client_error(client), mod_gm_con_errors );
+            }
+            mod_gm_con_errors++;
+        }
 
         /* recreate client, otherwise gearman sigsegvs */
         gearman_client_free( client );
@@ -174,6 +190,10 @@ int add_job_to_queue( gearman_client_st *client, char ** server_list, char * que
             return GM_ERROR;
         }
     }
+
+    /* reset error counter */
+    mod_gm_con_errors = 0;
+
     logger( GM_LOG_TRACE, "add_job_to_queue() finished sucessfully: %d %d\n", ret1, ret2 );
     return GM_OK;
 }

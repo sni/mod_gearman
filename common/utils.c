@@ -218,6 +218,7 @@ int set_default_options(mod_gm_opt_t *opt) {
     opt->fork_on_exec       = GM_ENABLED;
     opt->idle_timeout       = GM_DEFAULT_IDLE_TIMEOUT;
     opt->max_jobs           = GM_DEFAULT_MAX_JOBS;
+    opt->identifier         = NULL;
 
     opt->host               = NULL;
     opt->service            = NULL;
@@ -444,6 +445,11 @@ int parse_args_line(mod_gm_opt_t *opt, char * arg, int recursion_level) {
         opt->logfile = strdup( value );
     }
 
+    /* identifier */
+    else if ( !strcmp( key, "identifier" ) ) {
+        opt->identifier = strdup( value );
+    }
+
     /* timeout */
     else if ( !strcmp( key, "job_timeout" ) ) {
         opt->job_timeout = atoi( value );
@@ -604,6 +610,7 @@ void dumpconfig(mod_gm_opt_t *opt, int mode) {
     logger( GM_LOG_DEBUG, "configuration:\n" );
     logger( GM_LOG_DEBUG, "log level:           %d\n", opt->debug_level);
     if(mode == GM_WORKER_MODE) {
+        logger( GM_LOG_DEBUG, "identifier:          %s\n", opt->identifier);
         logger( GM_LOG_DEBUG, "pidfile:             %s\n", opt->pidfile == NULL ? "no" : opt->pidfile);
         logger( GM_LOG_DEBUG, "logfile:             %s\n", opt->logfile == NULL ? "no" : opt->logfile);
         logger( GM_LOG_DEBUG, "job max age:         %d\n", opt->max_age);
@@ -683,6 +690,7 @@ void mod_gm_free_opt(mod_gm_opt_t *opt) {
     free(opt->logfile);
     free(opt->host);
     free(opt->service);
+    free(opt->identifier);
     free(opt);
 }
 

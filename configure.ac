@@ -2,8 +2,8 @@
 # Process this file with autoconf to produce a configure script.
 
 ##############################################
-AC_PREREQ([2.61])
-AC_INIT([mod_gearman], [0.6], [sven@consol.de])
+AC_PREREQ([2.59])
+AC_INIT([mod_gearman], [0.7], [sven@consol.de])
 AM_INIT_AUTOMAKE([-Wall foreign subdir-objects])
 AC_CONFIG_SRCDIR([neb_module/mod_gearman.c],[worker/worker.c],[tools/send_gearman.c],[tools/check_gearman.c],[tools/gearman_top.c])
 AC_CONFIG_HEADER([config.h])
@@ -12,6 +12,7 @@ AC_CONFIG_HEADER([config.h])
 # Checks for programs.
 AC_PROG_CXX
 AC_PROG_CC
+AM_PROG_CC_C_O
 AC_PROG_RANLIB
 
 ##############################################
@@ -27,8 +28,9 @@ AC_CHECK_LIB([pthread], [pthread_create])
 
 ##############################################
 # Checks for header files.
-AC_CHECK_HEADERS([stdlib.h string.h unistd.h pthread.h arpa/inet.h fcntl.h limits.h netdb.h netinet/in.h stddef.h sys/socket.h sys/time.h sys/timeb.h syslog.h curses.h],,AC_MSG_ERROR([Compiling mod_gearman requires standard unix headers files]))
+AC_CHECK_HEADERS([stdlib.h string.h unistd.h pthread.h arpa/inet.h fcntl.h limits.h netdb.h netinet/in.h stddef.h sys/socket.h sys/time.h sys/timeb.h syslog.h],,AC_MSG_ERROR([Compiling mod_gearman requires standard unix headers files]))
 AC_CHECK_HEADERS([ltdl.h],,AC_MSG_ERROR([Compiling mod_gearman requires ltdl.h]))
+AC_CHECK_HEADERS([curses.h],,AC_MSG_ERROR([Compiling mod_gearman requires curses.h]))
 
 AC_ARG_WITH(gearman,
  [  --with-gearman=DIR Specify the path to you gearman library],
@@ -71,9 +73,6 @@ AC_PROG_LN_S
 ##############################################
 # Checks for typedefs, structures, and compiler characteristics.
 AC_TYPE_SIZE_T
-AC_TYPE_UINT8_T
-AC_TYPE_UINT32_T
-AC_TYPE_UINT64_T
 AC_TYPE_PID_T
 
 ##############################################

@@ -28,7 +28,7 @@
 #define MOD_GM_COMMON_H
 
 /* constants */
-#define GM_VERSION                  "0.6"
+#define GM_VERSION                  "0.7"
 #define GM_ENABLED                      1
 #define GM_DISABLED                     0
 #define GM_BUFFERSIZE               16384
@@ -127,6 +127,7 @@ typedef struct mod_gm_opt_struct {
     char         * local_servicegroups_list[GM_LISTSIZE];
     int            local_servicegroups_num;
 /* worker */
+    char         * identifier;
     char         * pidfile;
     char         * logfile;
     FILE         * logfile_fp;

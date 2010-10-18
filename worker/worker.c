@@ -209,6 +209,7 @@ int parse_arguments(int argc, char **argv) {
     int i;
     int errors = 0;
     int verify;
+    char hostname[GM_BUFFERSIZE];
     mod_gm_opt_t * mod_gm_new_opt;
     mod_gm_new_opt = malloc(sizeof(mod_gm_opt_t));
     set_default_options(mod_gm_new_opt);
@@ -221,13 +222,18 @@ int parse_arguments(int argc, char **argv) {
         if ( !strcmp( arg, "help" ) || !strcmp( arg, "--help" )  || !strcmp( arg, "-h" ) ) {
             print_usage();
         }
-        lc(arg);
         if(parse_args_line(mod_gm_new_opt, arg, 0) != GM_OK) {
             errors++;
             free(arg_c);
             break;
         }
         free(arg_c);
+    }
+
+    /* set identifier to hostname unless specified */
+    if(mod_gm_new_opt->identifier == NULL) {
+        gethostname(hostname, GM_BUFFERSIZE-1);
+        mod_gm_new_opt->identifier = strdup(hostname);
     }
 
     /* close old logfile */
