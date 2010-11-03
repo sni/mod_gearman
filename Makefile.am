@@ -140,7 +140,8 @@ install-local-state-dir:
     fi
 
 install-data-local: install-local-state-dir
-	$(install_sh_PROGRAM) -m 644 extras/example.conf $(DESTDIR)$(datadir)/mod_gearman/example.conf
+	$(install_sh_PROGRAM) -m 644 extras/shared.conf            $(DESTDIR)$(datadir)/mod_gearman/shared.conf
+	$(install_sh_PROGRAM) -m 644 extras/standalone_worker.conf $(DESTDIR)$(datadir)/mod_gearman/standalone_worker.conf
 	@echo ""
 	@echo "################################################################"
 	@echo ""
