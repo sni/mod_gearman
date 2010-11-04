@@ -275,6 +275,13 @@ perfdata:           defines if the module should distribute perfdata
                     queue.
 
                     Example: perfdata=yes
+
+result_queue:       sets the result queue. Necessary when putting jobs
+                    from several nagios instances into the same
+                    gearman queues.
+                    Default: check_results
+
+                    Example: result_queue=check_results_nagios1
 .......
 
 
