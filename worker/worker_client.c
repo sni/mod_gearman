@@ -202,8 +202,12 @@ void *get_job( gearman_job_st *job, void *context, size_t *result_size, gearman_
         } else if ( !strcmp( key, "timeout" ) ) {
             exec_job->timeout = atoi(value);
         } else if ( !strcmp( key, "command_line" ) ) {
-            snprintf(command, sizeof(command), "%s 2>&1", value);
+            /* adding 2>&1 breaks the exec/popen check and everything will be checked by popen */
+            /*
+            snprintf(command, sizeof(command)+5, "%s 2>&1", value);
             exec_job->command_line = strdup(command);
+            */
+            exec_job->command_line = strdup(value);
         }
     }
 

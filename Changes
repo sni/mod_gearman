@@ -1,5 +1,8 @@
 This file documents the revision history for mod_gearman.
 
+0.8    
+          - fixed checks with popen/exec
+
 0.7    Wed Nov  3 14:01:23 CET 2010
           - added identifier to worker config. Usefull when running more than one worker per host
           - added spec file for building rpms
