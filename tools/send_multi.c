@@ -62,7 +62,7 @@ int main (int argc, char **argv) {
     /* if rc > 0, it contains the number of checks being submitted, 
        otherwise its an error code (-1 - WARNING, -2 - CRITICAL, -3 - UNKNOWN) */
     if (rc >= 0) {
-	    logger( GM_LOG_INFO, "%d check_multi child check%s submitted\n", rc, (rc>1)?"s":"" );
+	    gm_log( GM_LOG_INFO, "%d check_multi child check%s submitted\n", rc, (rc>1)?"s":"" );
     } else {
 	    rc*=-1;
     }
@@ -184,7 +184,7 @@ int send_result() {
     char temp_buffer1[GM_BUFFERSIZE];
     char temp_buffer2[GM_BUFFERSIZE];
 
-    logger( GM_LOG_TRACE, "send_result()\n" );
+    gm_log( GM_LOG_TRACE, "send_result()\n" );
 
     if(mod_gm_opt->result_queue == NULL) {
         printf( "got no result queue, please use --result_queue=...\n" );
@@ -198,7 +198,7 @@ int send_result() {
     snprintf(mod_gm_opt->message, GM_BUFFERSIZE, "%s", buf);
     free(buf);
 
-    logger( GM_LOG_TRACE, "queue: %s\n", mod_gm_opt->result_queue );
+    gm_log( GM_LOG_TRACE, "queue: %s\n", mod_gm_opt->result_queue );
     temp_buffer1[0]='\x0';
     snprintf( temp_buffer1, sizeof( temp_buffer1 )-1, "type=%s\nhost_name=%s\nstart_time=%i.%i\nfinish_time=%i.%i\nlatency=%i.%i\nreturn_code=%i\n",
               mod_gm_opt->active == GM_ENABLED ? "active" : "passive",
@@ -229,7 +229,7 @@ int send_result() {
     }
     strncat(temp_buffer1, "\n", (sizeof(temp_buffer1)-2));
 
-    logger( GM_LOG_TRACE, "data:\n%s\n", temp_buffer1);
+    gm_log( GM_LOG_TRACE, "data:\n%s\n", temp_buffer1);
 
     if(add_job_to_queue( &client,
                          mod_gm_opt->server_list,
@@ -240,10 +240,10 @@ int send_result() {
                          GM_DEFAULT_JOB_RETRIES,
                          mod_gm_opt->transportmode
                         ) == GM_OK) {
-        logger( GM_LOG_TRACE, "send_result_back() finished successfully\n" );
+        gm_log( GM_LOG_TRACE, "send_result_back() finished successfully\n" );
     }
     else {
-        logger( GM_LOG_TRACE, "send_result_back() finished unsuccessfully\n" );
+        gm_log( GM_LOG_TRACE, "send_result_back() finished unsuccessfully\n" );
         return(GM_ERROR);
     }
     return(GM_OK);
@@ -251,9 +251,9 @@ int send_result() {
 
 /* called when check runs into timeout */
 void alarm_sighandler(int sig) {
-    logger( GM_LOG_TRACE, "alarm_sighandler(%i)\n", sig );
+    gm_log( GM_LOG_TRACE, "alarm_sighandler(%i)\n", sig );
 
-    printf("got no input! Either send plugin output to stdin or use --message=...\n");
+    printf("got no input! Send plugin output to stdin.\n");
 
     exit(EXIT_FAILURE);
 }
@@ -283,7 +283,7 @@ int read_multi_stream(FILE *stream) {
 			/* closing tag </CHILD> found? read after <CHILD> with rest of buffer len */
 		    	if ((bufend=(char *)memmem(bufstart,buflen-(bufstart-buffer),"</CHILD>",strlen("</CHILD>"))) != NULL) {
 
-				logger( GM_LOG_TRACE, "\tXML chunk %d found: buffer position %3d-%3d length %d bytes\n", count, bufstart-buffer, bufend-buffer, bufend-bufstart);
+				gm_log( GM_LOG_TRACE, "\tXML chunk %d found: buffer position %3d-%3d length %d bytes\n", count, bufstart-buffer, bufend-buffer, bufend-bufstart);
 				/* count valid chunks */
 				count++;
 
@@ -306,19 +306,19 @@ int read_multi_stream(FILE *stream) {
 			/* start <CHILD> tag found, but no closing tag </CHILD>, buffer too small? */
 			} else {
 				buflen=0L;
-				logger( GM_LOG_ERROR, "Error: no closing tag </CHILD> within buffer, buffer size too small? discarding buffer, %ld bytes now\n", buflen);
+				gm_log( GM_LOG_ERROR, "Error: no closing tag </CHILD> within buffer, buffer size too small? discarding buffer, %ld bytes now\n", buflen);
 				return -1;
 			}
-			logger( GM_LOG_TRACE, "\tbuflen after XML chunk parsing:%ld\n", buflen);
+			gm_log( GM_LOG_TRACE, "\tbuflen after XML chunk parsing:%ld\n", buflen);
 
 		/* neither <CHILD> nor </CHILD> found, discard buffer */
 		} else {
 			/* discard whole buffer but continue */
 			buflen=0L;
-			logger( GM_LOG_TRACE, "Error: no starting tag <CHILD> within buffer - discarding buffer, buflen now %ld bytes\n", buflen);
+			gm_log( GM_LOG_TRACE, "Error: no starting tag <CHILD> within buffer - discarding buffer, buflen now %ld bytes\n", buflen);
 		}
 		
-		logger( GM_LOG_TRACE, "\ttrying to fill up buffer with %ld bytes from offset %ld\n", GM_BUFFERSIZE-buflen, buflen);
+		gm_log( GM_LOG_TRACE, "\ttrying to fill up buffer with %ld bytes from offset %ld\n", GM_BUFFERSIZE-buflen, buflen);
 
 		/* read one block of data, or less bytes, if there is still data left */
 		alarm(mod_gm_opt->timeout);
@@ -334,7 +334,7 @@ int read_multi_stream(FILE *stream) {
 			/* adjust block len */
 			buflen+=bytes_read;
 		}
-		logger( GM_LOG_TRACE, "\tread %ld bytes, %ld bytes remaining in buffer\n", bytes_read, buflen);
+		gm_log( GM_LOG_TRACE, "\tread %ld bytes, %ld bytes remaining in buffer\n", bytes_read, buflen);
 	} while (buflen > 0);
 	return count;
 }
@@ -350,7 +350,7 @@ int read_child_check(char *bufstart, char *bufend) {
 		if (!strcmp(attribute,"0")) {
 			return 0;
 		}
-		logger( GM_LOG_TRACE, "child check: %d\n", atoi(attribute));
+		gm_log( GM_LOG_TRACE, "child check: %d\n", atoi(attribute));
 	}
 
 	/* service description */
@@ -358,7 +358,7 @@ int read_child_check(char *bufstart, char *bufend) {
 		return 0;
 	} else {
 		mod_gm_opt->service=strdup(attribute);
-		logger( GM_LOG_TRACE, "service_description: %s\n", mod_gm_opt->service);
+		gm_log( GM_LOG_TRACE, "service_description: %s\n", mod_gm_opt->service);
 	}
 
 	/* return code */
@@ -366,7 +366,7 @@ int read_child_check(char *bufstart, char *bufend) {
 		return 0;
 	} else {
 		mod_gm_opt->return_code=atoi(attribute);
-		logger( GM_LOG_TRACE, "mod_gm_opt->return_code: %d\n", mod_gm_opt->return_code);
+		gm_log( GM_LOG_TRACE, "mod_gm_opt->return_code: %d\n", mod_gm_opt->return_code);
 	}
 
 	/* start time */
@@ -375,7 +375,7 @@ int read_child_check(char *bufstart, char *bufend) {
 	} else {
 		mod_gm_opt->starttime.tv_sec=atoi(strtok(attribute, "."));
 		mod_gm_opt->starttime.tv_usec=atoi(strtok(NULL, "."));
-		logger( GM_LOG_TRACE, "starttime: %d.%d\n", mod_gm_opt->starttime.tv_sec, mod_gm_opt->starttime.tv_usec);
+		gm_log( GM_LOG_TRACE, "starttime: %d.%d\n", mod_gm_opt->starttime.tv_sec, mod_gm_opt->starttime.tv_usec);
 	}
 
 	/* end time */
@@ -384,7 +384,7 @@ int read_child_check(char *bufstart, char *bufend) {
 	} else {
 		mod_gm_opt->finishtime.tv_sec=atoi(strtok(attribute, "."));
 		mod_gm_opt->finishtime.tv_usec=atoi(strtok(NULL, "."));
-		logger( GM_LOG_TRACE, "endtime: %d.%d\n", mod_gm_opt->finishtime.tv_sec, mod_gm_opt->finishtime.tv_usec);
+		gm_log( GM_LOG_TRACE, "endtime: %d.%d\n", mod_gm_opt->finishtime.tv_sec, mod_gm_opt->finishtime.tv_usec);
 	}
 
 	/* message */
@@ -392,7 +392,7 @@ int read_child_check(char *bufstart, char *bufend) {
 		return 0;
 	} else {
 		mod_gm_opt->message=strdup(decode_xml(attribute));
-		logger( GM_LOG_TRACE, "mod_gm_opt->message: %s\n", mod_gm_opt->message);
+		gm_log( GM_LOG_TRACE, "mod_gm_opt->message: %s\n", mod_gm_opt->message);
 	}
 	return 1;
 }
@@ -403,12 +403,12 @@ char *read_multi_attribute(char *bufstart, char *bufend, char *element) {
 	sprintf(end_element, "</%s>", element);
 
 	if ((bufstart=(char *)memmem(bufstart,bufend-bufstart,start_element,strlen(start_element))) == NULL) {
-		logger( GM_LOG_TRACE, "\tread_multi_attribute: start element \'%s\' not found\n", start_element);
+		gm_log( GM_LOG_TRACE, "\tread_multi_attribute: start element \'%s\' not found\n", start_element);
 		return NULL;
 	}
 	bufstart+=strlen(start_element);
 	if ((bufend=(char *)memmem(bufstart,bufend-bufstart,end_element,strlen(end_element))) == NULL) {
-		logger( GM_LOG_TRACE, "\tread_multi_attribute: end element \'%s\' not found\n", end_element);
+		gm_log( GM_LOG_TRACE, "\tread_multi_attribute: end element \'%s\' not found\n", end_element);
 		return NULL;
 	}
 	*bufend='\0';
