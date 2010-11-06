@@ -1975,6 +1975,32 @@ check would do.</p></div>
 <pre><tt> %&gt; ./send_gearman --server=&lt;job server&gt; --encryption=no --host="&lt;hostname&gt;" --service="&lt;service&gt;" --message="message"</tt></pre>
 </div></div>
 </div>
+<h2 id="_how_to_submit_check_multi_results">How to Submit check_multi Results</h2>
+<div class="sectionbody">
+<div class="para"><p>
+check_multi is a plugin which executes multiple child checks. 
+See more details about the feed_passive mode at: 
+<a href="http://www.my-plugin.de/wiki/projects/check_multi/feed_passive">http://www.my-plugin.de/wiki/projects/check_multi/feed_passive</a>
+You can pass such child checks to Nagios via the mod_gearman
+neb module: 
+</p></div>
+<div class="literalblock">
+<div class="content">
+<pre><tt>
+ %&gt; check_multi -f multi.cmd -r 256 | ./send_multi --server=&lt;job server&gt; --encryption=no --host="&lt;hostname&gt;" --service="&lt;service&gt;"
+</tt></pre>
+</div></div>
+<div class="para"><p>
+If you want to use only check_multi and no other workers, you can achieve this with the following neb module settings:
+<div class="literalblock">
+<div class="content">
+<pre><tt>
+ broker_module=/usr/local/share/nagios/mod_gearman.o server=localhost encryption=no eventhandler=no hosts=no services=no hostgroups=does_not_exist
+ </tt></pre>
+</div></div>
+<div class="para"><p>
+Note: encryption is not necessary if you both run the check_multi checks on one host.
+</p></div>
 <h2 id="_what_about_notifications">What About Notifications</h2>
 <div class="sectionbody">
 <div class="para"><p>Notifications are very difficult to distribute. And i think its not

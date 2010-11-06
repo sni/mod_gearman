@@ -30,6 +30,7 @@ mod_gearman_so_SOURCES     = $(common_SOURCES) \
 
 bin_PROGRAMS               = mod_gearman_worker \
                              send_gearman \
+                             send_multi \
                              check_gearman \
                              gearman_top
 
@@ -41,6 +42,10 @@ mod_gearman_worker_SOURCES = $(common_SOURCES) \
 send_gearman_SOURCES       = $(common_SOURCES) \
                              tools/tools_logger.c \
                              tools/send_gearman.c
+
+send_multi_SOURCES         = $(common_SOURCES) \
+                             tools/tools_logger.c \
+                             tools/send_multi.c
 
 check_gearman_SOURCES      = $(common_SOURCES) \
                              tools/tools_logger.c \
@@ -143,13 +148,14 @@ install-data-local: install-local-state-dir
 	@echo "################################################################"
 	@echo ""
 	@echo " Installation completed:"
-	@echo " neb module:    $(DESTDIR)$(pkglibdir)/mod_gearman.o"
+	@echo " neb module:     $(DESTDIR)$(pkglibdir)/mod_gearman.o"
 	@echo ""
-	@echo " worker:        $(DESTDIR)$(bindir)/mod_gearman_worker"
-	@echo " init script:   $(DESTDIR)$(initrddir)/mod_gearman_worker"
+	@echo " worker:         $(DESTDIR)$(bindir)/mod_gearman_worker"
+	@echo " init script:    $(DESTDIR)$(initrddir)/mod_gearman_worker"
 	@echo ""
-	@echo " check bin:     $(DESTDIR)$(bindir)/check_gearman"
-	@echo " send bin:      $(DESTDIR)$(bindir)/send_gearman"
+	@echo " check bin:      $(DESTDIR)$(bindir)/check_gearman"
+	@echo " send bin:       $(DESTDIR)$(bindir)/send_gearman"
+	@echo " send multi bin: $(DESTDIR)$(bindir)/send_multi"
 	@echo ""
 	@echo "just add the broker line to your nagios.cfg:"
 	@echo "broker_module=$(DESTDIR)$(pkglibdir)/mod_gearman.o config=$(DESTDIR)$(sysconfdir)/mod_gearman.conf"

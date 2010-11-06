@@ -451,6 +451,12 @@ int parse_args_line(mod_gm_opt_t *opt, char * arg, int recursion_level) {
     }
 
     /* timeout */
+    else if ( !strcmp( key, "timeout" ) ) {
+        opt->timeout = atoi( value );
+        if(opt->timeout < 0) { opt->timeout = 10; }
+    }
+
+    /* job_timeout */
     else if ( !strcmp( key, "job_timeout" ) ) {
         opt->job_timeout = atoi( value );
         if(opt->job_timeout < 1) { opt->job_timeout = 1; }

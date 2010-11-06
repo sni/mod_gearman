@@ -153,7 +153,7 @@ NEB Module
 A sample broker in your nagios.cfg could look like:
 
 ======
- broker=/usr/local/share/nagios/mod_gearman.o keyfile=/usr/local/share/nagios/secret.txt server=localhost eventhandler=yes hosts=yes services=yes
+ broker_module=/usr/local/share/nagios/mod_gearman.o keyfile=/usr/local/share/nagios/secret.txt server=localhost eventhandler=yes hosts=yes services=yes
 ======
 
 See the following list for a detailed explaination of available
@@ -466,6 +466,29 @@ check would do.
  %> ./send_gearman --server=<job server> --encryption=no --host="<hostname>" --service="<service>" --message="message"
 .......
 
+
+
+How to Submit check_multi Results
+---------------------------------
+
+check_multi is a plugin which executes multiple child checks. 
+See more details about the feed_passive mode at: 
+http://www.my-plugin.de/wiki/projects/check_multi/feed_passive
+
+You can pass such child checks to Nagios via the mod_gearman
+neb module: 
+
+.......
+ %> check_multi -f multi.cmd -r 256 | ./send_multi --server=<job server> --encryption=no --host="<hostname>" --service="<service>"
+.......
+
+If you want to use only check_multi and no other workers, you can
+achieve this with the following neb module settings:
+
+ broker_module=/usr/local/share/nagios/mod_gearman.o server=localhost encryption=no eventhandler=no hosts=no services=no hostgroups=does_not_exist
+
+Note: encryption is not necessary if you both run the check_multi checks
+and the nagios check_results queue on the same server.
 
 
 What About Notifications
