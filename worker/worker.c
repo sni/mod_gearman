@@ -61,7 +61,7 @@ int main (int argc, char **argv) {
         }
         /* we are the child process */
         else if(pid == 0) {
-            logger( GM_LOG_INFO, "mod_gearman worker daemon started with pid %d\n", getpid());
+            gm_log( GM_LOG_INFO, "mod_gearman worker daemon started with pid %d\n", getpid());
 
             /* Create a new SID for the child process */
             sid = setsid();
@@ -87,7 +87,7 @@ int main (int argc, char **argv) {
             exit( EXIT_SUCCESS );
         }
     } else {
-        logger( GM_LOG_INFO, "mod_gearman worker started with pid %d\n", getpid());
+        gm_log( GM_LOG_INFO, "mod_gearman worker started with pid %d\n", getpid());
     }
 
     /* set signal handlers for a clean exit */
@@ -109,7 +109,7 @@ int main (int argc, char **argv) {
         mod_gm_opt->transportmode = GM_ENCODE_ONLY;
     }
 
-    logger( GM_LOG_DEBUG, "main process started\n");
+    gm_log( GM_LOG_DEBUG, "main process started\n");
 
     /* setup shared memory */
     setup_child_communicator();
@@ -134,7 +134,7 @@ int main (int argc, char **argv) {
         /* collect finished workers */
         while(waitpid(-1, &status, WNOHANG) > 0) {
             current_number_of_workers--;
-            logger( GM_LOG_TRACE, "waitpid() %d\n", status);
+            gm_log( GM_LOG_TRACE, "waitpid() %d\n", status);
             update_runtime_data();
         }
 
@@ -167,7 +167,7 @@ int main (int argc, char **argv) {
 int make_new_child(int mode) {
     pid_t pid = 0;
 
-    logger( GM_LOG_TRACE, "make_new_child()\n");
+    gm_log( GM_LOG_TRACE, "make_new_child()\n");
 
     /* fork a child process */
     pid=fork();
@@ -175,13 +175,13 @@ int make_new_child(int mode) {
     /* an error occurred while trying to fork */
     if(pid==-1){
         perror("fork");
-        logger( GM_LOG_ERROR, "fork error\n" );
+        gm_log( GM_LOG_ERROR, "fork error\n" );
         return GM_ERROR;
     }
 
     /* we are in the child process */
     else if(pid==0){
-        logger( GM_LOG_DEBUG, "worker started with pid: %d\n", getpid() );
+        gm_log( GM_LOG_DEBUG, "worker started with pid: %d\n", getpid() );
 
         signal(SIGUSR1, SIG_IGN);
         signal(SIGINT,  SIG_DFL);
@@ -291,13 +291,13 @@ int verify_options(mod_gm_opt_t *opt) {
 
     /* did we get any server? */
     if(opt->server_num == 0) {
-        logger( GM_LOG_ERROR, "please specify at least one server\n" );
+        gm_log( GM_LOG_ERROR, "please specify at least one server\n" );
         return(GM_ERROR);
     }
 
     /* nothing set by hand -> defaults */
     if( opt->set_queues_by_hand == 0 ) {
-        logger( GM_LOG_DEBUG, "starting client with default queues\n" );
+        gm_log( GM_LOG_DEBUG, "starting client with default queues\n" );
         opt->hosts    = GM_ENABLED;
         opt->services = GM_ENABLED;
         opt->events   = GM_ENABLED;
@@ -310,7 +310,7 @@ int verify_options(mod_gm_opt_t *opt) {
        && opt->services == GM_DISABLED
        && opt->events   == GM_DISABLED
       ) {
-        logger( GM_LOG_ERROR, "starting worker without any queues is useless\n" );
+        gm_log( GM_LOG_ERROR, "starting worker without any queues is useless\n" );
         return(GM_ERROR);
     }
 
@@ -320,7 +320,7 @@ int verify_options(mod_gm_opt_t *opt) {
     /* encryption without key? */
     if(opt->encryption == GM_ENABLED) {
         if(opt->crypt_key == NULL && opt->keyfile == NULL) {
-            logger( GM_LOG_ERROR, "no encryption key provided, please use --key=... or keyfile=... or disable encryption\n");
+            gm_log( GM_LOG_ERROR, "no encryption key provided, please use --key=... or keyfile=... or disable encryption\n");
             return(GM_ERROR);
         }
     }
@@ -367,7 +367,7 @@ void print_usage() {
 
 /* check child signal pipe */
 void check_signal(int sig) {
-    logger( GM_LOG_TRACE, "check_signal(%i)\n", sig);
+    gm_log( GM_LOG_TRACE, "check_signal(%i)\n", sig);
     update_runtime_data();
     return;
 }
@@ -379,7 +379,7 @@ void setup_child_communicator() {
     int shmid;
     int * shm;
 
-    logger( GM_LOG_TRACE, "setup_child_communicator()\n");
+    gm_log( GM_LOG_TRACE, "setup_child_communicator()\n");
 
     /* setup signal handler */
     sigfillset (&block_mask); /* block all signals */
@@ -420,7 +420,7 @@ int adjust_number_of_worker(int min, int max, int cur_workers, int cur_jobs) {
     perc_running = (int)cur_jobs*100/cur_workers;
     idle         = (int)cur_workers - cur_jobs;
 
-    logger( GM_LOG_TRACE, "adjust_number_of_worker(min %d, max %d, worker %d, jobs %d) = %d%% running\n", min, max, cur_workers, cur_jobs, perc_running);
+    gm_log( GM_LOG_TRACE, "adjust_number_of_worker(min %d, max %d, worker %d, jobs %d) = %d%% running\n", min, max, cur_workers, cur_jobs, perc_running);
 
     if(cur_workers == max)
         return max;
@@ -428,7 +428,7 @@ int adjust_number_of_worker(int min, int max, int cur_workers, int cur_jobs) {
     /* > 90% workers running */
     if(cur_jobs > 0 && ( perc_running > 90 || idle <= 2 )) {
         /* increase target number by 2 */
-        logger( GM_LOG_TRACE, "starting 2 new workers\n");
+        gm_log( GM_LOG_TRACE, "starting 2 new workers\n");
         target = cur_workers + 2;
     }
 
@@ -436,7 +436,7 @@ int adjust_number_of_worker(int min, int max, int cur_workers, int cur_jobs) {
     if(target > max) { target = max; }
 
     if(target != cur_workers)
-        logger( GM_LOG_DEBUG, "adjust_number_of_worker(min %d, max %d, worker %d, jobs %d) = %d%% running -> %d\n", min, max, cur_workers, cur_jobs, perc_running, target);
+        gm_log( GM_LOG_DEBUG, "adjust_number_of_worker(min %d, max %d, worker %d, jobs %d) = %d%% running -> %d\n", min, max, cur_workers, cur_jobs, perc_running, target);
 
     return target;
 }
@@ -444,7 +444,7 @@ int adjust_number_of_worker(int min, int max, int cur_workers, int cur_jobs) {
 
 /* do a clean exit */
 void clean_exit(int sig) {
-    logger( GM_LOG_TRACE, "clean_exit(%d)\n", sig);
+    gm_log( GM_LOG_TRACE, "clean_exit(%d)\n", sig);
 
     if(mod_gm_opt->pidfile != NULL)
         unlink(mod_gm_opt->pidfile);
@@ -458,7 +458,7 @@ void clean_exit(int sig) {
         kill(-pid, SIGKILL);
     }
 
-    logger( GM_LOG_INFO, "mod_gearman worker exited\n");
+    gm_log( GM_LOG_INFO, "mod_gearman worker exited\n");
 
     mod_gm_free_opt(mod_gm_opt);
 
@@ -481,14 +481,14 @@ void stop_childs(int mode) {
      * send term signal to our childs
      * children will finish the current job and exit
      */
-    logger( GM_LOG_TRACE, "send SIGTERM\n");
+    gm_log( GM_LOG_TRACE, "send SIGTERM\n");
     killpg(0, SIGTERM);
 
-    logger( GM_LOG_TRACE, "waiting for childs to exit...\n");
+    gm_log( GM_LOG_TRACE, "waiting for childs to exit...\n");
     while(current_number_of_workers > 0) {
         while((chld = waitpid(-1, &status, WNOHANG)) != -1 && chld > 0) {
             current_number_of_workers--;
-            logger( GM_LOG_TRACE, "wait() %d exited with %d\n", chld, status);
+            gm_log( GM_LOG_TRACE, "wait() %d exited with %d\n", chld, status);
             /* start one worker less than exited, because of the status worker */
             if(skipfirst == 0 && mode == GM_WORKER_RESTART) {
                 make_new_child(GM_WORKER_MULTI);
@@ -500,18 +500,18 @@ void stop_childs(int mode) {
         if(waited > GM_CHILD_SHUTDOWN_TIMEOUT) {
             break;
         }
-        logger( GM_LOG_TRACE, "still waiting (%d)...\n", waited);
+        gm_log( GM_LOG_TRACE, "still waiting (%d)...\n", waited);
     }
 
     if(mode == GM_WORKER_STOP) {
         if(current_number_of_workers > 0) {
-            logger( GM_LOG_TRACE, "sending SIGINT...\n");
+            gm_log( GM_LOG_TRACE, "sending SIGINT...\n");
             killpg(0, SIGINT);
         }
 
         while((chld = waitpid(-1, &status, WNOHANG)) != -1 && chld > 0) {
             current_number_of_workers--;
-            logger( GM_LOG_TRACE, "wait() %d exited with %d\n", chld, status);
+            gm_log( GM_LOG_TRACE, "wait() %d exited with %d\n", chld, status);
         }
 
         /*
@@ -524,11 +524,11 @@ void stop_childs(int mode) {
         if( shmctl( shmid, IPC_RMID, 0 ) == -1 ) {
             perror("shmctl");
         }
-        logger( GM_LOG_TRACE, "shared memory deleted\n");
+        gm_log( GM_LOG_TRACE, "shared memory deleted\n");
 
         if(current_number_of_workers > 0) {
             /* this will kill us too */
-            logger( GM_LOG_TRACE, "sending SIGKILL...\n");
+            gm_log( GM_LOG_TRACE, "sending SIGKILL...\n");
             killpg(0, SIGKILL);
         }
     }
@@ -557,19 +557,19 @@ int write_pid_file() {
                 perror("fgets");
             fclose(fp);
             pid = trim(pid);
-            logger( GM_LOG_INFO, "found pid file for: %s\n", pid);
+            gm_log( GM_LOG_INFO, "found pid file for: %s\n", pid);
             snprintf(pid_path, GM_BUFFERSIZE, "/proc/%s/status", pid);
             free(pid);
             if(file_exists(pid_path)) {
-                logger( GM_LOG_INFO, "pidfile already exists, cannot start!\n");
+                gm_log( GM_LOG_INFO, "pidfile already exists, cannot start!\n");
                 return(GM_ERROR);
             } else {
-                logger( GM_LOG_INFO, "removed stale pidfile\n");
+                gm_log( GM_LOG_INFO, "removed stale pidfile\n");
                 unlink(mod_gm_opt->pidfile);
             }
         } else {
             perror(mod_gm_opt->pidfile);
-            logger( GM_LOG_INFO, "cannot read pidfile\n");
+            gm_log( GM_LOG_INFO, "cannot read pidfile\n");
             return(GM_ERROR);
         }
     }
@@ -578,13 +578,13 @@ int write_pid_file() {
     fp = fopen(mod_gm_opt->pidfile,"w+");
     if(fp == NULL) {
         perror(mod_gm_opt->pidfile);
-        logger( GM_LOG_ERROR, "cannot write pidfile\n");
+        gm_log( GM_LOG_ERROR, "cannot write pidfile\n");
         return(GM_ERROR);
     }
 
     fprintf(fp, "%d\n", getpid());
     fclose(fp);
-    logger( GM_LOG_DEBUG, "pid file %s written\n", mod_gm_opt->pidfile );
+    gm_log( GM_LOG_DEBUG, "pid file %s written\n", mod_gm_opt->pidfile );
     return GM_OK;
 }
 
@@ -599,9 +599,9 @@ int store_original_comandline(int argc, char **argv) {
 
 /* try to reload the config */
 void reload_config(int sig) {
-    logger( GM_LOG_TRACE, "reload_config(%d)\n", sig);
+    gm_log( GM_LOG_TRACE, "reload_config(%d)\n", sig);
     if(parse_arguments(orig_argc, orig_argv) != GM_OK) {
-        logger( GM_LOG_ERROR, "reload config failed, check your config\n");
+        gm_log( GM_LOG_ERROR, "reload config failed, check your config\n");
         return;
     }
 
@@ -615,7 +615,7 @@ void reload_config(int sig) {
     /* start status worker */
     make_new_child(GM_WORKER_STATUS);
 
-    logger( GM_LOG_INFO, "reloading config was successful\n");
+    gm_log( GM_LOG_INFO, "reloading config was successful\n");
 
     return;
 }
@@ -626,7 +626,7 @@ void update_runtime_data() {
     int shmid;
     int *shm;
 
-    logger( GM_LOG_TRACE, "update_worker_num()\n");
+    gm_log( GM_LOG_TRACE, "update_worker_num()\n");
 
     /* Locate the segment. */
     if ((shmid = shmget(mod_gm_shm_key, GM_SHM_SIZE, 0600)) < 0) {
@@ -640,7 +640,7 @@ void update_runtime_data() {
         exit(1);
     }
 
-    logger( GM_LOG_TRACE, "update_runtime_data: %i\n", shm[0]);
+    gm_log( GM_LOG_TRACE, "update_runtime_data: %i\n", shm[0]);
     current_number_of_jobs = shm[0];
     shm[1] = current_number_of_workers;
 

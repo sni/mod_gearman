@@ -57,8 +57,8 @@
 #define GM_DEFAULT_JOB_RETRIES          1
 #define GM_CHILD_SHUTDOWN_TIMEOUT       5
 #define GM_DEFAULT_RESULT_QUEUE  "check_results"
-#define GM_DEFAULT_IDLE_TIMEOUT        30
-#define GM_DEFAULT_MAX_JOBS            50
+#define GM_DEFAULT_IDLE_TIMEOUT        10
+#define GM_DEFAULT_MAX_JOBS            20
 #define MAX_CMD_ARGS                 4096
 
 /* worker */
@@ -156,7 +156,7 @@ typedef struct mod_gm_opt_struct {
  * logger is then defined in worker_logger.c
  * and the neb logger in logger.c
  */
-void logger( int lvl, const char *text, ... );
+void gm_log( int lvl, const char *text, ... );
 
 
 #endif

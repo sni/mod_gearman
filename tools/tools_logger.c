@@ -27,7 +27,7 @@
 
 struct tm now;
 
-void logger( int lvl, const char *text, ... ) {
+void gm_log( int lvl, const char *text, ... ) {
     FILE * fp       = NULL;
     int debug_level = GM_LOG_ERROR;
     char buffer[GM_BUFFERSIZE];

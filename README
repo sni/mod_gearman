@@ -275,6 +275,13 @@ perfdata:           defines if the module should distribute perfdata
                     queue.
 
                     Example: perfdata=yes
+
+result_queue:       sets the result queue. Necessary when putting jobs
+                    from several nagios instances into the same
+                    gearman queues.
+                    Default: check_results
+
+                    Example: result_queue=check_results_nagios1
 .......
 
 
@@ -317,18 +324,19 @@ max-worker:         Maximum number of worker processes which should
                     Example: max-worker=20
 
 
-idle-timeout:       Time after which an idling worker exists
-                    This parameter controls how fast your waiting
-                    workers will exit if there are no jobs waiting.
-                    Default: 30
+idle-timeout:       Time after which an idling worker exists.  This
+                    parameter controls how fast your waiting workers
+                    will exit if there are no jobs waiting.i
+                    Default: 10
 
                     Example: idle-timeout=30
 
 
-max-jobs:           Controls the amount of jobs a worker will do before he exits
-                    Use this to control how fast the amount of workers will go down
-                    after high load times.
-                    Default: 50
+max-jobs:           Controls the amount of jobs a worker will do
+                    before he exits.  Use this to control how fast the
+                    amount of workers will go down after high load
+                    times.
+                    Default: 20
 
                     Example: max-jobs=50
 .......

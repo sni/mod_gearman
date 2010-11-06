@@ -25,9 +25,7 @@
 #include "worker.h"
 #include "worker_logger.h"
 
-struct tm now;
-
-void logger( int lvl, const char *text, ... ) {
+void gm_log( int lvl, const char *text, ... ) {
     FILE * fp       = NULL;
     int debug_level = GM_LOG_ERROR;
     char buffer[GM_BUFFERSIZE];
@@ -35,6 +33,7 @@ void logger( int lvl, const char *text, ... ) {
     char buffer2[GM_BUFFERSIZE];
     time_t t;
     va_list ap;
+    struct tm now;
 
     if(mod_gm_opt != NULL) {
         debug_level = mod_gm_opt->debug_level;
@@ -59,7 +58,7 @@ void logger( int lvl, const char *text, ... ) {
     else
         level = "UNKNO";
 
-    now = *(localtime(&t));
+    localtime_r(&t, &now);
 
     strftime(buffer, sizeof(buffer), "[%Y-%m-%d %H:%M:%S]", &now );
 

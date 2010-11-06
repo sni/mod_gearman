@@ -23,9 +23,9 @@
 
 #include "common.h"
 #include "mod_gearman.h"
-#include "logger.h"
+#include "gm_log.h"
 
-void logger( int lvl, const char *text, ... ) {
+void gm_log( int lvl, const char *text, ... ) {
     char buffer[GM_BUFFERSIZE];
     va_list ap;
 

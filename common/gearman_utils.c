@@ -88,10 +88,10 @@ int get_gearman_server_data(mod_gm_server_status_t *stats, char ** message, char
     output = strdup(buf);
     output_c = output;
     while ( (line = strsep( &output, "\n" )) != NULL ) {
-        logger( GM_LOG_TRACE, "%s\n", line );
+        gm_log( GM_LOG_TRACE, "%s\n", line );
         if(!strcmp( line, ".")) {
             if((line = strsep( &output, "\n" )) != NULL) {
-                logger( GM_LOG_TRACE, "%s\n", line );
+                gm_log( GM_LOG_TRACE, "%s\n", line );
                 snprintf(*version, GM_BUFFERSIZE, "%s", line);
             }
 
@@ -128,7 +128,7 @@ int get_gearman_server_data(mod_gm_server_status_t *stats, char ** message, char
         }
 
         stats->function[stats->function_num++] = func;
-        logger( GM_LOG_DEBUG, "%i: name:%-20s worker:%-5i waiting:%-5i running:%-5i\n", stats->function_num, func->queue, func->worker, func->waiting, func->running );
+        gm_log( GM_LOG_DEBUG, "%i: name:%-20s worker:%-5i waiting:%-5i running:%-5i\n", stats->function_num, func->queue, func->worker, func->waiting, func->running );
     }
 
     snprintf(*message, GM_BUFFERSIZE, "got no valid data from %s:%i\n", hostname, (int)port);

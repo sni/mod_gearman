@@ -175,7 +175,7 @@ int send_result() {
     char temp_buffer2[GM_BUFFERSIZE];
     int size;
 
-    logger( GM_LOG_TRACE, "send_result()\n" );
+    gm_log( GM_LOG_TRACE, "send_result()\n" );
 
     gettimeofday(&now, NULL);
     if(mod_gm_opt->starttime.tv_sec == 0)
@@ -212,7 +212,7 @@ int send_result() {
     snprintf(mod_gm_opt->message, GM_BUFFERSIZE, "%s", buf);
     free(buf);
 
-    logger( GM_LOG_TRACE, "queue: %s\n", mod_gm_opt->result_queue );
+    gm_log( GM_LOG_TRACE, "queue: %s\n", mod_gm_opt->result_queue );
     temp_buffer1[0]='\x0';
     snprintf( temp_buffer1, sizeof( temp_buffer1 )-1, "type=%s\nhost_name=%s\nstart_time=%i.%i\nfinish_time=%i.%i\nlatency=%i.%i\nreturn_code=%i\n",
               mod_gm_opt->active == GM_ENABLED ? "active" : "passive",
@@ -243,7 +243,7 @@ int send_result() {
     }
     strncat(temp_buffer1, "\n", (sizeof(temp_buffer1)-2));
 
-    logger( GM_LOG_TRACE, "data:\n%s\n", temp_buffer1);
+    gm_log( GM_LOG_TRACE, "data:\n%s\n", temp_buffer1);
 
     if(add_job_to_queue( &client,
                          mod_gm_opt->server_list,
@@ -254,10 +254,10 @@ int send_result() {
                          GM_DEFAULT_JOB_RETRIES,
                          mod_gm_opt->transportmode
                         ) == GM_OK) {
-        logger( GM_LOG_TRACE, "send_result_back() finished successfully\n" );
+        gm_log( GM_LOG_TRACE, "send_result_back() finished successfully\n" );
     }
     else {
-        logger( GM_LOG_TRACE, "send_result_back() finished unsuccessfully\n" );
+        gm_log( GM_LOG_TRACE, "send_result_back() finished unsuccessfully\n" );
         return(GM_ERROR);
     }
     return(GM_OK);
@@ -266,7 +266,7 @@ int send_result() {
 
 /* called when check runs into timeout */
 void alarm_sighandler(int sig) {
-    logger( GM_LOG_TRACE, "alarm_sighandler(%i)\n", sig );
+    gm_log( GM_LOG_TRACE, "alarm_sighandler(%i)\n", sig );
 
     printf("got no input! Either send plugin output to stdin or use --message=...\n");
 

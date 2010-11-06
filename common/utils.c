@@ -22,7 +22,7 @@
  *****************************************************************************/
 
 #include "utils.h"
-#include "logger.h"
+#include "gm_log.h"
 #include "crypt.h"
 #include "base64.h"
 
@@ -81,7 +81,7 @@ int real_exit_code(int code) {
 /* initialize encryption */
 void mod_gm_crypt_init(char * key) {
     if(strlen(key) < 8) {
-        logger( GM_LOG_INFO, "encryption key should be at least 8 bytes!\n" );
+        gm_log( GM_LOG_INFO, "encryption key should be at least 8 bytes!\n" );
     }
     mod_gm_aes_init(key);
     return;
@@ -276,7 +276,7 @@ int parse_args_line(mod_gm_opt_t *opt, char * arg, int recursion_level) {
     char *key;
     char *value;
 
-    logger( GM_LOG_TRACE, "parse_args_line(%s, %d)\n", arg, recursion_level);
+    gm_log( GM_LOG_TRACE, "parse_args_line(%s, %d)\n", arg, recursion_level);
 
     key   = strsep( &arg, "=" );
     value = strsep( &arg, "\x0" );
@@ -570,10 +570,10 @@ int read_config_file(mod_gm_opt_t *opt, char*filename, int recursion_level) {
     char *line;
     char *line_c;
 
-    logger( GM_LOG_TRACE, "read_config_file(%s, %d)\n", filename, recursion_level );
+    gm_log( GM_LOG_TRACE, "read_config_file(%s, %d)\n", filename, recursion_level );
 
     if(recursion_level > 10) {
-        logger( GM_LOG_ERROR, "deep recursion in config files!\n" );
+        gm_log( GM_LOG_ERROR, "deep recursion in config files!\n" );
         return GM_ERROR;
     }
     fp = fopen(filename, "r");
@@ -612,66 +612,66 @@ int read_config_file(mod_gm_opt_t *opt, char*filename, int recursion_level) {
 /* dump config */
 void dumpconfig(mod_gm_opt_t *opt, int mode) {
     int i=0;
-    logger( GM_LOG_DEBUG, "--------------------------------\n" );
-    logger( GM_LOG_DEBUG, "configuration:\n" );
-    logger( GM_LOG_DEBUG, "log level:           %d\n", opt->debug_level);
+    gm_log( GM_LOG_DEBUG, "--------------------------------\n" );
+    gm_log( GM_LOG_DEBUG, "configuration:\n" );
+    gm_log( GM_LOG_DEBUG, "log level:           %d\n", opt->debug_level);
     if(mode == GM_WORKER_MODE) {
-        logger( GM_LOG_DEBUG, "identifier:          %s\n", opt->identifier);
-        logger( GM_LOG_DEBUG, "pidfile:             %s\n", opt->pidfile == NULL ? "no" : opt->pidfile);
-        logger( GM_LOG_DEBUG, "logfile:             %s\n", opt->logfile == NULL ? "no" : opt->logfile);
-        logger( GM_LOG_DEBUG, "job max age:         %d\n", opt->max_age);
-        logger( GM_LOG_DEBUG, "job timeout:         %d\n", opt->job_timeout);
-        logger( GM_LOG_DEBUG, "min worker:          %d\n", opt->min_worker);
-        logger( GM_LOG_DEBUG, "max worker:          %d\n", opt->max_worker);
-        logger( GM_LOG_DEBUG, "fork on exec:        %s\n", opt->fork_on_exec == GM_ENABLED ? "yes" : "no");
+        gm_log( GM_LOG_DEBUG, "identifier:          %s\n", opt->identifier);
+        gm_log( GM_LOG_DEBUG, "pidfile:             %s\n", opt->pidfile == NULL ? "no" : opt->pidfile);
+        gm_log( GM_LOG_DEBUG, "logfile:             %s\n", opt->logfile == NULL ? "no" : opt->logfile);
+        gm_log( GM_LOG_DEBUG, "job max age:         %d\n", opt->max_age);
+        gm_log( GM_LOG_DEBUG, "job timeout:         %d\n", opt->job_timeout);
+        gm_log( GM_LOG_DEBUG, "min worker:          %d\n", opt->min_worker);
+        gm_log( GM_LOG_DEBUG, "max worker:          %d\n", opt->max_worker);
+        gm_log( GM_LOG_DEBUG, "fork on exec:        %s\n", opt->fork_on_exec == GM_ENABLED ? "yes" : "no");
     }
     if(mode == GM_NEB_MODE) {
-        logger( GM_LOG_DEBUG, "debug result:        %s\n", opt->debug_result == GM_ENABLED ? "yes" : "no");
-        logger( GM_LOG_DEBUG, "result_worker:       %d\n", opt->result_workers);
+        gm_log( GM_LOG_DEBUG, "debug result:        %s\n", opt->debug_result == GM_ENABLED ? "yes" : "no");
+        gm_log( GM_LOG_DEBUG, "result_worker:       %d\n", opt->result_workers);
     }
     if(mode == GM_NEB_MODE || mode == GM_SEND_GEARMAN_MODE) {
-        logger( GM_LOG_DEBUG, "result_queue:        %s\n", opt->result_queue);
+        gm_log( GM_LOG_DEBUG, "result_queue:        %s\n", opt->result_queue);
     }
-    logger( GM_LOG_DEBUG, "\n" );
+    gm_log( GM_LOG_DEBUG, "\n" );
 
     /* server && queues */
     for(i=0;i<opt->server_num;i++)
-        logger( GM_LOG_DEBUG, "server:              %s\n", opt->server_list[i]);
-    logger( GM_LOG_DEBUG, "\n" );
+        gm_log( GM_LOG_DEBUG, "server:              %s\n", opt->server_list[i]);
+    gm_log( GM_LOG_DEBUG, "\n" );
     if(mode == GM_NEB_MODE) {
-        logger( GM_LOG_DEBUG, "perfdata:            %s\n", opt->perfdata     == GM_ENABLED ? "yes" : "no");
+        gm_log( GM_LOG_DEBUG, "perfdata:            %s\n", opt->perfdata     == GM_ENABLED ? "yes" : "no");
     }
     if(mode == GM_NEB_MODE || mode == GM_WORKER_MODE) {
-        logger( GM_LOG_DEBUG, "hosts:               %s\n", opt->hosts        == GM_ENABLED ? "yes" : "no");
-        logger( GM_LOG_DEBUG, "services:            %s\n", opt->services     == GM_ENABLED ? "yes" : "no");
-        logger( GM_LOG_DEBUG, "eventhandler:        %s\n", opt->events       == GM_ENABLED ? "yes" : "no");
+        gm_log( GM_LOG_DEBUG, "hosts:               %s\n", opt->hosts        == GM_ENABLED ? "yes" : "no");
+        gm_log( GM_LOG_DEBUG, "services:            %s\n", opt->services     == GM_ENABLED ? "yes" : "no");
+        gm_log( GM_LOG_DEBUG, "eventhandler:        %s\n", opt->events       == GM_ENABLED ? "yes" : "no");
         for(i=0;i<opt->hostgroups_num;i++)
-            logger( GM_LOG_DEBUG, "hostgroups:          %s\n", opt->hostgroups_list[i]);
+            gm_log( GM_LOG_DEBUG, "hostgroups:          %s\n", opt->hostgroups_list[i]);
         for(i=0;i<opt->servicegroups_num;i++)
-            logger( GM_LOG_DEBUG, "servicegroups:       %s\n", opt->servicegroups_list[i]);
+            gm_log( GM_LOG_DEBUG, "servicegroups:       %s\n", opt->servicegroups_list[i]);
     }
 
     if(mode == GM_NEB_MODE) {
         for(i=0;i<opt->local_hostgroups_num;i++)
-            logger( GM_LOG_DEBUG, "local_hostgroups: %s\n", opt->local_hostgroups_list[i]);
+            gm_log( GM_LOG_DEBUG, "local_hostgroups: %s\n", opt->local_hostgroups_list[i]);
         for(i=0;i<opt->local_servicegroups_num;i++)
-            logger( GM_LOG_DEBUG, "local_servicegroups:      %s\n", opt->local_servicegroups_list[i]);
+            gm_log( GM_LOG_DEBUG, "local_servicegroups:      %s\n", opt->local_servicegroups_list[i]);
     }
 
     /* encryption */
-    logger( GM_LOG_DEBUG, "\n" );
-    logger( GM_LOG_DEBUG, "encryption:          %s\n", opt->encryption == GM_ENABLED ? "yes" : "no");
+    gm_log( GM_LOG_DEBUG, "\n" );
+    gm_log( GM_LOG_DEBUG, "encryption:          %s\n", opt->encryption == GM_ENABLED ? "yes" : "no");
     if(opt->encryption == GM_ENABLED) {
-        logger( GM_LOG_DEBUG, "keyfile:             %s\n", opt->keyfile == NULL ? "no" : opt->keyfile);
+        gm_log( GM_LOG_DEBUG, "keyfile:             %s\n", opt->keyfile == NULL ? "no" : opt->keyfile);
         if(opt->crypt_key != NULL) {
-            logger( GM_LOG_DEBUG, "encryption key:      set\n" );
+            gm_log( GM_LOG_DEBUG, "encryption key:      set\n" );
         } else {
-            logger( GM_LOG_DEBUG, "encryption key:      not set\n" );
+            gm_log( GM_LOG_DEBUG, "encryption key:      not set\n" );
         }
     }
-    logger( GM_LOG_DEBUG, "transport mode:      %s\n", opt->encryption == GM_ENABLED ? "aes-256+base64" : "base64 only");
+    gm_log( GM_LOG_DEBUG, "transport mode:      %s\n", opt->encryption == GM_ENABLED ? "aes-256+base64" : "base64 only");
 
-    logger( GM_LOG_DEBUG, "--------------------------------\n" );
+    gm_log( GM_LOG_DEBUG, "--------------------------------\n" );
     return;
 }
 
@@ -894,18 +894,18 @@ int run_check(char *processed_command, char **ret) {
 
     /* check for check execution method (shell or execvp) */
     if(!strpbrk(processed_command,"!$^&*()~[]|{};<>?`\"'")) {
-        logger( GM_LOG_TRACE, "using execvp\n" );
+        gm_log( GM_LOG_TRACE, "using execvp\n" );
         if(pipe(pipefds)) {
-            logger( GM_LOG_ERROR, "error creating pipe: %s\n", strerror(errno));
+            gm_log( GM_LOG_ERROR, "error creating pipe: %s\n", strerror(errno));
             _exit(STATE_UNKNOWN);
         }
         if((pid=fork())<0){
-            logger( GM_LOG_ERROR, "fork error\n");
+            gm_log( GM_LOG_ERROR, "fork error\n");
             _exit(STATE_UNKNOWN);
         }
         else if(!pid){
             if((dup2(pipefds[1],STDOUT_FILENO)<0)||(dup2(pipefds[1],STDERR_FILENO)<0)){
-                logger( GM_LOG_ERROR, "dup2 error\n");
+                gm_log( GM_LOG_ERROR, "dup2 error\n");
                 _exit(STATE_UNKNOWN);
             }
             close(pipefds[1]);
@@ -920,7 +920,7 @@ int run_check(char *processed_command, char **ret) {
         close(pipefds[1]);
         fp=fdopen(pipefds[0],"r");
         if(!fp){
-            logger( GM_LOG_ERROR, "fdopen error\n");
+            gm_log( GM_LOG_ERROR, "fdopen error\n");
             _exit(STATE_UNKNOWN);
         }
 
@@ -934,7 +934,7 @@ int run_check(char *processed_command, char **ret) {
             retval=-1;
     }
     else {
-        logger( GM_LOG_TRACE, "using popen\n" );
+        gm_log( GM_LOG_TRACE, "using popen\n" );
         fp=popen(processed_command,"r");
         if(fp==NULL)
             _exit(STATE_UNKNOWN);

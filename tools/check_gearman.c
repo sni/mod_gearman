@@ -180,7 +180,7 @@ void print_usage() {
 
 /* called when check runs into timeout */
 void alarm_sighandler(int sig) {
-    logger( GM_LOG_TRACE, "alarm_sighandler(%i)\n", sig );
+    gm_log( GM_LOG_TRACE, "alarm_sighandler(%i)\n", sig );
 
     printf("timeout while waiting for %s\n", opt_server);
 
