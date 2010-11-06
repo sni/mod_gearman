@@ -19,5 +19,6 @@ mod_gearman_worker
 02_full
 images
 send_gearman
+send_multi
 check_gearman
 gearman_top
