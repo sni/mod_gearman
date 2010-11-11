@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <pthread.h>
 #include <signal.h>
 #include <sys/wait.h>
 #include <sys/time.h>
@@ -24,22 +23,19 @@ mod_gm_opt_t *mod_gm_opt;
 
 /* start the gearmand server */
 void *start_gearmand(void*data) {
+    int sid;
     data = data; // warning: unused parameter 'data'
-    pthread_setcancelstate( PTHREAD_CANCEL_ENABLE, NULL );
-    pthread_setcanceltype( PTHREAD_CANCEL_ASYNCHRONOUS, NULL );
     pid_t pid = fork();
     if(pid == 0) {
+        sid = setsid();
         char port[30];
         snprintf(port, 30, "-p %d", GEARMAND_TEST_PORT);
         execlp("gearmand", "-t 10", "-j 0", port, (char *)NULL);
         perror("gearmand");
-        return NULL;
+        exit(1);
     }
     else {
         gearmand_pid = pid;
-        int status;
-        waitpid(pid, &status, 0);
-        ok(status == 0, "gearmand exited with exit code %d", real_exit_code(status));
     }
     return NULL;
 }
@@ -47,11 +43,11 @@ void *start_gearmand(void*data) {
 
 /* start the test worker */
 void *start_worker(void*data) {
+    int sid;
     char* key = (char*)data;
-    pthread_setcancelstate( PTHREAD_CANCEL_ENABLE, NULL );
-    pthread_setcanceltype( PTHREAD_CANCEL_ASYNCHRONOUS, NULL );
     pid_t pid = fork();
     if(pid == 0) {
+        sid = setsid();
         char options[150];
         snprintf(options, 150, "server=localhost:%d", GEARMAND_TEST_PORT);
         if(key != NULL) {
@@ -62,13 +58,10 @@ void *start_worker(void*data) {
             execl("./mod_gearman_worker", "debug=0", "encryption=no", "logfile=/dev/null", "max-worker=1", options, (char *)NULL);
         }
         perror("mod_gearman_worker");
-        return NULL;
+        exit(1);
     }
     else {
         worker_pid = pid;
-        int status;
-        waitpid(pid, &status, 0);
-        ok(status == 0, "worker exited with exit code %d", real_exit_code(status));
     }
     return NULL;
 }
@@ -120,7 +113,8 @@ void create_modules() {
 
 /* main tests */
 int main(void) {
-    int tests = 19;
+    int status;
+    int tests = 25;
     plan_tests(tests);
 
     mod_gm_opt = malloc(sizeof(mod_gm_opt_t));
@@ -132,10 +126,8 @@ int main(void) {
     mod_gm_opt->debug_level = GM_LOG_ERROR;
 
     /* first fire up a gearmand server and one worker */
-    pthread_t gearmand_thread;
-    pthread_create( &gearmand_thread, NULL, start_gearmand, (void *)NULL);
-    pthread_t worker_thread;
-    pthread_create( &worker_thread, NULL, start_worker, (void *)NULL);
+    start_gearmand((void*)NULL);
+    start_worker((void*)NULL);
 
     sleep(1);
     if(!ok(gearmand_pid > 0, "gearmand running with pid: %d", gearmand_pid))
@@ -161,11 +153,15 @@ int main(void) {
         "me make you loooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooong key"
     };
 
+    /* ignore some signals for now */
+    signal(SIGTERM, SIG_IGN);
+
     int i;
     for(i=0;i<4;i++) {
-        pthread_cancel(worker_thread);
-        pthread_join(worker_thread, NULL);
-        pthread_create( &worker_thread, NULL, start_worker, (void *)test_keys[i]);
+        kill(worker_pid, SIGTERM);
+        waitpid(worker_pid, &status, 0);
+        ok(status == 0, "worker exited with exit code %d", real_exit_code(status));
+        start_worker((void *)test_keys[i]);
         sleep(1);
 
         mod_gm_crypt_init( test_keys[i] );
@@ -179,11 +175,15 @@ int main(void) {
     mod_gm_free_opt(mod_gm_opt);
     free_client(&client);
     free_worker(&worker);
+
     kill(gearmand_pid, SIGTERM);
+    waitpid(gearmand_pid, &status, 0);
+    ok(status == 0, "gearmand exited with exit code %d", real_exit_code(status));
+
+    kill(worker_pid, SIGTERM);
+    waitpid(worker_pid, &status, 0);
+    ok(status == 0, "worker exited with exit code %d", real_exit_code(status));
+
     skip_end;
-    pthread_cancel(gearmand_thread);
-    pthread_join(gearmand_thread, NULL);
-    pthread_cancel(worker_thread);
-    pthread_join(worker_thread, NULL);
     return exit_status();
 }
