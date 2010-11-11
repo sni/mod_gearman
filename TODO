@@ -6,11 +6,10 @@ General
 -------
 
  - handle sync host checks correctly
- - add example configs for standalone worker
 
 Bugs
 ----
- none known
+ - none known
 
 WISH LIST
 =========
