@@ -63,6 +63,7 @@ int main (int argc, char **argv) {
        otherwise its an error code (-1 - WARNING, -2 - CRITICAL, -3 - UNKNOWN) */
     if (rc >= 0) {
 	    gm_log( GM_LOG_INFO, "%d check_multi child check%s submitted\n", rc, (rc>1)?"s":"" );
+       rc=0; /* OK */
     } else {
 	    rc*=-1;
     }
