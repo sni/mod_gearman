@@ -326,7 +326,7 @@ max-worker:         Maximum number of worker processes which should
 
 idle-timeout:       Time after which an idling worker exists.  This
                     parameter controls how fast your waiting workers
-                    will exit if there are no jobs waiting.i
+                    will exit if there are no jobs waiting.
                     Default: 10
 
                     Example: idle-timeout=30

@@ -1,6 +1,6 @@
 Name:          mod_gearman
-Version:       0.7
-Release:       2
+Version:       0.8
+Release:       3
 License:       GNU Public License version 2
 Packager:      Olivier Raginel <babar@cern.ch>
 Vendor:        Icinga team
