@@ -1,6 +1,6 @@
 This file documents the revision history for mod_gearman.
 
-0.8    
+0.8    Wed Nov 17 14:11:54 CET 2010
           - added send_multi (Matthias Flacke)
           - fixed checks with popen/exec
 
