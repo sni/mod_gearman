@@ -10,6 +10,12 @@ gearman servers.  The counterpart is one or more worker clients for
 the checks itself. They can be bound to host and servicegroups.
 
 
+Support & Questions
+-------------------
+Please use the following google groups mailinglist for support or
+questions: https://groups.google.com/group/mod_gearman
+
+
 How does it work
 ----------------
 When the broker module is loaded, it captures all servicecheck,
@@ -326,7 +332,7 @@ max-worker:         Maximum number of worker processes which should
 
 idle-timeout:       Time after which an idling worker exists.  This
                     parameter controls how fast your waiting workers
-                    will exit if there are no jobs waiting.i
+                    will exit if there are no jobs waiting.
                     Default: 10
 
                     Example: idle-timeout=30

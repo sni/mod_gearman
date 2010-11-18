@@ -569,6 +569,11 @@ gearman servers.  The counterpart is one or more worker clients for
 the checks itself. They can be bound to host and servicegroups.</p></div>
 </div>
 </div>
+<h2 id="_support_amp_questions">Support &amp; Questions</h2>
+<div class="sectionbody">
+<div class="paragraph"><p>Please use the following google groups mailinglist for support or
+questions: <a href="https://groups.google.com/group/mod_gearman">https://groups.google.com/group/mod_gearman</a></p></div>
+</div>
 <h2 id="_how_does_it_work">How does it work</h2>
 <div class="sectionbody">
 <div class="paragraph"><p>When the broker module is loaded, it captures all servicecheck,
@@ -1098,7 +1103,7 @@ is needed.</p></div>
 <div class="exampleblock-content">
 <div class="literalblock">
 <div class="content">
-<pre><tt>broker=/usr/local/share/nagios/mod_gearman.o keyfile=/usr/local/share/nagios/secret.txt server=localhost eventhandler=yes hosts=yes services=yes</tt></pre>
+<pre><tt>broker_module=/usr/local/share/nagios/mod_gearman.o keyfile=/usr/local/share/nagios/secret.txt server=localhost eventhandler=yes hosts=yes services=yes</tt></pre>
 </div></div>
 </div></div>
 <div class="paragraph"><p>See the following list for a detailed explaination of available
@@ -1265,7 +1270,7 @@ max-worker:         Maximum number of worker processes which should
 
 idle-timeout:       Time after which an idling worker exists.  This
                     parameter controls how fast your waiting workers
-                    will exit if there are no jobs waiting.i
+                    will exit if there are no jobs waiting.
                     Default: 10
 
                     Example: idle-timeout=30
@@ -2112,30 +2117,24 @@ check would do.</p></div>
 </div>
 <h2 id="_how_to_submit_check_multi_results">How to Submit check_multi Results</h2>
 <div class="sectionbody">
-<div class="para"><p>
-check_multi is a plugin which executes multiple child checks. 
-See more details about the feed_passive mode at: 
-<a href="http://www.my-plugin.de/wiki/projects/check_multi/feed_passive">http://www.my-plugin.de/wiki/projects/check_multi/feed_passive</a>
-You can pass such child checks to Nagios via the mod_gearman
-neb module: 
-</p></div>
+<div class="paragraph"><p>check_multi is a plugin which executes multiple child checks.
+See more details about the feed_passive mode at:
+<a href="http://www.my-plugin.de/wiki/projects/check_multi/feed_passive">http://www.my-plugin.de/wiki/projects/check_multi/feed_passive</a></p></div>
+<div class="paragraph"><p>You can pass such child checks to Nagios via the mod_gearman
+neb module:</p></div>
 <div class="literalblock">
 <div class="content">
-<pre><tt>
- %&gt; check_multi -f multi.cmd -r 256 | ./send_multi --server=&lt;job server&gt; --encryption=no --host="&lt;hostname&gt;" --service="&lt;service&gt;"
-</tt></pre>
+<pre><tt> %&gt; check_multi -f multi.cmd -r 256 | ./send_multi --server=&lt;job server&gt; --encryption=no --host="&lt;hostname&gt;" --service="&lt;service&gt;"</tt></pre>
 </div></div>
-<div class="para"><p>
-If you want to use only check_multi and no other workers, you can achieve this with the following neb module settings:
+<div class="paragraph"><p>If you want to use only check_multi and no other workers, you can
+achieve this with the following neb module settings:</p></div>
 <div class="literalblock">
 <div class="content">
-<pre><tt>
- broker_module=/usr/local/share/nagios/mod_gearman.o server=localhost encryption=no eventhandler=no hosts=no services=no hostgroups=does_not_exist
- </tt></pre>
+<pre><tt>broker_module=/usr/local/share/nagios/mod_gearman.o server=localhost encryption=no eventhandler=no hosts=no services=no hostgroups=does_not_exist</tt></pre>
 </div></div>
-<div class="para"><p>
-Note: encryption is not necessary if you both run the check_multi checks on one host.
-</p></div>
+<div class="paragraph"><p>Note: encryption is not necessary if you both run the check_multi checks
+and the nagios check_results queue on the same server.</p></div>
+</div>
 <h2 id="_what_about_notifications">What About Notifications</h2>
 <div class="sectionbody">
 <div class="paragraph"><p>Notifications are very difficult to distribute. And i think its not
@@ -2185,7 +2184,7 @@ If you have some checks which should not run parallel, just setup a
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2010-11-04 20:48:04 CEST
+Last updated 2010-11-18 09:28:14 CEST
 </div>
 </div>
 </body>
