@@ -10,6 +10,12 @@ gearman servers.  The counterpart is one or more worker clients for
 the checks itself. They can be bound to host and servicegroups.
 
 
+Support & Questions
+-------------------
+Please use the following google groups mailinglist for support or
+questions: https://groups.google.com/group/mod_gearman
+
+
 How does it work
 ----------------
 When the broker module is loaded, it captures all servicecheck,
