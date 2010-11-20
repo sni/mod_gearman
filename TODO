@@ -6,6 +6,7 @@ General
 -------
 
  - handle sync host checks correctly
+ - use libmcrypt for encryption
 
 Bugs
 ----
