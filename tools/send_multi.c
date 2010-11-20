@@ -275,8 +275,6 @@ int read_multi_stream(FILE *stream) {
 	char *bufend=NULL;
 	int count=0;
 
-	//char outbuf[GM_BUFFERSIZE+1];
-
 	do {
 		/* opening tag <CHILD> found? read from buffer start with maximum buffer len */
 		if ((bufstart=(char *)memmem(buffer,buflen,"<CHILD>",strlen("<CHILD>"))) != NULL) { 
@@ -374,8 +372,13 @@ int read_child_check(char *bufstart, char *bufend) {
 	if ((attribute=read_multi_attribute(bufstart,bufend,"starttime")) == NULL) {
 		return 0;
 	} else {
-		mod_gm_opt->starttime.tv_sec=atoi(strtok(attribute, "."));
-		mod_gm_opt->starttime.tv_usec=atoi(strtok(NULL, "."));
+		if (strchr(attribute, '.') != NULL) {
+			mod_gm_opt->starttime.tv_sec=atoi(strtok(attribute, "."));
+			mod_gm_opt->starttime.tv_usec=atoi(strtok(NULL, "."));
+		} else {
+			mod_gm_opt->starttime.tv_sec=atoi(attribute);
+			mod_gm_opt->starttime.tv_usec=0;
+		}
 		gm_log( GM_LOG_TRACE, "starttime: %d.%d\n", mod_gm_opt->starttime.tv_sec, mod_gm_opt->starttime.tv_usec);
 	}
 
@@ -383,8 +386,13 @@ int read_child_check(char *bufstart, char *bufend) {
 	if ((attribute=read_multi_attribute(bufstart,bufend,"endtime")) == NULL) {
 		return 0;
 	} else {
-		mod_gm_opt->finishtime.tv_sec=atoi(strtok(attribute, "."));
-		mod_gm_opt->finishtime.tv_usec=atoi(strtok(NULL, "."));
+		if (strchr(attribute, '.') != NULL) {
+			mod_gm_opt->finishtime.tv_sec=atoi(strtok(attribute, "."));
+			mod_gm_opt->finishtime.tv_usec=atoi(strtok(NULL, "."));
+		} else {
+			mod_gm_opt->finishtime.tv_sec=atoi(attribute);
+			mod_gm_opt->finishtime.tv_usec=0;
+		}
 		gm_log( GM_LOG_TRACE, "endtime: %d.%d\n", mod_gm_opt->finishtime.tv_sec, mod_gm_opt->finishtime.tv_usec);
 	}
 
