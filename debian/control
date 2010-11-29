@@ -1,0 +1,25 @@
+Source: mod-gearman
+Section: net
+Priority: extra
+Maintainer: Stig Sandbeck Mathisen <ssm@debian.org>
+Build-Depends: debhelper (>= 7.0.50~), libgearman-dev, libncurses5-dev, libltdl-dev
+Standards-Version: 3.9.1
+Homepage: http://labs.consol.de/nagios/mod-gearman/
+#Vcs-Git: git://git.debian.org/pkg-nagios/mod-gearman.git
+#Vcs-Browser: http://git.debian.org/?p=pkg-nagios/mod-gearman.git;a=summary
+
+Package: mod-gearman
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Distribute active Nagios checks across your network
+ Mod Gearman provides a way of distributing active Nagios checks
+ across your network.
+ .
+ It consists of two parts:
+ .
+ One part is a nagios event broker module which resides in the Nagios
+ core.  This module adds servicechecks, hostchecks and eventhandlers
+ to a Gearman queue.  There can be multiple equal gearman servers.
+ .
+ The counterpart is one or more worker clients for the checks itself.
+ These clients can be bound to host and servicegroups.

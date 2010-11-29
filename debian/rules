@@ -1,0 +1,13 @@
+#!/usr/bin/make -f
+# -*- makefile -*-
+
+%:
+	dh $@
+
+override_dh_clean:
+	rm -fr .pc debian/patches
+	dh_clean
+
+override_dh_auto_configure:
+	./autogen.sh
+	dh_auto_configure
