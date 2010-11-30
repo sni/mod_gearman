@@ -313,7 +313,7 @@ int parse_args_line(mod_gm_opt_t *opt, char * arg, int recursion_level) {
 
     /* services */
     else if (   !strcmp( key, "services" )
-             || !strcmp( key, "service" )
+             //|| !strcmp( key, "service" )
             ) {
         opt->set_queues_by_hand++;
         opt->services = parse_yes_or_no(value, GM_ENABLED);
