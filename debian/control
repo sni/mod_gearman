@@ -2,7 +2,7 @@ Source: mod-gearman
 Section: net
 Priority: extra
 Maintainer: Stig Sandbeck Mathisen <ssm@debian.org>
-Build-Depends: debhelper (>= 7.0.50~), automake, libgearman-dev (>= 0.14), libncurses5-dev, libltdl-dev, gearman-job-server
+Build-Depends: debhelper (>= 7.0.50~), automake, libtool, libgearman-dev (>= 0.14), libncurses5-dev, libltdl-dev, gearman-job-server
 Standards-Version: 3.9.1
 Homepage: http://labs.consol.de/nagios/mod-gearman/
 #Vcs-Git: git://git.debian.org/pkg-nagios/mod-gearman.git
