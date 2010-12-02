@@ -9,5 +9,8 @@ override_dh_clean:
 	dh_clean
 
 override_dh_auto_configure:
-	./autogen.sh
+	aclocal
+	autoheader
+	automake -a
+	autoreconf --install --verbose
 	dh_auto_configure
