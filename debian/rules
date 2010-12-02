@@ -1,11 +1,15 @@
 #!/usr/bin/make -f
 # -*- makefile -*-
 
+DH_VERBOSE=1
+
 %:
 	dh $@
 
 override_dh_clean:
-	rm -fr .pc debian/patches compile depcomp install-sh missing
+	rm -fr .pc debian/patches
+	rm -f compile depcomp install-sh missing
+	rm -f extras/gearmand-init
 	dh_clean
 
 override_dh_auto_configure:
@@ -14,3 +18,10 @@ override_dh_auto_configure:
 	automake -a
 	autoreconf --install --verbose
 	dh_auto_configure -- --localstatedir=/var/lib
+
+override_dh_auto_install:
+	dh_auto_install
+	rm -f debian/mod-gearman/usr/share/mod_gearman/shared.conf
+	rm -f debian/mod-gearman/usr/share/mod_gearman/standalone_worker.conf
+
+override_dh_auto_test:
