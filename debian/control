@@ -5,8 +5,8 @@ Maintainer: Stig Sandbeck Mathisen <ssm@debian.org>
 Build-Depends: debhelper (>= 7.0.50~), automake, libtool, libgearman-dev (>= 0.14), libncurses5-dev, libltdl-dev, gearman-job-server, help2man, dctrl-tools
 Standards-Version: 3.9.1
 Homepage: http://labs.consol.de/nagios/mod-gearman/
-#Vcs-Git: git://git.debian.org/pkg-nagios/mod-gearman.git
-#Vcs-Browser: http://git.debian.org/?p=pkg-nagios/mod-gearman.git;a=summary
+Vcs-Git: git://gitorious.org/ssm-deb/mod-gearman.git
+Vcs-Browser: http://gitorious.org/ssm-deb/mod-gearman/trees/master
 
 Package: mod-gearman
 Architecture: any
