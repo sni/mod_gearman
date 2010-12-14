@@ -8,19 +8,12 @@ Homepage: http://labs.consol.de/nagios/mod-gearman/
 Vcs-Git: git://gitorious.org/ssm-deb/mod-gearman.git
 Vcs-Browser: http://gitorious.org/ssm-deb/mod-gearman/trees/master
 
-Package: mod-gearman
+Package: mod-gearman-doc
 Architecture: all
-Depends: mod-gearman-module, mod-gearman-worker, ${misc:Depends}
-Description: Distribute active Nagios checks across your network
- Mod Gearman provides a way of distributing active Nagios checks
- across your network. It consists of two parts, connecting to one or
- more gearman job servers:
- .
- One part is an event broker module which is loaded by Nagios /
- Icinga.
- .
- The counterpart is one or more worker clients which run the the
- active service checks.
+Depends: ${misc:Depends}
+Description: Documentation and examples for Mod Gearman
+ This package contains documentation and examples common to the
+ mod-gearman-module and mod-gearman-worker packages.
 
 Package: mod-gearman-module
 Architecture: any
