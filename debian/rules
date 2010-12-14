@@ -29,31 +29,31 @@ override_dh_auto_install:
 	help2man --no-info --section=8 --version-string="mod_gearman_worker $(DEB_VERSION)" \
 		--help-option=-h --include=$(CURDIR)/debian/help2man.include \
                 -n "Agent that runs active checks from a gearman queue" \
-                $(CURDIR)/debian/mod-gearman/usr/bin/mod_gearman_worker \
+                $(CURDIR)/debian/tmp/usr/bin/mod_gearman_worker \
                 > $(CURDIR)/debian/mod_gearman_worker.8
 
 	help2man --no-info --section=8 --version-string="check_gearman $(DEB_VERSION)" \
 		--help-option=-h --include=$(CURDIR)/debian/help2man.include \
                 -n "Nagios service check to monitor the gearman job server" \
-                $(CURDIR)/debian/mod-gearman/usr/bin/check_gearman \
+                $(CURDIR)/debian/tmp/usr/bin/check_gearman \
                 > $(CURDIR)/debian/check_gearman.8
 
 	help2man --no-info --section=8 --version-string="send_gearman $(DEB_VERSION)" \
 		--help-option=-h --include=$(CURDIR)/debian/help2man.include \
                 -n "Submit active and passive check results to a gearman job server" \
-                $(CURDIR)/debian/mod-gearman/usr/bin/send_gearman \
+                $(CURDIR)/debian/tmp/usr/bin/send_gearman \
                 > $(CURDIR)/debian/send_gearman.8
 
 	help2man --no-info --section=8 --version-string="gearman_top $(DEB_VERSION)" \
 		--help-option=-h --include=$(CURDIR)/debian/help2man.include \
                 -n "Monitor the gearman job server" \
-                $(CURDIR)/debian/mod-gearman/usr/bin/gearman_top \
+                $(CURDIR)/debian/tmp/usr/bin/gearman_top \
                 > $(CURDIR)/debian/gearman_top.8
 
 	help2man --no-info --section=8 --version-string="send_multi $(DEB_VERSION)" \
 		--help-option=-h --include=$(CURDIR)/debian/help2man.include \
                 -n "Submit check results from check_multi to a gearman job server" \
-                $(CURDIR)/debian/mod-gearman/usr/bin/send_multi \
+                $(CURDIR)/debian/tmp/usr/bin/send_multi \
                 > $(CURDIR)/debian/send_multi.8
 
 override_dh_auto_test:
