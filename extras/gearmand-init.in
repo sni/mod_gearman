@@ -26,7 +26,7 @@ for f in /usr/bin/netcat /usr/bin/nc; do
   fi
 done
 
-function get_status() {
+get_status() {
         pid=`cat $PIDFILE 2>/dev/null`
         if [ "$pid" != "" ]; then
             ps -p $pid > /dev/null 2>&1
@@ -39,7 +39,7 @@ function get_status() {
         return 1;
 }
 
-function kill_gearmand() {
+kill_gearmand() {
     echo -n "Killing $NAME"
     pid=`cat $PIDFILE 2>/dev/null`
     if [ -z $pid ]; then
