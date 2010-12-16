@@ -20,17 +20,16 @@ PIDFILE=/var/run/gearmand.pid
 LOGFILE=/var/log/gearmand.log
 USER=%USER%
 GRACEFUL_SHUTDOWN_TIME=30
-for f in /usr/bin/netcat /usr/bin/nc; do
-  if [ -x $f ]; then 
+for f in $( which netcat nc ) ; do
+  if [ -x "$f" ]; then
     NC=$f
   fi
 done
 
 get_status() {
-        pid=`cat $PIDFILE 2>/dev/null`
-        if [ "$pid" != "" ]; then
-            ps -p $pid > /dev/null 2>&1
-            if [ $? -eq 0 ]; then
+        pid=$( cat $PIDFILE 2>/dev/null )
+        if [ -n "$pid" ]; then
+            if ps -p $pid > /dev/null 2>&1 ; then
                 echo "$NAME is running with pid $pid"
                 return 0;
             fi
@@ -41,8 +40,8 @@ get_status() {
 
 kill_gearmand() {
     echo -n "Killing $NAME"
-    pid=`cat $PIDFILE 2>/dev/null`
-    if [ -z $pid ]; then
+    pid=$( cat $PIDFILE 2>/dev/null )
+    if [ -z "$pid" ]; then
         echo ". Not running."
     else
         # do a kill if still now down
@@ -51,8 +50,7 @@ kill_gearmand() {
             echo -n "."
             ps -p $pid > /dev/null 2>&1 && sleep 1;
         done
-        ps -p $pid > /dev/null 2>&1;
-        if [ $? -ne 0 ]; then
+        if ! ps -p $pid > /dev/null 2>&1 ; then
             echo "done"
             exit 0;
         else
@@ -62,12 +60,11 @@ kill_gearmand() {
     fi
 }
 
-WHO=`whoami`
+WHO=$( whoami )
 case "$1" in
     start)
         echo -n "Starting $NAME "
-        get_status > /dev/null;
-        if [ $? = 0 ]; then
+        if get_status > /dev/null ; then
             echo "failed"
             echo "$NAME already running"
             exit 0;
@@ -89,8 +86,8 @@ case "$1" in
         ;;
     stop)
         echo -n "Stopping $NAME"
-        pid=`cat $PIDFILE 2>/dev/null`
-        if [ -z $pid ]; then
+        pid=$( cat $PIDFILE 2>/dev/null )
+        if [ -z "$pid" ]; then
             echo ". Not running."
         else
             # do a graceful shutdown
@@ -101,11 +98,10 @@ case "$1" in
                 while [ $x -gt 0 ]; do
                     echo -n "."
                     ps -p $pid > /dev/null 2>&1 && sleep 1 || x=0;
-                    let "x=x-1"
+                    x=$( expr $x - 1 )
                 done
 
-                ps -p $pid > /dev/null 2>&1;
-                if [ $? -ne 0 ]; then
+                if ! ps -p $pid > /dev/null 2>&1 ; then
                     echo "done"
                     exit 0;
                 else
@@ -122,9 +118,9 @@ case "$1" in
         ;;
     reload|force-reload)
         echo -n "Reloading $NAME configuration files "
-        pid=`cat $PIDFILE 2>/dev/null`
-        if [ "$pid" != "" ]; then
-            kill -HUP $pid
+        pid=$( cat $PIDFILE 2>/dev/null )
+        if [ -n "$pid" ]; then
+            kill -HUP "$pid"
             echo "OK"
             exit 0;
         else
