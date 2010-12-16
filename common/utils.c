@@ -619,6 +619,7 @@ void dumpconfig(mod_gm_opt_t *opt, int mode) {
         gm_log( GM_LOG_DEBUG, "identifier:          %s\n", opt->identifier);
         gm_log( GM_LOG_DEBUG, "pidfile:             %s\n", opt->pidfile == NULL ? "no" : opt->pidfile);
         gm_log( GM_LOG_DEBUG, "logfile:             %s\n", opt->logfile == NULL ? "no" : opt->logfile);
+        gm_log( GM_LOG_DEBUG, "job max num:         %d\n", opt->max_jobs);
         gm_log( GM_LOG_DEBUG, "job max age:         %d\n", opt->max_age);
         gm_log( GM_LOG_DEBUG, "job timeout:         %d\n", opt->job_timeout);
         gm_log( GM_LOG_DEBUG, "min worker:          %d\n", opt->min_worker);
