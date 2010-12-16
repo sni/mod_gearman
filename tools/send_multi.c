@@ -59,7 +59,7 @@ int main (int argc, char **argv) {
     /* send result message */
     signal(SIGALRM, alarm_sighandler);
     rc = read_multi_stream(stdin);
-    /* if rc > 0, it contains the number of checks being submitted, 
+    /* if rc > 0, it contains the number of checks being submitted,
        otherwise its an error code (-1 - WARNING, -2 - CRITICAL, -3 - UNKNOWN) */
     if (rc >= 0) {
 	    gm_log( GM_LOG_INFO, "%d check_multi child check%s submitted\n", rc, (rc>1)?"s":"" );
@@ -94,7 +94,6 @@ int parse_arguments(int argc, char **argv) {
         if ( !strcmp( arg, "help" ) || !strcmp( arg, "--help" )  || !strcmp( arg, "-h" ) ) {
             print_usage();
         }
-        lc(arg);
         if(parse_args_line(mod_gm_opt, arg, 0) != GM_OK) {
             errors++;
             free(arg_c);
@@ -277,7 +276,7 @@ int read_multi_stream(FILE *stream) {
 
 	do {
 		/* opening tag <CHILD> found? read from buffer start with maximum buffer len */
-		if ((bufstart=(char *)memmem(buffer,buflen,"<CHILD>",strlen("<CHILD>"))) != NULL) { 
+		if ((bufstart=(char *)memmem(buffer,buflen,"<CHILD>",strlen("<CHILD>"))) != NULL) {
 
 			/* closing tag </CHILD> found? read after <CHILD> with rest of buffer len */
 		    	if ((bufend=(char *)memmem(bufstart,buflen-(bufstart-buffer),"</CHILD>",strlen("</CHILD>"))) != NULL) {
@@ -316,7 +315,7 @@ int read_multi_stream(FILE *stream) {
 			buflen=0L;
 			gm_log( GM_LOG_TRACE, "Error: no starting tag <CHILD> within buffer - discarding buffer, buflen now %ld bytes\n", buflen);
 		}
-		
+
 		gm_log( GM_LOG_TRACE, "\ttrying to fill up buffer with %ld bytes from offset %ld\n", GM_BUFFERSIZE-buflen, buflen);
 
 		/* read one block of data, or less bytes, if there is still data left */
