@@ -39,7 +39,7 @@ get_status() {
 }
 
 kill_gearmand() {
-    echo -n "Killing $NAME"
+    printf '%s' "Killing $NAME"
     pid=$( cat $PIDFILE 2>/dev/null )
     if [ -z "$pid" ]; then
         echo ". Not running."
@@ -47,7 +47,7 @@ kill_gearmand() {
         # do a kill if still now down
         ps -p $pid > /dev/null 2>&1 && kill $pid
         for x in 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5; do
-            echo -n "."
+            printf "."
             ps -p $pid > /dev/null 2>&1 && sleep 1;
         done
         if ! ps -p $pid > /dev/null 2>&1 ; then
@@ -63,7 +63,7 @@ kill_gearmand() {
 WHO=$( whoami )
 case "$1" in
     start)
-        echo -n "Starting $NAME "
+        printf '%s' "Starting $NAME "
         if get_status > /dev/null ; then
             echo "failed"
             echo "$NAME already running"
@@ -85,18 +85,18 @@ case "$1" in
         fi
         ;;
     stop)
-        echo -n "Stopping $NAME"
+        printf '%s' "Stopping $NAME"
         pid=$( cat $PIDFILE 2>/dev/null )
         if [ -z "$pid" ]; then
             echo ". Not running."
         else
             # do a graceful shutdown
             if [ ! -z $NC ]; then
-                echo -n " gracefully "
+                printf '%s' " gracefully "
                 echo "shutdown graceful" | $NC -w 1 $LISTEN $PORT
                 x=$GRACEFUL_SHUTDOWN_TIME
                 while [ $x -gt 0 ]; do
-                    echo -n "."
+                    printf "."
                     ps -p $pid > /dev/null 2>&1 && sleep 1 || x=0;
                     x=$( expr $x - 1 )
                 done
@@ -117,7 +117,7 @@ case "$1" in
         kill_gearmand;
         ;;
     reload|force-reload)
-        echo -n "Reloading $NAME configuration files "
+        printf '%s' "Reloading $NAME configuration files "
         pid=$( cat $PIDFILE 2>/dev/null )
         if [ -n "$pid" ]; then
             kill -HUP "$pid"
