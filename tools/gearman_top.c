@@ -157,6 +157,7 @@ void print_stats(char * hostname) {
     /* get stats */
     stats = malloc(sizeof(mod_gm_server_status_t));
     stats->function_num = 0;
+    stats->worker_num = 0;
     rc = get_gearman_server_data(stats, &message, &version, server, port);
 
     t   = time(NULL);
