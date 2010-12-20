@@ -304,26 +304,20 @@ int parse_args_line(mod_gm_opt_t *opt, char * arg, int recursion_level) {
     }
 
     /* hosts */
-    else if (   !strcmp( key, "hosts" )
-        || !strcmp( key, "host" )
-        ) {
+    else if ( !strcmp( key, "hosts" ) ) {
         opt->set_queues_by_hand++;
         opt->hosts = parse_yes_or_no(value, GM_ENABLED);
     }
 
     /* services */
-    else if (   !strcmp( key, "services" )
-             || !strcmp( key, "service" )
-            ) {
+    else if ( !strcmp( key, "services" ) ) {
         opt->set_queues_by_hand++;
         opt->services = parse_yes_or_no(value, GM_ENABLED);
     }
 
     /* eventhandler */
     else if (   !strcmp( key, "events" )
-             || !strcmp( key, "event" )
              || !strcmp( key, "eventhandlers" )
-             || !strcmp( key, "eventhandler" )
             ) {
         opt->set_queues_by_hand++;
         opt->events = parse_yes_or_no(value, GM_ENABLED);
