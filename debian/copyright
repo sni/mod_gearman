@@ -1,0 +1,41 @@
+Format-Specification: http://svn.debian.org/wsvn/dep/web/deps/dep5.mdwn?op=file&rev=135
+Name: Mod Gearman
+Maintainer: Stig Sandbeck Mathisen <ssm@debian.org>
+Source: http://labs.consol.de/nagios/mod-gearman/
+
+Files: *
+Copyright: 2010, Sven Nierlein <sven.nierlein@consol.de>
+License: GPL-3+
+
+Files: debian/*
+Copyright: 2010, Stig Sandbeck Mathisen <ssm@debian.org>
+License: GPL-3+
+
+Files: include/nagios/*
+Copyright: 1999-2008 Ethan Galstad <egalstad@nagios.org>
+License: GPL-2
+
+Files: include/libgearman/*
+Copyright: 2006-2010 Brian Aker,
+           2008-2010 Eric Day
+License: BSD
+
+Files: include/base64.c, common/base64.c
+Copyright: Unknown
+ Downloaded from <http://freecode-freecode.blogspot.com/>
+License: unknown
+
+Files: include/rijndael.h, common/rijndael.c
+Copyright: Public domain
+
+Files: include/send_multi.h, tools/send_multi.c
+Copyright: 2010 Matthias Flacke <matthias.flacke@gmx.de>
+
+Files: t/tap.[ch]
+Copyright: 2004 Nik Clayton
+
+License: GPL-3
+ See file:///usr/share/common-licenses/GPL-3 for details
+
+License: BSD
+ See file:///usr/share/common-licenses/BSD for details

@@ -1,0 +1,40 @@
+Source: mod-gearman
+Section: net
+Priority: extra
+Maintainer: Stig Sandbeck Mathisen <ssm@debian.org>
+Build-Depends: debhelper (>= 7.0.50~), automake, libtool, libgearman-dev (>= 0.14), libncurses5-dev, libltdl-dev, gearman-job-server, help2man, dctrl-tools
+Standards-Version: 3.9.1
+Homepage: http://labs.consol.de/nagios/mod-gearman/
+Vcs-Git: git://gitorious.org/ssm-deb/mod-gearman.git
+Vcs-Browser: http://gitorious.org/ssm-deb/mod-gearman/trees/master
+
+Package: mod-gearman-doc
+Architecture: all
+Depends: ${misc:Depends}
+Description: Documentation and examples for Mod Gearman
+ This package contains documentation and examples common to the
+ mod-gearman-module and mod-gearman-worker packages.
+
+Package: mod-gearman-module
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Event broker module to distribute service checks.
+ Event broker module for Nagios or Icinga.  This module adds
+ servicechecks, hostchecks and eventhandlers to a queue on a Gearman
+ job server.
+ .
+ There can be multiple equal gearman job servers.
+
+Package: mod-gearman-worker
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Worker agent for mod-gearman
+ The worker agent for mod-geraman connects to a gearman job server,
+ runs active nagios  service checks, and return the results.
+ .
+ The agent can ask for any available check, or it can be bound to
+ specific hostgroups or servicegroups.
+ .
+ This package also includes a set of extra tools to send check results
+ to Nagios via a gearman server, and a plugin to monitor the gearman
+ job server itself.

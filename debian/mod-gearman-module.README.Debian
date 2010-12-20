@@ -1,0 +1,30 @@
+Usage
+=====
+
+Module configuration
+--------------------
+
+Copy the example configuration file to /etc/mod-gearman
+
+# cp /usr/share/doc/mod-gearman-module/examples/module.conf /etc/mod-gearman
+
+Edit to point to your gearman job server, and set a password common to the
+module and the workers.
+
+
+Nagios / Icinga configuration
+-----------------------------
+
+Add the following stanza to /etc/nagios/nagios.cfg or /etc/icinga/icinga.cfg
+
+broker_module=/usr/lib/mod_gearman/mod_gearman.o config=/etc/mod-gearman/module.conf
+
+
+Restart Nagios / Icinga
+-----------------------
+
+Restart nagios or icinga, and check the log for warnings.  You should see the
+following message in your log:
+
+[...] Event broker module '/usr/lib/mod_gearman/mod_gearman.o' initialized successfully.
+
