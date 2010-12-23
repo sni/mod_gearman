@@ -199,3 +199,6 @@ rpm: dist
 	mv -v $(RPM_TOPDIR)/RPMS/*/*.rpm .
 	mv -v $(RPM_TOPDIR)/SRPMS/*.src.rpm .
 	rm -rf $(RPM_TOPDIR) rpm.buildroot
+
+deb:
+	dpkg-buildpackage -us -uc
