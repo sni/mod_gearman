@@ -1,6 +1,7 @@
 This file documents the revision history for mod_gearman.
 
 0.9    Wed...
+          - added debian packaging files (thanks Stig Sandbeck Mathisen)
           - fixed problem with uppercase service descriptions in send_gearman
 
 0.8    Wed Nov 17 14:11:54 CET 2010
