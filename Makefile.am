@@ -190,6 +190,8 @@ docs:
 	ln -s /usr/share/asciidoc/images .
 	asciidoc --unsafe -a toc -a toclevels=2 -a icons -a data-uri -a max-width=800 README
 	chmod 644 README.html
+	asciidoc --unsafe -a toc -a toclevels=2 -a icons -a data-uri -a max-width=800 QUICKSTART
+	chmod 644 QUICKSTART.html
 
 rpm: dist
 	mkdir -p $(RPM_TOPDIR)/{SOURCES,BUILD,RPMS,SRPMS,SPECS}
