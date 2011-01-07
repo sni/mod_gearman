@@ -1,3 +1,0 @@
-version=3
-http://labs.consol.de/lang/de/nagios/mod-gearman \
-  http://labs.consol.de/wp-content/uploads/(?:\d+)/(?:\d+)/mod_gearman-(\d+\S+)\.tar.gz

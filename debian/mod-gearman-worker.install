@@ -1,5 +1,0 @@
-debian/tmp/usr/bin/mod_gearman_worker
-debian/tmp/usr/bin/send_gearman
-debian/tmp/usr/bin/gearman_top
-debian/tmp/usr/bin/send_multi
-debian/tmp/usr/bin/check_gearman
