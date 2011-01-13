@@ -226,6 +226,9 @@ int set_default_options(mod_gm_opt_t *opt) {
     opt->server_num         = 0;
     for(i=0;i<=GM_LISTSIZE;i++)
         opt->server_list[i] = NULL;
+    opt->dupserver_num         = 0;
+    for(i=0;i<=GM_LISTSIZE;i++)
+        opt->dupserver_list[i] = NULL;
     opt->hostgroups_num     = 0;
     for(i=0;i<=GM_LISTSIZE;i++)
         opt->hostgroups_list[i] = NULL;
@@ -498,6 +501,18 @@ int parse_args_line(mod_gm_opt_t *opt, char * arg, int recursion_level) {
         }
     }
 
+    /* duplicate server */
+    else if ( !strcmp( key, "dupserver" ) ) {
+        char *servername;
+        while ( (servername = strsep( &value, "," )) != NULL ) {
+            servername = trim(servername);
+            if ( strcmp( servername, "" ) ) {
+                opt->dupserver_list[opt->dupserver_num] = strdup(servername);
+                opt->dupserver_num++;
+            }
+        }
+    }
+
     /* servicegroups */
     else if (   !strcmp( key, "servicegroups" )
              || !strcmp( key, "servicegroup" )
@@ -633,6 +648,9 @@ void dumpconfig(mod_gm_opt_t *opt, int mode) {
     for(i=0;i<opt->server_num;i++)
         gm_log( GM_LOG_DEBUG, "server:              %s\n", opt->server_list[i]);
     gm_log( GM_LOG_DEBUG, "\n" );
+    for(i=0;i<opt->dupserver_num;i++)
+        gm_log( GM_LOG_DEBUG, "dupserver:           %s\n", opt->dupserver_list[i]);
+    gm_log( GM_LOG_DEBUG, "\n" );
     if(mode == GM_NEB_MODE) {
         gm_log( GM_LOG_DEBUG, "perfdata:            %s\n", opt->perfdata     == GM_ENABLED ? "yes" : "no");
     }
@@ -676,6 +694,8 @@ void mod_gm_free_opt(mod_gm_opt_t *opt) {
     int i;
     for(i=0;i<opt->server_num;i++)
         free(opt->server_list[i]);
+    for(i=0;i<opt->dupserver_num;i++)
+        free(opt->dupserver_list[i]);
     for(i=0;i<opt->hostgroups_num;i++)
         free(opt->hostgroups_list[i]);
     for(i=0;i<opt->servicegroups_num;i++)

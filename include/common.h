@@ -107,6 +107,8 @@ typedef struct mod_gm_opt_struct {
     char         * keyfile;
     char         * server_list[GM_LISTSIZE];
     int            server_num;
+    char         * dupserver_list[GM_LISTSIZE];
+    int            dupserver_num;
     char         * hostgroups_list[GM_LISTSIZE];
     int            hostgroups_num;
     char         * servicegroups_list[GM_LISTSIZE];

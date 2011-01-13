@@ -342,6 +342,8 @@ void print_usage() {
     printf("\n");
     printf("       [ --server=<server>     ]\n");
     printf("\n");
+    printf("       [ --dupserver=<server>  ]\n");
+    printf("\n");
     printf("       [ --hosts               ]\n");
     printf("       [ --services            ]\n");
     printf("       [ --events              ]\n");

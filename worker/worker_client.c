@@ -35,6 +35,7 @@ char hostname[GM_BUFFERSIZE];
 
 gearman_worker_st worker;
 gearman_client_st client;
+gearman_client_st client_dup;
 
 gm_job_t * current_job;
 pid_t current_child_pid;
@@ -70,6 +71,12 @@ void worker_client(int worker_mode) {
         exit( EXIT_FAILURE );
     }
 
+    /* create duplicate client */
+    if ( create_client_dup( mod_gm_opt->dupserver_list, &client_dup ) != GM_OK ) {
+        gm_log( GM_LOG_ERROR, "cannot start client for duplicate server\n" );
+        exit( EXIT_FAILURE );
+    }
+
     worker_loop();
 
     return;
@@ -93,6 +100,7 @@ void worker_loop() {
             gearman_job_free_all( &worker );
             gearman_worker_free( &worker );
             gearman_client_free( &client );
+            if( mod_gm_opt->dupserver_num ) gearman_client_free( &client_dup );
 
             /* sleep on error to avoid cpu intensive infinite loops */
             sleep(sleep_time_after_error);
@@ -103,6 +111,7 @@ void worker_loop() {
             /* create new connections */
             set_worker( &worker );
             create_client( mod_gm_opt->server_list, &client );
+            create_client( mod_gm_opt->dupserver_list, &client_dup );
         }
     }
 
@@ -233,6 +242,7 @@ void *get_job( gearman_job_st *job, void *context, size_t *result_size, gearman_
         gearman_worker_unregister_all(&worker);
         gearman_job_free_all( &worker );
         gearman_client_free( &client );
+        if( mod_gm_opt->dupserver_num ) gearman_client_free( &client_dup );
         mod_gm_free_opt(mod_gm_opt);
         exit( EXIT_SUCCESS );
     }
@@ -505,6 +515,29 @@ void send_result_back() {
     }
     else {
         gm_log( GM_LOG_TRACE, "send_result_back() finished unsuccessfully\n" );
+    }
+
+    if( mod_gm_opt->dupserver_num ) {
+        strncpy(temp_buffer2, "type=passive\n", (sizeof(temp_buffer1)-2));
+        strncat(temp_buffer2, temp_buffer1, (sizeof(temp_buffer2)-2));
+        temp_buffer2[sizeof( temp_buffer2 )-1]='\x0';
+        if( add_job_to_queue( &client_dup,
+                              mod_gm_opt->dupserver_list,
+                              exec_job->result_queue,
+                              NULL,
+                              temp_buffer2,
+                              GM_JOB_PRIO_NORMAL,
+                              GM_DEFAULT_JOB_RETRIES,
+                              mod_gm_opt->transportmode
+                            ) == GM_OK) {
+            gm_log( GM_LOG_TRACE, "send_result_back() finished successfully for duplicate server.\n" );
+        }
+        else {
+            gm_log( GM_LOG_TRACE, "send_result_back() finished unsuccessfully for duplicate server\n" );
+        }
+    }
+    else {
+        gm_log( GM_LOG_TRACE, "send_result_back() has no duplicate servers to send to.\n" );
     }
 
     return;
