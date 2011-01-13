@@ -147,6 +147,10 @@ void monitor_loop() {
         /* collect finished workers */
         while(waitpid(-1, &status, WNOHANG) > 0) {
             gm_log( GM_LOG_TRACE, "waitpid() worker exited with: %d\n", status);
+            if( status != EXIT_SUCCESS ) {
+                /* decrease number of worker */
+                decrease_number_worker();
+            }
         }
 
         check_worker_population();
@@ -180,9 +184,15 @@ void check_worker_population() {
 
 /* start up new worker */
 int make_new_child(int mode) {
+    struct sigaction usr1_action;
+    sigset_t block_mask;
     pid_t pid = 0;
 
     gm_log( GM_LOG_TRACE, "make_new_child()\n");
+
+    signal(SIGUSR1, SIG_IGN);
+    signal(SIGINT,  SIG_DFL);
+    signal(SIGTERM, SIG_DFL);
 
     /* fork a child process */
     pid=fork();
@@ -196,9 +206,6 @@ int make_new_child(int mode) {
 
     /* we are in the child process */
     else if(pid==0){
-        signal(SIGUSR1, SIG_IGN);
-        signal(SIGINT,  SIG_DFL);
-        signal(SIGTERM, SIG_DFL);
 
         gm_log( GM_LOG_DEBUG, "worker started with pid: %d\n", getpid() );
 
@@ -210,7 +217,14 @@ int make_new_child(int mode) {
 
     /* parent  */
     else if(pid > 0){
-        /* do nothing */
+        /* setup signal handler */
+        sigfillset (&block_mask); /* block all signals */
+        usr1_action.sa_handler = check_signal;
+        usr1_action.sa_mask    = block_mask;
+        usr1_action.sa_flags   = 0;
+        sigaction (SIGUSR1, &usr1_action, NULL);
+        signal(SIGINT, clean_exit);
+        signal(SIGTERM,clean_exit);
     }
 
     return GM_OK;
@@ -681,6 +695,35 @@ void update_runtime_data() {
 /* called when run into timeout */
 void wait_sighandler(int sig) {
     gm_log( GM_LOG_TRACE, "wait_sighandler(%i)\n", sig );
+    return;
+}
+
+
+/* decrease amount of worker */
+void decrease_number_worker() {
+    int shmid;
+    int *shm;
+
+    gm_log( GM_LOG_TRACE, "decrease_number_worker()\n");
+
+    /* Locate the segment. */
+    if ((shmid = shmget(mod_gm_shm_key, GM_SHM_SIZE, 0600)) < 0) {
+        perror("shmget");
+        exit(1);
+    }
+
+    /* Now we attach the segment to our data space. */
+    if ((shm = shmat(shmid, NULL, 0)) == (int *) -1) {
+        perror("shmat");
+        exit(1);
+    }
+
+    shm[1]--;
+
+    /* detach from shared memory */
+    if(shmdt(shm) < 0)
+        perror("shmdt");
+
     return;
 }
 

@@ -55,3 +55,4 @@ void update_runtime_data(void);
 void monitor_loop(void);
 void wait_sighandler(int sig);
 void check_worker_population(void);
+void decrease_number_worker(void);
