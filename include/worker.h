@@ -52,4 +52,6 @@ int verify_options(mod_gm_opt_t *opt);
 void reload_config(int sig);
 void stop_childs(int mode);
 void update_runtime_data(void);
-
+void monitor_loop(void);
+void wait_sighandler(int sig);
+void check_worker_population(void);

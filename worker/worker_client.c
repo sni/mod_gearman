@@ -70,6 +70,10 @@ void worker_client(int worker_mode) {
         exit( EXIT_FAILURE );
     }
 
+    /* increase worker counter */
+    if(worker_run_mode != GM_WORKER_STATUS)
+        send_state_to_parent(GM_WORKER_START);
+
     worker_loop();
 
     return;
@@ -82,9 +86,11 @@ void worker_loop() {
     while ( 1 ) {
         gearman_return_t ret;
 
-        /* wait three minutes for a job, otherwise exit */
-        if(worker_run_mode == GM_WORKER_MULTI)
+        /* wait for a job, otherwise exit when hit the idle timeout */
+        if(worker_run_mode == GM_WORKER_MULTI) {
+            signal(SIGALRM, idle_sighandler);
             alarm(mod_gm_opt->idle_timeout);
+        }
 
         signal(SIGPIPE, SIG_IGN);
         ret = gearman_worker_work( &worker );
@@ -120,7 +126,6 @@ void *get_job( gearman_job_st *job, void *context, size_t *result_size, gearman_
     char * decrypted_data_c;
     char * decrypted_orig;
     char *ptr;
-    char command[GM_BUFFERSIZE];
 
     jobs_done++;
 
@@ -202,11 +207,6 @@ void *get_job( gearman_job_st *job, void *context, size_t *result_size, gearman_
         } else if ( !strcmp( key, "timeout" ) ) {
             exec_job->timeout = atoi(value);
         } else if ( !strcmp( key, "command_line" ) ) {
-            /* adding 2>&1 breaks the exec/popen check and everything will be checked by popen */
-            /*
-            snprintf(command, sizeof(command)+5, "%s 2>&1", value);
-            exec_job->command_line = strdup(command);
-            */
             exec_job->command_line = strdup(value);
         }
     }
@@ -230,10 +230,7 @@ void *get_job( gearman_job_st *job, void *context, size_t *result_size, gearman_
 
     if(jobs_done >= mod_gm_opt->max_jobs) {
         gm_log( GM_LOG_TRACE, "jobs done: %i -> exiting...\n", jobs_done );
-        gearman_worker_unregister_all(&worker);
-        gearman_job_free_all( &worker );
-        gearman_client_free( &client );
-        mod_gm_free_opt(mod_gm_opt);
+        clean_worker_exit(0);
         exit( EXIT_SUCCESS );
     }
 
@@ -559,6 +556,14 @@ int set_worker( gearman_worker_st *w ) {
 }
 
 
+/* called when worker runs into idle timeout */
+void idle_sighandler(int sig) {
+    gm_log( GM_LOG_TRACE, "idle_sighandler(%i)\n", sig );
+    clean_worker_exit(0);
+    exit( EXIT_SUCCESS );
+}
+
+
 /* called when check runs into timeout */
 void alarm_sighandler(int sig) {
     pid_t pid = getpid();
@@ -601,10 +606,14 @@ void send_state_to_parent(int status) {
     }
 
     /* set our counter */
+    if(status == GM_WORKER_START)
+        shm[1]++; /* increase running worker */
+    if(status == GM_WORKER_EXIT)
+        shm[1]--; /* decrease running worker */
     if(status == GM_JOB_START)
-        shm[0]++;
+        shm[0]++; /* increase running jobs */
     if(status == GM_JOB_END) {
-        shm[0]--;
+        shm[0]--; /* decrease running jobs */
         shm[2]++; /* increase jobs done */
     }
 
@@ -631,6 +640,10 @@ void clean_worker_exit(int sig) {
     gearman_worker_unregister_all(&worker);
     gearman_job_free_all( &worker );
     gearman_client_free( &client );
+
+    /* decrease worker counter */
+    if(worker_run_mode != GM_WORKER_STATUS)
+        send_state_to_parent(GM_WORKER_EXIT);
 
     mod_gm_free_opt(mod_gm_opt);
 

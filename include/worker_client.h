@@ -34,6 +34,8 @@
 
 #define GM_JOB_START            0
 #define GM_JOB_END              1
+#define GM_WORKER_START         2
+#define GM_WORKER_EXIT          3
 
 #define GM_WORKER_MULTI         0
 #define GM_WORKER_STANDALONE    1
@@ -66,6 +68,7 @@ void do_exec_job(void);
 int set_worker( gearman_worker_st *worker );
 void send_result_back(void);
 void alarm_sighandler(int sig);
+void idle_sighandler(int sig);
 void send_state_to_parent(int status);
 void execute_safe_command(void);
 void clean_worker_exit(int sig);
@@ -75,4 +78,3 @@ int free_job(gm_job_t *job);
 #ifdef GM_DEBUG
 void write_debug_file(char ** text);
 #endif
-
