@@ -127,13 +127,14 @@ void *get_job( gearman_job_st *job, void *context, size_t *result_size, gearman_
     char * decrypted_orig;
     char *ptr;
 
+    /* reset timeout for now, will be set befor execution again */
+    alarm(0);
+    signal(SIGALRM, SIG_IGN);
+
     jobs_done++;
 
     /* send start signal to parent */
     send_state_to_parent(GM_JOB_START);
-
-    /* reset timeout for now, will be set befor execution again */
-    alarm(0);
 
     gm_log( GM_LOG_TRACE, "get_job()\n" );
 
