@@ -1,4 +1,4 @@
-
+# vim:ft=automake noexpandtab
 ###############################################################################
 #
 # mod_gearman - distribute checks with gearman
