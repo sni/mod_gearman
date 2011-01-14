@@ -218,15 +218,15 @@ void *get_job( gearman_job_st *job, void *context, size_t *result_size, gearman_
 
     do_exec_job();
 
+    /* send finish signal to parent */
+    send_state_to_parent(GM_JOB_END);
+
     /* start listening to SIGTERMs */
     sigprocmask(SIG_SETMASK, &old_mask, NULL);
 
     free(decrypted_orig);
     free(decrypted_data_c);
     free_job(exec_job);
-
-    /* send finish signal to parent */
-    send_state_to_parent(GM_JOB_END);
 
     if(jobs_done >= mod_gm_opt->max_jobs) {
         gm_log( GM_LOG_TRACE, "jobs done: %i -> exiting...\n", jobs_done );
