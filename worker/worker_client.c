@@ -593,7 +593,8 @@ void send_state_to_parent(int status) {
 
     /* Locate the segment */
     if ((shmid = shmget(mod_gm_shm_key, GM_SHM_SIZE, 0600)) < 0) {
-        perror("shmget");
+        if(status != GM_WORKER_EXIT)
+            perror("shmget");
         gm_log( GM_LOG_TRACE, "worker finished: %d\n", getpid() );
         exit( EXIT_FAILURE );
     }

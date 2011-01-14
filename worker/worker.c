@@ -509,6 +509,9 @@ void stop_childs(int mode) {
     /* ignore some signals for now */
     signal(SIGTERM, SIG_IGN);
     signal(SIGINT,  SIG_IGN);
+    if(mode == GM_WORKER_STOP) {
+        signal(SIGUSR1,  SIG_IGN);
+    }
 
     /*
      * send term signal to our childs
@@ -521,6 +524,7 @@ void stop_childs(int mode) {
     while(current_number_of_workers > 0) {
         while((chld = waitpid(-1, &status, WNOHANG)) != -1 && chld > 0) {
             gm_log( GM_LOG_TRACE, "wait() %d exited with %d\n", chld, status);
+            current_number_of_workers--;
             /* start one worker less than exited, because of the status worker */
             if(skipfirst == 0 && mode == GM_WORKER_RESTART) {
                 make_new_child(GM_WORKER_MULTI);
@@ -543,6 +547,7 @@ void stop_childs(int mode) {
 
         while((chld = waitpid(-1, &status, WNOHANG)) != -1 && chld > 0) {
             gm_log( GM_LOG_TRACE, "wait() %d exited with %d\n", chld, status);
+            current_number_of_workers--;
         }
 
         /*
@@ -551,15 +556,17 @@ void stop_childs(int mode) {
          */
         if ((shmid = shmget(mod_gm_shm_key, GM_SHM_SIZE, 0600)) < 0) {
             perror("shmget");
+        } else {
+            if( shmctl( shmid, IPC_RMID, 0 ) == -1 ) {
+                perror("shmctl");
+            } else {
+                gm_log( GM_LOG_TRACE, "shared memory deleted\n");
+            }
         }
-        if( shmctl( shmid, IPC_RMID, 0 ) == -1 ) {
-            perror("shmctl");
-        }
-        gm_log( GM_LOG_TRACE, "shared memory deleted\n");
 
         if(current_number_of_workers > 0) {
             /* this will kill us too */
-            gm_log( GM_LOG_TRACE, "sending SIGKILL...\n");
+            gm_log( GM_LOG_INFO, "exiting by SIGKILL...\n");
             killpg(0, SIGKILL);
         }
     }
