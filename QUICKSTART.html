@@ -629,46 +629,15 @@ install Gearman from source.</p></div>
 <div class="literalblock">
 <div class="content">
 <pre><tt>#&gt; cd /tmp
-#&gt; wget "http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-0.8.tar.gz"
-#&gt; tar zxf mod_gearman-0.8.tar.gz
-#&gt; cd mod_gearman-0.8
+#&gt; wget "http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-0.9.tar.gz"
+#&gt; tar zxf mod_gearman-0.9.tar.gz
+#&gt; cd mod_gearman-0.9
 #&gt; ./configure --prefix=/opt --with-gearman=/opt --with-user=nagios --with-init-dir=/etc/init.d
 #&gt; make
 #&gt; make install
 #&gt; make install-config
-#&gt; cp ./extras/gearmand-init /etc/init.d/gearmand &amp;&amp; chmod 755 /etc/init.d/gearmand</tt></pre>
+#&gt; cp ./extras/gearmand-init /etc/init.d/gearmand</tt></pre>
 </div></div>
-</div></div>
-<div class="paragraph"><p>The default paths of /etc/init.d/gearmand does not fit our environment and has
-to be changed. Open <em>/etc/init.d/gearmand</em> and change</p></div>
-<div class="ulist"><ul>
-<li>
-<p>
-DAEMON to <em>/opt/sbin/gearmand</em>
-</p>
-</li>
-<li>
-<p>
-PIDFILE to <em>/opt/var/mod_gearman/gearmand.pid</em>
-</p>
-</li>
-<li>
-<p>
-LOGFILE to <em>/opt/var/mod_gearman/gearmand.log</em>
-</p>
-</li>
-</ul></div>
-<div class="paragraph"><p>The resulting file should look like this.</p></div>
-<div class="listingblock">
-<div class="content">
-<pre><tt>  ...
-  DAEMON="/opt/sbin/gearmand"
-  ...
-  LISTEN=0.0.0.0
-  PIDFILE=/opt/var/mod_gearman/gearmand.pid
-  LOGFILE=/opt/var/mod_gearman/gearmand.log
-  USER=nagios
-  ...</tt></pre>
 </div></div>
 <div class="paragraph"><p>Gearman runs as user nagios which needs a valid shell:</p></div>
 <div class="exampleblock">
@@ -746,7 +715,7 @@ worker for each queue.</p></div>
 <div class="literalblock">
 <div class="content">
 <pre><tt>  #&gt; /opt/bin/check_gearman -H localhost -q worker_`hostname` -t 10 -s check
-check_gearman OK - debian64 has 1 worker and is working on 0 jobs. Version: 0.8|worker=1 jobs=2c</tt></pre>
+check_gearman OK - debian64 has 1 worker and is working on 0 jobs. Version: 0.9|worker=1 jobs=2c</tt></pre>
 </div></div>
 </div></div>
 <div class="paragraph"><p>The interesting number is the last one, <em>2c</em> in our case, which means there
@@ -790,7 +759,7 @@ Mod-Gearman Worker: /opt/var/mod_gearman/mod_gearman_worker.log
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2011-01-07 23:50:43 CEST
+Last updated 2011-01-14 10:36:56 CEST
 </div>
 </div>
 </body>

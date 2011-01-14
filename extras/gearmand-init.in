@@ -12,12 +12,12 @@
 ### END INIT INFO
 
 NAME=gearmand
-DAEMON="/usr/sbin/gearmand"
+DAEMON="%GEARMAND%"
 OPTIONS="-d -t 10 -j 0"
 PORT=4730
 LISTEN=0.0.0.0
-PIDFILE=/var/run/gearmand.pid
-LOGFILE=/var/log/gearmand.log
+PIDFILE=%GPIDFILE%
+LOGFILE=%GLOGFILE%
 USER=%USER%
 GRACEFUL_SHUTDOWN_TIME=30
 for f in $( which netcat nc ) ; do

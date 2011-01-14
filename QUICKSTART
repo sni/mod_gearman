@@ -60,34 +60,16 @@ Mod-Gearman
 Half way done, the next step installs Mod-Gearman.
 ======
   #> cd /tmp
-  #> wget "http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-0.8.tar.gz"
-  #> tar zxf mod_gearman-0.8.tar.gz
-  #> cd mod_gearman-0.8
+  #> wget "http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-0.9.tar.gz"
+  #> tar zxf mod_gearman-0.9.tar.gz
+  #> cd mod_gearman-0.9
   #> ./configure --prefix=/opt --with-gearman=/opt --with-user=nagios --with-init-dir=/etc/init.d
   #> make
   #> make install
   #> make install-config
-  #> cp ./extras/gearmand-init /etc/init.d/gearmand && chmod 755 /etc/init.d/gearmand
+  #> cp ./extras/gearmand-init /etc/init.d/gearmand
 ======
 
-The default paths of /etc/init.d/gearmand does not fit our environment and has
-to be changed. Open '/etc/init.d/gearmand' and change
-
- - DAEMON to '/opt/sbin/gearmand'
- - PIDFILE to '/opt/var/mod_gearman/gearmand.pid'
- - LOGFILE to '/opt/var/mod_gearman/gearmand.log'
-
-The resulting file should look like this.
------
-  ...
-  DAEMON="/opt/sbin/gearmand"
-  ...
-  LISTEN=0.0.0.0
-  PIDFILE=/opt/var/mod_gearman/gearmand.pid
-  LOGFILE=/opt/var/mod_gearman/gearmand.log
-  USER=nagios
-  ...
------
 
 Gearman runs as user nagios which needs a valid shell:
 ======
@@ -161,7 +143,7 @@ Then we have a look at the shiped check plugin:
 
 ======
   #> /opt/bin/check_gearman -H localhost -q worker_`hostname` -t 10 -s check
-check_gearman OK - debian64 has 1 worker and is working on 0 jobs. Version: 0.8|worker=1 jobs=2c
+check_gearman OK - debian64 has 1 worker and is working on 0 jobs. Version: 0.9|worker=1 jobs=2c
 ======
 The interesting number is the last one, '2c' in our case, which means there
 have been already 2 jobs executed by this worker.

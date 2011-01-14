@@ -65,9 +65,12 @@ check_PROGRAMS   = 01_utils 02_full
 TESTS            = 01_utils 02_full
 
 
+GEARMANDS=/usr/sbin/gearmand /opt/sbin/gearmand
 replace_vars = sed -e 's:%CONFIG%:$(sysconfdir)/mod_gearman.conf:g' \
                -e 's:%PIDFILE%:$(localstatedir)/mod_gearman/mod_gearman_worker.pid:g' \
                -e 's:%LOGFILE%:$(localstatedir)/mod_gearman/mod_gearman_worker.log:g' \
+               -e 's:%GPIDFILE%:$(localstatedir)/mod_gearman/gearmand.pid:g' \
+               -e 's:%GLOGFILE%:$(localstatedir)/mod_gearman/gearmand.log:g' \
                -e 's:%WORKERBIN%:$(bindir)/mod_gearman_worker:g' \
                -e 's:%USER%:$(user):g'
 
@@ -91,6 +94,14 @@ initscript-local:
 
 gearmand-init-local:
 	$(replace_vars) extras/gearmand-init.in > extras/gearmand-init
+	if [ ! -z $$(which gearmand 2>/dev/null) ]; then \
+	    sed -i -e "s:%GEARMAND%:$$(which gearmand 2>/dev/null):g" extras/gearmand-init; \
+	fi
+	for gearm in $(GEARMANDS); do \
+  	    test -f $$gearm && sed -i -e "s:%GEARMAND%:$$gearm:g" extras/gearmand-init ; \
+	done; echo done
+	sed -i -e 's:%GEARMAND%:/usr/sbin/gearmand:g' extras/gearmand-init
+	chmod 755 extras/gearmand-init
 
 all-local: mod_gearman.o initscript-local mod_gearman.conf-local gearmand-init-local
 	@echo ""
