@@ -111,6 +111,14 @@ Restarting nagios3 monitoring daemon: nagios3
 .
 ======
 
+Your nagios.log should contain a line:
+======
+  #> grep mod_gearman /var/log/nagios3/nagios.log
+  [1295003042] mod_gearman: Version 0.9
+  [1295003042] Event broker module '/opt/lib/mod_gearman/mod_gearman.o' initialized successfully.
+======
+
+
 
 
 Testing
