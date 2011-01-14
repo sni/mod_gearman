@@ -70,8 +70,14 @@ case "$1" in
             exit 0;
         fi
 
-        CMD="$DAEMON -p $PORT -P $PIDFILE $OPTIONS --log-file=$LOGFILE -v -v --listen=$LISTEN"
+        CMD="$DAEMON -p $PORT -P $PIDFILE $OPTIONS --log-file=$LOGFILE -v -v --listen=$LISTEN > $LOGFILE 2>&1"
         if [ "$WHO" = "root" ]; then
+            # try to exec commands as user
+            su - $USER -c /bin/true
+            if [ $? -ne 0 ]; then
+                echo "cannot exec commands as user $USER, make sure user has a valid shell"
+                exit 1;
+            fi
             su - $USER -c  "$CMD"
         else
             $CMD
