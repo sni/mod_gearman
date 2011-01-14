@@ -689,6 +689,16 @@ Restarting nagios3 monitoring daemon: nagios3
 .</tt></pre>
 </div></div>
 </div></div>
+<div class="paragraph"><p>Your nagios.log should contain a line:</p></div>
+<div class="exampleblock">
+<div class="exampleblock-content">
+<div class="literalblock">
+<div class="content">
+<pre><tt>#&gt; grep mod_gearman /var/log/nagios3/nagios.log
+[1295003042] mod_gearman: Version 0.9
+[1295003042] Event broker module '/opt/lib/mod_gearman/mod_gearman.o' initialized successfully.</tt></pre>
+</div></div>
+</div></div>
 </div>
 <h2 id="_testing">Testing</h2>
 <div class="sectionbody">
@@ -760,7 +770,7 @@ Mod-Gearman Worker: /opt/var/mod_gearman/mod_gearman_worker.log
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2011-01-14 16:59:53 CEST
+Last updated 2011-01-14 18:44:38 CEST
 </div>
 </div>
 </body>

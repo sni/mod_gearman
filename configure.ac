@@ -33,7 +33,7 @@ AC_CHECK_HEADERS([ltdl.h],,AC_MSG_ERROR([Compiling mod_gearman requires ltdl.h])
 AC_CHECK_HEADERS([curses.h],,AC_MSG_ERROR([Compiling mod_gearman requires curses.h]))
 
 AC_ARG_WITH(gearman,
- [  --with-gearman=DIR Specify the path to you gearman library],
+ [  --with-gearman=DIR Specify the path to your gearman library],
  [  LDFLAGS="$LDFLAGS -L$withval/lib"
     CFLAGS="$CFLAGS -I$withval/include"
  ])
@@ -60,7 +60,7 @@ AC_MSG_CHECKING(if user $user exists)
 id -a $user > /dev/null 2>&1
 if test "$?" != "0" ; then
     AC_MSG_RESULT(no)
-    AC_MSG_ERROR(user $user does not exist) 
+    AC_MSG_ERROR(user $user does not exist)
 else
     AC_MSG_RESULT(yes)
 fi

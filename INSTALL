@@ -17,4 +17,5 @@ Building
  %> make test
  %> make install
 
-see the README for configuration examples
+see the README for configuration examples and docs/QUICKSTART for detailed
+installation instructions for debian.

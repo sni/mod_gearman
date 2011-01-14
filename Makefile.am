@@ -9,6 +9,8 @@
 
 RPM_TOPDIR=$$(pwd)/rpm.topdir
 
+.PHONY: docs
+
 # -g adds debug symbols, -s strips
 CFLAGS=-Wall -W -Wstrict-prototypes -Wmissing-prototypes -Wnested-externs -s -O -fPIC
 # for debugging
@@ -75,8 +77,8 @@ replace_vars = sed -e 's:%CONFIG%:$(sysconfdir)/mod_gearman.conf:g' \
                -e 's:%USER%:$(user):g'
 
 EXTRA_DIST = COPYING etc extras include \
-             THANKS README README.html patches Changes worker/initscript.in \
-             QUICKSTART QUICKSTART.html
+             THANKS README docs/README.html Changes worker/initscript.in \
+             docs/QUICKSTART docs/QUICKSTART.html
 
 # other targets
 mod_gearman.o: $(mod_gearman_so_OBJECTS) $(mod_gearman_so_DEPENDENCIES)
@@ -126,10 +128,10 @@ all-local: mod_gearman.o initscript-local mod_gearman.conf-local gearmand-init-l
 	@echo "################################################################"
 
 distclean-local: clean
-	$(RM) -r .deps/ Makefile.in aclocal.m4 autom4te.cache config.* configure depcomp install-sh missing *.gz
+	$(RM) -rf .deps/ Makefile.in aclocal.m4 autom4te.cache config.* configure depcomp install-sh missing *.gz
 
 clean-local:
-	$(RM) -r worker.static worker/initscript etc/mod_gearman.conf rpm.topdir *.o */*.o
+	$(RM) -rf worker.static worker/initscript etc/mod_gearman.conf rpm.topdir *.o */*.o
 
 worker.static: worker
 	@echo "################################################################"
@@ -150,9 +152,9 @@ install-exec-local: install-local-state-dir
 install-local-state-dir:
 	$(RM) $(DESTDIR)$(pkglibdir)/mod_gearman.so
 	if [ `id -u` -eq 0 ]; then \
-	    $(install_sh) -o $(user) -d $(DESTDIR)$(localstatedir)/mod_gearman/; \
+	    $(install_sh_PROGRAM) -o $(user) -d $(DESTDIR)$(localstatedir)/mod_gearman/; \
     else \
-	    $(install_sh) -o $(user) -d $(DESTDIR)$(localstatedir)/mod_gearman/; \
+	    $(install_sh_PROGRAM) -o $(user) -d $(DESTDIR)$(localstatedir)/mod_gearman/; \
         echo "*** You should run: sudo chown $(user) $(DESTDIR)$(localstatedir)/mod_gearman/"; \
     fi
 
@@ -198,12 +200,13 @@ test: check
 	@echo "################################################################"
 
 docs:
-	$(RM) images
-	ln -s /usr/share/asciidoc/images .
-	asciidoc --unsafe -a toc -a toclevels=2 -a icons -a data-uri -a max-width=800 README
-	chmod 644 README.html
-	asciidoc --unsafe -a toc -a toclevels=2 -a icons -a data-uri -a max-width=800 QUICKSTART
-	chmod 644 QUICKSTART.html
+	$(RM) docs/images
+	cd docs && ln -s /usr/share/asciidoc/images .
+	cp -p README docs/ && cd docs && asciidoc --unsafe -a toc -a toclevels=2 -a icons -a data-uri -a max-width=800 README
+	chmod 644 docs/README.html
+	rm -f docs/README
+	cd docs && asciidoc --unsafe -a toc -a toclevels=2 -a icons -a data-uri -a max-width=800 QUICKSTART
+	chmod 644 docs/QUICKSTART.html
 
 rpm: dist
 	mkdir -p $(RPM_TOPDIR)/{SOURCES,BUILD,RPMS,SRPMS,SPECS}
