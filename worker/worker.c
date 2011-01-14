@@ -114,6 +114,12 @@ int main (int argc, char **argv) {
 
     gm_log( GM_LOG_DEBUG, "main process started\n");
 
+    /* start a single non forked standalone worker */
+    if(mod_gm_opt->debug_level >= 10) {
+        worker_client(GM_WORKER_STANDALONE);
+        exit(EXIT_SUCCESS);
+    }
+
     /* setup shared memory */
     setup_child_communicator();
 
