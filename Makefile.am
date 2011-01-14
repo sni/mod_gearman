@@ -75,7 +75,8 @@ replace_vars = sed -e 's:%CONFIG%:$(sysconfdir)/mod_gearman.conf:g' \
                -e 's:%USER%:$(user):g'
 
 EXTRA_DIST = COPYING etc extras include \
-             THANKS README README.html patches Changes worker/initscript.in
+             THANKS README README.html patches Changes worker/initscript.in \
+             QUICKSTART QUICKSTART.html
 
 # other targets
 mod_gearman.o: $(mod_gearman_so_OBJECTS) $(mod_gearman_so_DEPENDENCIES)
