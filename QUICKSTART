@@ -7,6 +7,8 @@ and Mod-Gearman, we have to install them from source.
 
 This guide assumes you have a basic nagios system running.
 
+All commands  have to be executed as root.
+
 
 Build Preparation
 -----------------
