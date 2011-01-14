@@ -69,8 +69,12 @@ case "$1" in
             echo "$NAME already running"
             exit 0;
         fi
+        if [ ! -x "$DAEMON" ]; then
+            echo "Cannot start. Make sure $DAEMON exists and is executable"
+            exit 1;
+        fi
 
-        CMD="$DAEMON -p $PORT -P $PIDFILE $OPTIONS --log-file=$LOGFILE -v -v --listen=$LISTEN > $LOGFILE 2>&1"
+        CMD="$DAEMON -p $PORT -P $PIDFILE $OPTIONS --log-file=$LOGFILE -v -v --listen=$LISTEN"
         if [ "$WHO" = "root" ]; then
             # try to exec commands as user
             su - $USER -c /bin/true
@@ -78,9 +82,9 @@ case "$1" in
                 echo "cannot exec commands as user $USER, make sure user has a valid shell"
                 exit 1;
             fi
-            su - $USER -c  "$CMD"
+            su - $USER -c  "$CMD > $LOGFILE 2>&1"
         else
-            $CMD
+            $CMD > $LOGFILE 2>&1
         fi
         if [ $? -eq 0 ]; then
             echo "done"
@@ -99,7 +103,7 @@ case "$1" in
             # do a graceful shutdown
             if [ ! -z $NC ]; then
                 printf '%s' " gracefully "
-                echo "shutdown graceful" | $NC -w 1 $LISTEN $PORT
+                echo "shutdown graceful" | $NC -w 1 -i 1 $LISTEN $PORT
                 x=$GRACEFUL_SHUTDOWN_TIME
                 while [ $x -gt 0 ]; do
                     printf "."
