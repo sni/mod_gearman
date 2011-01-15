@@ -33,13 +33,15 @@ pthread_t status_thr;
 
 int     orig_argc;
 char ** orig_argv;
-int     last_time_checked;
+int     last_time_increased;
+volatile sig_atomic_t shmid;
+int   * shm;
 
 /* work starts here */
 int main (int argc, char **argv) {
     int sid, x;
 
-    last_time_checked = 0;
+    last_time_increased = 0;
 
     /* store the original command line for later reloads */
     store_original_comandline(argc, argv);
@@ -116,7 +118,8 @@ int main (int argc, char **argv) {
 
     /* start a single non forked standalone worker */
     if(mod_gm_opt->debug_level >= 10) {
-        worker_client(GM_WORKER_STANDALONE);
+        gm_log( GM_LOG_TRACE, "starting standalone worker\n");
+        worker_client(GM_WORKER_STANDALONE, 1, shmid);
         exit(EXIT_SUCCESS);
     }
 
@@ -145,19 +148,12 @@ void monitor_loop() {
 
     /* maintain the population */
     while (1) {
-        /* check number of workers every 3 seconds
-         * sleep gets canceled anyway when receiving signals
-         */
-        sleep(3);
+        /* check number of workers every second */
+        sleep(1);
 
         /* collect finished workers */
-        while(waitpid(-1, &status, WNOHANG) > 0) {
+        while(waitpid(-1, &status, WNOHANG) > 0)
             gm_log( GM_LOG_TRACE, "waitpid() worker exited with: %d\n", status);
-            if( status != EXIT_SUCCESS ) {
-                /* decrease number of worker */
-                decrease_number_worker();
-            }
-        }
 
         check_worker_population();
     }
@@ -165,22 +161,80 @@ void monitor_loop() {
 }
 
 
+/* count current worker and jobs */
+void count_current_worker() {
+    int x;
+
+    gm_log( GM_LOG_TRACE, "count_current_worker()\n");
+    gm_log( GM_LOG_TRACE, "done jobs:     shm[0] = %d\n", shm[0]);
+
+    /* shm states:
+     *   0 -> undefined
+     *  -1 -> free
+     * <-1 -> used but idle
+     * > 1 -> used and working
+     */
+
+    /* check if status worker died */
+    if( shm[3] != -1 && pid_alive(shm[3]) == FALSE ) {
+        gm_log( GM_LOG_TRACE, "removed stale status worker, old pid: %d\n", shm[3] );
+        shm[3] = -1;
+    }
+    gm_log( GM_LOG_TRACE, "status worker: shm[3] = %d\n", shm[3]);
+
+    /* check all known worker */
+    current_number_of_workers = 0;
+    current_number_of_jobs    = 0;
+    for(x=4; x < mod_gm_opt->max_worker+4; x++) {
+        /* verify worker is alive */
+        if( shm[x] != -1 && pid_alive(shm[x]) == FALSE ) {
+            gm_log( GM_LOG_TRACE, "removed stale worker %d, old pid: %d\n", x, shm[x]);
+            shm[x] = -1;
+        }
+        gm_log( GM_LOG_TRACE, "worker slot:   shm[%d] = %d\n", x, shm[x]);
+        if(shm[x] != -1) {
+            current_number_of_workers++;
+        }
+        if(shm[x] > 0) {
+            current_number_of_jobs++;
+        }
+    }
+
+    shm[1] = current_number_of_workers; /* total worker   */
+    shm[2] = current_number_of_jobs;    /* running worker */
+
+    gm_log( GM_LOG_TRACE, "worker: %d  -  running: %d\n", current_number_of_workers, current_number_of_jobs);
+
+    return;
+}
+
 /* start new worker if needed */
 void check_worker_population() {
     int x, now, target_number_of_workers;
 
+    gm_log( GM_LOG_TRACE, "check_worker_population()\n");
+
+    /* set current worker number */
+    count_current_worker();
+
+    /* check if status worker died */
+    if( shm[3] == -1 ) {
+        make_new_child(GM_WORKER_STATUS);
+    }
+
     /* keep up minimum population */
     for (x = current_number_of_workers; x < mod_gm_opt->min_worker; x++) {
         make_new_child(GM_WORKER_MULTI);
+        current_number_of_workers++;
     }
 
     now = (int)time(NULL);
-    if(last_time_checked +2 > now)
+    if(last_time_increased +2 > now)
         return;
-    last_time_checked = now;
 
     target_number_of_workers = adjust_number_of_worker(mod_gm_opt->min_worker, mod_gm_opt->max_worker, current_number_of_workers, current_number_of_jobs);
     for (x = current_number_of_workers; x < target_number_of_workers; x++) {
+        last_time_increased = now;
         /* top up the worker pool */
         make_new_child(GM_WORKER_MULTI);
     }
@@ -190,13 +244,19 @@ void check_worker_population() {
 
 /* start up new worker */
 int make_new_child(int mode) {
-    struct sigaction usr1_action;
-    sigset_t block_mask;
     pid_t pid = 0;
+    int next_shm_index;
 
-    gm_log( GM_LOG_TRACE, "make_new_child()\n");
+    gm_log( GM_LOG_TRACE, "make_new_child(%d)\n", mode);
 
-    signal(SIGUSR1, SIG_IGN);
+    if(mode == GM_WORKER_STATUS) {
+        gm_log( GM_LOG_TRACE, "forking status worker\n");
+        next_shm_index = 3;
+    } else {
+        gm_log( GM_LOG_TRACE, "forking worker\n");
+        next_shm_index = get_next_shm_index();
+    }
+
     signal(SIGINT,  SIG_DFL);
     signal(SIGTERM, SIG_DFL);
 
@@ -216,21 +276,16 @@ int make_new_child(int mode) {
         gm_log( GM_LOG_DEBUG, "worker started with pid: %d\n", getpid() );
 
         /* do the real work */
-        worker_client(mode);
+        worker_client(mode, next_shm_index, shmid);
 
         exit(EXIT_SUCCESS);
     }
 
     /* parent  */
     else if(pid > 0){
-        /* setup signal handler */
-        sigfillset (&block_mask); /* block all signals */
-        usr1_action.sa_handler = check_signal;
-        usr1_action.sa_mask    = block_mask;
-        usr1_action.sa_flags   = 0;
-        sigaction (SIGUSR1, &usr1_action, NULL);
         signal(SIGINT, clean_exit);
         signal(SIGTERM,clean_exit);
+        shm[next_shm_index] = -pid;
     }
 
     return GM_OK;
@@ -398,48 +453,31 @@ void print_usage() {
 }
 
 
-/* check child signal pipe */
-void check_signal(int sig) {
-    gm_log( GM_LOG_TRACE, "check_signal(%i)\n", sig);
-    update_runtime_data();
-    return;
-}
-
 /* create shared memory segments */
 void setup_child_communicator() {
-    struct sigaction usr1_action;
-    sigset_t block_mask;
-    int shmid;
-    int * shm;
+    int x;
 
     gm_log( GM_LOG_TRACE, "setup_child_communicator()\n");
-
-    /* setup signal handler */
-    sigfillset (&block_mask); /* block all signals */
-    usr1_action.sa_handler = check_signal;
-    usr1_action.sa_mask    = block_mask;
-    usr1_action.sa_flags   = 0;
-    sigaction (SIGUSR1, &usr1_action, NULL);
 
     /* Create the segment. */
     mod_gm_shm_key = getpid(); /* use pid as shm key */
     if ((shmid = shmget(mod_gm_shm_key, GM_SHM_SIZE, IPC_CREAT | 0600)) < 0) {
         perror("shmget");
-        exit(1);
+        exit( EXIT_FAILURE );
     }
 
     /* Now we attach the segment to our data space. */
     if ((shm = shmat(shmid, NULL, 0)) == (int *) -1) {
         perror("shmat");
-        exit(1);
+        exit( EXIT_FAILURE );
     }
-    shm[0] = 0; /* current jobs    */
-    shm[1] = 0; /* current worker  */
-    shm[2] = 0; /* done jobs       */
-
-    /* detach from shared memory */
-    if(shmdt(shm) < 0)
-        perror("shmdt");
+    shm[0] = 0;  /* done jobs         */
+    shm[1] = 0;  /* total worker      */
+    shm[2] = 0;  /* running worker    */
+    shm[3] = -1; /* status worker pid */
+    for(x = 0; x < mod_gm_opt->max_worker; x++) {
+        shm[x+4] = -1; /* status worker   */
+    }
 
     return;
 }
@@ -491,6 +529,10 @@ void clean_exit(int sig) {
     /* stop all childs */
     stop_childs(GM_WORKER_STOP);
 
+    /* detach shm */
+    if(shmdt(shm) < 0)
+        perror("shmdt");
+
     /* kill remaining worker */
     if(current_number_of_workers > 0) {
         pid_t pid = getpid();
@@ -509,15 +551,11 @@ void clean_exit(int sig) {
 void stop_childs(int mode) {
     int status, chld;
     int waited = 0;
-    int shmid;
     int skipfirst = 0;
 
     /* ignore some signals for now */
     signal(SIGTERM, SIG_IGN);
     signal(SIGINT,  SIG_IGN);
-    if(mode == GM_WORKER_STOP) {
-        signal(SIGUSR1,  SIG_IGN);
-    }
 
     /*
      * send term signal to our childs
@@ -546,6 +584,7 @@ void stop_childs(int mode) {
     }
 
     if(mode == GM_WORKER_STOP) {
+        count_current_worker();
         if(current_number_of_workers > 0) {
             gm_log( GM_LOG_TRACE, "sending SIGINT...\n");
             killpg(0, SIGINT);
@@ -553,21 +592,19 @@ void stop_childs(int mode) {
 
         while((chld = waitpid(-1, &status, WNOHANG)) != -1 && chld > 0) {
             gm_log( GM_LOG_TRACE, "wait() %d exited with %d\n", chld, status);
-            current_number_of_workers--;
         }
+
+        /* count childs a last time */
+        count_current_worker();
 
         /*
          * clean up shared memory
          * will be removed when last client detaches
          */
-        if ((shmid = shmget(mod_gm_shm_key, GM_SHM_SIZE, 0600)) < 0) {
-            perror("shmget");
+        if( shmctl( shmid, IPC_RMID, 0 ) == -1 ) {
+            perror("shmctl");
         } else {
-            if( shmctl( shmid, IPC_RMID, 0 ) == -1 ) {
-                perror("shmctl");
-            } else {
-                gm_log( GM_LOG_TRACE, "shared memory deleted\n");
-            }
+            gm_log( GM_LOG_TRACE, "shared memory deleted\n");
         }
 
         if(current_number_of_workers > 0) {
@@ -665,79 +702,29 @@ void reload_config(int sig) {
 }
 
 
-/* update the number of worker and jobs */
-void update_runtime_data() {
-    int shmid;
-    int *shm;
+/* return and reserve next shm index*/
+int get_next_shm_index() {
+    int x;
+    int next_index = 0;
 
-    gm_log( GM_LOG_TRACE, "update_runtime_data()\n");
+    gm_log( GM_LOG_TRACE, "get_next_shm_index()\n" );
 
-    /* set timeout while waiting for the shared memory */
-    signal(SIGALRM, wait_sighandler);
-    alarm(3);
-
-    /* Locate the segment. */
-    if ((shmid = shmget(mod_gm_shm_key, GM_SHM_SIZE, 0600)) < 0) {
-        perror("shmget");
-        exit(1);
+    for(x = 4; x < mod_gm_opt->max_worker+4; x++) {
+        if(shm[x] == -1) {
+            next_index      = x;
+            shm[next_index] = 1;
+            break;
+        }
     }
 
-    /* Now we attach the segment to our data space. */
-    if ((shm = shmat(shmid, NULL, 0)) == (int *) -1) {
-        perror("shmat");
-        exit(1);
+    if(next_index == 0) {
+        gm_log(GM_LOG_ERROR, "unable to get next shm id\n");
+        clean_exit(15);
+        exit(EXIT_FAILURE);
     }
+    gm_log( GM_LOG_TRACE, "get_next_shm_index() -> %d\n", next_index );
 
-    gm_log( GM_LOG_TRACE, "update_runtime_data: running jobs: %i - running worker: %i - jobs done: %i\n", shm[0], shm[1], shm[2]);
-    current_number_of_jobs    = shm[0];
-    current_number_of_workers = shm[1];
-
-    /* detach from shared memory */
-    if(shmdt(shm) < 0)
-        perror("shmdt");
-
-    /* reset timeout */
-    alarm(0);
-
-    check_worker_population();
-
-    return;
-}
-
-
-/* called when run into timeout */
-void wait_sighandler(int sig) {
-    gm_log( GM_LOG_TRACE, "wait_sighandler(%i)\n", sig );
-    return;
-}
-
-
-/* decrease amount of worker */
-void decrease_number_worker() {
-    int shmid;
-    int *shm;
-
-    gm_log( GM_LOG_TRACE, "decrease_number_worker()\n");
-
-    /* Locate the segment. */
-    if ((shmid = shmget(mod_gm_shm_key, GM_SHM_SIZE, 0600)) < 0) {
-        perror("shmget");
-        exit(1);
-    }
-
-    /* Now we attach the segment to our data space. */
-    if ((shm = shmat(shmid, NULL, 0)) == (int *) -1) {
-        perror("shmat");
-        exit(1);
-    }
-
-    shm[1]--;
-
-    /* detach from shared memory */
-    if(shmdt(shm) < 0)
-        perror("shmdt");
-
-    return;
+    return next_index;
 }
 
 

@@ -55,10 +55,10 @@
 
 #define GM_DEFAULT_JOB_TIMEOUT         60
 #define GM_DEFAULT_JOB_RETRIES          1
-#define GM_CHILD_SHUTDOWN_TIMEOUT       5
+#define GM_CHILD_SHUTDOWN_TIMEOUT      30
 #define GM_DEFAULT_RESULT_QUEUE  "check_results"
-#define GM_DEFAULT_IDLE_TIMEOUT        10
-#define GM_DEFAULT_MAX_JOBS            20
+#define GM_DEFAULT_IDLE_TIMEOUT        30
+#define GM_DEFAULT_MAX_JOBS             0
 #define MAX_CMD_ARGS                 4096
 
 /* worker */
@@ -96,8 +96,7 @@
 #define STATE_CRITICAL                  2
 #define STATE_UNKNOWN                   3
 
-/* size of the shared memory segment */
-#define GM_SHM_SIZE                   300
+#define GM_SHM_SIZE                  4096
 
 /* options structure */
 typedef struct mod_gm_opt_struct {

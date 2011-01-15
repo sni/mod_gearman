@@ -944,3 +944,20 @@ int run_check(char *processed_command, char **ret) {
 
     return retval;
 }
+
+
+/* verify if a pid is alive */
+int pid_alive(int pid) {
+    if(pid < 0) { pid = -pid; }
+
+    /* 1/-1 are undefined pids in our case */
+    if(pid == 1)
+        return TRUE;
+
+    /* send kill 0 to verify the proc is alive */
+    if(kill(pid, 0) == 0) {
+        return TRUE;
+    }
+
+    return FALSE;
+}
