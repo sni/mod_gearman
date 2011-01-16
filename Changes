@@ -1,7 +1,7 @@
 This file documents the revision history for mod_gearman.
 
-0.9    Wed...
-          - added debian packaging files (thanks Stig Sandbeck Mathisen)
+0.9    Sun Jan 16 21:20:06 CET 2011
+          - prepared debian packaging (thanks Stig Sandbeck Mathisen)
           - increased max output to 64k
           - fixed default paths in gearmand init script
           - fixed problem with too low number of workers after running for a while
