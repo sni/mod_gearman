@@ -123,7 +123,7 @@ void worker_loop() {
 void *get_job( gearman_job_st *job, void *context, size_t *result_size, gearman_return_t *ret_ptr ) {
     sigset_t block_mask;
     sigset_t old_mask;
-    int wsize;
+    int wsize, valid_lines;
     char workload[GM_BUFFERSIZE];
     char * decrypted_data;
     char * decrypted_data_c;
@@ -180,6 +180,7 @@ void *get_job( gearman_job_st *job, void *context, size_t *result_size, gearman_
     exec_job = ( gm_job_t * )malloc( sizeof *exec_job );
     set_default_job(exec_job);
 
+    valid_lines = 0;
     while ( (ptr = strsep(&decrypted_data, "\n" )) != NULL ) {
         char *key   = strsep( &ptr, "=" );
         char *value = strsep( &ptr, "\x0" );
@@ -192,26 +193,37 @@ void *get_job( gearman_job_st *job, void *context, size_t *result_size, gearman_
 
         if ( !strcmp( key, "host_name" ) ) {
             exec_job->host_name = strdup(value);
+            valid_lines++;
         } else if ( !strcmp( key, "service_description" ) ) {
             exec_job->service_description = strdup(value);
+            valid_lines++;
         } else if ( !strcmp( key, "type" ) ) {
             exec_job->type = strdup(value);
+            valid_lines++;
         } else if ( !strcmp( key, "result_queue" ) ) {
             exec_job->result_queue = strdup(value);
+            valid_lines++;
         } else if ( !strcmp( key, "check_options" ) ) {
             exec_job->check_options = atoi(value);
+            valid_lines++;
         } else if ( !strcmp( key, "scheduled_check" ) ) {
             exec_job->scheduled_check = atoi(value);
+            valid_lines++;
         } else if ( !strcmp( key, "reschedule_check" ) ) {
             exec_job->reschedule_check = atoi(value);
+            valid_lines++;
         } else if ( !strcmp( key, "latency" ) ) {
             exec_job->latency = atof(value);
+            valid_lines++;
         } else if ( !strcmp( key, "start_time" ) ) {
             string2timeval(value, &exec_job->core_start_time);
+            valid_lines++;
         } else if ( !strcmp( key, "timeout" ) ) {
             exec_job->timeout = atoi(value);
+            valid_lines++;
         } else if ( !strcmp( key, "command_line" ) ) {
             exec_job->command_line = strdup(value);
+            valid_lines++;
         }
     }
 
@@ -220,7 +232,11 @@ void *get_job( gearman_job_st *job, void *context, size_t *result_size, gearman_
         write_debug_file(&decrypted_orig);
 #endif
 
-    do_exec_job();
+    if(valid_lines == 0) {
+        gm_log( GM_LOG_ERROR, "discarded invalid job, check your encryption settings\n" );
+    } else {
+        do_exec_job();
+    }
 
     /* send finish signal to parent */
     set_state(GM_JOB_END);
