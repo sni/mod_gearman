@@ -33,8 +33,6 @@ char temp_buffer1[GM_BUFFERSIZE];
 char temp_buffer2[GM_BUFFERSIZE];
 char hostname[GM_BUFFERSIZE];
 
-int has_worker = FALSE;
-int has_client = FALSE;
 gearman_worker_st worker;
 gearman_client_st client;
 
@@ -68,15 +66,16 @@ void worker_client(int worker_mode, int index, int shid) {
     /* create worker */
     if(set_worker(&worker) != GM_OK) {
         gm_log( GM_LOG_ERROR, "cannot start worker\n" );
+        clean_worker_exit(0);
         exit( EXIT_FAILURE );
     }
 
     /* create client */
     if ( create_client( mod_gm_opt->server_list, &client ) != GM_OK ) {
         gm_log( GM_LOG_ERROR, "cannot start client\n" );
+        clean_worker_exit(0);
         exit( EXIT_FAILURE );
     }
-    has_client = TRUE;
 
     worker_loop();
 
@@ -103,7 +102,6 @@ void worker_loop() {
             gearman_job_free_all( &worker );
             gearman_worker_free( &worker );
             gearman_client_free( &client );
-            has_client = FALSE;
 
             /* sleep on error to avoid cpu intensive infinite loops */
             sleep(sleep_time_after_error);
@@ -114,7 +112,6 @@ void worker_loop() {
             /* create new connections */
             set_worker( &worker );
             create_client( mod_gm_opt->server_list, &client );
-            has_client = TRUE;
         }
     }
 
@@ -520,7 +517,6 @@ int set_worker( gearman_worker_st *w ) {
     int x = 0;
 
     gm_log( GM_LOG_TRACE, "set_worker()\n" );
-    has_worker = FALSE;
 
     create_worker( mod_gm_opt->server_list, w );
 
@@ -560,8 +556,6 @@ int set_worker( gearman_worker_st *w ) {
     /* add our dummy queue, gearman sometimes forgets the last added queue */
     worker_add_function( w, "dummy", dummy);
 
-    has_worker = TRUE;
-
     return GM_OK;
 }
 
@@ -589,6 +583,7 @@ void alarm_sighandler(int sig) {
     kill(-pid, SIGKILL);
 
     if(worker_run_mode != GM_WORKER_STANDALONE)
+        clean_worker_exit(0);
         exit(EXIT_SUCCESS);
 
     return;
@@ -604,6 +599,7 @@ void set_state(int status) {
     if ((shm = shmat(shmid, NULL, 0)) == (int *) -1) {
         perror("shmat");
         gm_log( GM_LOG_TRACE, "worker finished: %d\n", getpid() );
+        clean_worker_exit(0);
         exit( EXIT_FAILURE );
     }
 
@@ -613,7 +609,8 @@ void set_state(int status) {
         shm[0]++; /* increase jobs done */
         /* pid in our status slot changed, this should not happen -> exit */
         if( shm[shm_index] != current_pid ) {
-            gm_log( GM_LOG_ERROR, "pid has changed? %d != %d\n", getpid(), shm[shm_index] );
+            gm_log( GM_LOG_ERROR, "double used worker slot: %d != %d\n", getpid(), shm[shm_index] );
+            clean_worker_exit(0);
             exit( EXIT_FAILURE );
         }
         shm[shm_index] = -current_child_pid;
@@ -629,20 +626,29 @@ void set_state(int status) {
 
 /* do a clean exit */
 void clean_worker_exit(int sig) {
+    int *shm;
 
     gm_log( GM_LOG_TRACE, "clean_worker_exit(%d)\n", sig);
 
-    if( has_worker == TRUE ) {
-        gm_log( GM_LOG_TRACE, "cleaning worker\n");
-        gearman_worker_unregister_all(&worker);
-        gearman_job_free_all( &worker );
-    }
-    if( has_client == TRUE ) {
-        gm_log( GM_LOG_TRACE, "cleaning client\n");
-        gearman_client_free( &client );
-    }
-
+    gm_log( GM_LOG_TRACE, "cleaning worker\n");
+    gearman_worker_unregister_all(&worker);
+    //gearman_job_free_all( &worker );
+    gm_log( GM_LOG_TRACE, "cleaning client\n");
+    //gearman_client_free( &client );
     mod_gm_free_opt(mod_gm_opt);
+
+    /* Now we attach the segment to our data space. */
+    if ((shm = shmat(shmid, NULL, 0)) == (int *) -1) {
+        perror("shmat");
+        gm_log( GM_LOG_TRACE, "worker finished: %d\n", getpid() );
+        clean_worker_exit(0);
+        exit( EXIT_FAILURE );
+    }
+    shm[shm_index] = -1;
+
+    /* detach from shared memory */
+    if(shmdt(shm) < 0)
+        perror("shmdt");
 
     if(worker_run_mode != GM_WORKER_STANDALONE)
         exit( EXIT_SUCCESS );

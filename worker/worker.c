@@ -533,16 +533,8 @@ void clean_exit(int sig) {
     if(shmdt(shm) < 0)
         perror("shmdt");
 
-    /* kill remaining worker */
-    if(current_number_of_workers > 0) {
-        pid_t pid = getpid();
-        kill(-pid, SIGKILL);
-    }
-
     gm_log( GM_LOG_INFO, "mod_gearman worker exited\n");
-
     mod_gm_free_opt(mod_gm_opt);
-
     exit( EXIT_SUCCESS );
 }
 
@@ -551,7 +543,9 @@ void clean_exit(int sig) {
 void stop_childs(int mode) {
     int status, chld;
     int waited = 0;
-    int skipfirst = 0;
+    int x, curpid;
+
+    gm_log( GM_LOG_TRACE, "stop_childs(%d)\n", mode);
 
     /* ignore some signals for now */
     signal(SIGTERM, SIG_IGN);
@@ -561,37 +555,53 @@ void stop_childs(int mode) {
      * send term signal to our childs
      * children will finish the current job and exit
      */
-    gm_log( GM_LOG_TRACE, "send SIGTERM\n");
-    killpg(0, SIGTERM);
-
-    gm_log( GM_LOG_TRACE, "waiting for childs to exit...\n");
     while(current_number_of_workers > 0) {
+        gm_log( GM_LOG_TRACE, "send SIGTERM\n");
+        for(x=3; x < mod_gm_opt->max_worker+4; x++) {
+            curpid = shm[x];
+            if(curpid < 0) { curpid = -curpid; }
+            if( curpid != 0 ) {
+                kill(curpid, SIGTERM);
+            }
+        }
         while((chld = waitpid(-1, &status, WNOHANG)) != -1 && chld > 0) {
             gm_log( GM_LOG_TRACE, "wait() %d exited with %d\n", chld, status);
-            current_number_of_workers--;
-            /* start one worker less than exited, because of the status worker */
-            if(skipfirst == 0 && mode == GM_WORKER_RESTART) {
-                make_new_child(GM_WORKER_MULTI);
-            }
-            skipfirst = 1;
         }
         sleep(1);
         waited++;
         if(waited > GM_CHILD_SHUTDOWN_TIMEOUT) {
             break;
         }
-        gm_log( GM_LOG_TRACE, "still waiting (%d)...\n", waited);
+        count_current_worker();
+        gm_log( GM_LOG_TRACE, "still waiting (%d) %d childs missing...\n", waited, current_number_of_workers);
     }
 
     if(mode == GM_WORKER_STOP) {
         count_current_worker();
         if(current_number_of_workers > 0) {
             gm_log( GM_LOG_TRACE, "sending SIGINT...\n");
-            killpg(0, SIGINT);
+            for(x=3; x < mod_gm_opt->max_worker+4; x++) {
+                curpid = shm[x];
+                if(curpid < 0) { curpid = -curpid; }
+                if( curpid != 0 ) {
+                    kill(curpid, SIGINT);
+                }
+            }
         }
 
         while((chld = waitpid(-1, &status, WNOHANG)) != -1 && chld > 0) {
             gm_log( GM_LOG_TRACE, "wait() %d exited with %d\n", chld, status);
+        }
+
+        /* kill them the hard way */
+        for(x=3; x < mod_gm_opt->max_worker+4; x++) {
+            if( shm[x] != 0 ) {
+                curpid = shm[x];
+                if(curpid < 0) { curpid = -curpid; }
+                if( curpid != 0 ) {
+                    kill(curpid, SIGKILL);
+                }
+            }
         }
 
         /* count childs a last time */

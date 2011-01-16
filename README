@@ -334,7 +334,7 @@ idle-timeout:       Time after which an idling worker exists.  This
                     parameter controls how fast your waiting workers
                     will exit if there are no jobs waiting. Set to 0
                     to disable the idle timeout.
-                    Default: 30
+                    Default: 10
 
                     Example: idle-timeout=30
 
@@ -343,9 +343,9 @@ max-jobs:           Controls the amount of jobs a worker will do
                     before he exits.  Use this to control how fast the
                     amount of workers will go down after high load
                     times. Disabled when set to 0.
-                    Default: 0
+                    Default: 1000
 
-                    Example: max-jobs=50
+                    Example: max-jobs=500
 .......
 
 

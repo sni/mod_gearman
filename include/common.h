@@ -57,8 +57,8 @@
 #define GM_DEFAULT_JOB_RETRIES          1
 #define GM_CHILD_SHUTDOWN_TIMEOUT      30
 #define GM_DEFAULT_RESULT_QUEUE  "check_results"
-#define GM_DEFAULT_IDLE_TIMEOUT        30
-#define GM_DEFAULT_MAX_JOBS             0
+#define GM_DEFAULT_IDLE_TIMEOUT        10
+#define GM_DEFAULT_MAX_JOBS          1000
 #define MAX_CMD_ARGS                 4096
 
 /* worker */
