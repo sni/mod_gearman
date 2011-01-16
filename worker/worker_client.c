@@ -51,7 +51,7 @@ volatile sig_atomic_t shmid;
 void worker_client(int worker_mode, int index, int shid) {
 
     gm_log( GM_LOG_TRACE, "%s worker client started\n", (worker_mode == GM_WORKER_STATUS ? "status" : "job" ));
-    mod_gm_opt->debug_level = 0;
+
     /* set signal handlers for a clean exit */
     signal(SIGINT, clean_worker_exit);
     signal(SIGTERM,clean_worker_exit);
@@ -252,11 +252,11 @@ void do_exec_job( ) {
     gm_log( GM_LOG_TRACE, "do_exec_job()\n" );
 
     if(exec_job->type == NULL) {
-        gm_log( GM_LOG_ERROR, "discarded invalid job\n" );
+        gm_log( GM_LOG_ERROR, "discarded invalid job, no type given\n" );
         return;
     }
     if(exec_job->command_line == NULL) {
-        gm_log( GM_LOG_ERROR, "discarded invalid job\n" );
+        gm_log( GM_LOG_ERROR, "discarded invalid job, no command line given\n" );
         return;
     }
 
@@ -632,9 +632,9 @@ void clean_worker_exit(int sig) {
 
     gm_log( GM_LOG_TRACE, "cleaning worker\n");
     gearman_worker_unregister_all(&worker);
-    //gearman_job_free_all( &worker );
+    gearman_job_free_all( &worker );
     gm_log( GM_LOG_TRACE, "cleaning client\n");
-    //gearman_client_free( &client );
+    gearman_client_free( &client );
     mod_gm_free_opt(mod_gm_opt);
 
     /* Now we attach the segment to our data space. */

@@ -273,7 +273,8 @@ int make_new_child(int mode) {
     /* we are in the child process */
     else if(pid==0){
 
-        gm_log( GM_LOG_DEBUG, "worker started with pid: %d\n", getpid() );
+        gm_log( GM_LOG_DEBUG, "child started with pid: %d\n", getpid() );
+        shm[next_shm_index] = -getpid();
 
         /* do the real work */
         worker_client(mode, next_shm_index, shmid);
@@ -555,6 +556,7 @@ void stop_childs(int mode) {
      * send term signal to our childs
      * children will finish the current job and exit
      */
+    killpg(0, SIGTERM);
     while(current_number_of_workers > 0) {
         gm_log( GM_LOG_TRACE, "send SIGTERM\n");
         for(x=3; x < mod_gm_opt->max_worker+4; x++) {
@@ -573,19 +575,23 @@ void stop_childs(int mode) {
             break;
         }
         count_current_worker();
+        if(current_number_of_workers == 0)
+            return;
         gm_log( GM_LOG_TRACE, "still waiting (%d) %d childs missing...\n", waited, current_number_of_workers);
     }
 
     if(mode == GM_WORKER_STOP) {
+        killpg(0, SIGINT);
         count_current_worker();
-        if(current_number_of_workers > 0) {
-            gm_log( GM_LOG_TRACE, "sending SIGINT...\n");
-            for(x=3; x < mod_gm_opt->max_worker+4; x++) {
-                curpid = shm[x];
-                if(curpid < 0) { curpid = -curpid; }
-                if( curpid != 0 ) {
-                    kill(curpid, SIGINT);
-                }
+        if(current_number_of_workers == 0)
+            return;
+
+        gm_log( GM_LOG_TRACE, "sending SIGINT...\n");
+        for(x=3; x < mod_gm_opt->max_worker+4; x++) {
+            curpid = shm[x];
+            if(curpid < 0) { curpid = -curpid; }
+            if( curpid != 0 ) {
+                kill(curpid, SIGINT);
             }
         }
 
@@ -594,6 +600,9 @@ void stop_childs(int mode) {
         }
 
         /* kill them the hard way */
+        count_current_worker();
+        if(current_number_of_workers == 0)
+            return;
         for(x=3; x < mod_gm_opt->max_worker+4; x++) {
             if( shm[x] != 0 ) {
                 curpid = shm[x];
@@ -606,6 +615,8 @@ void stop_childs(int mode) {
 
         /* count childs a last time */
         count_current_worker();
+        if(current_number_of_workers == 0)
+            return;
 
         /*
          * clean up shared memory
@@ -617,11 +628,9 @@ void stop_childs(int mode) {
             gm_log( GM_LOG_TRACE, "shared memory deleted\n");
         }
 
-        if(current_number_of_workers > 0) {
-            /* this will kill us too */
-            gm_log( GM_LOG_INFO, "exiting by SIGKILL...\n");
-            killpg(0, SIGKILL);
-        }
+        /* this will kill us too */
+        gm_log( GM_LOG_ERROR, "exiting by SIGKILL...\n");
+        killpg(0, SIGKILL);
     }
 
     /* restore signal handlers for a clean exit */
