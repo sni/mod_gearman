@@ -1270,7 +1270,8 @@ max-worker:         Maximum number of worker processes which should
 
 idle-timeout:       Time after which an idling worker exists.  This
                     parameter controls how fast your waiting workers
-                    will exit if there are no jobs waiting.
+                    will exit if there are no jobs waiting. Set to 0
+                    to disable the idle timeout.
                     Default: 10
 
                     Example: idle-timeout=30
@@ -1279,10 +1280,10 @@ idle-timeout:       Time after which an idling worker exists.  This
 max-jobs:           Controls the amount of jobs a worker will do
                     before he exits.  Use this to control how fast the
                     amount of workers will go down after high load
-                    times.
-                    Default: 20
+                    times. Disabled when set to 0.
+                    Default: 1000
 
-                    Example: max-jobs=50</tt></pre>
+                    Example: max-jobs=500</tt></pre>
 </div></div>
 </div>
 <h2 id="_queue_names">Queue Names</h2>
@@ -2184,7 +2185,7 @@ If you have some checks which should not run parallel, just setup a
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2011-01-14 19:27:55 CEST
+Last updated 2011-01-16 17:32:23 CEST
 </div>
 </div>
 </body>
