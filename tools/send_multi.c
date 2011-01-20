@@ -40,7 +40,7 @@ int main (int argc, char **argv) {
      */
     if(parse_arguments(argc, argv) != GM_OK) {
         print_usage();
-        exit( EXIT_FAILURE );
+        exit( 3 );
     }
 
     /* init crypto functions */
@@ -52,8 +52,8 @@ int main (int argc, char **argv) {
 
     /* create client */
     if ( create_client( mod_gm_opt->server_list, &client ) != GM_OK ) {
-        printf( "cannot start client\n" );
-        exit( EXIT_FAILURE );
+        printf( "send_multi CRITICAL: cannot start client\n" );
+        exit(2);
     }
 
     /* send result message */
@@ -61,11 +61,15 @@ int main (int argc, char **argv) {
     rc = read_multi_stream(stdin);
     /* if rc > 0, it contains the number of checks being submitted,
        otherwise its an error code (-1 - WARNING, -2 - CRITICAL, -3 - UNKNOWN) */
-    if (rc >= 0) {
-        gm_log( GM_LOG_INFO, "%d check_multi child check%s submitted\n", rc, (rc>1)?"s":"" );
+    if (rc == 0) {
+        printf( "send_multi WARNING: %d check_multi child checks submitted\n", rc );
+        rc=1; /* WARNING */
+    }
+    else if (rc > 0) {
+        printf( "send_multi OK: %d check_multi child check%s submitted\n", rc, (rc>1)?"s":"" );
         rc=0; /* OK */
     } else {
-        rc*=-1;
+        rc*=-2;
     }
 
     gearman_client_free( &client );
@@ -174,7 +178,7 @@ void print_usage() {
     printf("http://my-plugin.de/wiki/projects/check_multi/feed_passive\n");
     printf("\n");
 
-    exit( EXIT_SUCCESS );
+    exit(3);
 }
 
 
