@@ -624,8 +624,8 @@ void set_state(int status) {
     if(status == GM_JOB_END) {
         shm[0]++; /* increase jobs done */
         /* pid in our status slot changed, this should not happen -> exit */
-        if( shm[shm_index] != current_pid ) {
-            gm_log( GM_LOG_ERROR, "double used worker slot: %d != %d\n", getpid(), shm[shm_index] );
+        if( shm[shm_index] != current_pid && shm[shm_index] != -current_pid ) {
+            gm_log( GM_LOG_ERROR, "double used worker slot: %d != %d\n", current_pid, shm[shm_index] );
             clean_worker_exit(0);
             exit( EXIT_FAILURE );
         }
