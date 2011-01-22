@@ -69,8 +69,6 @@ static void  start_threads(void);
 static check_result * merge_result_lists(check_result * lista, check_result * listb);
 static void move_results_to_core(void);
 
-
-/* this function gets initally called when loading the module */
 int nebmodule_init( int flags, char *args, nebmodule *handle ) {
 
     /* save our handle */

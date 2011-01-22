@@ -21,15 +21,51 @@
  *
  *****************************************************************************/
 
+/** @file
+ *  @brief crypt module
+ *
+ * contains the utility functions for en/decryption
+ *
+ * @{
+ */
 
 #include <stdio.h>
 #include <string.h>
 #include "rijndael.h"
 
-#define KEYBITS     256
-#define BLOCKSIZE    16
+#define KEYBITS     256     /**< key size */
+#define BLOCKSIZE    16     /**< block size for encryption */
 
+/**
+ * initialize crypto module
+ *
+ * @param[in] password - encryption key
+ *
+ * @return nothing
+ */
 void mod_gm_aes_init(char * password);
+
+/**
+ * encrypt text
+ *
+ * @param[out] encrypted - pointer to encrypted text
+ * @param[in] text       - text which should be encrypted
+ *
+ * @return size of encrypted text
+ */
 int mod_gm_aes_encrypt(unsigned char ** encrypted, char * text);
+
+/**
+ * decrypt text
+ *
+ * @param[out] decrypted - pointer to decrypted text
+ * @param[in] encrypted  - text which should be decrypted
+ * @param[in] size       - size of encrypted text
+ *
+ * @return nothing
+ */
 void mod_gm_aes_decrypt(char ** decrypted, unsigned char * encrypted, int size);
 
+/*
+ * @}
+ */

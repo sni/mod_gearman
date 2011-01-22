@@ -21,6 +21,30 @@
  *
  *****************************************************************************/
 
+/** \mainpage Mod-Gearman
+ *
+ * \section intro_sec Introduction
+ *
+ * Mod-Gearman (http://labs.consol.de/nagios/mod-gearman) is a new
+ * way of distributing active Nagios checks (http://www.nagios.org) across your network. It
+ * consists of two parts: There is a NEB module which resides in the
+ * Nagios core and adds servicechecks, hostchecks and eventhandler to a
+ * Gearman (http://gearman.org) queue. There can be multiple equal
+ * gearman servers.  The counterpart is one or more worker clients for
+ * the checks itself. They can be bound to host and servicegroups.
+ *
+ * @attention Please submit bugreports or patches on https://github.com/sni/mod_gearman
+ * @author Sven Nierlein <sven.nierlein@consol.de>
+ *
+ */
+
+
+/** @file
+ *  @brief common header for all components
+ *
+ *  @{
+ */
+
 #include <stdio.h>
 #include <sys/time.h>
 
@@ -62,9 +86,9 @@
 #define MAX_CMD_ARGS                 4096
 
 /* worker */
-#define GM_DEFAULT_MIN_WORKER           1      /* minumum number of worker            */
-#define GM_DEFAULT_MAX_WORKER          20      /* maximum number of concurrent worker */
-#define GM_DEFAULT_JOB_MAX_AGE        600      /* discard jobs older than that        */
+#define GM_DEFAULT_MIN_WORKER           1      /**< minumum number of worker            */
+#define GM_DEFAULT_MAX_WORKER          20      /**< maximum number of concurrent worker */
+#define GM_DEFAULT_JOB_MAX_AGE        600      /**< discard jobs older than that        */
 
 /* transport modes */
 #define GM_ENCODE_AND_ENCRYPT           1
@@ -91,71 +115,87 @@
 #define FALSE                           0
 #endif
 
-#define STATE_OK                        0
-#define STATE_WARNING                   1
-#define STATE_CRITICAL                  2
-#define STATE_UNKNOWN                   3
+#define STATE_OK                        0    /**< core exit code for ok       */
+#define STATE_WARNING                   1    /**< core exit code for warning  */
+#define STATE_CRITICAL                  2    /**< core exit code for critical */
+#define STATE_UNKNOWN                   3    /**< core exit code for unknown  */
 
-#define GM_SHM_SIZE                  4096
+#define GM_SHM_SIZE                  4096    /**< size of the shared memory segment */
 
-/* options structure */
+/** options structure
+ *
+ * structure union for all components
+ * all config files and commandline arguments are parsed
+ * into this structure
+ */
 typedef struct mod_gm_opt_struct {
-    int            set_queues_by_hand;
+    int            set_queues_by_hand;                      /**< flag whether there has been queues configured by hand */
 
-    char         * crypt_key;
-    char         * keyfile;
-    char         * server_list[GM_LISTSIZE];
-    int            server_num;
-    char         * hostgroups_list[GM_LISTSIZE];
-    int            hostgroups_num;
-    char         * servicegroups_list[GM_LISTSIZE];
-    int            servicegroups_num;
-    int            debug_level;
-    int            hosts;
-    int            services;
-    int            events;
-    int            job_timeout;
-    int            encryption;
-    int            transportmode;
+    char         * crypt_key;                               /**< encryption key used for securing the messages sent over gearman */
+    char         * keyfile;                                 /**< path to a file where the crypt_key is read from */
+    char         * server_list[GM_LISTSIZE];                /**< list of gearmand servers */
+    int            server_num;                              /**< number of gearmand servers */
+    char         * hostgroups_list[GM_LISTSIZE];            /**< list of hostgroups which get own queues */
+    int            hostgroups_num;                          /**< number of elements in hostgroups_list */
+    char         * servicegroups_list[GM_LISTSIZE];         /**< list of servicegroups which get own queues */
+    int            servicegroups_num;                       /**< number of elements in servicegroups_list */
+    int            debug_level;                             /**< level of debug output */
+    int            hosts;                                   /**< flag wheter host checks are distributed or not */
+    int            services;                                /**< flag wheter service checks are distributed or not */
+    int            events;                                  /**< flag wheter eventhandlers are distributed or not */
+    int            job_timeout;                             /**< override job timeout */
+    int            encryption;                              /**< flag wheter messages are encrypted */
+    int            transportmode;                           /**< flag for the transportmode, base64 only or base64 and encrypted  */
 /* neb module */
-    char         * result_queue;
-    int            result_workers;
-    int            perfdata;
-    char         * local_hostgroups_list[GM_LISTSIZE];
-    int            local_hostgroups_num;
-    char         * local_servicegroups_list[GM_LISTSIZE];
-    int            local_servicegroups_num;
+    char         * result_queue;                            /**< name of the result queue used by the neb module */
+    int            result_workers;                          /**< number of result worker threads started */
+    int            perfdata;                                /**< flag whether perfdata are distributed or not */
+    char         * local_hostgroups_list[GM_LISTSIZE];      /**< list of hostgroups which will not be distributed */
+    int            local_hostgroups_num;                    /**< number of elements in local_hostgroups_list */
+    char         * local_servicegroups_list[GM_LISTSIZE];   /**< list of group  which will not be distributed */
+    int            local_servicegroups_num;                 /**< number of elements in local_servicegroups_list */
 /* worker */
-    char         * identifier;
-    char         * pidfile;
-    char         * logfile;
-    FILE         * logfile_fp;
-    int            daemon_mode;
-    int            debug_result;
-    int            max_age;
-    int            min_worker;
-    int            max_worker;
-    int            fork_on_exec;
-    int            idle_timeout;
-    int            max_jobs;
+    char         * identifier;                              /**< identifier for this worker */
+    char         * pidfile;                                 /**< path to a pidfile */
+    char         * logfile;                                 /**< path for the logfile */
+    FILE         * logfile_fp;                              /**< filedescriptor for the logfile */
+    int            daemon_mode;                             /**< running as daemon ot not? */
+    int            debug_result;                            /**< flag to write a debug file for each result */
+    int            max_age;                                 /**< max age in seconds for new jobs */
+    int            min_worker;                              /**< minimum number of workers */
+    int            max_worker;                              /**< maximum number of workers */
+    int            fork_on_exec;                            /**< flag to disable additional forks for each job */
+    int            idle_timeout;                            /**< number of seconds till a idle worker exits */
+    int            max_jobs;                                /**< maximum number of jobs done after a worker exits */
 /* send_gearman */
-    int            timeout;
-    int            return_code;
-    char         * message;
-    char         * host;
-    char         * service;
-    int            active;
-    struct timeval starttime;
-    struct timeval finishtime;
-    struct timeval latency;
+    int            timeout;                                 /**< timeout for waiting reading on stdin */
+    int            return_code;                             /**< return code */
+    char         * message;                                 /**< message output */
+    char         * host;                                    /**< hostname for this check */
+    char         * service;                                 /**< service description for this check */
+    int            active;                                  /**< flag wheter the result is a active or a passive check */
+    struct timeval starttime;                               /**< time when the check started */
+    struct timeval finishtime;                              /**< time when the check finished */
+    struct timeval latency;                                 /**< latency for this result */
 } mod_gm_opt_t;
 
 
-/*
+/**
+ * general logger
+ *
  * logger is then defined in worker_logger.c
  * and the neb logger in logger.c
+ * tools logger is in the tools_logger.c
+ *
+ * @param[in] lvl  - debug level for this message
+ * @param[in] text - text to log
+ *
+ * @return nothing
  */
 void gm_log( int lvl, const char *text, ... );
 
+/*
+ * @}
+ */
 
 #endif

@@ -21,6 +21,11 @@
  *
  *****************************************************************************/
 
+/** @file
+ *  @brief header for mod-gearman worker client component
+ *
+ *  @{
+ */
 
 #include <sys/time.h>
 #include <signal.h>
@@ -39,24 +44,25 @@
 #define GM_WORKER_STANDALONE    1
 #define GM_WORKER_STATUS        2
 
+/** structure for jobs to execute */
 typedef struct gm_job_struct {
-    char         * host_name;
-    char         * service_description;
-    char         * command_line;
-    char         * type;
-    char         * result_queue;
-    char         * output;
-    int            return_code;
-    int            early_timeout;
-    int            check_options;
-    int            scheduled_check;
-    int            reschedule_check;
-    int            exited_ok;
-    int            timeout;
-    double         latency;
-    struct timeval core_start_time;
-    struct timeval start_time;
-    struct timeval finish_time;
+    char         * host_name;           /**< hostname for this job */
+    char         * service_description; /**< service description for this job or NULL */
+    char         * command_line;        /**< command line to execute */
+    char         * type;                /**< type of this job */
+    char         * result_queue;        /**< name of the result queue */
+    char         * output;              /**< output from the executed command line */
+    int            return_code;         /**< return code for this job */
+    int            early_timeout;       /**< did the check run into a timeout */
+    int            check_options;       /**< check_options given from the core */
+    int            scheduled_check;     /**< normal scheduled check? */
+    int            reschedule_check;    /**< rescheduled check? */
+    int            exited_ok;           /**< did the plugin exit normally? */
+    int            timeout;             /**< timeout for this job */
+    double         latency;             /**< latency for from this job */
+    struct timeval core_start_time;     /**< time when the core started the job */
+    struct timeval start_time;          /**< time when the job really started */
+    struct timeval finish_time;         /**< time when the job was finished */
 } gm_job_t;
 
 void worker_client(int worker_mode, int index, int shid);
@@ -76,3 +82,8 @@ int free_job(gm_job_t *job);
 #ifdef GM_DEBUG
 void write_debug_file(char ** text);
 #endif
+
+
+/**
+ * @}
+ */

@@ -1,7 +1,15 @@
 #include <string.h>
 
-/*
- * http://freecode-freecode.blogspot.com/2008/02/base64c.html
+/** @file
+ *  @brief utilities for base64 encoding
+ *
+ *  contains all function used for encoding and decoding of
+ *  base64.
+ *
+ *  see
+ *  http://freecode-freecode.blogspot.com/2008/02/base64c.html
+ *  for more.
+ * @{
  */
 
 
@@ -51,3 +59,6 @@ int _base64_decode_triple(char quadruple[4], unsigned char *result);
  */
 size_t base64_decode(char *source, unsigned char *target, size_t targetlen);
 
+/**
+ * @}
+ */

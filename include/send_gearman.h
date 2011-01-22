@@ -21,6 +21,16 @@
  *
  *****************************************************************************/
 
+/**
+ * @file
+ * @brief send_gearman command line utility
+ * @addtogroup mod_gearman_send_gearman send_gearman
+ *
+ * command line utility to send results back to core. Replacement for send_nsca.
+ *
+ * @{
+ */
+
 #define MOD_GM_SEND_GEARMAN
 
 #include <stdlib.h>
@@ -32,13 +42,76 @@
 #include <libgearman/gearman.h>
 #include "common.h"
 
-mod_gm_opt_t *mod_gm_opt;
+mod_gm_opt_t *mod_gm_opt;            /**< global options structure */
 
+
+/** send_gearman
+ *
+ * main function of gearman_top
+ *
+ * @param[in] argc - number of arguments
+ * @param[in] argv - list of arguments
+ *
+ * @return just exits
+ */
 int main (int argc, char **argv);
+
+/**
+ * parse the arguments into the global options structure
+ *
+ * @param[in] argc - number of arguments
+ * @param[in] argv - list of arguments
+ *
+ * @return TRUE on success or FALSE if not
+ */
 int parse_arguments(int argc, char **argv);
+
+/**
+ *
+ * print the usage and exit
+ *
+ * @return exits with a nagios compatible exit code
+ */
 void print_usage(void);
+
+/**
+ *
+ * print the version and exit
+ *
+ * @return exits with a nagios compatible exit code
+ */
 void print_version(void);
+
+/**
+ * verify options structure and check for missing options
+ *
+ * @param[in] opt - options structure to verify
+ *
+ * @return TRUE on success or FALSE if something went wrong
+ */
 int verify_options(mod_gm_opt_t *opt);
+
+/**
+ * send_result
+ *
+ * create and send back the gearman jobs
+ *
+ * @return TRUE on success or FALSE if something went wrong
+ */
 int send_result(void);
+
+/**
+ * alarm_sighandler
+ *
+ * handles sig alarms
+ *
+ * @param[in] sig - signal number
+ *
+ * @return nothing
+ */
 void alarm_sighandler(int sig);
 
+
+/**
+ * @}
+ */

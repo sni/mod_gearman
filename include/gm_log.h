@@ -21,5 +21,9 @@
  *
  *****************************************************************************/
 
+/** @file
+ *  @brief header for the log module
+ */
+
 #include "nagios/nagios.h"
 

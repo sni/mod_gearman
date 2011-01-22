@@ -21,16 +21,72 @@
  *
  *****************************************************************************/
 
+/**
+ * @file
+ * @brief gearman_top command line utility
+ * @addtogroup mod_gearman_gearman_top gearman_top
+ *
+ * Command line utility which connects to the admin interface of a gearman daemon.
+ * displays current worker and queue utilization.
+ *
+ * @{
+ */
+
 #include <stdlib.h>
 #include <signal.h>
 #include <curses.h>
 #include <time.h>
 #include "common.h"
 
-mod_gm_opt_t *mod_gm_opt;
+mod_gm_opt_t *mod_gm_opt;            /**< global options structure */
 
+/** gearman_top
+ *
+ * main function of gearman_top
+ *
+ * @param[in] argc - number of arguments
+ * @param[in] argv - list of arguments
+ *
+ * @return just exits
+ */
 int main (int argc, char **argv);
+
+/**
+ *
+ * close all connections and exit
+ *
+ * @param[in] sig - signal number received
+ *
+ * @return just exits
+ */
 void clean_exit(int sig);
+
+/**
+ *
+ * print the usage and exit
+ *
+ * @return just exits
+ */
 void print_usage(void);
+
+/**
+ *
+ * print the version and exit
+ *
+ * @return exits with a nagios compatible exit code
+ */
 void print_version(void);
+
+/**
+ *
+ * print the statistics for a given hostname
+ *
+ * @param[in] hostname - hostname to connect to
+ *
+ * @return nothing
+ */
 void print_stats(char * hostname);
+
+/**
+ * @}
+ */

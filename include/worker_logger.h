@@ -21,6 +21,10 @@
  *
  *****************************************************************************/
 
+/** @file
+ *  @brief header for mod-gearman worker logger
+ */
+
 #include <stdio.h>
 #include <string.h>
 #include <time.h>

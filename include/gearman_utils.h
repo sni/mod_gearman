@@ -21,6 +21,12 @@
  *
  *****************************************************************************/
 
+/** @file
+ *  @brief gearman specific utils
+ *
+ *  @{
+ */
+
 #include <stdlib.h>
 #include <errno.h>
 #include <sys/types.h>
@@ -30,33 +36,73 @@
 #include <unistd.h>
 
 
-/* function status structure */
+/** function status structure */
 typedef struct mod_gm_status_function {
-    char         * queue;
-    int            total;
-    int            running;
-    int            waiting;
-    int            worker;
+    char         * queue;         /**< name of the queue (function name) */
+    int            total;         /**< total number of workers */
+    int            running;       /**< number of running worker */
+    int            waiting;       /**< number of waiting jobs */
+    int            worker;        /**< number of workers */
 } mod_gm_status_function_t;
 
-/* worker status structure */
+/** worker status structure
+ *
+ * not used at the moment
+ */
 typedef struct mod_gm_status_worker {
-    int            fd;
-    char         * ip;
-    char         * id;
-    char         * function[GM_LISTSIZE];
+    int            fd;                    /**< file descriptor */
+    char         * ip;                    /**< ip from this worker */
+    char         * id;                    /**< id of the worker */
+    char         * function[GM_LISTSIZE]; /**< list of functions returned from gearmand */
 } mod_gm_status_worker_t;
 
 
-/* server status structure */
+/** server status structure */
 typedef struct mod_gm_status_server {
-    mod_gm_status_worker_t    * worker[GM_LISTSIZE];
-    int                         worker_num;
-    mod_gm_status_function_t  * function[GM_LISTSIZE];
-    int                         function_num;
+    mod_gm_status_worker_t    * worker[GM_LISTSIZE];   /**< list of worker */
+    int                         worker_num;            /**< number of worker */
+    mod_gm_status_function_t  * function[GM_LISTSIZE]; /**< number of functions */
+    int                         function_num;          /**< number of functions */
 } mod_gm_server_status_t;
 
-
+/**
+ * get_gearman_server_data
+ *
+ * return admin statistics from gearmand
+ *
+ * @param[out] stats - stats structure
+ * @param[out] message - info/error message
+ * @param[out] version - version string from server
+ * @param[in] hostname - hostname to connect to
+ * @param[in] port - port to connect
+ *
+ * @return true on success
+ */
 int get_gearman_server_data(mod_gm_server_status_t *stats, char ** message, char **version, char * hostname, int port);
+
+/**
+ * free_mod_gm_status_server
+ *
+ * free status structure
+ *
+ * @param[in] stats - structure to free
+ *
+ * @return nothing
+ */
 void free_mod_gm_status_server(mod_gm_server_status_t *stats);
+
+/**
+ * struct_cmp_by_queue
+ *
+ * sort gearman queues by name
+ *
+ * @param[in] a - structure a
+ * @param[in] b - structure b
+ *
+ * @return true on success
+ */
 int struct_cmp_by_queue(const void *a, const void *b);
+
+/**
+ * @}
+ */

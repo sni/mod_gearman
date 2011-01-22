@@ -21,19 +21,87 @@
  *
  *****************************************************************************/
 
-#define MOD_GM_CHECK_GEARMAN
+/**
+ * @file
+ * @brief check_gearman nagios plugin
+ * @addtogroup mod_gearman_check_gearman check_gearman
+ *
+ * check_gearman can be used as a nagios plugin to verify gearman server and worker.
+ * It is part of the Mod-Gearman package but not limited to Mod-Gearman.
+ *
+ * @{
+ */
 
-#define PLUGIN_NAME    "check_gearman"
+#define MOD_GM_CHECK_GEARMAN             /**< set check_gearman mode */
+
+#define PLUGIN_NAME    "check_gearman"   /**< set the name of the plugin */
 
 #include <stdlib.h>
 #include <signal.h>
 #include "common.h"
 
-mod_gm_opt_t *mod_gm_opt;
+mod_gm_opt_t *mod_gm_opt;                /**< global options structure */
 
+
+/** check_gearman
+ *
+ * main function of check_gearman
+ *
+ * @param[in] argc - number of arguments
+ * @param[in] argv - list of arguments
+ *
+ * @return exits with a nagios compatible exit code
+ */
 int main (int argc, char **argv);
+
+/**
+ *
+ * print the usage and exit
+ *
+ * @return exits with a nagios compatible exit code
+ */
 void print_usage(void);
+
+/**
+ *
+ * print the version and exit
+ *
+ * @return exits with a nagios compatible exit code
+ */
 void print_version(void);
+
+/**
+ *
+ * signal handler for sig alarm
+ *
+ * @param[in] sig - signal number
+ *
+ * @return exits with a nagios compatible exit code
+ */
 void alarm_sighandler(int sig);
+
+/**
+ *
+ * check a gearmand server
+ *
+ * @param[in] server - server to check
+ *
+ * @return returns a nagios compatible exit code
+ */
 int check_server(char * server);
+
+/**
+ *
+ * check a gearman worker
+ *
+ * @param[in] queue - queue name (function)
+ * @param[in] send - put this text as job into the queue
+ * @param[in] expect - returning text to expect
+ *
+ * @return returns a nagios compatible exit code
+ */
 int check_worker(char * queue, char * send, char * expect);
+
+/**
+ * @}
+ */

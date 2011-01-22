@@ -21,7 +21,7 @@
  *
  *****************************************************************************/
 
-#define MOD_GM_NEB
+#define MOD_GM_NEB  /**< set mod_gearman neb features */
 
 #include <common.h>
 
@@ -31,9 +31,23 @@
 #include <unistd.h>
 #include <pthread.h>
 
-#define GM_PERFDATA_QUEUE    "perfdata"
+#define GM_PERFDATA_QUEUE    "perfdata"  /**< default performance data queue */
+#define NSCORE                           /**< enable core features           */
 
-#define NSCORE
+/** @file
+ *  @brief Mod-Gearman NEB Module
+ *  @addtogroup mod_gearman_neb_module NEB Module
+ *
+ * The Mod-Gearman NEB module loads into the core and intercepts scheduled host
+ * and service checks as well as eventhander jobs.
+ * The module start a single new thread which acts as gearman client and worker.
+ * The client is used to send new jobs into the gearman queues (functions). The
+ * worker listens on the result queue and puts back the finished results.
+ * Before the core reaps the result they will be merged together with the ones
+ * from gearman.
+ *
+ * @{
+ */
 
 /* include some Nagios stuff as well */
 #include "nagios/nagios.h"
@@ -46,11 +60,40 @@
 /* include the gearman libs */
 #include <libgearman/gearman.h>
 
-/* functions */
-int nebmodule_init( int, char *, nebmodule * );
-int nebmodule_deinit( int, int );
-void mod_gm_add_result_to_list(check_result * newcr);
+/** main NEB module init function
+ *
+ * this function gets initally called when loading the module
+ *
+ * @param[in] flags  - module flags
+ * @param[in] args   - module arguments from the core config
+ * @param[in] handle - our module handle
+ *
+ * @return Zero on success, or a non-zero error value.
+ */
+int nebmodule_init( int flags, char * args, nebmodule * handle);
 
-/* global variables */
+/** NEB module deinit function
+ *
+ * this function gets called before unloading the module from the core
+ *
+ * @param[in] flags  - module flags
+ * @param[in] reason - reason for unloading the module
+ *
+ * @return nothing
+ */
+int nebmodule_deinit( int flags, int reason );
+
+/** adds check result to result list
+ *
+ * @param[in] newcheckresult - new checkresult structure to add to list
+ *
+ * @return nothing
+ */
+void mod_gm_add_result_to_list(check_result * newcheckresult);
+
+/** options structure */
 mod_gm_opt_t *mod_gm_opt;
 
+/**
+ * @}
+ */

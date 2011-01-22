@@ -21,6 +21,10 @@
  *
  *****************************************************************************/
 
+/** @file
+ *  @brief header for the tools logger component
+ */
+
 #include <stdio.h>
 #include <string.h>
 #include <time.h>

@@ -21,6 +21,12 @@
  *
  *****************************************************************************/
 
+/** @file
+ *  @brief header for the gearman module
+ *
+ *  @{
+ */
+
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
@@ -39,3 +45,6 @@ void *dummy( gearman_job_st *, void *, size_t *, gearman_return_t * );
 void free_client(gearman_client_st *client);
 void free_worker(gearman_worker_st *worker);
 
+/**
+ * @}
+ */

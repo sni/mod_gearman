@@ -200,6 +200,7 @@ test: check
 	@echo "################################################################"
 
 docs:
+	doxygen Doxyfile
 	$(RM) docs/images
 	cd docs && ln -s /usr/share/asciidoc/images .
 	cp -p README docs/ && cd docs && asciidoc --unsafe -a toc -a toclevels=2 -a icons -a data-uri -a max-width=800 README

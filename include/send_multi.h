@@ -22,6 +22,14 @@
  *
  *****************************************************************************/
 
+/**
+ * @file
+ * @brief send_multi command line utility
+ * @addtogroup mod_gearman_send_multi send_multi
+ *
+ * @{
+ */
+
 #define MOD_GM_SEND_MULTI
 
 #define _GNU_SOURCE
@@ -35,18 +43,115 @@
 #include <libgearman/gearman.h>
 #include "common.h"
 
-mod_gm_opt_t *mod_gm_opt;
+mod_gm_opt_t *mod_gm_opt;   /**< options structure */
 
+/** send_multi
+ *
+ * main function of send_multi
+ *
+ * @param[in] argc - number of arguments
+ * @param[in] argv - list of arguments
+ *
+ * @return exits with a nagios compatible exit code
+ */
 int main (int argc, char **argv);
+
+/**
+ * parse the arguments into the global options structure
+ *
+ * @param[in] argc - number of arguments
+ * @param[in] argv - list of arguments
+ *
+ * @return TRUE on success or FALSE if not
+ */
 int parse_arguments(int argc, char **argv);
+
+/**
+ *
+ * print the usage and exit
+ *
+ * @return exits with a nagios compatible exit code
+ */
 void print_usage(void);
+
+/**
+ *
+ * print the version and exit
+ *
+ * @return exits with a nagios compatible exit code
+ */
 void print_version(void);
+
+/**
+ * verify options structure and check for missing options
+ *
+ * @param[in] opt - options structure to verify
+ *
+ * @return TRUE on success or FALSE if something went wrong
+ */
 int verify_options(mod_gm_opt_t *opt);
+
+/**
+ * send_result
+ *
+ * create and send back the gearman jobs
+ *
+ * @return TRUE on success or FALSE if something went wrong
+ */
 int send_result(void);
+
+/**
+ * alarm_sighandler
+ *
+ * handles sig alarms
+ *
+ * @param[in] sig - signal number
+ *
+ * @return nothing
+ */
 void alarm_sighandler(int sig);
+
+/**
+ * read_multi_stream
+ *
+ * read xml data from stream
+ *
+ * @param[in] stream - file pointer to read xml data from
+ *
+ * @return TRUE on success or FALSE if something went wrong
+ */
 int read_multi_stream(FILE *stream);
+
+/**
+ * read_child_check
+ *
+ * @param[in] bufstart - start of buffer
+ * @param[in] bufend - end of buffer
+ *
+ * @return TRUE on success or FALSE if something went wrong
+ */
 int read_child_check(char *bufstart, char *bufend);
+
+/**
+ * read_multi_attribute
+ *
+ * @param[in] bufstart - start of buffer
+ * @param[in] bufend - end of buffer
+ * @param[in] attname - name of attribute to read
+ *
+ * @return value for this attribute
+ */
 char *read_multi_attribute(char *bufstart, char *bufend, char *attname);
-char *decode_xml(char *);
 
+/**
+ * decode_xml
+ *
+ * @param[in] xml - xml to decode
+ *
+ * @return decoded string
+ */
+char *decode_xml(char * xml);
 
+/**
+ * @}
+ */
