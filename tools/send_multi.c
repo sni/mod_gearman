@@ -397,9 +397,11 @@ int read_child_check(char *bufstart, char *bufend) {
     if ((attribute=read_multi_attribute(bufstart,bufend,"output")) == NULL)
         return 0;
     /* performance data */
-    if ((attribute2=read_multi_attribute(bufstart,bufend,"performance")) == NULL)
-        return 0;
-    snprintf( temp_buffer, sizeof( temp_buffer )-1, "%s|%s", decode_xml(attribute), decode_xml(attribute2));
+    if ((attribute2=read_multi_attribute(bufstart,bufend,"performance")) == NULL) {
+        snprintf( temp_buffer, sizeof( temp_buffer )-1, "%s", decode_xml(attribute));
+    } else {
+        snprintf( temp_buffer, sizeof( temp_buffer )-1, "%s|%s", decode_xml(attribute), decode_xml(attribute2));
+    }
     mod_gm_opt->message=strdup(temp_buffer);
     gm_log( GM_LOG_TRACE, "mod_gm_opt->message: %s\n", mod_gm_opt->message);
 
