@@ -344,6 +344,7 @@ int read_multi_stream(FILE *stream) {
 int read_child_check(char *bufstart, char *bufend) {
     char *attribute  = NULL;
     char *attribute2 = NULL;
+    char *error = NULL;
     char temp_buffer[GM_BUFFERSIZE];
 
     /* child check number */
@@ -396,11 +397,22 @@ int read_child_check(char *bufstart, char *bufend) {
     /* message */
     if ((attribute=read_multi_attribute(bufstart,bufend,"output")) == NULL)
         return 0;
+
+    /* stderr */
+    if ((error=read_multi_attribute(bufstart,bufend,"error")) == NULL) {
+        return 0;
+    /* if error found: 'error' -> ' [error]' */
+    } else if (*error) {
+        *(--error)='[';
+        *(--error)=' ';
+        strcat(error,"]");
+    }
+
     /* performance data */
     if ((attribute2=read_multi_attribute(bufstart,bufend,"performance")) == NULL) {
-        snprintf( temp_buffer, sizeof( temp_buffer )-1, "%s", decode_xml(attribute));
+        snprintf( temp_buffer, sizeof( temp_buffer )-1, "%s%s", decode_xml(attribute), decode_xml(error));
     } else {
-        snprintf( temp_buffer, sizeof( temp_buffer )-1, "%s|%s", decode_xml(attribute), decode_xml(attribute2));
+        snprintf( temp_buffer, sizeof( temp_buffer )-1, "%s%s|%s", decode_xml(attribute), decode_xml(error), decode_xml(attribute2));
     }
     mod_gm_opt->message=strdup(temp_buffer);
     gm_log( GM_LOG_TRACE, "mod_gm_opt->message: %s\n", mod_gm_opt->message);
