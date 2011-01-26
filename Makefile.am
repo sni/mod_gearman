@@ -1,4 +1,4 @@
-
+# vim:ft=automake noexpandtab
 ###############################################################################
 #
 # mod_gearman - distribute checks with gearman
@@ -8,6 +8,8 @@
 ###############################################################################
 
 RPM_TOPDIR=$$(pwd)/rpm.topdir
+
+.PHONY: docs
 
 # -g adds debug symbols, -s strips
 CFLAGS=-Wall -W -Wstrict-prototypes -Wmissing-prototypes -Wnested-externs -s -O -fPIC
@@ -65,14 +67,18 @@ check_PROGRAMS   = 01_utils 02_full
 TESTS            = 01_utils 02_full
 
 
+GEARMANDS=/usr/sbin/gearmand /opt/sbin/gearmand
 replace_vars = sed -e 's:%CONFIG%:$(sysconfdir)/mod_gearman.conf:g' \
                -e 's:%PIDFILE%:$(localstatedir)/mod_gearman/mod_gearman_worker.pid:g' \
                -e 's:%LOGFILE%:$(localstatedir)/mod_gearman/mod_gearman_worker.log:g' \
+               -e 's:%GPIDFILE%:$(localstatedir)/mod_gearman/gearmand.pid:g' \
+               -e 's:%GLOGFILE%:$(localstatedir)/mod_gearman/gearmand.log:g' \
                -e 's:%WORKERBIN%:$(bindir)/mod_gearman_worker:g' \
                -e 's:%USER%:$(user):g'
 
 EXTRA_DIST = COPYING etc extras include \
-             THANKS README README.html patches Changes worker/initscript.in
+             THANKS README docs/README.html Changes worker/initscript.in \
+             docs/QUICKSTART docs/QUICKSTART.html
 
 # other targets
 mod_gearman.o: $(mod_gearman_so_OBJECTS) $(mod_gearman_so_DEPENDENCIES)
@@ -91,6 +97,14 @@ initscript-local:
 
 gearmand-init-local:
 	$(replace_vars) extras/gearmand-init.in > extras/gearmand-init
+	if [ ! -z $$(which gearmand 2>/dev/null) ]; then \
+	    sed -i -e "s:%GEARMAND%:$$(which gearmand 2>/dev/null):g" extras/gearmand-init; \
+	fi
+	for gearm in $(GEARMANDS); do \
+  	    test -f $$gearm && sed -i -e "s:%GEARMAND%:$$gearm:g" extras/gearmand-init ; \
+	done; echo done
+	sed -i -e 's:%GEARMAND%:/usr/sbin/gearmand:g' extras/gearmand-init
+	chmod 755 extras/gearmand-init
 
 all-local: mod_gearman.o initscript-local mod_gearman.conf-local gearmand-init-local
 	@echo ""
@@ -114,10 +128,10 @@ all-local: mod_gearman.o initscript-local mod_gearman.conf-local gearmand-init-l
 	@echo "################################################################"
 
 distclean-local: clean
-	$(RM) -r .deps/ Makefile.in aclocal.m4 autom4te.cache config.* configure depcomp install-sh missing *.gz
+	$(RM) -rf .deps/ Makefile.in aclocal.m4 autom4te.cache config.* configure depcomp install-sh missing *.gz
 
 clean-local:
-	$(RM) -r worker.static worker/initscript etc/mod_gearman.conf rpm.topdir *.o */*.o
+	$(RM) -rf worker.static worker/initscript etc/mod_gearman.conf rpm.topdir *.o */*.o
 
 worker.static: worker
 	@echo "################################################################"
@@ -138,9 +152,9 @@ install-exec-local: install-local-state-dir
 install-local-state-dir:
 	$(RM) $(DESTDIR)$(pkglibdir)/mod_gearman.so
 	if [ `id -u` -eq 0 ]; then \
-	    $(install_sh) -o $(user) -d $(DESTDIR)$(localstatedir)/mod_gearman/; \
+	    $(install_sh_PROGRAM) -o $(user) -d $(DESTDIR)$(localstatedir)/mod_gearman/; \
     else \
-	    $(install_sh) -o $(user) -d $(DESTDIR)$(localstatedir)/mod_gearman/; \
+	    $(install_sh_PROGRAM) -o $(user) -d $(DESTDIR)$(localstatedir)/mod_gearman/; \
         echo "*** You should run: sudo chown $(user) $(DESTDIR)$(localstatedir)/mod_gearman/"; \
     fi
 
@@ -186,12 +200,13 @@ test: check
 	@echo "################################################################"
 
 docs:
-	$(RM) images
-	ln -s /usr/share/asciidoc/images .
-	asciidoc --unsafe -a toc -a toclevels=2 -a icons -a data-uri -a max-width=800 README
-	chmod 644 README.html
-	asciidoc --unsafe -a toc -a toclevels=2 -a icons -a data-uri -a max-width=800 QUICKSTART
-	chmod 644 QUICKSTART.html
+	$(RM) docs/images
+	cd docs && ln -s /usr/share/asciidoc/images .
+	cp -p README docs/ && cd docs && asciidoc --unsafe -a toc -a toclevels=2 -a icons -a data-uri -a max-width=800 README
+	chmod 644 docs/README.html
+	rm -f docs/README
+	cd docs && asciidoc --unsafe -a toc -a toclevels=2 -a icons -a data-uri -a max-width=800 QUICKSTART
+	chmod 644 docs/QUICKSTART.html
 
 rpm: dist
 	mkdir -p $(RPM_TOPDIR)/{SOURCES,BUILD,RPMS,SRPMS,SPECS}

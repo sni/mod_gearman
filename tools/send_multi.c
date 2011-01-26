@@ -40,7 +40,7 @@ int main (int argc, char **argv) {
      */
     if(parse_arguments(argc, argv) != GM_OK) {
         print_usage();
-        exit( EXIT_FAILURE );
+        exit( 3 );
     }
 
     /* init crypto functions */
@@ -52,8 +52,8 @@ int main (int argc, char **argv) {
 
     /* create client */
     if ( create_client( mod_gm_opt->server_list, &client ) != GM_OK ) {
-        printf( "cannot start client\n" );
-        exit( EXIT_FAILURE );
+        printf( "send_multi CRITICAL: cannot start client\n" );
+        exit(2);
     }
 
     /* send result message */
@@ -61,11 +61,15 @@ int main (int argc, char **argv) {
     rc = read_multi_stream(stdin);
     /* if rc > 0, it contains the number of checks being submitted,
        otherwise its an error code (-1 - WARNING, -2 - CRITICAL, -3 - UNKNOWN) */
-    if (rc >= 0) {
-	    gm_log( GM_LOG_INFO, "%d check_multi child check%s submitted\n", rc, (rc>1)?"s":"" );
-       rc=0; /* OK */
+    if (rc == 0) {
+        printf( "send_multi WARNING: %d check_multi child checks submitted\n", rc );
+        rc=1; /* WARNING */
+    }
+    else if (rc > 0) {
+        printf( "send_multi OK: %d check_multi child check%s submitted\n", rc, (rc>1)?"s":"" );
+        rc=0; /* OK */
     } else {
-	    rc*=-1;
+        rc*=-2;
     }
 
     gearman_client_free( &client );
@@ -123,8 +127,8 @@ int verify_options(mod_gm_opt_t *opt) {
 
     /* no server specified? then default to localhost */
     if(opt->server_num == 0) {
-	opt->server_list[opt->server_num] = strdup("localhost");
-	opt->server_num++;
+        opt->server_list[opt->server_num] = strdup("localhost");
+        opt->server_num++;
     }
 
     /* host is mandatory */
@@ -174,7 +178,7 @@ void print_usage() {
     printf("http://my-plugin.de/wiki/projects/check_multi/feed_passive\n");
     printf("\n");
 
-    exit( EXIT_SUCCESS );
+    exit(3);
 }
 
 
@@ -267,183 +271,194 @@ void print_version() {
 }
 
 int read_multi_stream(FILE *stream) {
-	char buffer[GM_BUFFERSIZE+1];
-	unsigned long buflen=0L;
-	unsigned long bytes_read=0L;
-	char *bufstart=NULL;
-	char *bufend=NULL;
-	int count=0;
+    char buffer[GM_BUFFERSIZE+1];
+    unsigned long buflen=0L;
+    unsigned long bytes_read=0L;
+    char *bufstart=NULL;
+    char *bufend=NULL;
+    int count=0;
 
-	do {
-		/* opening tag <CHILD> found? read from buffer start with maximum buffer len */
-		if ((bufstart=(char *)memmem(buffer,buflen,"<CHILD>",strlen("<CHILD>"))) != NULL) {
+    do {
+        /* opening tag <CHILD> found? read from buffer start with maximum buffer len */
+        if ((bufstart=(char *)memmem(buffer,buflen,"<CHILD>",strlen("<CHILD>"))) != NULL) {
 
-			/* closing tag </CHILD> found? read after <CHILD> with rest of buffer len */
-		    	if ((bufend=(char *)memmem(bufstart,buflen-(bufstart-buffer),"</CHILD>",strlen("</CHILD>"))) != NULL) {
+            /* closing tag </CHILD> found? read after <CHILD> with rest of buffer len */
+            if ((bufend=(char *)memmem(bufstart,buflen-(bufstart-buffer),"</CHILD>",strlen("</CHILD>"))) != NULL) {
 
-				gm_log( GM_LOG_TRACE, "\tXML chunk %d found: buffer position %3d-%3d length %d bytes\n", count, bufstart-buffer, bufend-buffer, bufend-bufstart);
-				/* count valid chunks */
-				count++;
+                gm_log( GM_LOG_TRACE, "\tXML chunk %d found: buffer position %3d-%3d length %d bytes\n", count, bufstart-buffer, bufend-buffer, bufend-bufstart);
+                /* count valid chunks */
+                count++;
 
-				/* identify CHILD chunk */
-				bufstart+=strlen("<CHILD>");
+                /* identify CHILD chunk */
+                bufstart+=strlen("<CHILD>");
 
-				/* if valid check_multi chunk found, send the result*/
-				if (read_child_check(bufstart,bufend)) {
-					if (send_result() == GM_ERROR) {
-						count--;
-					}
-				} else {
-					count--;
-				}
+                /* if valid check_multi chunk found, send the result*/
+                if (read_child_check(bufstart,bufend)) {
+                    if (send_result() == GM_ERROR) {
+                        count--;
+                    }
+                } else {
+                    count--;
+                }
 
-				/* shift input rest to buffer start, create space for subsequent reads */
-				memmove(buffer,bufend+strlen("</CHILD>"),buflen-(bufend+strlen("</CHILD>")-buffer));
-				buflen-=bufend+strlen("</CHILD>")-buffer;
+                /* shift input rest to buffer start, create space for subsequent reads */
+                memmove(buffer,bufend+strlen("</CHILD>"),buflen-(bufend+strlen("</CHILD>")-buffer));
+                buflen-=bufend+strlen("</CHILD>")-buffer;
 
-			/* start <CHILD> tag found, but no closing tag </CHILD>, buffer too small? */
-			} else {
-				buflen=0L;
-				gm_log( GM_LOG_ERROR, "Error: no closing tag </CHILD> within buffer, buffer size too small? discarding buffer, %ld bytes now\n", buflen);
-				return -1;
-			}
-			gm_log( GM_LOG_TRACE, "\tbuflen after XML chunk parsing:%ld\n", buflen);
+            /* start <CHILD> tag found, but no closing tag </CHILD>, buffer too small? */
+            } else {
+                buflen=0L;
+                gm_log( GM_LOG_ERROR, "Error: no closing tag </CHILD> within buffer, buffer size too small? discarding buffer, %ld bytes now\n", buflen);
+                return -1;
+            }
+            gm_log( GM_LOG_TRACE, "\tbuflen after XML chunk parsing:%ld\n", buflen);
 
-		/* neither <CHILD> nor </CHILD> found, discard buffer */
-		} else {
-			/* discard whole buffer but continue */
-			buflen=0L;
-			gm_log( GM_LOG_TRACE, "Error: no starting tag <CHILD> within buffer - discarding buffer, buflen now %ld bytes\n", buflen);
-		}
+        /* neither <CHILD> nor </CHILD> found, discard buffer */
+        } else {
+            /* discard whole buffer but continue */
+            buflen=0L;
+            gm_log( GM_LOG_TRACE, "Error: no starting tag <CHILD> within buffer - discarding buffer, buflen now %ld bytes\n", buflen);
+        }
 
-		gm_log( GM_LOG_TRACE, "\ttrying to fill up buffer with %ld bytes from offset %ld\n", GM_BUFFERSIZE-buflen, buflen);
+        gm_log( GM_LOG_TRACE, "\ttrying to fill up buffer with %ld bytes from offset %ld\n", GM_BUFFERSIZE-buflen, buflen);
 
-		/* read one block of data, or less bytes, if there is still data left */
-		alarm(mod_gm_opt->timeout);
-		if ((bytes_read=fread(buffer+buflen, 1, GM_BUFFERSIZE-buflen, stream)) == 0L) {
+        /* read one block of data, or less bytes, if there is still data left */
+        alarm(mod_gm_opt->timeout);
+        if ((bytes_read=fread(buffer+buflen, 1, GM_BUFFERSIZE-buflen, stream)) == 0L) {
 
-			/* break if zero read was caused by an error */
-			if (!feof(stream)) {
-				perror("fread");
-				return -2;
-			}
-		} else {
+            /* break if zero read was caused by an error */
+            if (!feof(stream)) {
+                perror("fread");
+                return -2;
+            }
+        } else {
 
-			/* adjust block len */
-			buflen+=bytes_read;
-		}
-		gm_log( GM_LOG_TRACE, "\tread %ld bytes, %ld bytes remaining in buffer\n", bytes_read, buflen);
-	} while (buflen > 0);
-	return count;
+            /* adjust block len */
+            buflen+=bytes_read;
+        }
+        gm_log( GM_LOG_TRACE, "\tread %ld bytes, %ld bytes remaining in buffer\n", bytes_read, buflen);
+    } while (buflen > 0);
+    return count;
 }
 
 int read_child_check(char *bufstart, char *bufend) {
-	char *attribute=NULL;
+    char *attribute  = NULL;
+    char *attribute2 = NULL;
+    char *error = NULL;
+    char temp_buffer[GM_BUFFERSIZE];
 
-	/* child check number */
-	if ((attribute=read_multi_attribute(bufstart,bufend,"no")) == NULL) {
-		return 0;
-	} else {
-		/* skip parent check */
-		if (!strcmp(attribute,"0")) {
-			return 0;
-		}
-		gm_log( GM_LOG_TRACE, "child check: %d\n", atoi(attribute));
-	}
+    /* child check number */
+    if ((attribute=read_multi_attribute(bufstart,bufend,"no")) == NULL) {
+        return 0;
+    } else {
+        /* skip parent check */
+        if (!strcmp(attribute,"0")) {
+            return 0;
+        }
+        gm_log( GM_LOG_TRACE, "child check: %d\n", atoi(attribute));
+    }
 
-	/* service description */
-	if ((attribute=read_multi_attribute(bufstart,bufend,"name")) == NULL) {
-		return 0;
-	} else {
-		mod_gm_opt->service=strdup(attribute);
-		gm_log( GM_LOG_TRACE, "service_description: %s\n", mod_gm_opt->service);
-	}
+    /* service description */
+    if ((attribute=read_multi_attribute(bufstart,bufend,"name")) == NULL)
+        return 0;
+    mod_gm_opt->service=strdup(attribute);
+    gm_log( GM_LOG_TRACE, "service_description: %s\n", mod_gm_opt->service);
 
-	/* return code */
-	if ((attribute=read_multi_attribute(bufstart,bufend,"rc")) == NULL) {
-		return 0;
-	} else {
-		mod_gm_opt->return_code=atoi(attribute);
-		gm_log( GM_LOG_TRACE, "mod_gm_opt->return_code: %d\n", mod_gm_opt->return_code);
-	}
+    /* return code */
+    if ((attribute=read_multi_attribute(bufstart,bufend,"rc")) == NULL)
+        return 0;
+    mod_gm_opt->return_code=atoi(attribute);
+    gm_log( GM_LOG_TRACE, "mod_gm_opt->return_code: %d\n", mod_gm_opt->return_code);
 
-	/* start time */
-	if ((attribute=read_multi_attribute(bufstart,bufend,"starttime")) == NULL) {
-		return 0;
-	} else {
-		if (strchr(attribute, '.') != NULL) {
-			mod_gm_opt->starttime.tv_sec=atoi(strtok(attribute, "."));
-			mod_gm_opt->starttime.tv_usec=atoi(strtok(NULL, "."));
-		} else {
-			mod_gm_opt->starttime.tv_sec=atoi(attribute);
-			mod_gm_opt->starttime.tv_usec=0;
-		}
-		gm_log( GM_LOG_TRACE, "starttime: %d.%d\n", mod_gm_opt->starttime.tv_sec, mod_gm_opt->starttime.tv_usec);
-	}
+    /* start time */
+    if ((attribute=read_multi_attribute(bufstart,bufend,"starttime")) == NULL)
+        return 0;
+    if (strchr(attribute, '.') != NULL) {
+        mod_gm_opt->starttime.tv_sec=atoi(strtok(attribute, "."));
+        mod_gm_opt->starttime.tv_usec=atoi(strtok(NULL, "."));
+    } else {
+        mod_gm_opt->starttime.tv_sec=atoi(attribute);
+        mod_gm_opt->starttime.tv_usec=0;
+    }
+    gm_log( GM_LOG_TRACE, "starttime: %d.%d\n", mod_gm_opt->starttime.tv_sec, mod_gm_opt->starttime.tv_usec);
 
-	/* end time */
-	if ((attribute=read_multi_attribute(bufstart,bufend,"endtime")) == NULL) {
-		return 0;
-	} else {
-		if (strchr(attribute, '.') != NULL) {
-			mod_gm_opt->finishtime.tv_sec=atoi(strtok(attribute, "."));
-			mod_gm_opt->finishtime.tv_usec=atoi(strtok(NULL, "."));
-		} else {
-			mod_gm_opt->finishtime.tv_sec=atoi(attribute);
-			mod_gm_opt->finishtime.tv_usec=0;
-		}
-		gm_log( GM_LOG_TRACE, "endtime: %d.%d\n", mod_gm_opt->finishtime.tv_sec, mod_gm_opt->finishtime.tv_usec);
-	}
+    /* end time */
+    if ((attribute=read_multi_attribute(bufstart,bufend,"endtime")) == NULL)
+        return 0;
+    if (strchr(attribute, '.') != NULL) {
+        mod_gm_opt->finishtime.tv_sec=atoi(strtok(attribute, "."));
+        mod_gm_opt->finishtime.tv_usec=atoi(strtok(NULL, "."));
+    } else {
+        mod_gm_opt->finishtime.tv_sec=atoi(attribute);
+        mod_gm_opt->finishtime.tv_usec=0;
+    }
+    gm_log( GM_LOG_TRACE, "endtime: %d.%d\n", mod_gm_opt->finishtime.tv_sec, mod_gm_opt->finishtime.tv_usec);
 
-	/* message */
-	if ((attribute=read_multi_attribute(bufstart,bufend,"output")) == NULL) {
-		return 0;
-	} else {
-		mod_gm_opt->message=strdup(decode_xml(attribute));
-		gm_log( GM_LOG_TRACE, "mod_gm_opt->message: %s\n", mod_gm_opt->message);
-	}
-	return 1;
+    /* message */
+    if ((attribute=read_multi_attribute(bufstart,bufend,"output")) == NULL)
+        return 0;
+
+    /* stderr */
+    if ((error=read_multi_attribute(bufstart,bufend,"error")) == NULL) {
+        return 0;
+    /* if error found: 'error' -> ' [error]' */
+    } else if (*error) {
+        *(--error)='[';
+        *(--error)=' ';
+        strcat(error,"]");
+    }
+
+    /* performance data */
+    if ((attribute2=read_multi_attribute(bufstart,bufend,"performance")) == NULL) {
+        snprintf( temp_buffer, sizeof( temp_buffer )-1, "%s%s", decode_xml(attribute), decode_xml(error));
+    } else {
+        snprintf( temp_buffer, sizeof( temp_buffer )-1, "%s%s|%s", decode_xml(attribute), decode_xml(error), decode_xml(attribute2));
+    }
+    mod_gm_opt->message=strdup(temp_buffer);
+    gm_log( GM_LOG_TRACE, "mod_gm_opt->message: %s\n", mod_gm_opt->message);
+
+    return 1;
 }
 
 char *read_multi_attribute(char *bufstart, char *bufend, char *element) {
-	char start_element[GM_BUFFERSIZE], end_element[GM_BUFFERSIZE];
-	sprintf(start_element, "<%s>", element);
-	sprintf(end_element, "</%s>", element);
+    char start_element[GM_BUFFERSIZE], end_element[GM_BUFFERSIZE];
+    sprintf(start_element, "<%s>", element);
+    sprintf(end_element, "</%s>", element);
 
-	if ((bufstart=(char *)memmem(bufstart,bufend-bufstart,start_element,strlen(start_element))) == NULL) {
-		gm_log( GM_LOG_TRACE, "\tread_multi_attribute: start element \'%s\' not found\n", start_element);
-		return NULL;
-	}
-	bufstart+=strlen(start_element);
-	if ((bufend=(char *)memmem(bufstart,bufend-bufstart,end_element,strlen(end_element))) == NULL) {
-		gm_log( GM_LOG_TRACE, "\tread_multi_attribute: end element \'%s\' not found\n", end_element);
-		return NULL;
-	}
-	*bufend='\0';
-	return bufstart;
+    if ((bufstart=(char *)memmem(bufstart,bufend-bufstart,start_element,strlen(start_element))) == NULL) {
+        gm_log( GM_LOG_TRACE, "\tread_multi_attribute: start element \'%s\' not found\n", start_element);
+        return NULL;
+    }
+    bufstart+=strlen(start_element);
+    if ((bufend=(char *)memmem(bufstart,bufend-bufstart,end_element,strlen(end_element))) == NULL) {
+        gm_log( GM_LOG_TRACE, "\tread_multi_attribute: end element \'%s\' not found\n", end_element);
+        return NULL;
+    }
+    *bufend='\0';
+    return bufstart;
 }
 
 char *decode_xml(char *string) {
-        struct decode{
-                char c;
-                char *enc_string;
-        } dtab[] = {
-                { '>', "&gt;"  },
-                { '<', "&lt;"  },
-                { '&', "&amp;" },
-        };
-        int i;
-        char *found;
+    struct decode{
+            char c;
+            char *enc_string;
+    } dtab[] = {
+            { '>', "&gt;"  },
+            { '<', "&lt;"  },
+            { '&', "&amp;" },
+    };
+    int i;
+    char *found;
 
-	/* foreach XML decode pair */
-        for (i=0; i<(int)(sizeof(dtab)/sizeof(struct decode)); i++) {
-		/* while XML encoding strings found */
-                while ((found=strstr(string, dtab[i].enc_string)) != NULL) {
-			/* replace string with character */
-                        *found=dtab[i].c;
-			/* shift rest of string after character */
-                        strcpy(found+1, found+strlen(dtab[i].enc_string));
-                }
+    /* foreach XML decode pair */
+    for (i=0; i<(int)(sizeof(dtab)/sizeof(struct decode)); i++) {
+    /* while XML encoding strings found */
+        while ((found=strstr(string, dtab[i].enc_string)) != NULL) {
+            /* replace string with character */
+            *found=dtab[i].c;
+            /* shift rest of string after character */
+            strcpy(found+1, found+strlen(dtab[i].enc_string));
         }
-        return string;
+    }
+    return string;
 }

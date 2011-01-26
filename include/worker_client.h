@@ -59,14 +59,15 @@ typedef struct gm_job_struct {
     struct timeval finish_time;
 } gm_job_t;
 
-void worker_client(int worker_mode);
+void worker_client(int worker_mode, int index, int shid);
 void worker_loop(void);
 void *get_job( gearman_job_st *, void *, size_t *, gearman_return_t * );
 void do_exec_job(void);
 int set_worker( gearman_worker_st *worker );
 void send_result_back(void);
 void alarm_sighandler(int sig);
-void send_state_to_parent(int status);
+void idle_sighandler(int sig);
+void set_state(int status);
 void execute_safe_command(void);
 void clean_worker_exit(int sig);
 void *return_status( gearman_job_st *, void *, size_t *, gearman_return_t *);
@@ -75,4 +76,3 @@ int free_job(gm_job_t *job);
 #ifdef GM_DEBUG
 void write_debug_file(char ** text);
 #endif
-

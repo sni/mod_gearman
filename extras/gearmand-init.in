@@ -12,12 +12,12 @@
 ### END INIT INFO
 
 NAME=gearmand
-DAEMON="/usr/sbin/gearmand"
+DAEMON="%GEARMAND%"
 OPTIONS="-d -t 10 -j 0"
 PORT=4730
 LISTEN=0.0.0.0
-PIDFILE=/var/run/gearmand.pid
-LOGFILE=/var/log/gearmand.log
+PIDFILE=%GPIDFILE%
+LOGFILE=%GLOGFILE%
 USER=%USER%
 GRACEFUL_SHUTDOWN_TIME=30
 for f in $( which netcat nc ) ; do
@@ -69,12 +69,22 @@ case "$1" in
             echo "$NAME already running"
             exit 0;
         fi
+        if [ ! -x "$DAEMON" ]; then
+            echo "Cannot start. Make sure $DAEMON exists and is executable"
+            exit 1;
+        fi
 
         CMD="$DAEMON -p $PORT -P $PIDFILE $OPTIONS --log-file=$LOGFILE -v -v --listen=$LISTEN"
         if [ "$WHO" = "root" ]; then
-            su - $USER -c  "$CMD"
+            # try to exec commands as user
+            su - $USER -c /bin/true
+            if [ $? -ne 0 ]; then
+                echo "cannot exec commands as user $USER, make sure user has a valid shell"
+                exit 1;
+            fi
+            su - $USER -c  "$CMD > $LOGFILE 2>&1"
         else
-            $CMD
+            $CMD > $LOGFILE 2>&1
         fi
         if [ $? -eq 0 ]; then
             echo "done"
@@ -93,7 +103,7 @@ case "$1" in
             # do a graceful shutdown
             if [ ! -z $NC ]; then
                 printf '%s' " gracefully "
-                echo "shutdown graceful" | $NC -w 1 $LISTEN $PORT
+                echo "shutdown graceful" | $NC -w 1 -i 1 $LISTEN $PORT
                 x=$GRACEFUL_SHUTDOWN_TIME
                 while [ $x -gt 0 ]; do
                     printf "."

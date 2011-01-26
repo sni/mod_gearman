@@ -14,6 +14,7 @@
 
 #define GEARMAND_TEST_PORT   54730
 
+char * worker_logfile;
 int gearmand_pid;
 int worker_pid;
 gearman_worker_st worker;
@@ -22,6 +23,7 @@ mod_gm_opt_t *mod_gm_opt;
 
 
 /* start the gearmand server */
+void *start_gearmand(void*data);
 void *start_gearmand(void*data) {
     int sid;
     data = data; // warning: unused parameter 'data'
@@ -30,7 +32,7 @@ void *start_gearmand(void*data) {
         sid = setsid();
         char port[30];
         snprintf(port, 30, "-p %d", GEARMAND_TEST_PORT);
-        execlp("gearmand", "-t 10", "-j 0", port, (char *)NULL);
+        execlp("gearmand", "gearmand", "-t 10", "-j 0", port, (char *)NULL);
         perror("gearmand");
         exit(1);
     }
@@ -42,6 +44,7 @@ void *start_gearmand(void*data) {
 
 
 /* start the test worker */
+void *start_worker(void*data);
 void *start_worker(void*data) {
     int sid;
     char* key = (char*)data;
@@ -50,12 +53,14 @@ void *start_worker(void*data) {
         sid = setsid();
         char options[150];
         snprintf(options, 150, "server=localhost:%d", GEARMAND_TEST_PORT);
+        char logf[150];
+        snprintf(logf, 150, "logfile=%s", worker_logfile);
         if(key != NULL) {
             char encryption[150];
             snprintf(encryption, 150, "key=%s", key);
-            execl("./mod_gearman_worker", "debug=0", encryption,      "logfile=/dev/null", "max-worker=1", options, (char *)NULL);
+            execl("./mod_gearman_worker", "./mod_gearman_worker", "debug=2", encryption,      logf, "max-worker=1", options, (char *)NULL);
         } else {
-            execl("./mod_gearman_worker", "debug=0", "encryption=no", "logfile=/dev/null", "max-worker=1", options, (char *)NULL);
+            execl("./mod_gearman_worker", "./mod_gearman_worker", "debug=2", "encryption=no", logf, "max-worker=1", options, (char *)NULL);
         }
         perror("mod_gearman_worker");
         exit(1);
@@ -68,6 +73,7 @@ void *start_worker(void*data) {
 
 
 /* test event handler over gearmand */
+void test_eventhandler(int transportmode);
 void test_eventhandler(int transportmode) {
     char * testdata = "type=eventhandler\ncommand_line=/bin/hostname\n\n\n";
     int rt = add_job_to_queue( &client, mod_gm_opt->server_list, "eventhandler", NULL, testdata, GM_JOB_PRIO_NORMAL, 1, transportmode);
@@ -77,6 +83,7 @@ void test_eventhandler(int transportmode) {
 
 
 /* test service check handler over gearmand */
+void test_servicecheck(int transportmode);
 void test_servicecheck(int transportmode) {
     struct timeval start_time;
     gettimeofday(&start_time,NULL);
@@ -111,10 +118,42 @@ void create_modules() {
 }
 
 
+/* check logfile for errors */
+void check_logfile(void);
+void check_logfile() {
+    FILE * fp;
+    char *line;
+    int errors = 0;
+
+    fp = fopen(worker_logfile, "r");
+    if(fp == NULL) {
+        perror(worker_logfile);
+        return;
+    }
+    line = malloc(GM_BUFFERSIZE);
+    while(fgets(line, GM_BUFFERSIZE, fp) != NULL) {
+        trim(line);
+        if(strstr(line, "ERROR") != NULL) {
+            errors++;
+            diag("logfile: %s", line);
+        }
+    }
+    fclose(fp);
+
+    ok(errors == 0, "errors in logfile: %d", errors);
+
+    /* cleanup logfile */
+    ok(unlink(worker_logfile) == 0, "removed temporary logfile: %s", worker_logfile);
+
+    free(line);
+    return;
+}
+
+
 /* main tests */
 int main(void) {
-    int status;
-    int tests = 25;
+    int status, chld;
+    int tests = 36;
     plan_tests(tests);
 
     mod_gm_opt = malloc(sizeof(mod_gm_opt_t));
@@ -125,15 +164,34 @@ int main(void) {
     ok(parse_args_line(mod_gm_opt, options, 0) == 0, "parse_args_line()");
     mod_gm_opt->debug_level = GM_LOG_ERROR;
 
+    worker_logfile = tmpnam(NULL);
+    if(!ok(worker_logfile != NULL, "created temp logile: %s", worker_logfile)) {
+        diag("could not create temp logfile");
+        exit( EXIT_FAILURE );
+    }
+
     /* first fire up a gearmand server and one worker */
     start_gearmand((void*)NULL);
     start_worker((void*)NULL);
 
+    /* wait one second and catch died procs */
     sleep(1);
-    if(!ok(gearmand_pid > 0, "gearmand running with pid: %d", gearmand_pid))
-        diag("make sure gearmand is in your PATH. Usuall locations are /usr/sbin or /usr/local/sbin");
+    while((chld = waitpid(-1, &status, WNOHANG)) != -1 && chld > 0) {
+        diag( "waitpid() %d exited with %d\n", chld, status);
+    }
+
+    if(!ok(gearmand_pid > 0, "gearmand started with pid: %d", gearmand_pid)) {
+        diag("make sure gearmand is in your PATH. Common locations are /usr/sbin or /usr/local/sbin");
+        exit( EXIT_FAILURE );
+    }
+    if(!ok(pid_alive(gearmand_pid) == TRUE, "gearmand alive")) {
+        exit( EXIT_FAILURE );
+    }
     if(!ok(worker_pid > 0, "worker running with pid: %d", worker_pid))
         diag("could not start worker");
+    if(!ok(pid_alive(worker_pid) == TRUE, "worker alive")) {
+        exit( EXIT_FAILURE );
+    }
 
     skip_start(gearmand_pid <= 0 || worker_pid <= 0,
                tests-3,             /* Number of tests to skip */
@@ -145,6 +203,7 @@ int main(void) {
     /* try to send some data with base64 only */
     test_eventhandler(GM_ENCODE_ONLY);
     test_servicecheck(GM_ENCODE_ONLY);
+    sleep(1);
 
     char * test_keys[] = {
         "12345",
@@ -161,6 +220,7 @@ int main(void) {
         kill(worker_pid, SIGTERM);
         waitpid(worker_pid, &status, 0);
         ok(status == 0, "worker exited with exit code %d", real_exit_code(status));
+        check_logfile();
         start_worker((void *)test_keys[i]);
         sleep(1);
 
@@ -169,6 +229,7 @@ int main(void) {
 
         test_eventhandler(GM_ENCODE_AND_ENCRYPT);
         test_servicecheck(GM_ENCODE_AND_ENCRYPT);
+        sleep(1);
     }
 
     /* cleanup */

@@ -38,36 +38,43 @@ gearman_client_st client;
 gearman_client_st client_dup;
 
 gm_job_t * current_job;
+pid_t current_pid;
 pid_t current_child_pid;
 gm_job_t * exec_job;
 
 int jobs_done = 0;
 int sleep_time_after_error = 1;
 int worker_run_mode;
-
+int shm_index = 0;
+volatile sig_atomic_t shmid;
 
 /* callback for task completed */
-void worker_client(int worker_mode) {
+void worker_client(int worker_mode, int index, int shid) {
 
-    gm_log( GM_LOG_TRACE, "worker client started\n" );
+    gm_log( GM_LOG_TRACE, "%s worker client started\n", (worker_mode == GM_WORKER_STATUS ? "status" : "job" ));
 
     /* set signal handlers for a clean exit */
     signal(SIGINT, clean_worker_exit);
     signal(SIGTERM,clean_worker_exit);
 
     worker_run_mode = worker_mode;
+    shm_index       = index;
+    shmid           = shid;
+    current_pid     = getpid();
 
     gethostname(hostname, GM_BUFFERSIZE-1);
 
     /* create worker */
     if(set_worker(&worker) != GM_OK) {
         gm_log( GM_LOG_ERROR, "cannot start worker\n" );
+        clean_worker_exit(0);
         exit( EXIT_FAILURE );
     }
 
     /* create client */
     if ( create_client( mod_gm_opt->server_list, &client ) != GM_OK ) {
         gm_log( GM_LOG_ERROR, "cannot start client\n" );
+        clean_worker_exit(0);
         exit( EXIT_FAILURE );
     }
 
@@ -89,9 +96,11 @@ void worker_loop() {
     while ( 1 ) {
         gearman_return_t ret;
 
-        /* wait three minutes for a job, otherwise exit */
-        if(worker_run_mode == GM_WORKER_MULTI)
+        /* wait for a job, otherwise exit when hit the idle timeout */
+        if(mod_gm_opt->idle_timeout > 0 && worker_run_mode == GM_WORKER_MULTI) {
+            signal(SIGALRM, idle_sighandler);
             alarm(mod_gm_opt->idle_timeout);
+        }
 
         signal(SIGPIPE, SIG_IGN);
         ret = gearman_worker_work( &worker );
@@ -123,21 +132,21 @@ void worker_loop() {
 void *get_job( gearman_job_st *job, void *context, size_t *result_size, gearman_return_t *ret_ptr ) {
     sigset_t block_mask;
     sigset_t old_mask;
-    int wsize;
+    int wsize, valid_lines;
     char workload[GM_BUFFERSIZE];
     char * decrypted_data;
     char * decrypted_data_c;
     char * decrypted_orig;
     char *ptr;
-    char command[GM_BUFFERSIZE];
+
+    /* reset timeout for now, will be set befor execution again */
+    alarm(0);
+    signal(SIGALRM, SIG_IGN);
 
     jobs_done++;
 
     /* send start signal to parent */
-    send_state_to_parent(GM_JOB_START);
-
-    /* reset timeout for now, will be set befor execution again */
-    alarm(0);
+    set_state(GM_JOB_START);
 
     gm_log( GM_LOG_TRACE, "get_job()\n" );
 
@@ -180,6 +189,7 @@ void *get_job( gearman_job_st *job, void *context, size_t *result_size, gearman_
     exec_job = ( gm_job_t * )malloc( sizeof *exec_job );
     set_default_job(exec_job);
 
+    valid_lines = 0;
     while ( (ptr = strsep(&decrypted_data, "\n" )) != NULL ) {
         char *key   = strsep( &ptr, "=" );
         char *value = strsep( &ptr, "\x0" );
@@ -192,31 +202,37 @@ void *get_job( gearman_job_st *job, void *context, size_t *result_size, gearman_
 
         if ( !strcmp( key, "host_name" ) ) {
             exec_job->host_name = strdup(value);
+            valid_lines++;
         } else if ( !strcmp( key, "service_description" ) ) {
             exec_job->service_description = strdup(value);
+            valid_lines++;
         } else if ( !strcmp( key, "type" ) ) {
             exec_job->type = strdup(value);
+            valid_lines++;
         } else if ( !strcmp( key, "result_queue" ) ) {
             exec_job->result_queue = strdup(value);
+            valid_lines++;
         } else if ( !strcmp( key, "check_options" ) ) {
             exec_job->check_options = atoi(value);
+            valid_lines++;
         } else if ( !strcmp( key, "scheduled_check" ) ) {
             exec_job->scheduled_check = atoi(value);
+            valid_lines++;
         } else if ( !strcmp( key, "reschedule_check" ) ) {
             exec_job->reschedule_check = atoi(value);
+            valid_lines++;
         } else if ( !strcmp( key, "latency" ) ) {
             exec_job->latency = atof(value);
+            valid_lines++;
         } else if ( !strcmp( key, "start_time" ) ) {
             string2timeval(value, &exec_job->core_start_time);
+            valid_lines++;
         } else if ( !strcmp( key, "timeout" ) ) {
             exec_job->timeout = atoi(value);
+            valid_lines++;
         } else if ( !strcmp( key, "command_line" ) ) {
-            /* adding 2>&1 breaks the exec/popen check and everything will be checked by popen */
-            /*
-            snprintf(command, sizeof(command)+5, "%s 2>&1", value);
-            exec_job->command_line = strdup(command);
-            */
             exec_job->command_line = strdup(value);
+            valid_lines++;
         }
     }
 
@@ -225,7 +241,14 @@ void *get_job( gearman_job_st *job, void *context, size_t *result_size, gearman_
         write_debug_file(&decrypted_orig);
 #endif
 
-    do_exec_job();
+    if(valid_lines == 0) {
+        gm_log( GM_LOG_ERROR, "discarded invalid job, check your encryption settings\n" );
+    } else {
+        do_exec_job();
+    }
+
+    /* send finish signal to parent */
+    set_state(GM_JOB_END);
 
     /* start listening to SIGTERMs */
     sigprocmask(SIG_SETMASK, &old_mask, NULL);
@@ -234,16 +257,9 @@ void *get_job( gearman_job_st *job, void *context, size_t *result_size, gearman_
     free(decrypted_data_c);
     free_job(exec_job);
 
-    /* send finish signal to parent */
-    send_state_to_parent(GM_JOB_END);
-
-    if(jobs_done >= mod_gm_opt->max_jobs) {
+    if(mod_gm_opt->max_jobs > 0 && jobs_done >= mod_gm_opt->max_jobs) {
         gm_log( GM_LOG_TRACE, "jobs done: %i -> exiting...\n", jobs_done );
-        gearman_worker_unregister_all(&worker);
-        gearman_job_free_all( &worker );
-        gearman_client_free( &client );
-        if( mod_gm_opt->dupserver_num ) gearman_client_free( &client_dup );
-        mod_gm_free_opt(mod_gm_opt);
+        clean_worker_exit(0);
         exit( EXIT_SUCCESS );
     }
 
@@ -261,11 +277,11 @@ void do_exec_job( ) {
     gm_log( GM_LOG_TRACE, "do_exec_job()\n" );
 
     if(exec_job->type == NULL) {
-        gm_log( GM_LOG_ERROR, "discarded invalid job\n" );
+        gm_log( GM_LOG_ERROR, "discarded invalid job, no type given\n" );
         return;
     }
     if(exec_job->command_line == NULL) {
-        gm_log( GM_LOG_ERROR, "discarded invalid job\n" );
+        gm_log( GM_LOG_ERROR, "discarded invalid job, no command line given\n" );
         return;
     }
 
@@ -592,6 +608,14 @@ int set_worker( gearman_worker_st *w ) {
 }
 
 
+/* called when worker runs into idle timeout */
+void idle_sighandler(int sig) {
+    gm_log( GM_LOG_TRACE, "idle_sighandler(%i)\n", sig );
+    clean_worker_exit(0);
+    exit( EXIT_SUCCESS );
+}
+
+
 /* called when check runs into timeout */
 void alarm_sighandler(int sig) {
     pid_t pid = getpid();
@@ -607,49 +631,42 @@ void alarm_sighandler(int sig) {
     kill(-pid, SIGKILL);
 
     if(worker_run_mode != GM_WORKER_STANDALONE)
+        clean_worker_exit(0);
         exit(EXIT_SUCCESS);
 
     return;
 }
 
 /* tell parent our state */
-void send_state_to_parent(int status) {
-    int shmid;
+void set_state(int status) {
     int *shm;
 
-    gm_log( GM_LOG_TRACE, "send_state_to_parent(%d)\n", status );
-
-    /* Locate the segment */
-    if ((shmid = shmget(mod_gm_shm_key, GM_SHM_SIZE, 0600)) < 0) {
-        perror("shmget");
-        gm_log( GM_LOG_TRACE, "worker finished: %d\n", getpid() );
-        exit( EXIT_FAILURE );
-    }
+    gm_log( GM_LOG_TRACE, "set_state(%d)\n", status );
 
     /* Now we attach the segment to our data space. */
     if ((shm = shmat(shmid, NULL, 0)) == (int *) -1) {
         perror("shmat");
         gm_log( GM_LOG_TRACE, "worker finished: %d\n", getpid() );
+        clean_worker_exit(0);
         exit( EXIT_FAILURE );
     }
 
-    /* set our counter */
     if(status == GM_JOB_START)
-        shm[0]++;
+        shm[shm_index] = current_pid;
     if(status == GM_JOB_END) {
-        shm[0]--;
-        shm[2]++; /* increase jobs done */
+        shm[0]++; /* increase jobs done */
+        /* pid in our status slot changed, this should not happen -> exit */
+        if( shm[shm_index] != current_pid && shm[shm_index] != -current_pid ) {
+            gm_log( GM_LOG_ERROR, "double used worker slot: %d != %d\n", current_pid, shm[shm_index] );
+            clean_worker_exit(0);
+            exit( EXIT_FAILURE );
+        }
+        shm[shm_index] = -current_child_pid;
     }
 
     /* detach from shared memory */
     if(shmdt(shm) < 0)
         perror("shmdt");
-
-    if(worker_run_mode != GM_WORKER_MULTI)
-        return;
-
-    /* wake up parent */
-    kill(getppid(), SIGUSR1);
 
     return;
 }
@@ -657,15 +674,29 @@ void send_state_to_parent(int status) {
 
 /* do a clean exit */
 void clean_worker_exit(int sig) {
-    int shmid;
+    int *shm;
 
     gm_log( GM_LOG_TRACE, "clean_worker_exit(%d)\n", sig);
 
+    gm_log( GM_LOG_TRACE, "cleaning worker\n");
     gearman_worker_unregister_all(&worker);
     gearman_job_free_all( &worker );
+    gm_log( GM_LOG_TRACE, "cleaning client\n");
     gearman_client_free( &client );
-
     mod_gm_free_opt(mod_gm_opt);
+
+    /* Now we attach the segment to our data space. */
+    if ((shm = shmat(shmid, NULL, 0)) == (int *) -1) {
+        perror("shmat");
+        gm_log( GM_LOG_TRACE, "worker finished: %d\n", getpid() );
+        clean_worker_exit(0);
+        exit( EXIT_FAILURE );
+    }
+    shm[shm_index] = -1;
+
+    /* detach from shared memory */
+    if(shmdt(shm) < 0)
+        perror("shmdt");
 
     if(worker_run_mode != GM_WORKER_STANDALONE)
         exit( EXIT_SUCCESS );
@@ -674,9 +705,6 @@ void clean_worker_exit(int sig) {
      * clean up shared memory
      * will be removed when last client detaches
      */
-    if ((shmid = shmget(mod_gm_shm_key, GM_SHM_SIZE, 0600)) < 0) {
-        perror("shmget");
-    }
     if( shmctl( shmid, IPC_RMID, 0 ) == -1 ) {
         perror("shmctl");
     }
@@ -689,7 +717,6 @@ void clean_worker_exit(int sig) {
 void *return_status( gearman_job_st *job, void *context, size_t *result_size, gearman_return_t *ret_ptr ) {
     int wsize;
     char workload[GM_BUFFERSIZE];
-    int shmid;
     int *shm;
     char * result;
 
@@ -712,13 +739,6 @@ void *return_status( gearman_job_st *job, void *context, size_t *result_size, ge
     result = malloc(GM_BUFFERSIZE);
     *result_size = GM_BUFFERSIZE;
 
-    /* Locate the segment */
-    if ((shmid = shmget(mod_gm_shm_key, GM_SHM_SIZE, 0600)) < 0) {
-        perror("shmget");
-        *result_size = 0;
-        return NULL;
-    }
-
     /* Now we attach the segment to our data space. */
     if ((shm = shmat(shmid, NULL, 0)) == (int *) -1) {
         perror("shmat");
@@ -726,7 +746,7 @@ void *return_status( gearman_job_st *job, void *context, size_t *result_size, ge
         return NULL;
     }
 
-    snprintf(result, GM_BUFFERSIZE, "%s has %i worker and is working on %i jobs. Version: %s|worker=%i jobs=%ic", hostname, shm[1], shm[0], GM_VERSION, shm[1], shm[2] );
+    snprintf(result, GM_BUFFERSIZE, "%s has %i worker and is working on %i jobs. Version: %s|worker=%i jobs=%ic", hostname, shm[1], shm[2], GM_VERSION, shm[1], shm[0] );
 
     /* detach from shared memory */
     if(shmdt(shm) < 0)

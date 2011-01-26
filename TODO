@@ -7,11 +7,11 @@ General
 
  - handle sync host checks correctly
  - maybe use libmcrypt for encryption
- - make target for gearmand init script
+ - "include" directorys for the config file
 
 Bugs
 ----
- - incorrect job counter leads to low worker count
+ - none known
 
 WISH LIST
 =========

@@ -1,7 +1,14 @@
 This file documents the revision history for mod_gearman.
 
-0.9    Wed...
-          - added debian packaging files (thanks Stig Sandbeck Mathisen)
+1.0    Sun...
+          - added stderr to send_multi
+          - added missing performance data to send_multi
+
+0.9    Sun Jan 16 21:20:06 CET 2011
+          - prepared debian packaging (thanks Stig Sandbeck Mathisen)
+          - increased max output to 64k
+          - fixed default paths in gearmand init script
+          - fixed problem with too low number of workers after running for a while
           - fixed problem with uppercase service descriptions in send_gearman
 
 0.8    Wed Nov 17 14:11:54 CET 2010
