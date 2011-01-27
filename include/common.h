@@ -135,6 +135,8 @@ typedef struct mod_gm_opt_struct {
     char         * keyfile;                                 /**< path to a file where the crypt_key is read from */
     char         * server_list[GM_LISTSIZE];                /**< list of gearmand servers */
     int            server_num;                              /**< number of gearmand servers */
+    char         * dupserver_list[GM_LISTSIZE];             /**< list of gearmand servers to duplicate results */
+    int            dupserver_num;                           /**< number of duplicate gearmand servers */
     char         * hostgroups_list[GM_LISTSIZE];            /**< list of hostgroups which get own queues */
     int            hostgroups_num;                          /**< number of elements in hostgroups_list */
     char         * servicegroups_list[GM_LISTSIZE];         /**< list of servicegroups which get own queues */

@@ -23,6 +23,11 @@ debug=0
 server=localhost:4730
 
 
+# sets the address of your 2nd (duplicate) gearman job server. Can
+# be specified more than once o add more servers.
+#dupserver=<host>:<port>
+
+
 # defines if the module should distribute execution of
 # eventhandlers.
 eventhandler=yes
