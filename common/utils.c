@@ -91,14 +91,14 @@ void mod_gm_crypt_init(char * key) {
 /* encrypt text with given key */
 int mod_gm_encrypt(char ** encrypted, char * text, int mode) {
     int size;
-    unsigned char * crypted;
+    char * crypted;
     char * base64;
 
     if(mode == GM_ENCODE_AND_ENCRYPT) {
         size = mod_gm_aes_encrypt(&crypted, text);
     }
     else {
-        crypted = (unsigned char*)strdup(text);
+        crypted = (char*)strdup(text);
         size    = strlen(text);
     }
 
@@ -115,7 +115,7 @@ int mod_gm_encrypt(char ** encrypted, char * text, int mode) {
 
 /* decrypt text with given key */
 void mod_gm_decrypt(char ** decrypted, char * text, int mode) {
-    unsigned char * buffer = malloc(sizeof(unsigned char) * GM_BUFFERSIZE);
+    char * buffer = malloc(sizeof(char) * GM_BUFFERSIZE);
 
     /* first decode from base64 */
     size_t bsize = base64_decode(text, buffer, GM_BUFFERSIZE);

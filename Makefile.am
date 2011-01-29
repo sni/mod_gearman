@@ -16,12 +16,12 @@ CFLAGS=-Wall -W -Wstrict-prototypes -Wmissing-prototypes -Wnested-externs -s -O 
 # for debugging
 #CFLAGS=-pedantic -Wfatal-errors -Wall -W -Wstrict-prototypes -Wshadow -Wpointer-arith -Wcast-qual -Wcast-align -Wstrict-prototypes -Wmissing-prototypes -Wnested-externs -g3 -O -fPIC
 AM_CPPFLAGS=-Iinclude
+LDADD=-lmcrypt
 OS=`uname`
 
 # source definitions
 common_SOURCES             = common/base64.c \
                              common/crypt.c  \
-                             common/rijndael.c \
                              common/gearman.c \
                              common/gearman_utils.c \
                              common/utils.c
@@ -58,7 +58,7 @@ check_gearman_SOURCES      = $(common_SOURCES) \
 gearman_top_SOURCES        = $(common_SOURCES) \
                              tools/tools_logger.c \
                              tools/gearman_top.c
-gearman_top_LDFLAGS        = -lncurses
+gearman_top_LDADD          = -lncurses -lmcrypt
 
 # tests
 check_PROGRAMS   = 01_utils 02_full
@@ -83,9 +83,9 @@ EXTRA_DIST = COPYING etc extras include \
 # other targets
 mod_gearman.o: $(mod_gearman_so_OBJECTS) $(mod_gearman_so_DEPENDENCIES)
 	if [ "$(OS)" == "Darwin" ]; then \
-	    $(CXX) $(LDFLAGS) -dynamiclib -single_module -undefined dynamic_lookup $(mod_gearman_so_OBJECTS) -o $@ -lpthread -lgearman; \
+	    $(CXX) $(LDFLAGS) -dynamiclib -single_module -undefined dynamic_lookup $(mod_gearman_so_OBJECTS) -o $@ -lpthread -lgearman -lmcrypt; \
 	else \
-	    $(CXX) $(LDFLAGS) -fPIC -shared $(mod_gearman_so_OBJECTS) -o $@ -lpthread -lgearman; \
+	    $(CXX) $(LDFLAGS) -fPIC -shared $(mod_gearman_so_OBJECTS) -o $@ -lpthread -lgearman -lmcrypt; \
 	fi
 	$(RM) mod_gearman.so
 
@@ -140,7 +140,7 @@ worker.static: worker
 	@echo " compile libgearman with -static"
 	@echo ""
 	@echo "################################################################"
-	cd worker && $(CC) $(LDFLAGS) $(CFLAGS) -static -o worker.static $(worker_OBJECTS) -lgearman -lpthread -luuid
+	cd worker && $(CC) $(LDFLAGS) $(CFLAGS) -static -o worker.static $(worker_OBJECTS) -lgearman -lpthread -luuid -lmcrypt
 	@echo ""
 	@echo " worker.static created."
 	@echo ""

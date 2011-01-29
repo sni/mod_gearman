@@ -29,16 +29,23 @@
 #include "common.h"
 
 int encryption_initialized = 0;
-unsigned char key[KEYLENGTH(KEYBITS)];
-
+unsigned char key[32];
+MCRYPT td;
+char * IV;
 
 /* initialize encryption */
 void mod_gm_aes_init(char * password) {
+    int iv_size;
 
     /* pad key till keysize */
     int i;
     for (i = 0; i < 32; i++)
         key[i] = *password != 0 ? *password++ : 0;
+
+    td=mcrypt_module_open(MCRYPT_RIJNDAEL_256,NULL,"cbc",NULL);
+    iv_size=mcrypt_enc_get_iv_size(td);
+    IV=(char *)malloc(iv_size);
+    mcrypt_generic_init(td,key,32,IV);
 
     encryption_initialized = 1;
     return;
@@ -46,73 +53,17 @@ void mod_gm_aes_init(char * password) {
 
 
 /* encrypt text with given key */
-int mod_gm_aes_encrypt(unsigned char ** encrypted, char * text) {
-    unsigned long rk[RKLENGTH(KEYBITS)];
-    int nrounds;
-    int i = 0;
-    int k = 0;
-    unsigned char *enc;
-    int size;
-    int totalsize;
-
-    assert(encryption_initialized == 1);
-
-    nrounds   = rijndaelSetupEncrypt(rk, key, KEYBITS);
-    size      = strlen(text);
-    totalsize = size + BLOCKSIZE-size%BLOCKSIZE;
-    enc       = (unsigned char *) malloc(sizeof(unsigned char)*totalsize);
-    while(size > 0) {
-        unsigned char plaintext[BLOCKSIZE];
-        unsigned char ciphertext[BLOCKSIZE];
-        int j;
-        for (j = 0; j < BLOCKSIZE; j++) {
-            int c = text[i];
-            if(c == 0)
-                break;
-            plaintext[j] = c;
-            i++;
-        }
-
-        for (; j < BLOCKSIZE; j++)
-            plaintext[j] = '\n';
-        rijndaelEncrypt(rk, nrounds, plaintext, ciphertext);
-        for (j = 0; j < BLOCKSIZE; j++)
-            enc[k++] = ciphertext[j];
-        size -=BLOCKSIZE;
-    }
-
-    *encrypted = enc;
+int mod_gm_aes_encrypt(char ** encrypted, char * text) {
+    int totalsize = strlen(text);
+    *encrypted = strdup(text);
+    mcrypt_generic( td, *encrypted, totalsize);
     return totalsize;
 }
 
 
 /* decrypt text with given key */
-void mod_gm_aes_decrypt(char ** text, unsigned char * encrypted, int size) {
-    char decr[GM_BUFFERSIZE];
-    unsigned long rk[RKLENGTH(KEYBITS)];
-    int nrounds;
-    int i = 0;
-
-    assert(encryption_initialized == 1);
-    nrounds = rijndaelSetupDecrypt(rk, key, KEYBITS);
-    decr[0] = '\0';
-
-    while(1) {
-        unsigned char plaintext[BLOCKSIZE];
-        unsigned char ciphertext[BLOCKSIZE];
-        int j;
-        for (j = 0; j < BLOCKSIZE; j++) {
-            int c = encrypted[i];
-            ciphertext[j] = c;
-            i++;
-        }
-        rijndaelDecrypt(rk, nrounds, ciphertext, plaintext);
-        strncat(decr, (char*)plaintext, BLOCKSIZE);
-        size -= BLOCKSIZE;
-        if(size < BLOCKSIZE)
-            break;
-    }
-
-    strcpy(*text, decr);
+void mod_gm_aes_decrypt(char ** text, char * encrypted, int size) {
+    *text = strdup(encrypted);
+    mdecrypt_generic( td, text, size);
     return;
 }

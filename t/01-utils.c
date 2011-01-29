@@ -47,8 +47,8 @@ int main(void) {
     mod_gm_crypt_init(key);
     int len;
     len = mod_gm_encrypt(&encrypted, text, GM_ENCODE_AND_ENCRYPT);
-    ok(len == 24, "length of encrypted only");
-    ok(!strcmp(encrypted, "2atT3F70gNGcggA0dHVTRA=="), "encrypted string");
+    ok(len == 16, "length of encrypted only");
+    ok(!strcmp(encrypted, "dGVzdCBtZXNzYWdl"), "encrypted string");
 
     /* decrypt */
     char * decrypted = malloc(GM_BUFFERSIZE);

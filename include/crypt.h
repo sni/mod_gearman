@@ -31,7 +31,7 @@
 
 #include <stdio.h>
 #include <string.h>
-#include "rijndael.h"
+#include <mcrypt.h>
 
 #define KEYBITS     256     /**< key size */
 #define BLOCKSIZE    16     /**< block size for encryption */
@@ -53,7 +53,7 @@ void mod_gm_aes_init(char * password);
  *
  * @return size of encrypted text
  */
-int mod_gm_aes_encrypt(unsigned char ** encrypted, char * text);
+int mod_gm_aes_encrypt(char ** encrypted, char * text);
 
 /**
  * decrypt text
@@ -64,7 +64,7 @@ int mod_gm_aes_encrypt(unsigned char ** encrypted, char * text);
  *
  * @return nothing
  */
-void mod_gm_aes_decrypt(char ** decrypted, unsigned char * encrypted, int size);
+void mod_gm_aes_decrypt(char ** decrypted, char * encrypted, int size);
 
 /*
  * @}
