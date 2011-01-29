@@ -122,6 +122,18 @@
 
 #define GM_SHM_SIZE                  4096    /**< size of the shared memory segment */
 
+/** options exports structure
+ *
+ * structure for export definition
+ *
+ */
+typedef struct mod_gm_export {
+    char   * name;                          /**< queue name to export into */
+    int      return_code;                   /**< return code which should be returned to nagios */
+    int      callbacks[GM_LISTSIZE];        /**< list of callbacks */
+    int      callbacks_num;                 /**< number of callbacks elements */
+} mod_gm_exp_t;
+
 /** options structure
  *
  * structure union for all components
@@ -156,6 +168,8 @@ typedef struct mod_gm_opt_struct {
     int            local_hostgroups_num;                    /**< number of elements in local_hostgroups_list */
     char         * local_servicegroups_list[GM_LISTSIZE];   /**< list of group  which will not be distributed */
     int            local_servicegroups_num;                 /**< number of elements in local_servicegroups_list */
+    mod_gm_exp_t * exports[GM_LISTSIZE];                    /**< list of exporter queues */
+    int            exports_num;                             /**< number of elements in exports */
 /* worker */
     char         * identifier;                              /**< identifier for this worker */
     char         * pidfile;                                 /**< path to a pidfile */
@@ -195,6 +209,7 @@ typedef struct mod_gm_opt_struct {
  * @return nothing
  */
 void gm_log( int lvl, const char *text, ... );
+
 
 /*
  * @}

@@ -241,6 +241,9 @@ int set_default_options(mod_gm_opt_t *opt) {
     opt->local_servicegroups_num  = 0;
     for(i=0;i<=GM_LISTSIZE;i++)
         opt->local_servicegroups_list[i] = NULL;
+    opt->exports_num  = 0;
+    for(i=0;i<=GM_LISTSIZE;i++)
+        opt->exports[i] = NULL;
 
     return(GM_OK);
 }
@@ -568,6 +571,26 @@ int parse_args_line(mod_gm_opt_t *opt, char * arg, int recursion_level) {
             }
         }
     }
+
+    /* export queues */
+    else if ( !strcmp( key, "export" ) ) {
+        mod_gm_exp_t *mod_gm_exp;
+        char *callback;
+        mod_gm_exp          = malloc(sizeof(mod_gm_exp_t));
+        mod_gm_exp->name    = strsep( &value, ":" );
+        mod_gm_exp->name    = trim(mod_gm_exp->name);
+        char *return_code   = strsep( &value, ":" );
+        mod_gm_exp->return_code = atoi(return_code);
+        char *callbacks = strsep( &value, ":" );
+        mod_gm_exp->callbacks_num = 0;
+        while ( (callback = strsep( &callbacks, "," )) != NULL ) {
+            mod_gm_exp->callbacks[mod_gm_exp->callbacks_num] = atoi(callback);
+            mod_gm_exp->callbacks_num++;
+        }
+        opt->exports[opt->exports_num] = mod_gm_exp;
+        opt->exports_num++;
+    }
+
     return(GM_OK);
 }
 
@@ -621,6 +644,9 @@ int read_config_file(mod_gm_opt_t *opt, char*filename, int recursion_level) {
 /* dump config */
 void dumpconfig(mod_gm_opt_t *opt, int mode) {
     int i=0;
+    int j=0;
+    char temp_buffer[GM_BUFFERSIZE];
+    char callbacks[GM_BUFFERSIZE];
     gm_log( GM_LOG_DEBUG, "--------------------------------\n" );
     gm_log( GM_LOG_DEBUG, "configuration:\n" );
     gm_log( GM_LOG_DEBUG, "log level:           %d\n", opt->debug_level);
@@ -669,6 +695,18 @@ void dumpconfig(mod_gm_opt_t *opt, int mode) {
             gm_log( GM_LOG_DEBUG, "local_hostgroups: %s\n", opt->local_hostgroups_list[i]);
         for(i=0;i<opt->local_servicegroups_num;i++)
             gm_log( GM_LOG_DEBUG, "local_servicegroups:      %s\n", opt->local_servicegroups_list[i]);
+        /* export queues*/
+        for(i=0;i<opt->exports_num;i++) {
+            callbacks[0]='\x0';
+            for(j=0;j<opt->exports[i]->callbacks_num;j++) {
+                temp_buffer[0]='\x0';
+                snprintf( temp_buffer,sizeof( temp_buffer )-1, "%d", opt->exports[i]->callbacks[j]);
+                strcat(callbacks, temp_buffer );
+                if(j < opt->exports[i]->callbacks_num-1)
+                    strcat(callbacks, ",");
+            }
+            gm_log( GM_LOG_DEBUG, "export:              %s -> %s\n", opt->exports[i]->name, callbacks);
+        }
     }
 
     /* encryption */
@@ -704,6 +742,11 @@ void mod_gm_free_opt(mod_gm_opt_t *opt) {
         free(opt->local_hostgroups_list[i]);
     for(i=0;i<opt->local_servicegroups_num;i++)
         free(opt->local_servicegroups_list[i]);
+    for(i=0;i<opt->exports_num;i++) {
+        free(opt->exports[i]->name);
+        free(opt->exports[i]->callbacks);
+        free(opt->exports[i]);
+    }
     free(opt->crypt_key);
     free(opt->keyfile);
     free(opt->message);
@@ -980,4 +1023,228 @@ int pid_alive(int pid) {
     }
 
     return FALSE;
+}
+
+
+
+/* escapes newlines in a string */
+char *escapestring(char *rawbuf) {
+    char *newbuf=NULL;
+    char buff[64];
+    register int x,y;
+
+    if(rawbuf==NULL)
+        return NULL;
+
+    /* allocate enough memory to escape all chars if necessary */
+    if((newbuf=malloc((strlen(rawbuf)*2)+1))==NULL)
+        return NULL;
+
+    for(x=0,y=0;rawbuf[x]!=(char)'\x0';x++){
+
+        if(escaped(rawbuf[x])) {
+            escape(buff, rawbuf[x]);
+            newbuf[y++]=buff[0];
+            if(buff[1] != 0)
+                newbuf[y++]=buff[1];
+        }
+
+        else
+            newbuf[y++]=rawbuf[x];
+    }
+    newbuf[y]='\x0';
+
+    return newbuf;
+}
+
+/*
+is a character escaped?
+Params: ch - character to test
+Returns: 1 if escaped, 0 if normal
+*/
+int escaped(int ch) {
+    return strchr("\\\a\b\n\r\t\"\f\v", ch) ? 1 : 0;
+}
+
+/*
+get the escape sequence for a character
+Params: out - output buffer (currently max 2 + nul but allow for more)
+ch - the character to escape
+*/
+void escape(char *out, int ch) {
+    switch(ch) {
+        case '\n':
+            strcpy(out, "\\n"); break;
+        case '\t':
+            strcpy(out, "\\t"); break;
+        case '\v':
+            strcpy(out, "\\v"); break;
+        case '\b':
+            strcpy(out, "\\b"); break;
+        case '\r':
+            strcpy(out, "\\r"); break;
+        case '\f':
+            strcpy(out, "\\f"); break;
+        case '\a':
+            strcpy(out, "\\a"); break;
+        case '\\':
+            strcpy(out, "\\\\"); break;
+        //case '\'':
+        //    strcpy(out, "\\\'"); break;
+        case '\"':
+            strcpy(out, "\\\""); break;
+        default:
+            out[0] = (char) ch; break;
+            out[1] = 0;
+    }
+}
+
+
+/* return human readable name for type int */
+char * type2str(int i) {
+    switch(i) {
+        case 0:
+            return strdup("NEBTYPE_NONE"); break;
+        case 1:
+            return strdup("NEBTYPE_HELLO"); break;
+        case 2:
+            return strdup("NEBTYPE_GOODBYE"); break;
+        case 3:
+            return strdup("NEBTYPE_INFO"); break;
+        case 100:
+            return strdup("NEBTYPE_PROCESS_START"); break;
+        case 101:
+            return strdup("NEBTYPE_PROCESS_DAEMONIZE"); break;
+        case 102:
+            return strdup("NEBTYPE_PROCESS_RESTART"); break;
+        case 103:
+            return strdup("NEBTYPE_PROCESS_SHUTDOWN"); break;
+        case 104:
+            return strdup("NEBTYPE_PROCESS_PRELAUNCH"); break;
+        case 105:
+            return strdup("NEBTYPE_PROCESS_EVENTLOOPSTART"); break;
+        case 106:
+            return strdup("NEBTYPE_PROCESS_EVENTLOOPEND"); break;
+        case 200:
+            return strdup("NEBTYPE_TIMEDEVENT_ADD"); break;
+        case 201:
+            return strdup("NEBTYPE_TIMEDEVENT_REMOVE"); break;
+        case 202:
+            return strdup("NEBTYPE_TIMEDEVENT_EXECUTE"); break;
+        case 203:
+            return strdup("NEBTYPE_TIMEDEVENT_DELAY"); break;
+        case 204:
+            return strdup("NEBTYPE_TIMEDEVENT_SKIP"); break;
+        case 205:
+            return strdup("NEBTYPE_TIMEDEVENT_SLEEP"); break;
+        case 300:
+            return strdup("NEBTYPE_LOG_DATA"); break;
+        case 301:
+            return strdup("NEBTYPE_LOG_ROTATION"); break;
+        case 400:
+            return strdup("NEBTYPE_SYSTEM_COMMAND_START"); break;
+        case 401:
+            return strdup("NEBTYPE_SYSTEM_COMMAND_END"); break;
+        case 500:
+            return strdup("NEBTYPE_EVENTHANDLER_START"); break;
+        case 501:
+            return strdup("NEBTYPE_EVENTHANDLER_END"); break;
+        case 600:
+            return strdup("NEBTYPE_NOTIFICATION_START"); break;
+        case 601:
+            return strdup("NEBTYPE_NOTIFICATION_END"); break;
+        case 602:
+            return strdup("NEBTYPE_CONTACTNOTIFICATION_START"); break;
+        case 603:
+            return strdup("NEBTYPE_CONTACTNOTIFICATION_END"); break;
+        case 604:
+            return strdup("NEBTYPE_CONTACTNOTIFICATIONMETHOD_START"); break;
+        case 605:
+            return strdup("NEBTYPE_CONTACTNOTIFICATIONMETHOD_END"); break;
+        case 700:
+            return strdup("NEBTYPE_SERVICECHECK_INITIATE"); break;
+        case 701:
+            return strdup("NEBTYPE_SERVICECHECK_PROCESSED"); break;
+        case 702:
+            return strdup("NEBTYPE_SERVICECHECK_RAW_START"); break;
+        case 703:
+            return strdup("NEBTYPE_SERVICECHECK_RAW_END"); break;
+        case 704:
+            return strdup("NEBTYPE_SERVICECHECK_ASYNC_PRECHECK"); break;
+        case 800:
+            return strdup("NEBTYPE_HOSTCHECK_INITIATE"); break;
+        case 801:
+            return strdup("NEBTYPE_HOSTCHECK_PROCESSED"); break;
+        case 802:
+            return strdup("NEBTYPE_HOSTCHECK_RAW_START"); break;
+        case 803:
+            return strdup("NEBTYPE_HOSTCHECK_RAW_END"); break;
+        case 804:
+            return strdup("NEBTYPE_HOSTCHECK_ASYNC_PRECHECK"); break;
+        case 805:
+            return strdup("NEBTYPE_HOSTCHECK_SYNC_PRECHECK"); break;
+        case 900:
+            return strdup("NEBTYPE_COMMENT_ADD"); break;
+        case 901:
+            return strdup("NEBTYPE_COMMENT_DELETE"); break;
+        case 902:
+            return strdup("NEBTYPE_COMMENT_LOAD"); break;
+        case 1000:
+            return strdup("NEBTYPE_FLAPPING_START"); break;
+        case 1001:
+            return strdup("NEBTYPE_FLAPPING_STOP"); break;
+        case 1100:
+            return strdup("NEBTYPE_DOWNTIME_ADD"); break;
+        case 1101:
+            return strdup("NEBTYPE_DOWNTIME_DELETE"); break;
+        case 1102:
+            return strdup("NEBTYPE_DOWNTIME_LOAD"); break;
+        case 1103:
+            return strdup("NEBTYPE_DOWNTIME_START"); break;
+        case 1104:
+            return strdup("NEBTYPE_DOWNTIME_STOP"); break;
+        case 1200:
+            return strdup("NEBTYPE_PROGRAMSTATUS_UPDATE"); break;
+        case 1201:
+            return strdup("NEBTYPE_HOSTSTATUS_UPDATE"); break;
+        case 1202:
+            return strdup("NEBTYPE_SERVICESTATUS_UPDATE"); break;
+        case 1203:
+            return strdup("NEBTYPE_CONTACTSTATUS_UPDATE"); break;
+        case 1300:
+            return strdup("NEBTYPE_ADAPTIVEPROGRAM_UPDATE"); break;
+        case 1301:
+            return strdup("NEBTYPE_ADAPTIVEHOST_UPDATE"); break;
+        case 1302:
+            return strdup("NEBTYPE_ADAPTIVESERVICE_UPDATE"); break;
+        case 1303:
+            return strdup("NEBTYPE_ADAPTIVECONTACT_UPDATE"); break;
+        case 1400:
+            return strdup("NEBTYPE_EXTERNALCOMMAND_START"); break;
+        case 1401:
+            return strdup("NEBTYPE_EXTERNALCOMMAND_END"); break;
+        case 1500:
+            return strdup("NEBTYPE_AGGREGATEDSTATUS_STARTDUMP"); break;
+        case 1501:
+            return strdup("NEBTYPE_AGGREGATEDSTATUS_ENDDUMP"); break;
+        case 1600:
+            return strdup("NEBTYPE_RETENTIONDATA_STARTLOAD"); break;
+        case 1601:
+            return strdup("NEBTYPE_RETENTIONDATA_ENDLOAD"); break;
+        case 1602:
+            return strdup("NEBTYPE_RETENTIONDATA_STARTSAVE"); break;
+        case 1603:
+            return strdup("NEBTYPE_RETENTIONDATA_ENDSAVE"); break;
+        case 1700:
+            return strdup("NEBTYPE_ACKNOWLEDGEMENT_ADD"); break;
+        case 1701:
+            return strdup("NEBTYPE_ACKNOWLEDGEMENT_REMOVE"); break;
+        case 1702:
+            return strdup("NEBTYPE_ACKNOWLEDGEMENT_LOAD"); break;
+        case 1800:
+            return strdup("NEBTYPE_STATECHANGE_START"); break;
+        case 1801:
+            return strdup("NEBTYPE_STATECHANGE_END"); break;
+    }
+    return strdup("UNKNOWN");
 }

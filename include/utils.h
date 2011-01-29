@@ -313,5 +313,50 @@ int run_check(char *processed_command, char **plugin_output);
 int pid_alive(int pid);
 
 /**
+ * escapestring
+ *
+ * escape quotes and newlines
+ *
+ * @param[in] rawbuf - text to escape
+ *
+ * @return the escaped string
+ */
+char *escapestring(char *rawbuf);
+
+/**
+ * escaped
+ *
+ * checks wheter a char has to be escaped or not
+ *
+ * @param[in] ch - char to check
+ *
+ * @return true if char has to be escaped
+ */
+int escaped(int ch);
+
+/**
+ * escape
+ *
+ * return escaped variant of char
+ *
+ * @param[out] out - escaped char
+ * @param[in] ch - char to escape
+ *
+ * @return the escaped string
+ */
+void escape(char *out, int ch);
+
+/**
+ * type2str
+ *
+ * get human readable name for eventbroker type int
+ *
+ * @param[in] i - integer to translate
+ *
+ * @return the human readable string
+ */
+char * type2str(int i);
+
+/**
  * @}
  */

@@ -62,6 +62,7 @@ static int   handle_host_check( int,void * );
 static int   handle_svc_check( int,void * );
 static int   handle_eventhandler( int,void * );
 static int   handle_perfdata(int e, void *);
+static int   handle_export(int e, void *);
 static void  set_target_queue( host *, service * );
 static int   handle_process_events( int, void * );
 static int   handle_timed_events( int, void * );
@@ -70,6 +71,7 @@ static check_result * merge_result_lists(check_result * lista, check_result * li
 static void move_results_to_core(void);
 
 int nebmodule_init( int flags, char *args, nebmodule *handle ) {
+    int i,j;
 
     /* save our handle */
     gearman_module_handle=handle;
@@ -143,6 +145,13 @@ int nebmodule_init( int flags, char *args, nebmodule *handle ) {
     if ( create_client( mod_gm_opt->server_list, &client ) != GM_OK ) {
         gm_log( GM_LOG_ERROR, "cannot start client\n" );
         return NEB_ERROR;
+    }
+
+    /* register export callbacks */
+    for(i=0;i<mod_gm_opt->exports_num;i++) {
+        for(j=0;j<mod_gm_opt->exports[i]->callbacks_num;j++) {
+            neb_register_callback( mod_gm_opt->exports[i]->callbacks[j], gearman_module_handle, 0, handle_export );
+        }
     }
 
     /* register callback for process event where everything else starts */
@@ -692,6 +701,9 @@ static int verify_options(mod_gm_opt_t *opt) {
         return(GM_ERROR);
     }
 
+    if ( mod_gm_opt->result_queue == NULL )
+        mod_gm_opt->result_queue = GM_DEFAULT_RESULT_QUEUE;
+
     /* nothing set by hand -> defaults */
     if( opt->set_queues_by_hand == 0 ) {
         gm_log( GM_LOG_DEBUG, "starting client with default queues\n" );
@@ -702,17 +714,15 @@ static int verify_options(mod_gm_opt_t *opt) {
 
     if(   opt->servicegroups_num == 0
        && opt->hostgroups_num    == 0
-       && opt->hosts    == GM_DISABLED
-       && opt->services == GM_DISABLED
-       && opt->events   == GM_DISABLED
-       && opt->perfdata == GM_DISABLED
+       && opt->exports_num       == 0
+       && opt->hosts             == GM_DISABLED
+       && opt->services          == GM_DISABLED
+       && opt->events            == GM_DISABLED
+       && opt->perfdata          == GM_DISABLED
       ) {
         gm_log( GM_LOG_ERROR, "starting worker without any queues is useless\n" );
         return(GM_ERROR);
     }
-
-    if ( mod_gm_opt->result_queue == NULL )
-        mod_gm_opt->result_queue = GM_DEFAULT_RESULT_QUEUE;
 
     /* do we need a result thread? */
     if(   opt->servicegroups_num == 0
@@ -923,6 +933,131 @@ int handle_perfdata(int event_type, void *data) {
         else {
             gm_log( GM_LOG_TRACE, "handle_perfdata() finished unsuccessfully\n" );
         }
+    }
+
+    return 0;
+}
+
+
+/* handle generic exports */
+int handle_export(int event_type, void *data) {
+    char * buffer;
+    char * type;
+    nebstruct_log_data * nld;
+
+    if(event_type != NEBCALLBACK_LOG_DATA || mod_gm_opt->debug_level >= 3)
+        gm_log( GM_LOG_TRACE, "handle_export(%d)\n", event_type );
+
+    temp_buffer[0]='\x0';
+
+    /* what type of event/data do we have? */
+    switch (event_type) {
+        case NEBCALLBACK_RESERVED0:                         /*  0 */
+            break;
+        case NEBCALLBACK_RESERVED1:                         /*  1 */
+            break;
+        case NEBCALLBACK_RESERVED2:                         /*  2 */
+            break;
+        case NEBCALLBACK_RESERVED3:                         /*  3 */
+            break;
+        case NEBCALLBACK_RESERVED4:                         /*  4 */
+            break;
+        case NEBCALLBACK_RAW_DATA:                          /*  5 */
+            break;
+        case NEBCALLBACK_NEB_DATA:                          /*  6 */
+            break;
+        case NEBCALLBACK_PROCESS_DATA:                      /*  7 */
+            break;
+        case NEBCALLBACK_TIMED_EVENT_DATA:                  /*  8 */
+            break;
+        case NEBCALLBACK_LOG_DATA:                          /*  9 */
+            nld = (nebstruct_log_data *)data;
+            buffer = escapestring(nld->data);
+            type   = type2str(nld->type);
+            snprintf( temp_buffer,sizeof( temp_buffer )-1, "{\"event_type\":\"%s\",\"type\":\"%s\",\"flags\":%d,\"attr\":%d,\"timestamp\":%d.%d,\"entry_time\":%d,\"data_type\":%d,\"data\":\"%s\"}",
+                    "NEBCALLBACK_LOG_DATA",
+                    type,
+                    nld->flags,
+                    nld->attr,
+                    (int)nld->timestamp.tv_sec, (int)nld->timestamp.tv_usec,
+                    (int)nld->entry_time,
+                    nld->data_type,
+                    buffer);
+            free(type);
+            free(buffer);
+            break;
+        case NEBCALLBACK_SYSTEM_COMMAND_DATA:               /* 10 */
+            break;
+        case NEBCALLBACK_EVENT_HANDLER_DATA:                /* 11 */
+            break;
+        case NEBCALLBACK_NOTIFICATION_DATA:                 /* 12 */
+            break;
+        case NEBCALLBACK_SERVICE_CHECK_DATA:                /* 13 */
+            break;
+        case NEBCALLBACK_HOST_CHECK_DATA:                   /* 14 */
+            break;
+        case NEBCALLBACK_COMMENT_DATA:                      /* 15 */
+            break;
+        case NEBCALLBACK_DOWNTIME_DATA:                     /* 16 */
+            break;
+        case NEBCALLBACK_FLAPPING_DATA:                     /* 17 */
+            break;
+        case NEBCALLBACK_PROGRAM_STATUS_DATA:               /* 18 */
+            break;
+        case NEBCALLBACK_HOST_STATUS_DATA:                  /* 19 */
+            break;
+        case NEBCALLBACK_SERVICE_STATUS_DATA:               /* 20 */
+            break;
+        case NEBCALLBACK_ADAPTIVE_PROGRAM_DATA:             /* 21 */
+            break;
+        case NEBCALLBACK_ADAPTIVE_HOST_DATA:                /* 22 */
+            break;
+        case NEBCALLBACK_ADAPTIVE_SERVICE_DATA:             /* 23 */
+            break;
+        case NEBCALLBACK_EXTERNAL_COMMAND_DATA:             /* 24 */
+            break;
+        case NEBCALLBACK_AGGREGATED_STATUS_DATA:            /* 25 */
+            break;
+        case NEBCALLBACK_RETENTION_DATA:                    /* 26 */
+            break;
+        case NEBCALLBACK_CONTACT_NOTIFICATION_DATA:         /* 27 */
+            break;
+        case NEBCALLBACK_CONTACT_NOTIFICATION_METHOD_DATA:  /* 28 */
+            break;
+        case NEBCALLBACK_ACKNOWLEDGEMENT_DATA:              /* 29 */
+            break;
+        case NEBCALLBACK_STATE_CHANGE_DATA:                 /* 30 */
+            break;
+        case NEBCALLBACK_CONTACT_STATUS_DATA:               /* 31 */
+            break;
+        case NEBCALLBACK_ADAPTIVE_CONTACT_DATA:             /* 32 */
+            break;
+        default:
+            if(event_type != NEBCALLBACK_LOG_DATA || mod_gm_opt->debug_level >= 3)
+                gm_log( GM_LOG_ERROR, "handle_export() unknown export type: %d\n", event_type );
+            return 0;
+    }
+
+    temp_buffer[sizeof( temp_buffer )-1]='\x0';
+    if(temp_buffer[0] != '\x0') {
+        if(add_job_to_queue( &client,
+                             mod_gm_opt->server_list,
+                             "log",
+                             NULL,
+                             temp_buffer,
+                             GM_JOB_PRIO_NORMAL,
+                             GM_DEFAULT_JOB_RETRIES,
+                             mod_gm_opt->transportmode
+                            ) == GM_OK) {
+            if(event_type != NEBCALLBACK_LOG_DATA || mod_gm_opt->debug_level >= 3)
+                gm_log( GM_LOG_TRACE, "handle_export() finished successfully\n" );
+        }
+        else {
+            if(event_type != NEBCALLBACK_LOG_DATA || mod_gm_opt->debug_level >= 3)
+                gm_log( GM_LOG_TRACE, "handle_export() finished unsuccessfully\n" );
+        }
+    } else {
+        gm_log( GM_LOG_TRACE, "handle_export() finished\n" );
     }
 
     return 0;
