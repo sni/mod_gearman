@@ -74,7 +74,7 @@ int mod_gm_aes_encrypt(unsigned char ** encrypted, char * text) {
         }
 
         for (; j < BLOCKSIZE; j++)
-            plaintext[j] = '\n';
+            plaintext[j] = '\x0';
         rijndaelEncrypt(rk, nrounds, plaintext, ciphertext);
         for (j = 0; j < BLOCKSIZE; j++)
             enc[k++] = ciphertext[j];
