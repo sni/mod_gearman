@@ -33,9 +33,6 @@
 #include <string.h>
 #include <mcrypt.h>
 
-#define KEYBITS     256     /**< key size */
-#define BLOCKSIZE    16     /**< block size for encryption */
-
 /**
  * initialize crypto module
  *

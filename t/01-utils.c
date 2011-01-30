@@ -44,17 +44,19 @@ int main(void) {
     char * key = "test1234";
     char * encrypted = malloc(GM_BUFFERSIZE);
     char * text = "test message";
+    char * base = "y2d5NMIqwIeiy5CYY4p5HbtQt5YM/Zw4AR4WLLE8UsU=";
     mod_gm_crypt_init(key);
     int len;
     len = mod_gm_encrypt(&encrypted, text, GM_ENCODE_AND_ENCRYPT);
-    ok(len == 16, "length of encrypted only");
-    ok(!strcmp(encrypted, "dGVzdCBtZXNzYWdl"), "encrypted string");
+    ok(len == 32, "length of encrypted only");
+    if(!ok(!strcmp(encrypted, base), "encrypted string"))
+        diag("expected: '%s' but got: '%s'", base, encrypted);
 
     /* decrypt */
     char * decrypted = malloc(GM_BUFFERSIZE);
     mod_gm_decrypt(&decrypted, encrypted, GM_ENCODE_AND_ENCRYPT);
-    if(!ok(!strcmp(trim(decrypted), text), "decrypted text"))
-        diag("expected: '%s' but got: '%s'", text, trim(decrypted));
+    if(!ok(!strcmp(decrypted, text), "decrypted text"))
+        diag("expected: '%s' but got: '%s'", text, decrypted);
     free(decrypted);
     free(encrypted);
 

@@ -29,23 +29,33 @@
 #include "common.h"
 
 int encryption_initialized = 0;
-unsigned char key[32];
+char key[32];
 MCRYPT td;
 char * IV;
+int blocksize;
 
 /* initialize encryption */
 void mod_gm_aes_init(char * password) {
-    int iv_size;
+    int keysize = 32;
 
     /* pad key till keysize */
     int i;
-    for (i = 0; i < 32; i++)
+    for (i = 0; i < keysize; i++)
         key[i] = *password != 0 ? *password++ : 0;
 
-    td=mcrypt_module_open(MCRYPT_RIJNDAEL_256,NULL,"cbc",NULL);
-    iv_size=mcrypt_enc_get_iv_size(td);
-    IV=(char *)malloc(iv_size);
-    mcrypt_generic_init(td,key,32,IV);
+    td = mcrypt_module_open("rijndael-256", NULL, "cbc", NULL);
+    if (td == MCRYPT_FAILED)
+        return;
+    IV = malloc(mcrypt_enc_get_iv_size(td));
+    for (i=0; i< mcrypt_enc_get_iv_size( td); i++)
+        IV[i]=rand();
+
+    i = mcrypt_generic_init( td, key, keysize, IV);
+    if (i<0) {
+        mcrypt_perror(i);
+        return;
+    }
+    blocksize = mcrypt_enc_get_block_size(td);
 
     encryption_initialized = 1;
     return;
@@ -54,16 +64,62 @@ void mod_gm_aes_init(char * password) {
 
 /* encrypt text with given key */
 int mod_gm_aes_encrypt(char ** encrypted, char * text) {
-    int totalsize = strlen(text);
-    *encrypted = strdup(text);
-    mcrypt_generic( td, *encrypted, totalsize);
+    int i = 0;
+    int k = 0;
+    char *enc;
+    int size;
+    int totalsize;
+
+    assert(encryption_initialized == 1);
+
+    size      = strlen(text);
+    totalsize = size + blocksize-size%blocksize;
+    enc       = (unsigned char *) malloc(sizeof(unsigned char)*totalsize);
+    while(size > 0) {
+        char plaintext[blocksize];
+        int j;
+        for (j = 0; j < blocksize; j++) {
+            int c = text[i];
+            if(c == 0)
+                break;
+            plaintext[j] = c;
+            i++;
+        }
+
+        for (; j < blocksize; j++)
+            plaintext[j] = '\x0';
+        mcrypt_generic( td, plaintext, blocksize);
+        for (j = 0; j < blocksize; j++)
+            enc[k++] = plaintext[j];
+        size -=blocksize;
+    }
+    *encrypted = enc;
     return totalsize;
 }
 
-
 /* decrypt text with given key */
 void mod_gm_aes_decrypt(char ** text, char * encrypted, int size) {
-    *text = strdup(encrypted);
-    mdecrypt_generic( td, text, size);
-    return;
+    char decr[GM_BUFFERSIZE];
+    int i = 0;
+
+    assert(encryption_initialized == 1);
+
+    while(1) {
+        char ciphertext[blocksize];
+        int j;
+        for (j = 0; j < blocksize; j++) {
+            int c = encrypted[i];
+            ciphertext[j] = c;
+            i++;
+        }
+printf("a: %s\n", ciphertext);
+        mdecrypt_generic (td, ciphertext, blocksize);
+printf("b: %s\n", ciphertext);
+        strncat(decr, (char*)ciphertext, blocksize);
+        size -= blocksize;
+        if(size < blocksize)
+            break;
+    }
+
+    strcpy(*text, decr);
 }
