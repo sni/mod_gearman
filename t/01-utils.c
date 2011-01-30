@@ -41,20 +41,22 @@ int main(void) {
 
 
     /* encrypt */
-    char * key = "test1234";
+    char * key       = "test1234";
     char * encrypted = malloc(GM_BUFFERSIZE);
-    char * text = "test message";
+    char * text      = "test message";
+    char * base      = "a7HqhQEE8TQBde9uknpPYQ==";
     mod_gm_crypt_init(key);
     int len;
     len = mod_gm_encrypt(&encrypted, text, GM_ENCODE_AND_ENCRYPT);
     ok(len == 24, "length of encrypted only");
-    ok(!strcmp(encrypted, "2atT3F70gNGcggA0dHVTRA=="), "encrypted string");
+    if(!ok(!strcmp(encrypted, base), "encrypted string"))
+        diag("expected: '%s' but got: '%s'", base, encrypted);
 
     /* decrypt */
     char * decrypted = malloc(GM_BUFFERSIZE);
     mod_gm_decrypt(&decrypted, encrypted, GM_ENCODE_AND_ENCRYPT);
-    if(!ok(!strcmp(trim(decrypted), text), "decrypted text"))
-        diag("expected: '%s' but got: '%s'", text, trim(decrypted));
+    if(!ok(!strcmp(decrypted, text), "decrypted text"))
+        diag("expected: '%s' but got: '%s'", text, decrypted);
     free(decrypted);
     free(encrypted);
 
