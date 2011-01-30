@@ -39,11 +39,10 @@ int main(void) {
     ok1(trim(NULL) == NULL);
     strcpy(test, " test "); ok1(strcmp(trim(test), "test") == 0);
 
-
     /* encrypt */
-    char * key = "test1234";
+    char * key = "should_be_changed";
     char * encrypted = malloc(GM_BUFFERSIZE);
-    char * text = "test message";
+    char * text = "12345678901234561234567890123456";
     char * base = "y2d5NMIqwIeiy5CYY4p5HbtQt5YM/Zw4AR4WLLE8UsU=";
     mod_gm_crypt_init(key);
     int len;
@@ -51,6 +50,8 @@ int main(void) {
     ok(len == 32, "length of encrypted only");
     if(!ok(!strcmp(encrypted, base), "encrypted string"))
         diag("expected: '%s' but got: '%s'", base, encrypted);
+
+    mod_gm_crypt_init(key);
 
     /* decrypt */
     char * decrypted = malloc(GM_BUFFERSIZE);

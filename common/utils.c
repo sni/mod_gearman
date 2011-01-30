@@ -103,22 +103,35 @@ int mod_gm_encrypt(char ** encrypted, char * text, int mode) {
     }
 
     /* now encode in base64 */
-    base64 = malloc(GM_BUFFERSIZE);
-    base64[0] = 0;
-    base64_encode(crypted, size, base64, GM_BUFFERSIZE);
-    free(*encrypted);
-    free(crypted);
-    *encrypted = base64;
-    return strlen(base64);
+    if(1) {
+printf("base64_1: '%s'\n", crypted);
+        base64 = malloc(GM_BUFFERSIZE);
+        base64[0] = 0;
+        base64_encode((unsigned char*)crypted, size, base64, GM_BUFFERSIZE);
+        free(*encrypted);
+        free(crypted);
+        *encrypted = base64;
+printf("base64_2: '%s'\n", base64);
+        return strlen(base64);
+    }
+    return size;
 }
 
 
 /* decrypt text with given key */
 void mod_gm_decrypt(char ** decrypted, char * text, int mode) {
     char * buffer = malloc(sizeof(char) * GM_BUFFERSIZE);
+    size_t bsize;
 
     /* first decode from base64 */
-    size_t bsize = base64_decode(text, buffer, GM_BUFFERSIZE);
+    if(1) {
+printf("base64_3: '%s'\n", text);
+        bsize = base64_decode(text, (unsigned char*)buffer, GM_BUFFERSIZE);
+printf("base64_4: '%s'\n", buffer);
+    } else {
+        buffer = (char*)strdup(text);
+    }
+
     if(mode == GM_ENCODE_AND_ENCRYPT) {
         /* then decrypt */
         mod_gm_aes_decrypt(decrypted, buffer, bsize);
