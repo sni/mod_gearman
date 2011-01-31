@@ -319,8 +319,8 @@ int parse_args_line(mod_gm_opt_t *opt, char * arg, int recursion_level) {
     }
 
     /* eventhandler */
-    else if (   !strcmp( key, "events" )
-             || !strcmp( key, "eventhandlers" )
+    else if (   !strcmp( key, "eventhandlers" )
+             || !strcmp( key, "eventhandler" )
             ) {
         opt->set_queues_by_hand++;
         opt->events = parse_yes_or_no(value, GM_ENABLED);
