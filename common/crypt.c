@@ -60,6 +60,9 @@ int mod_gm_aes_encrypt(unsigned char ** encrypted, char * text) {
     nrounds   = rijndaelSetupEncrypt(rk, key, KEYBITS);
     size      = strlen(text);
     totalsize = size + BLOCKSIZE-size%BLOCKSIZE;
+    if(size%BLOCKSIZE == 0) {
+        size += BLOCKSIZE;
+    }
     enc       = (unsigned char *) malloc(sizeof(unsigned char)*totalsize);
     while(size > 0) {
         unsigned char plaintext[BLOCKSIZE];
