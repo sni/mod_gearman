@@ -171,6 +171,20 @@ int add_job_to_queue( gearman_client_st *client, char ** server_list, char * que
     size = mod_gm_encrypt(&crypted_data, data, transport_mode);
     gm_log( GM_LOG_TRACE, "%d +++>\n%s\n<+++\n", size, crypted_data );
 
+#ifdef GM_DEBUG
+    /* verify decrypted string is equal to the original */
+    char * test;
+    test = malloc(GM_BUFFERSIZE);
+    mod_gm_decrypt(&test, crypted_data, transport_mode);
+    gm_log( GM_LOG_TRACE, "%d ===>\n%s\n<===\n", size, test );
+    if(strcmp(test, data)) {
+        gm_log( GM_LOG_ERROR, "%d --->%s<---\n", strlen(data), data );
+        gm_log( GM_LOG_ERROR, "%d ===>\n%s\n<===\n", size, test );
+        fprintf(stderr, "encrypted string does not match\n");
+        exit(EXIT_FAILURE);
+    }
+#endif
+
     if( priority == GM_JOB_PRIO_LOW ) {
         task = gearman_client_add_task_low_background( client, NULL, NULL, queue, uniq, ( void * )crypted_data, ( size_t )size, &ret1 );
         gearman_task_give_workload(task,crypted_data,size);
