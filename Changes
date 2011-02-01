@@ -3,6 +3,8 @@ This file documents the revision history for mod_gearman.
 1.0    Sun...
           - added stderr to send_multi
           - added missing performance data to send_multi
+          - added error message when using unknown option
+          - fixed handling of unusual exit codes
 
 0.9    Sun Jan 16 21:20:06 CET 2011
           - prepared debian packaging (thanks Stig Sandbeck Mathisen)

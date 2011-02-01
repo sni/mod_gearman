@@ -299,24 +299,28 @@ int parse_args_line(mod_gm_opt_t *opt, char * arg, int recursion_level) {
     /* daemon mode */
     if ( !strcmp( key, "daemon" ) ||  !strcmp( key, "d" ) ) {
         opt->daemon_mode = parse_yes_or_no(value, GM_ENABLED);
+        return(GM_OK);
     }
 
     /* perfdata */
     else if (   !strcmp( key, "perfdata" ) ) {
         opt->set_queues_by_hand++;
         opt->perfdata = parse_yes_or_no(value, GM_ENABLED);
+        return(GM_OK);
     }
 
     /* hosts */
     else if ( !strcmp( key, "hosts" ) ) {
         opt->set_queues_by_hand++;
         opt->hosts = parse_yes_or_no(value, GM_ENABLED);
+        return(GM_OK);
     }
 
     /* services */
     else if ( !strcmp( key, "services" ) ) {
         opt->set_queues_by_hand++;
         opt->services = parse_yes_or_no(value, GM_ENABLED);
+        return(GM_OK);
     }
 
     /* eventhandler */
@@ -325,26 +329,35 @@ int parse_args_line(mod_gm_opt_t *opt, char * arg, int recursion_level) {
             ) {
         opt->set_queues_by_hand++;
         opt->events = parse_yes_or_no(value, GM_ENABLED);
+        return(GM_OK);
     }
 
     /* debug-result */
     else if ( !strcmp( key, "debug-result" ) ) {
         opt->debug_result = parse_yes_or_no(value, GM_ENABLED);
+        return(GM_OK);
     }
 
     /* encryption */
     else if ( !strcmp( key, "encryption" ) ) {
         opt->encryption = parse_yes_or_no(value, GM_ENABLED);
+        return(GM_OK);
     }
 
     /* fork_on_exec */
     else if ( !strcmp( key, "fork_on_exec" ) ) {
         opt->fork_on_exec = parse_yes_or_no(value, GM_ENABLED);
+        return(GM_OK);
     }
 
     /* active */
     else if (   !strcmp( key, "active" ) ) {
         opt->active = parse_yes_or_no(value, GM_ENABLED);
+        return(GM_OK);
+    }
+    else if ( value == NULL || !strcmp(value, "" ) ) {
+        gm_log( GM_LOG_ERROR, "unknown switch '%s'\n", key );
+        return(GM_OK);
     }
 
     if ( value == NULL )
@@ -568,6 +581,9 @@ int parse_args_line(mod_gm_opt_t *opt, char * arg, int recursion_level) {
                 opt->local_hostgroups_num++;
             }
         }
+    }
+    else {
+        gm_log( GM_LOG_ERROR, "unknown option '%s'\n", key );
     }
     return(GM_OK);
 }
