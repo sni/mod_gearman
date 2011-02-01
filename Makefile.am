@@ -61,10 +61,11 @@ gearman_top_SOURCES        = $(common_SOURCES) \
 gearman_top_LDFLAGS        = -lncurses
 
 # tests
-check_PROGRAMS   = 01_utils 02_full
+check_PROGRAMS   = 01_utils 02_full 03_exec
 01_utils_SOURCES = $(common_SOURCES) t/tap.h t/tap.c worker/worker_logger.c t/01-utils.c
 02_full_SOURCES  = $(common_SOURCES) t/tap.h t/tap.c worker/worker_logger.c t/02-full.c
-TESTS            = 01_utils 02_full
+03_exec_SOURCES  = $(common_SOURCES) t/tap.h t/tap.c worker/worker_logger.c t/03-exec_checks.c
+TESTS            = $(check_PROGRAMS)
 
 
 GEARMANDS=/usr/sbin/gearmand /opt/sbin/gearmand

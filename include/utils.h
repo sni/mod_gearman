@@ -302,6 +302,57 @@ int parse_command_line(char *cmd, char *argv[GM_LISTSIZE]);
 int run_check(char *processed_command, char **plugin_output);
 
 /**
+ *
+ * execute_safe_command
+ *
+ * execute command and fill the exec job structure
+ *
+ * @param[in] exec_job - job structure
+ * @param[in] fork_exec - fork or not before exec
+ * @param[in] hostname - current worker hostname
+ *
+ * @return true on success
+ */
+int execute_safe_command(gm_job_t * exec_job, int fork_exec, char * hostname);
+
+/**
+ *
+ * check_alarm_handler
+ *
+ * called when a check runs into the timeout
+ *
+ * @param[in] sig - signal number
+ *
+ * @return nothing
+ */
+void check_alarm_handler(int sig);
+
+/**
+ *
+ * set_default_job
+ *
+ * fill defaults into job structure
+ *
+ * @param[in] job - job structure to be filled
+ * @param[in] mod_gm_opt - options structure
+ *
+ * @return true on success
+ */
+int set_default_job(gm_job_t *job, mod_gm_opt_t *mod_gm_opt);
+
+/**
+ *
+ * free_job
+ *
+ * free job structure
+ *
+ * @param[in] job - job structure to be freed
+ *
+ * @return true on success
+ */
+int free_job(gm_job_t *job);
+
+/**
  * pid_alive
  *
  * check if a pid is alive

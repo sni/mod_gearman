@@ -39,7 +39,6 @@ gearman_client_st client_dup;
 
 gm_job_t * current_job;
 pid_t current_pid;
-pid_t current_child_pid;
 gm_job_t * exec_job;
 
 int jobs_done = 0;
@@ -49,7 +48,7 @@ int shm_index = 0;
 volatile sig_atomic_t shmid;
 
 /* callback for task completed */
-void worker_client(int worker_mode, int index, int shid) {
+void worker_client(int worker_mode, int indx, int shid) {
 
     gm_log( GM_LOG_TRACE, "%s worker client started\n", (worker_mode == GM_WORKER_STATUS ? "status" : "job" ));
 
@@ -58,7 +57,7 @@ void worker_client(int worker_mode, int index, int shid) {
     signal(SIGTERM,clean_worker_exit);
 
     worker_run_mode = worker_mode;
-    shm_index       = index;
+    shm_index       = indx;
     shmid           = shid;
     current_pid     = getpid();
 
@@ -187,7 +186,7 @@ void *get_job( gearman_job_st *job, void *context, size_t *result_size, gearman_
     *ret_ptr= GEARMAN_SUCCESS;
 
     exec_job = ( gm_job_t * )malloc( sizeof *exec_job );
-    set_default_job(exec_job);
+    set_default_job(exec_job, mod_gm_opt);
 
     valid_lines = 0;
     while ( (ptr = strsep(&decrypted_data, "\n" )) != NULL ) {
@@ -269,10 +268,8 @@ void *get_job( gearman_job_st *job, void *context, size_t *result_size, gearman_
 
 /* do some job */
 void do_exec_job( ) {
-    struct timeval start_time,end_time;
+    struct timeval start_time, end_time;
     int latency;
-    char plugin_output[GM_BUFFERSIZE];
-    strcpy(plugin_output,"");
 
     gm_log( GM_LOG_TRACE, "do_exec_job()\n" );
 
@@ -328,137 +325,11 @@ void do_exec_job( ) {
 
     /* run the command */
     gm_log( GM_LOG_TRACE, "command: %s\n", exec_job->command_line);
-    execute_safe_command();
-
-    /* record check result info */
-    gettimeofday(&end_time, NULL);
-    exec_job->finish_time = end_time;
-
-    /* did we have a timeout? */
-    if(exec_job->timeout < ((int)end_time.tv_sec - (int)start_time.tv_sec)) {
-        exec_job->return_code   = 2;
-        exec_job->early_timeout = 1;
-        if ( !strcmp( exec_job->type, "service" ) )
-            snprintf( plugin_output, sizeof( plugin_output ), "(Service Check Timed Out On Worker: %s)", hostname);
-        if ( !strcmp( exec_job->type, "host" ) )
-            snprintf( plugin_output, sizeof( plugin_output ), "(Host Check Timed Out On Worker: %s)", hostname);
-        exec_job->output = strdup( plugin_output );
-    }
+    execute_safe_command(exec_job, mod_gm_opt->fork_on_exec, hostname);
 
     if ( !strcmp( exec_job->type, "service" ) || !strcmp( exec_job->type, "host" ) ) {
         send_result_back();
     }
-
-    return;
-}
-
-
-/* execute this command with given timeout */
-void execute_safe_command() {
-    int pdes[2];
-    int return_code;
-    int pclose_result;
-    int fork_exec = mod_gm_opt->fork_on_exec;
-    char *plugin_output;
-    char buffer[GM_BUFFERSIZE];
-    sigset_t mask;
-
-    gm_log( GM_LOG_TRACE, "execute_safe_command()\n" );
-
-    /* fork a child process */
-    if(fork_exec == GM_ENABLED) {
-        if(pipe(pdes) != 0)
-            perror("pipe");
-
-        current_child_pid=fork();
-
-        /*fork error */
-        if( current_child_pid == -1 ) {
-            exec_job->output      = strdup("(Error On Fork)");
-            exec_job->return_code = 3;
-            return;
-        }
-    }
-
-    /* we are in the child process */
-    if( fork_exec == GM_DISABLED || current_child_pid == 0 ){
-
-        /* become the process group leader */
-        setpgid(0,0);
-        current_child_pid = getpid();
-
-        /* remove all customn signal handler */
-        sigfillset(&mask);
-        sigprocmask(SIG_UNBLOCK, &mask, NULL);
-
-        if( fork_exec == GM_ENABLED )
-            close(pdes[0]);
-        signal(SIGALRM, alarm_sighandler);
-        alarm(exec_job->timeout);
-
-        /* run the plugin check command */
-        pclose_result = run_check(exec_job->command_line, &plugin_output);
-        return_code   = real_exit_code(pclose_result);
-
-        if(fork_exec == GM_ENABLED) {
-            if(write(pdes[1], plugin_output, strlen(plugin_output)+1) <= 0)
-                perror("write");
-
-            if(pclose_result == -1) {
-                char error[GM_BUFFERSIZE];
-                snprintf(error, sizeof(error), "error on %s: %s", hostname, strerror(errno));
-                if(write(pdes[1], error, strlen(error)+1) <= 0)
-                    perror("write");
-            }
-
-            exit(return_code);
-        }
-        else {
-            snprintf( buffer, sizeof( buffer )-1, "%s", plugin_output );
-        }
-    }
-
-    /* we are the parent */
-    if( fork_exec == GM_DISABLED || current_child_pid > 0 ){
-
-        gm_log( GM_LOG_TRACE, "started check with pid: %d\n", current_child_pid);
-
-        if( fork_exec == GM_ENABLED) {
-            close(pdes[1]);
-
-            waitpid(current_child_pid, &return_code, 0);
-            return_code = real_exit_code(return_code);
-            gm_log( GM_LOG_TRACE, "finished check from pid: %d with status: %d\n", current_child_pid, return_code);
-            /* get all lines of plugin output */
-            if(read(pdes[0], buffer, sizeof(buffer)-1) < 0)
-                perror("read");
-        }
-
-        /* file not executable? */
-        if(return_code == 126) {
-            return_code = STATE_CRITICAL;
-            snprintf( buffer, sizeof( buffer )-1, "CRITICAL: Return code of 126 is out of bounds. Make sure the plugin you're trying to run is executable. (worker: %s)", hostname);
-        }
-        /* file not found errors? */
-        else if(return_code == 127) {
-            return_code = STATE_CRITICAL;
-            snprintf( buffer, sizeof( buffer )-1, "CRITICAL: Return code of 127 is out of bounds. Make sure the plugin you're trying to run actually exists. (worker: %s)", hostname);
-        }
-        /* signaled */
-        else if(return_code >= 128 && return_code < 256) {
-            char * signame = nr2signal((int)(return_code-128));
-            snprintf( buffer, sizeof( buffer )-1, "CRITICAL: Return code of %d is out of bounds. Plugin exited by signal %s. (worker: %s)", (int)(return_code), signame, hostname);
-            return_code = STATE_CRITICAL;
-            free(signame);
-        }
-        exec_job->output      = strdup(buffer);
-        exec_job->return_code = return_code;
-        if( fork_exec == GM_ENABLED) {
-            close(pdes[0]);
-        }
-    }
-    alarm(0);
-    current_child_pid = 0;
 
     return;
 }
@@ -616,27 +487,6 @@ void idle_sighandler(int sig) {
 }
 
 
-/* called when check runs into timeout */
-void alarm_sighandler(int sig) {
-    pid_t pid = getpid();
-
-    gm_log( GM_LOG_TRACE, "alarm_sighandler(%i)\n", sig );
-
-    signal(SIGINT, SIG_IGN);
-    gm_log( GM_LOG_TRACE, "send SIGINT to %d\n", pid);
-    kill(-pid, SIGINT);
-    signal(SIGINT, SIG_DFL);
-    sleep(1);
-    gm_log( GM_LOG_TRACE, "send SIGKILL to %d\n", pid);
-    kill(-pid, SIGKILL);
-
-    if(worker_run_mode != GM_WORKER_STANDALONE)
-        clean_worker_exit(0);
-        exit(EXIT_SUCCESS);
-
-    return;
-}
-
 /* tell parent our state */
 void set_state(int status) {
     int *shm;
@@ -661,7 +511,7 @@ void set_state(int status) {
             clean_worker_exit(0);
             exit( EXIT_FAILURE );
         }
-        shm[shm_index] = -current_child_pid;
+        shm[shm_index] = -current_pid;
     }
 
     /* detach from shared memory */
@@ -753,43 +603,6 @@ void *return_status( gearman_job_st *job, void *context, size_t *result_size, ge
         perror("shmdt");
 
     return((void*)result);
-}
-
-
-/* set empty default job */
-int set_default_job(gm_job_t *job) {
-
-    job->type                = NULL;
-    job->host_name           = NULL;
-    job->service_description = NULL;
-    job->result_queue        = NULL;
-    job->command_line        = NULL;
-    job->output              = NULL;
-    job->exited_ok           = TRUE;
-    job->scheduled_check     = TRUE;
-    job->reschedule_check    = TRUE;
-    job->return_code         = STATE_OK;
-    job->latency             = 0.0;
-    job->timeout             = mod_gm_opt->job_timeout;
-    job->start_time.tv_sec   = 0L;
-    job->start_time.tv_usec  = 0L;
-
-    return(GM_OK);
-}
-
-
-/* free the job structure */
-int free_job(gm_job_t *job) {
-
-    free(job->type);
-    free(job->host_name);
-    free(job->service_description);
-    free(job->result_queue);
-    free(job->command_line);
-    free(job->output);
-    free(job);
-
-    return(GM_OK);
 }
 
 

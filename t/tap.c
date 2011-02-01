@@ -1,436 +1,294 @@
-/*-
- * Copyright (c) 2004 Nik Clayton
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
- * 2. Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
- * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
- * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
- * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
- * SUCH DAMAGE.
- */
-
-#define _GNU_SOURCE
-#include <ctype.h>
-#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
-
+#include <stdarg.h>
+#include <string.h>
 #include "tap.h"
 
-static int no_plan = 0;
-static int skip_all = 0;
-static int have_plan = 0;
-static unsigned int test_count = 0; /* Number of tests that have been run */
-static unsigned int e_tests = 0; /* Expected number of tests to run */
-static unsigned int failures = 0; /* Number of tests that failed */
-static char *todo_msg = NULL;
-static char *todo_msg_fixed = "libtap malloc issue";
-static int todo = 0;
-static int test_died = 0;
+static int expected_tests = NO_PLAN;
+static int failed_tests;
+static int current_test;
+static char *todo_mesg;
 
-/* Encapsulate the pthread code in a conditional.  In the absence of
-   libpthread the code does nothing */
-#ifdef HAVE_LIBPTHREAD
-#include <pthread.h>
-static pthread_mutex_t M = PTHREAD_MUTEX_INITIALIZER;
-# define LOCK pthread_mutex_lock(&M);
-# define UNLOCK pthread_mutex_unlock(&M);
-#else
-# define LOCK
-# define UNLOCK
+void
+plan (int tests) {
+    expected_tests = tests;
+    if (tests != NO_PLAN)
+        printf("1..%d\n", tests);
+}
+
+static char *
+vstrdupf (const char *fmt, va_list args) {
+    char *str;
+    int size;
+    va_list args2;
+    va_copy(args2, args);
+    if (!fmt)
+        fmt = "";
+    size = vsnprintf(NULL, 0, fmt, args2) + 2;
+    str = malloc(size);
+    vsprintf(str, fmt, args);
+    va_end(args2);
+    return str;
+}
+
+int
+vok_at_loc (const char *file, int line, int test, const char *fmt,
+            va_list args)
+{
+    char *name = vstrdupf(fmt, args);
+    printf("%sok %d", test ? "" : "not ", ++current_test);
+    if (*name)
+        printf(" - %s", name);
+    if (todo_mesg) {
+        printf(" # TODO");
+        if (*todo_mesg)
+            printf(" %s", todo_mesg);
+    }
+    printf("\n");
+    if (!test) {
+        if (*name)
+            diag("  Failed%s test '%s'\n  at %s line %d.",
+                todo_mesg ? " (TODO)" : "", name, file, line);
+        else
+            diag("  Failed%s test at %s line %d.",
+                todo_mesg ? " (TODO)" : "", file, line);
+        if (!todo_mesg)
+            failed_tests++;
+    }
+    free(name);
+    return test;
+}
+
+int
+ok_at_loc (const char *file, int line, int test, const char *fmt, ...) {
+    va_list args;
+    va_start(args, fmt);
+    vok_at_loc(file, line, test, fmt, args);
+    va_end(args);
+    return test;
+}
+
+static int
+mystrcmp (const char *a, const char *b) {
+    return a == b ? 0 : !a ? -1 : !b ? 1 : strcmp(a, b);
+}
+
+#define eq(a, b) (!mystrcmp(a, b))
+#define ne(a, b) (mystrcmp(a, b))
+
+int
+is_at_loc (const char *file, int line, const char *got, const char *expected,
+           const char *fmt, ...)
+{
+    int test = eq(got, expected);
+    va_list args;
+    va_start(args, fmt);
+    vok_at_loc(file, line, test, fmt, args);
+    va_end(args);
+    if (!test) {
+        diag("         got: '%s'", got);
+        diag("    expected: '%s'", expected);
+    }
+    return test;
+}
+
+int
+isnt_at_loc (const char *file, int line, const char *got, const char *expected,
+             const char *fmt, ...)
+{
+    int test = ne(got, expected);
+    va_list args;
+    va_start(args, fmt);
+    vok_at_loc(file, line, test, fmt, args);
+    va_end(args);
+    if (!test) {
+        diag("         got: '%s'", got);
+        diag("    expected: anything else");
+    }
+    return test;
+}
+
+int
+cmp_ok_at_loc (const char *file, int line, int a, const char *op, int b,
+               const char *fmt, ...)
+{
+    int test = eq(op, "||") ? a || b
+             : eq(op, "&&") ? a && b
+             : eq(op, "|")  ? a |  b
+             : eq(op, "^")  ? a ^  b
+             : eq(op, "&")  ? a &  b
+             : eq(op, "==") ? a == b
+             : eq(op, "!=") ? a != b
+             : eq(op, "<")  ? a <  b
+             : eq(op, ">")  ? a >  b
+             : eq(op, "<=") ? a <= b
+             : eq(op, ">=") ? a >= b
+             : eq(op, "<<") ? a << b
+             : eq(op, ">>") ? a >> b
+             : eq(op, "+")  ? a +  b
+             : eq(op, "-")  ? a -  b
+             : eq(op, "*")  ? a *  b
+             : eq(op, "/")  ? a /  b
+             : eq(op, "%")  ? a %  b
+             : diag("unrecognized operator '%s'", op);
+    va_list args;
+    va_start(args, fmt);
+    vok_at_loc(file, line, test, fmt, args);
+    va_end(args);
+    if (!test) {
+        diag("    %d", a);
+        diag("        %s", op);
+        diag("    %d", b);
+    }
+    return test;
+}
+
+static void
+vdiag_to_fh (FILE *fh, const char *fmt, va_list args) {
+    char *mesg, *line;
+    int i;
+    if (!fmt)
+        return;
+    mesg = vstrdupf(fmt, args);
+    line = mesg;
+    for (i = 0; *line; i++) {
+        char c = mesg[i];
+        if (!c || c == '\n') {
+            mesg[i] = '\0';
+            fprintf(fh, "# %s\n", line);
+            if (!c) break;
+            mesg[i] = c;
+            line = &mesg[i+1];
+        }
+    }
+    free(mesg);
+    return;
+}
+
+int
+diag (const char *fmt, ...) {
+    va_list args;
+    va_start(args, fmt);
+    vdiag_to_fh(stderr, fmt, args);
+    va_end(args);
+    return 0;
+}
+
+int
+note (const char *fmt, ...) {
+    va_list args;
+    va_start(args, fmt);
+    vdiag_to_fh(stdout, fmt, args);
+    va_end(args);
+    return 0;
+}
+
+int
+exit_status () {
+    int retval = 0;
+    if (expected_tests == NO_PLAN) {
+        printf("1..%d\n", current_test);
+    }
+    else if (current_test != expected_tests) {
+        diag("Looks like you planned %d test%s but ran %d.",
+            expected_tests, expected_tests > 1 ? "s" : "", current_test);
+        retval = 255;
+    }
+    if (failed_tests) {
+        diag("Looks like you failed %d test%s of %d run.",
+            failed_tests, failed_tests > 1 ? "s" : "", current_test);
+        if (expected_tests == NO_PLAN)
+            retval = failed_tests;
+        else
+            retval = expected_tests - current_test + failed_tests;
+    }
+    return retval;
+}
+
+void
+skippy (int n, const char *fmt, ...) {
+    char *why;
+    va_list args;
+    va_start(args, fmt);
+    why = vstrdupf(fmt, args);
+    va_end(args);
+    while (n --> 0) {
+        printf("ok %d ", ++current_test);
+        note("skip %s\n", why);
+    }
+    free(why);
+}
+
+void
+ctodo (int ignore, const char *fmt, ...) {
+    va_list args;
+    va_start(args, fmt);
+    todo_mesg = vstrdupf(fmt, args);
+    va_end(args);
+}
+
+void
+cendtodo () {
+    free(todo_mesg);
+    todo_mesg = NULL;
+}
+
+#ifndef _WIN32
+#include <sys/mman.h>
+#include <regex.h>
+
+#ifdef __APPLE__
+#define MAP_ANONYMOUS MAP_ANON
 #endif
 
-static void _expected_tests(unsigned int);
-static void _tap_init(void);
-static void _cleanup(void);
-
-/*
- * Generate a test result.
- *
- * ok -- boolean, indicates whether or not the test passed.
- * test_name -- the name of the test, may be NULL
- * test_comment -- a comment to print afterwards, may be NULL
- */
-unsigned int
-_gen_result(int ok, const char *func, char *file, unsigned int line,
-	    char *test_name, ...)
-{
-	va_list ap;
-	char *local_test_name = NULL;
-	char *c;
-	int name_is_digits;
-
-	LOCK;
-
-	test_count++;
-
-	/* Start by taking the test name and performing any printf()
-	   expansions on it */
-	if(test_name != NULL) {
-		va_start(ap, test_name);
-		vasprintf(&local_test_name, test_name, ap);
-		va_end(ap);
-
-		/* Make sure the test name contains more than digits
-		   and spaces.  Emit an error message and exit if it
-		   does */
-		if(local_test_name) {
-			name_is_digits = 1;
-			for(c = local_test_name; *c != '\0'; c++) {
-				if(!isdigit(*c) && !isspace(*c)) {
-					name_is_digits = 0;
-					break;
-				}
-			}
-
-			if(name_is_digits) {
-				diag("    You named your test '%s'.  You shouldn't use numbers for your test names.", local_test_name);
-				diag("    Very confusing.");
-			}
-		}
-	}
-
-	if(!ok) {
-		printf("not ");
-		failures++;
-	}
-
-	printf("ok %d", test_count);
-
-	if(test_name != NULL) {
-		printf(" - ");
-
-		/* Print the test name, escaping any '#' characters it
-		   might contain */
-		if(local_test_name != NULL) {
-			flockfile(stdout);
-			for(c = local_test_name; *c != '\0'; c++) {
-				if(*c == '#')
-					fputc('\\', stdout);
-				fputc((int)*c, stdout);
-			}
-			funlockfile(stdout);
-		} else {	/* vasprintf() failed, use a fixed message */
-			printf("%s", todo_msg_fixed);
-		}
-	}
-
-	/* If we're in a todo_start() block then flag the test as being
-	   TODO.  todo_msg should contain the message to print at this
-	   point.  If it's NULL then asprintf() failed, and we should
-	   use the fixed message.
-
-	   This is not counted as a failure, so decrement the counter if
-	   the test failed. */
-	if(todo) {
-		printf(" # TODO %s", todo_msg ? todo_msg : todo_msg_fixed);
-		if(!ok)
-			failures--;
-	}
-
-	printf("\n");
-
-	if(!ok)
-		diag("    Failed %stest (%s:%s() at line %d)",
-		     todo ? "(TODO) " : "", file, func, line);
-
-	free(local_test_name);
-
-	UNLOCK;
-
-	/* We only care (when testing) that ok is positive, but here we
-	   specifically only want to return 1 or 0 */
-	return ok ? 1 : 0;
-}
-
-/*
- * Initialise the TAP library.  Will only do so once, however many times it's
- * called.
- */
-void
-_tap_init(void)
-{
-	static int run_once = 0;
-
-	LOCK;
-
-	if(!run_once) {
-		atexit(_cleanup);
-
-		/* stdout needs to be unbuffered so that the output appears
-		   in the same place relative to stderr output as it does
-		   with Test::Harness */
-		setbuf(stdout, 0);
-		run_once = 1;
-	}
-
-	UNLOCK;
-}
-
-/*
- * Note that there's no plan.
- */
+/* Create a shared memory int to keep track of whether a piece of code executed
+dies. to be used in the dies_ok and lives_ok macros  */
 int
-plan_no_plan(void)
-{
-
-	LOCK;
-
-	_tap_init();
-
-	if(have_plan != 0) {
-		fprintf(stderr, "You tried to plan twice!\n");
-		test_died = 1;
-		UNLOCK;
-		exit(255);
-	}
-
-	have_plan = 1;
-	no_plan = 1;
-
-	UNLOCK;
-
-	return 0;
-}
-
-/*
- * Note that the plan is to skip all tests
- */
-int
-plan_skip_all(char *reason)
-{
-
-	LOCK;
-
-	_tap_init();
-
-	skip_all = 1;
-
-	printf("1..0");
-
-	if(reason != NULL)
-		printf(" # Skip %s", reason);
-
-	printf("\n");
-
-	UNLOCK;
-
-	exit(0);
-}
-
-/*
- * Note the number of tests that will be run.
- */
-int
-plan_tests(unsigned int tests)
-{
-
-	LOCK;
-
-	_tap_init();
-
-	if(have_plan != 0) {
-		fprintf(stderr, "You tried to plan twice!\n");
-		test_died = 1;
-		UNLOCK;
-		exit(255);
-	}
-
-	if(tests == 0) {
-		fprintf(stderr, "You said to run 0 tests!  You've got to run something.\n");
-		test_died = 1;
-		UNLOCK;
-		exit(255);
-	}
-
-	have_plan = 1;
-
-	_expected_tests(tests);
-
-	UNLOCK;
-
-	return 0;
-}
-
-unsigned int
-diag(char *fmt, ...)
-{
-	va_list ap;
-
-	LOCK;
-
-	fputs("# ", stderr);
-
-	va_start(ap, fmt);
-	vfprintf(stderr, fmt, ap);
-	va_end(ap);
-
-	fputs("\n", stderr);
-
-	UNLOCK;
-
-	return 0;
-}
-
-void
-_expected_tests(unsigned int tests)
-{
-
-	LOCK;
-
-	printf("1..%d\n", tests);
-	e_tests = tests;
-
-	UNLOCK;
+tap_test_died (int status) {
+    static int *test_died = NULL;
+    int prev;
+    if (!test_died) {
+        test_died = mmap(0, sizeof (int), PROT_READ | PROT_WRITE,
+                         MAP_SHARED | MAP_ANONYMOUS, -1, 0);
+        *test_died = 0;
+    }
+    prev = *test_died;
+    *test_died = status;
+    return prev;
 }
 
 int
-skip(unsigned int n, char *fmt, ...)
+like_at_loc (int for_match, const char *file, int line, const char *got,
+             const char *expected, const char *fmt, ...)
 {
-	va_list ap;
-	char *skip_msg;
-
-	LOCK;
-
-	va_start(ap, fmt);
-	asprintf(&skip_msg, fmt, ap);
-	va_end(ap);
-
-	while(n-- > 0) {
-		test_count++;
-		printf("ok %d # skip %s\n", test_count,
-		       skip_msg != NULL ?
-		       skip_msg : "libtap():malloc() failed");
-	}
-
-	free(skip_msg);
-
-	UNLOCK;
-
-	return 1;
+    int test;
+    regex_t re;
+    int err = regcomp(&re, expected, REG_EXTENDED);
+    if (err) {
+        char errbuf[256];
+        regerror(err, &re, errbuf, sizeof errbuf);
+        fprintf(stderr, "Unable to compile regex '%s': %s at %s line %d\n",
+                        expected, errbuf, file, line);
+        exit(255);
+    }
+    err = regexec(&re, got, 0, NULL, 0);
+    regfree(&re);
+    test = for_match ? !err : err;
+    va_list args;
+    va_start(args, fmt);
+    vok_at_loc(file, line, test, fmt, args);
+    va_end(args);
+    if (!test) {
+        if (for_match) {
+            diag("                   '%s'", got);
+            diag("    doesn't match: '%s'", expected);
+        }
+        else {
+            diag("                   '%s'", got);
+            diag("          matches: '%s'", expected);
+        }
+    }
+    return test;
 }
+#endif
 
-void
-todo_start(char *fmt, ...)
-{
-	va_list ap;
-
-	LOCK;
-
-	va_start(ap, fmt);
-	vasprintf(&todo_msg, fmt, ap);
-	va_end(ap);
-
-	todo = 1;
-
-	UNLOCK;
-}
-
-void
-todo_end(void)
-{
-
-	LOCK;
-
-	todo = 0;
-	free(todo_msg);
-
-	UNLOCK;
-}
-
-int
-exit_status(void)
-{
-	int r;
-
-	LOCK;
-
-	/* If there's no plan, just return the number of failures */
-	if(no_plan || !have_plan) {
-		UNLOCK;
-		return failures;
-	}
-
-	/* Ran too many tests?  Return the number of tests that were run
-	   that shouldn't have been */
-	if(e_tests < test_count) {
-		r = test_count - e_tests;
-		UNLOCK;
-		return r;
-	}
-
-	/* Return the number of tests that failed + the number of tests
-	   that weren't run */
-	r = failures + e_tests - test_count;
-	UNLOCK;
-
-	return r;
-}
-
-/*
- * Cleanup at the end of the run, produce any final output that might be
- * required.
- */
-void
-_cleanup(void)
-{
-
-	LOCK;
-
-	/* If plan_no_plan() wasn't called, and we don't have a plan,
-	   and we're not skipping everything, then something happened
-	   before we could produce any output */
-	if(!no_plan && !have_plan && !skip_all) {
-		diag("Looks like your test died before it could output anything.");
-		UNLOCK;
-		return;
-	}
-
-	if(test_died) {
-		diag("Looks like your test died just after %d.", test_count);
-		UNLOCK;
-		return;
-	}
-
-
-	/* No plan provided, but now we know how many tests were run, and can
-	   print the header at the end */
-	if(!skip_all && (no_plan || !have_plan)) {
-		printf("1..%d\n", test_count);
-	}
-
-	if((have_plan && !no_plan) && e_tests < test_count) {
-		diag("Looks like you planned %d tests but ran %d extra.",
-		     e_tests, test_count - e_tests);
-		UNLOCK;
-		return;
-	}
-
-	if((have_plan || !no_plan) && e_tests > test_count) {
-		diag("Looks like you planned %d tests but only ran %d.",
-		     e_tests, test_count);
-		UNLOCK;
-		return;
-	}
-
-	if(failures)
-		diag("Looks like you failed %d tests of %d.",
-		     failures, test_count);
-
-	UNLOCK;
-}

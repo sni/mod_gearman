@@ -182,6 +182,28 @@ typedef struct mod_gm_opt_struct {
 } mod_gm_opt_t;
 
 
+/** structure for jobs to execute */
+typedef struct gm_job_struct {
+    char         * host_name;           /**< hostname for this job */
+    char         * service_description; /**< service description for this job or NULL */
+    char         * command_line;        /**< command line to execute */
+    char         * type;                /**< type of this job */
+    char         * result_queue;        /**< name of the result queue */
+    char         * output;              /**< output from the executed command line */
+    int            return_code;         /**< return code for this job */
+    int            early_timeout;       /**< did the check run into a timeout */
+    int            check_options;       /**< check_options given from the core */
+    int            scheduled_check;     /**< normal scheduled check? */
+    int            reschedule_check;    /**< rescheduled check? */
+    int            exited_ok;           /**< did the plugin exit normally? */
+    int            timeout;             /**< timeout for this job */
+    double         latency;             /**< latency for from this job */
+    struct timeval core_start_time;     /**< time when the core started the job */
+    struct timeval start_time;          /**< time when the job really started */
+    struct timeval finish_time;         /**< time when the job was finished */
+} gm_job_t;
+
+
 /**
  * general logger
  *

@@ -17,6 +17,7 @@ stamp-h1
 mod_gearman_worker
 01_utils
 02_full
+03_exec
 images
 send_gearman
 send_multi

@@ -154,7 +154,7 @@ void check_logfile() {
 int main(void) {
     int status, chld;
     int tests = 36;
-    plan_tests(tests);
+    plan(tests);
 
     mod_gm_opt = malloc(sizeof(mod_gm_opt_t));
     set_default_options(mod_gm_opt);
@@ -180,7 +180,7 @@ int main(void) {
         diag( "waitpid() %d exited with %d\n", chld, status);
     }
 
-    if(!ok(gearmand_pid > 0, "gearmand started with pid: %d", gearmand_pid)) {
+    if(!ok(gearmand_pid > 0, "'gearmand -t 10 -j 0 -p %d -v -v -v' started with pid: %d", GEARMAND_TEST_PORT, gearmand_pid)) {
         diag("make sure gearmand is in your PATH. Common locations are /usr/sbin or /usr/local/sbin");
         exit( EXIT_FAILURE );
     }
@@ -193,7 +193,7 @@ int main(void) {
         exit( EXIT_FAILURE );
     }
 
-    skip_start(gearmand_pid <= 0 || worker_pid <= 0,
+    skip(gearmand_pid <= 0 || worker_pid <= 0,
                tests-3,             /* Number of tests to skip */
                "Skipping all tests, no need to go on without gearmand or worker");
 
@@ -245,6 +245,6 @@ int main(void) {
     waitpid(worker_pid, &status, 0);
     ok(status == 0, "worker exited with exit code %d", real_exit_code(status));
 
-    skip_end;
+    endskip;
     return exit_status();
 }

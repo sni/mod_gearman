@@ -26,6 +26,7 @@
 #include "crypt.h"
 #include "base64.h"
 
+pid_t current_child_pid = 0;
 
 /* escapes newlines in a string */
 char *escape_newlines(char *rawbuf) {
@@ -927,7 +928,12 @@ int run_check(char *processed_command, char **ret) {
             parse_command_line(processed_command,argv);
             if(!argv[0])
                 _exit(STATE_UNKNOWN);
+            current_child_pid = getpid();
             execvp(argv[0], argv);
+            if(errno == 2)
+                _exit(127);
+            if(errno == 13)
+                _exit(126);
             _exit(STATE_UNKNOWN);
         }
 
@@ -949,6 +955,7 @@ int run_check(char *processed_command, char **ret) {
             retval=-1;
     }
     else {
+        current_child_pid = getpid();
         gm_log( GM_LOG_TRACE, "using popen\n" );
         fp=popen(processed_command,"r");
         if(fp==NULL)
@@ -963,6 +970,216 @@ int run_check(char *processed_command, char **ret) {
      }
 
     return retval;
+}
+
+
+/* execute this command with given timeout */
+int execute_safe_command(gm_job_t * exec_job, int fork_exec, char * hostname) {
+    int pdes[2];
+    int return_code;
+    int pclose_result;
+    char *plugin_output;
+    char buffer[GM_BUFFERSIZE];
+    sigset_t mask;
+    struct timeval start_time,end_time;
+    pid_t pid = 0;
+
+    gm_log( GM_LOG_TRACE, "execute_safe_command()\n" );
+
+    if(exec_job->start_time.tv_sec == 0) {
+        gettimeofday(&start_time,NULL);
+        exec_job->start_time = start_time;
+    }
+
+    /* fork a child process */
+    if(fork_exec == GM_ENABLED) {
+        if(pipe(pdes) != 0)
+            perror("pipe");
+
+        pid=fork();
+
+        /*fork error */
+        if( pid == -1 ) {
+            exec_job->output      = strdup("(Error On Fork)");
+            exec_job->return_code = 3;
+            return(GM_ERROR);
+        }
+    }
+
+    /* we are in the child process */
+    if( fork_exec == GM_DISABLED || pid == 0 ) {
+
+        /* become the process group leader */
+        setpgid(0,0);
+        pid = getpid();
+
+        /* remove all customn signal handler */
+        sigfillset(&mask);
+        sigprocmask(SIG_UNBLOCK, &mask, NULL);
+
+        if( fork_exec == GM_ENABLED )
+            close(pdes[0]);
+        signal(SIGALRM, check_alarm_handler);
+        alarm(exec_job->timeout);
+
+        /* run the plugin check command */
+        pclose_result = run_check(exec_job->command_line, &plugin_output);
+        return_code = pclose_result;
+
+        if(fork_exec == GM_ENABLED) {
+            if(write(pdes[1], plugin_output, strlen(plugin_output)+1) <= 0)
+                perror("write");
+
+            if(pclose_result == -1) {
+                char error[GM_BUFFERSIZE];
+                snprintf(error, sizeof(error), "error on %s: %s", hostname, strerror(errno));
+                if(write(pdes[1], error, strlen(error)+1) <= 0)
+                    perror("write");
+            }
+
+            return_code = real_exit_code(pclose_result);
+            exit(return_code);
+        }
+        else {
+            snprintf( buffer, sizeof( buffer )-1, "%s", plugin_output );
+        }
+    }
+
+    /* we are the parent */
+    if( fork_exec == GM_DISABLED || pid > 0 ){
+
+        gm_log( GM_LOG_TRACE, "started check with pid: %d\n", pid);
+
+        if( fork_exec == GM_ENABLED) {
+            close(pdes[1]);
+
+            waitpid(pid, &return_code, 0);
+            gm_log( GM_LOG_TRACE, "finished check from pid: %d with status: %d\n", pid, return_code);
+            /* get all lines of plugin output */
+            if(read(pdes[0], buffer, sizeof(buffer)-1) < 0)
+                perror("read");
+        }
+        return_code = real_exit_code(return_code);
+
+        /* file not executable? */
+        if(return_code == 126) {
+            return_code = STATE_CRITICAL;
+            snprintf( buffer, sizeof( buffer )-1, "CRITICAL: Return code of 126 is out of bounds. Make sure the plugin you're trying to run is executable. (worker: %s)", hostname);
+        }
+        /* file not found errors? */
+        else if(return_code == 127) {
+            return_code = STATE_CRITICAL;
+            snprintf( buffer, sizeof( buffer )-1, "CRITICAL: Return code of 127 is out of bounds. Make sure the plugin you're trying to run actually exists. (worker: %s)", hostname);
+        }
+        /* signaled */
+        else if(return_code >= 128 && return_code < 256) {
+            char * signame = nr2signal((int)(return_code-128));
+            snprintf( buffer, sizeof( buffer )-1, "CRITICAL: Return code of %d is out of bounds. Plugin exited by signal %s. (worker: %s)", (int)(return_code), signame, hostname);
+            return_code = STATE_CRITICAL;
+            free(signame);
+        }
+        /* other error codes > 3 */
+        else if(return_code > 3) {
+            snprintf( buffer, sizeof( buffer )-1, "CRITICAL: Return code of %d is out of bounds. (worker: %s)", (int)(return_code), hostname);
+            return_code = STATE_CRITICAL;
+        }
+
+        exec_job->output      = strdup(buffer);
+        exec_job->return_code = return_code;
+        if( fork_exec == GM_ENABLED) {
+            close(pdes[0]);
+        }
+    }
+    alarm(0);
+    current_child_pid = 0;
+    pid               = 0;
+
+    /* record check result info */
+    gettimeofday(&end_time, NULL);
+    exec_job->finish_time = end_time;
+
+    /* did we have a timeout? */
+    if(exec_job->timeout < ((int)end_time.tv_sec - (int)exec_job->start_time.tv_sec)) {
+        exec_job->return_code   = 2;
+        exec_job->early_timeout = 1;
+        if ( !strcmp( exec_job->type, "service" ) )
+            snprintf( buffer, sizeof( buffer ) -1, "(Service Check Timed Out On Worker: %s)", hostname);
+        if ( !strcmp( exec_job->type, "host" ) )
+            snprintf( buffer, sizeof( buffer ) -1, "(Host Check Timed Out On Worker: %s)", hostname);
+        exec_job->output = strdup( buffer );
+    }
+
+    return(GM_OK);
+}
+
+
+/* set empty default job */
+int set_default_job(gm_job_t *job, mod_gm_opt_t *mod_gm_opt) {
+
+    job->type                = NULL;
+    job->host_name           = NULL;
+    job->service_description = NULL;
+    job->result_queue        = NULL;
+    job->command_line        = NULL;
+    job->output              = NULL;
+    job->exited_ok           = TRUE;
+    job->scheduled_check     = TRUE;
+    job->reschedule_check    = TRUE;
+    job->return_code         = STATE_OK;
+    job->latency             = 0.0;
+    job->timeout             = mod_gm_opt->job_timeout;
+    job->start_time.tv_sec   = 0L;
+    job->start_time.tv_usec  = 0L;
+
+    return(GM_OK);
+}
+
+
+/* free the job structure */
+int free_job(gm_job_t *job) {
+
+    free(job->type);
+    free(job->host_name);
+    free(job->service_description);
+    free(job->result_queue);
+    free(job->command_line);
+    free(job->output);
+    free(job);
+
+    return(GM_OK);
+}
+
+
+
+/* called when check runs into timeout */
+void check_alarm_handler(int sig) {
+    int retval;
+    pid_t pid = getpid();
+
+    gm_log( GM_LOG_TRACE, "check_alarm_handler(%i)\n", sig );
+
+    if(current_child_pid > 0) {
+        gm_log( GM_LOG_TRACE, "send SIGINT to %d\n", current_child_pid);
+        signal(SIGINT, SIG_IGN);
+        kill(-current_child_pid, SIGINT);
+        sleep(1);
+        if(waitpid(pid,&retval,0)!=pid)
+            return;
+        if(pid_alive(current_child_pid)) {
+            gm_log( GM_LOG_TRACE, "send SIGKILL to %d\n", current_child_pid);
+            kill(-current_child_pid, SIGKILL);
+        }
+    } else {
+        signal(SIGINT, SIG_IGN);
+        gm_log( GM_LOG_TRACE, "send SIGINT to %d\n", pid);
+        kill(-pid, SIGINT);
+        signal(SIGINT, SIG_DFL);
+        sleep(1);
+        gm_log( GM_LOG_TRACE, "send SIGKILL to %d\n", pid);
+        kill(-pid, SIGKILL);
+    }
+
+    return;
 }
 
 
