@@ -186,8 +186,9 @@ debug:              use debug to increase the verbosity of the module.
                     Example: debug=1
 
 
-server:             sets the addess of your gearman job server. Can be specified
-                    more than once to add more server.
+server:             sets the address of your gearman job server. Can be specified
+                    more than once to add more server. Gearman uses
+                    the first one available.
 
                     Example: server=localhost:4730,remote_host:4730
 
@@ -346,6 +347,16 @@ max-jobs:           Controls the amount of jobs a worker will do
                     Default: 1000
 
                     Example: max-jobs=500
+
+dup_server:         sets the address of gearman job server where
+                    duplicated result will be sent to. Can be specified
+                    more than once to add more server.
+                    Useful for duplicating results for a reporting
+                    installation or remote gui.
+
+                    Example: dup_server=logserver:4730,logserver2:4730
+
+
 .......
 
 

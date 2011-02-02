@@ -201,7 +201,11 @@ test: check
 	@echo "################################################################"
 
 docs:
-	doxygen Doxyfile
+	@if [ `type doxygen > /dev/null 2>&1` ]; then \
+	    doxygen Doxyfile; \
+	else \
+	    printf "\n\n**** please install doxygen to generate doxygen docs ****\n\n"; \
+	fi;
 	$(RM) docs/images
 	cd docs && ln -s /usr/share/asciidoc/images .
 	cp -p README docs/ && cd docs && asciidoc --unsafe -a toc -a toclevels=2 -a icons -a data-uri -a max-width=800 README

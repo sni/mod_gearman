@@ -1128,8 +1128,9 @@ debug:              use debug to increase the verbosity of the module.
                     Example: debug=1
 
 
-server:             sets the addess of your gearman job server. Can be specified
-                    more than once to add more server.
+server:             sets the address of your gearman job server. Can be specified
+                    more than once to add more server. Gearman uses
+                    the first one available.
 
                     Example: server=localhost:4730,remote_host:4730
 
@@ -1283,7 +1284,15 @@ max-jobs:           Controls the amount of jobs a worker will do
                     times. Disabled when set to 0.
                     Default: 1000
 
-                    Example: max-jobs=500</tt></pre>
+                    Example: max-jobs=500
+
+dup_server:         sets the address of gearman job server where
+                    duplicated result will be sent to. Can be specified
+                    more than once to add more server.
+                    Useful for duplicating results for a reporting
+                    installation or remote gui.
+
+                    Example: dup_server=logserver:4730,logserver2:4730</tt></pre>
 </div></div>
 </div>
 <h2 id="_queue_names">Queue Names</h2>
@@ -2185,7 +2194,7 @@ If you have some checks which should not run parallel, just setup a
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2011-01-16 17:32:23 CEST
+Last updated 2011-02-02 12:28:09 CEST
 </div>
 </div>
 </body>
