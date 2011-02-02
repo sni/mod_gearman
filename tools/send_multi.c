@@ -344,7 +344,7 @@ int read_multi_stream(FILE *stream) {
 int read_child_check(char *bufstart, char *bufend) {
     char *attribute  = NULL;
     char *attribute2 = NULL;
-    char *error = NULL;
+    char *error      = NULL;
     char temp_buffer[GM_BUFFERSIZE];
 
     /* child check number */

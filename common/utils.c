@@ -355,7 +355,7 @@ int parse_args_line(mod_gm_opt_t *opt, char * arg, int recursion_level) {
         opt->active = parse_yes_or_no(value, GM_ENABLED);
         return(GM_OK);
     }
-    else if ( value == NULL || !strcmp(value, "" ) ) {
+    else if ( value == NULL ) {
         gm_log( GM_LOG_ERROR, "unknown switch '%s'\n", key );
         return(GM_OK);
     }

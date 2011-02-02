@@ -108,7 +108,8 @@ void worker_loop() {
             gearman_job_free_all( &worker );
             gearman_worker_free( &worker );
             gearman_client_free( &client );
-            if( mod_gm_opt->dupserver_num ) gearman_client_free( &client_dup );
+            if( mod_gm_opt->dupserver_num )
+                gearman_client_free( &client_dup );
 
             /* sleep on error to avoid cpu intensive infinite loops */
             sleep(sleep_time_after_error);
@@ -119,7 +120,8 @@ void worker_loop() {
             /* create new connections */
             set_worker( &worker );
             create_client( mod_gm_opt->server_list, &client );
-            create_client( mod_gm_opt->dupserver_list, &client_dup );
+            if( mod_gm_opt->dupserver_num )
+                create_client_dup( mod_gm_opt->dupserver_list, &client_dup );
         }
     }
 

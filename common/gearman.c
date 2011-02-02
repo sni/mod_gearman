@@ -83,7 +83,7 @@ int create_client_dup( char ** server_list, gearman_client_st *client ) {
     gearman_return_t ret;
     int x = 0;
 
-    gm_log( GM_LOG_TRACE, "create_gearman_client_dup()\n" );
+    gm_log( GM_LOG_TRACE, "create_client_dup()\n" );
 
     signal(SIGPIPE, SIG_IGN);
 
@@ -120,7 +120,7 @@ int create_client( char ** server_list, gearman_client_st *client ) {
     gearman_return_t ret;
     int x = 0;
 
-    gm_log( GM_LOG_TRACE, "create_gearman_client()\n" );
+    gm_log( GM_LOG_TRACE, "create_client()\n" );
 
     signal(SIGPIPE, SIG_IGN);
 
