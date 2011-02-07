@@ -348,6 +348,13 @@ max-jobs:           Controls the amount of jobs a worker will do
 
                     Example: max-jobs=500
 
+fork_on_exec:       Use this option to disable an extra fork for each
+                    plugin execution. This option will reduce the load
+                    on the worker host.
+                    Default: yes
+
+                    Example: fork_on_exec=no
+
 dup_server:         sets the address of gearman job server where
                     duplicated result will be sent to. Can be specified
                     more than once to add more server.
