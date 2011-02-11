@@ -56,7 +56,7 @@ and servicegroups.
 %{_localstatedir}
 
 %changelog
-* Fri Feb 11 20:25:18 CET 2011 Sven Nierlein <sven@consol.de>
+* Fri Feb 11 2011 Sven Nierlein <sven@consol.de>
 - Adapted spec file for SLES11
 
 * Wed Oct 13 2010 Olivier Raginel <babar@cern.ch>
