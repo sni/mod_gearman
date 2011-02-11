@@ -24,3 +24,4 @@ send_multi
 check_gearman
 gearman_top
 *.gz
+*.rpm

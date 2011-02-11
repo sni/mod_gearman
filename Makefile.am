@@ -79,7 +79,7 @@ replace_vars = sed -e 's:%CONFIG%:$(sysconfdir)/mod_gearman.conf:g' \
 
 EXTRA_DIST = COPYING etc extras include \
              THANKS README docs/README.html Changes worker/initscript.in \
-             docs/QUICKSTART docs/QUICKSTART.html
+             docs/QUICKSTART docs/QUICKSTART.html support/mod_gearman.spec
 
 # other targets
 mod_gearman.o: $(mod_gearman_so_OBJECTS) $(mod_gearman_so_DEPENDENCIES)
@@ -149,15 +149,16 @@ worker.static: worker
 install-exec-local: install-local-state-dir
 	$(install_sh_PROGRAM) mod_gearman.o $(DESTDIR)$(pkglibdir)/mod_gearman.o
 	$(install_sh_PROGRAM) -m 755 worker/initscript $(DESTDIR)$(initrddir)/mod_gearman_worker
+	$(install_sh_PROGRAM) -m 755 extras/gearmand-init $(DESTDIR)$(initrddir)/gearmand
 
 install-local-state-dir:
 	$(RM) $(DESTDIR)$(pkglibdir)/mod_gearman.so
 	if [ `id -u` -eq 0 ]; then \
 	    $(install_sh_PROGRAM) -o $(user) -d $(DESTDIR)$(localstatedir)/mod_gearman/; \
-    else \
+	else \
 	    $(install_sh_PROGRAM) -o $(user) -d $(DESTDIR)$(localstatedir)/mod_gearman/; \
-        echo "*** You should run: sudo chown $(user) $(DESTDIR)$(localstatedir)/mod_gearman/"; \
-    fi
+	    echo "*** You should run: sudo chown $(user) $(DESTDIR)$(localstatedir)/mod_gearman/"; \
+	fi
 
 install-data-local: install-local-state-dir
 	$(install_sh_PROGRAM) -m 644 extras/shared.conf            $(DESTDIR)$(datadir)/mod_gearman/shared.conf
@@ -218,7 +219,7 @@ rpm: dist
 	mkdir -p $(RPM_TOPDIR)/{SOURCES,BUILD,RPMS,SRPMS,SPECS}
 	cp mod_gearman-$(VERSION).tar.gz $(RPM_TOPDIR)/SOURCES
 	rpmbuild -ba --define "_topdir $(RPM_TOPDIR)" \
-	    --buildroot=$$(pwd)/rpm.buildroot mod_gearman.spec
+	    --buildroot=$$(pwd)/rpm.buildroot support/mod_gearman.spec
 	mv -v $(RPM_TOPDIR)/RPMS/*/*.rpm .
 	mv -v $(RPM_TOPDIR)/SRPMS/*.src.rpm .
 	rm -rf $(RPM_TOPDIR) rpm.buildroot
