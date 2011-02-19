@@ -1,0 +1,9 @@
+#!/bin/bash
+
+seconds=10
+if [ ! -z "$1" ]; then
+  seconds="$1"
+fi
+echo "sleeping $seconds seconds..."
+sleep $seconds
+exit

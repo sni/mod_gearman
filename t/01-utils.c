@@ -9,35 +9,35 @@
 #include <utils.h>
 
 int main(void) {
-    plan_tests(37);
+    plan(37);
 
     /* lowercase */
     char test[100];
-    ok1(lc(NULL) == NULL);
-    strcpy(test, "Yes"); ok1(strcmp(lc(test), "yes") == 0);
-    strcpy(test, "YES"); ok1(strcmp(lc(test), "yes") == 0);
-    strcpy(test, "yeS"); ok1(strcmp(lc(test), "yes") == 0);
+    ok(lc(NULL) == NULL, "lc(NULL)");
+    strcpy(test, "Yes"); ok(strcmp(lc(test), "yes") == 0, "lc(yes)");
+    strcpy(test, "YES"); ok(strcmp(lc(test), "yes") == 0, "lc(YES)");
+    strcpy(test, "yeS"); ok(strcmp(lc(test), "yes") == 0, "lc(yeS)");
 
 
     /* parse_yes_or_no */
-    ok1(parse_yes_or_no(NULL,    GM_ENABLED)  == GM_ENABLED);
-    ok1(parse_yes_or_no(NULL,    GM_DISABLED) == GM_DISABLED);
-    strcpy(test, "");      ok1(parse_yes_or_no(test, GM_ENABLED)  == GM_ENABLED);
-    strcpy(test, "");      ok1(parse_yes_or_no(test, GM_DISABLED) == GM_DISABLED);
-    strcpy(test, "yes");   ok1(parse_yes_or_no(test, GM_ENABLED)  == GM_ENABLED);
-    strcpy(test, "true");  ok1(parse_yes_or_no(test, GM_ENABLED)  == GM_ENABLED);
-    strcpy(test, "Yes");   ok1(parse_yes_or_no(test, GM_ENABLED)  == GM_ENABLED);
-    strcpy(test, "1");     ok1(parse_yes_or_no(test, GM_ENABLED)  == GM_ENABLED);
-    strcpy(test, "On");    ok1(parse_yes_or_no(test, GM_ENABLED)  == GM_ENABLED);
-    strcpy(test, "Off");   ok1(parse_yes_or_no(test, GM_ENABLED)  == GM_DISABLED);
-    strcpy(test, "false"); ok1(parse_yes_or_no(test, GM_ENABLED)  == GM_DISABLED);
-    strcpy(test, "no");    ok1(parse_yes_or_no(test, GM_ENABLED)  == GM_DISABLED);
-    strcpy(test, "0");     ok1(parse_yes_or_no(test, GM_ENABLED)  == GM_DISABLED);
+    ok(parse_yes_or_no(NULL,    GM_ENABLED)  == GM_ENABLED, "parse_yes_or_no 1");
+    ok(parse_yes_or_no(NULL,    GM_DISABLED) == GM_DISABLED, "parse_yes_or_no 2");
+    strcpy(test, "");      ok(parse_yes_or_no(test, GM_ENABLED)  == GM_ENABLED, "parse_yes_or_no 3");
+    strcpy(test, "");      ok(parse_yes_or_no(test, GM_DISABLED) == GM_DISABLED, "parse_yes_or_no 4");
+    strcpy(test, "yes");   ok(parse_yes_or_no(test, GM_ENABLED)  == GM_ENABLED, "parse_yes_or_no 5");
+    strcpy(test, "true");  ok(parse_yes_or_no(test, GM_ENABLED)  == GM_ENABLED, "parse_yes_or_no 6");
+    strcpy(test, "Yes");   ok(parse_yes_or_no(test, GM_ENABLED)  == GM_ENABLED, "parse_yes_or_no 7");
+    strcpy(test, "1");     ok(parse_yes_or_no(test, GM_ENABLED)  == GM_ENABLED, "parse_yes_or_no 8");
+    strcpy(test, "On");    ok(parse_yes_or_no(test, GM_ENABLED)  == GM_ENABLED, "parse_yes_or_no 9");
+    strcpy(test, "Off");   ok(parse_yes_or_no(test, GM_ENABLED)  == GM_DISABLED, "parse_yes_or_no 10");
+    strcpy(test, "false"); ok(parse_yes_or_no(test, GM_ENABLED)  == GM_DISABLED, "parse_yes_or_no 11");
+    strcpy(test, "no");    ok(parse_yes_or_no(test, GM_ENABLED)  == GM_DISABLED, "parse_yes_or_no 12");
+    strcpy(test, "0");     ok(parse_yes_or_no(test, GM_ENABLED)  == GM_DISABLED, "parse_yes_or_no 13");
 
 
     /* trim */
-    ok1(trim(NULL) == NULL);
-    strcpy(test, " test "); ok1(strcmp(trim(test), "test") == 0);
+    ok(trim(NULL) == NULL, "trim(NULL)");
+    strcpy(test, " test "); ok(strcmp(trim(test), "test") == 0, "trim(' test ')");
 
 
     /* encrypt */
@@ -76,8 +76,8 @@ int main(void) {
 
 
     /* file_exists */
-    ok1(file_exists("01_utils") == 1);
-    ok1(file_exists("non-exist") == 0);
+    ok(file_exists("01_utils") == 1, "file_exists('01_utils')");
+    ok(file_exists("non-exist") == 0, "file_exists('non-exist')");
 
     /* nr2signal */
     char * signame1 = nr2signal(9);
@@ -94,20 +94,20 @@ int main(void) {
     /* string2timeval */
     struct timeval t;
     string2timeval("100.50", &t);
-    ok1(t.tv_sec  == 100);
-    ok1(t.tv_usec == 50);
+    ok(t.tv_sec  == 100, "string2timeval 1");
+    ok(t.tv_usec == 50, "string2timeval 2");
 
     string2timeval("100", &t);
-    ok1(t.tv_sec  == 100);
-    ok1(t.tv_usec == 0);
+    ok(t.tv_sec  == 100, "string2timeval 3");
+    ok(t.tv_usec == 0, "string2timeval 4");
 
     string2timeval("", &t);
-    ok1(t.tv_sec  == 0);
-    ok1(t.tv_usec == 0);
+    ok(t.tv_sec  == 0, "string2timeval 5");
+    ok(t.tv_usec == 0, "string2timeval 6");
 
     string2timeval(NULL, &t);
-    ok1(t.tv_sec  == 0);
-    ok1(t.tv_usec == 0);
+    ok(t.tv_sec  == 0, "string2timeval 7");
+    ok(t.tv_usec == 0, "string2timeval 8");
 
     return exit_status();
 }

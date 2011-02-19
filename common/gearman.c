@@ -83,7 +83,7 @@ int create_client_dup( char ** server_list, gearman_client_st *client ) {
     gearman_return_t ret;
     int x = 0;
 
-    gm_log( GM_LOG_TRACE, "create_gearman_client_dup()\n" );
+    gm_log( GM_LOG_TRACE, "create_client_dup()\n" );
 
     signal(SIGPIPE, SIG_IGN);
 
@@ -120,7 +120,7 @@ int create_client( char ** server_list, gearman_client_st *client ) {
     gearman_return_t ret;
     int x = 0;
 
-    gm_log( GM_LOG_TRACE, "create_gearman_client()\n" );
+    gm_log( GM_LOG_TRACE, "create_client()\n" );
 
     signal(SIGPIPE, SIG_IGN);
 
@@ -170,6 +170,20 @@ int add_job_to_queue( gearman_client_st *client, char ** server_list, char * que
     crypted_data = malloc(GM_BUFFERSIZE);
     size = mod_gm_encrypt(&crypted_data, data, transport_mode);
     gm_log( GM_LOG_TRACE, "%d +++>\n%s\n<+++\n", size, crypted_data );
+
+#ifdef GM_DEBUG
+    /* verify decrypted string is equal to the original */
+    char * test;
+    test = malloc(GM_BUFFERSIZE);
+    mod_gm_decrypt(&test, crypted_data, transport_mode);
+    gm_log( GM_LOG_TRACE, "%d ===>\n%s\n<===\n", size, test );
+    if(strcmp(test, data)) {
+        gm_log( GM_LOG_ERROR, "%d --->%s<---\n", strlen(data), data );
+        gm_log( GM_LOG_ERROR, "%d ===>\n%s\n<===\n", size, test );
+        fprintf(stderr, "encrypted string does not match\n");
+        exit(EXIT_FAILURE);
+    }
+#endif
 
     if( priority == GM_JOB_PRIO_LOW ) {
         task = gearman_client_add_task_low_background( client, NULL, NULL, queue, uniq, ( void * )crypted_data, ( size_t )size, &ret1 );

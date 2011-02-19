@@ -1,0 +1,4 @@
+#!/bin/bash
+
+echo "exiting with exit code $1"
+exit $1

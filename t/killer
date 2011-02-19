@@ -1,0 +1,8 @@
+#!/bin/bash
+
+SIG="INT"
+if [ ! -z "$1" ]; then
+  SIG="$1"
+fi
+echo "exiting with signal SIG$SIG"
+kill -$SIG $$

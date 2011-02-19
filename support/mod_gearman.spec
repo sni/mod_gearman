@@ -8,11 +8,10 @@ URL:           http://labs.consol.de/nagios/mod-gearman/
 Prefix:        /opt/mod_gearman
 Source:        http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-%{version}.tar.gz
 Group:         Applications/Monitoring
-Requires:      libgearman
+Requires:      gearmand
 BuildRoot:     %{_tmppath}/%{name}-%{version}-root-%(%{__id_u} -n)
 BuildRequires: autoconf, automake
-BuildRequires: libtool, libtool-ltdl-devel, libevent-devel
-BuildRequires: libgearman-devel
+BuildRequires: libtool, libevent-devel, ncurses-devel
 Summary:       Gearman module for Nagios / Icinga
 Requires(pre,post): /sbin/ldconfig
 
@@ -33,24 +32,17 @@ and servicegroups.
 %setup -q
 [ -f ./configure ] || ./autogen.sh
 
-%build
-./configure --with-user=nagios \
-    --prefix=%{_prefix} \
-    --libdir=%{_libdir} \
-    --sysconfdir=%{_sysconfdir} \
-    --localstatedir=%{_localstatedir} \
-    --with-init-dir=%{_initrddir}
+%configure
 
-%{__make}
+%build
+%{__make} %{_smp_mflags}
 
 %install
-rm -rf $RPM_BUILD_ROOT
-mkdir -p $RPM_BUILD_ROOT/%{_prefix}
-
-%{__make} install install-config DESTDIR=$RPM_BUILD_ROOT
+%{__rm} -rf %{buildroot}
+%{__make} install install-config DESTDIR="%{buildroot}" AM_INSTALL_PROGRAM_FLAGS=""
 
 %clean
-rm -rf $RPM_BUILD_ROOT
+%{__rm} -rf %{buildroot}
 
 %post -p /sbin/ldconfig
 %postun -p /sbin/ldconfig
@@ -64,5 +56,8 @@ rm -rf $RPM_BUILD_ROOT
 %{_localstatedir}
 
 %changelog
+* Fri Feb 11 2011 Sven Nierlein <sven@consol.de>
+- Adapted spec file for SLES11
+
 * Wed Oct 13 2010 Olivier Raginel <babar@cern.ch>
 - First build, on Scientific Linux CERN 5.5

@@ -20,7 +20,7 @@ PIDFILE=%GPIDFILE%
 LOGFILE=%GLOGFILE%
 USER=%USER%
 GRACEFUL_SHUTDOWN_TIME=30
-for f in $( which netcat nc ) ; do
+for f in $( which netcat nc 2>/dev/null ) ; do
   if [ -x "$f" ]; then
     NC=$f
   fi
