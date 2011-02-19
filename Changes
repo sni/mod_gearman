@@ -1,6 +1,7 @@
 This file documents the revision history for mod_gearman.
 
 1.1    Mon...
+          - added general export option
           - fixed "make rpm" for SLES11
 
 1.0    Mon Feb  7 11:05:29 CET 2011
