@@ -8,6 +8,7 @@
 ###############################################################################
 
 RPM_TOPDIR=$$(pwd)/rpm.topdir
+DOS2UNIX=$(shell which dos2unix || which fromdos)
 
 .PHONY: docs
 
@@ -209,11 +210,13 @@ docs:
 	fi;
 	$(RM) docs/images
 	cd docs && ln -s /usr/share/asciidoc/images .
-	cp -p README docs/ && cd docs && asciidoc --unsafe -a toc -a toclevels=2 -a icons -a data-uri -a max-width=800 README
+	cp -p README docs/ && cd docs && asciidoc --unsafe -a toc -a toclevels=2 -a max-width=800 README
 	chmod 644 docs/README.html
+	$(DOS2UNIX) docs/README.html
 	rm -f docs/README
-	cd docs && asciidoc --unsafe -a toc -a toclevels=2 -a icons -a data-uri -a max-width=800 QUICKSTART
+	cd docs && asciidoc --unsafe -a toc -a toclevels=2 -a max-width=800 QUICKSTART
 	chmod 644 docs/QUICKSTART.html
+	$(DOS2UNIX) docs/QUICKSTART.html
 
 rpm: dist
 	mkdir -p $(RPM_TOPDIR)/{SOURCES,BUILD,RPMS,SRPMS,SPECS}
