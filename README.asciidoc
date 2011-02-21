@@ -190,203 +190,189 @@ options:
 
 Shared options for worker and the NEB module:
 
---------------------------------------
-config:             read config from this file. Options are the same
-                    like described here.
+config::
+    read config from this file. Options are the same like described here.
 
-                    Example: config=/etc/nagios3/mod_gm_worker.conf
-
-
-debug:              use debug to increase the verbosity of the module.
-                    Possible values are:
-                        0 = only errors
-                        1 = debug messages
-                        2 = trace messages
-                        3 = trace and all gearman related logs are going to stdout.
-                    Default is 0.
-
-                    Example: debug=1
+    Example: config=/etc/nagios3/mod_gm_worker.conf
 
 
-server:             sets the address of your gearman job server. Can be specified
-                    more than once to add more server. Gearman uses
-                    the first one available.
+debug::
+    use debug to increase the verbosity of the module.
+    Possible values are:
++
+--
+    * `0` - only errors
+    * `1` - debug messages
+    * `2` - trace messages
+--
++
+Default is 0.
++
+    Example: debug=1
 
-                    Example: server=localhost:4730,remote_host:4730
-
-
-eventhandler:       defines if the module should distribute execution of
-                    eventhandlers.
-
-                    Example: eventhandler=yes
-
-
-services:           defines if the module should distribute execution of
-                    service checks.
-
-                    Example: services=yes
-
-
-hosts:              defines if the module should distribute execution of
-                    host checks.
-
-                    Example: hosts=yes
+server::
+sets the address of your gearman job server. Can be specified
+more than once to add more server. Gearman uses
+the first one available.
++
+    Example: server=localhost:4730,remote_host:4730
 
 
-hostgroups:         sets a list of hostgroups which will go into seperate
-                    queues.
-
-                    Example: hostgroups=name1,name2,name3
-
-
-servicegroups:      sets a list of servicegroups which will go into seperate
-                    queues.
-
-                    Example: servicegroups=name1,name2,name3
+eventhandler::
+defines if the module should distribute execution of
+eventhandlers.
++
+    Example: eventhandler=yes
 
 
-encryption:         enables or disables encryption. It is strongly
-                    advised to not disable encryption. Anybody will be
-                    able to inject packages to your worker.
-                    Encryption is enabled by default and you have to
-                    explicitly disable it.
-                    When using encryption, you will either have to
-                    specify a shared password with key=... or a
-                    keyfile with keyfile=...
-                    Default is On.
-
-                    Example: encryption=yes
+services::
+defines if the module should distribute execution of service checks.
++
+    Example: services=yes
 
 
-key:                A shared password which will be used for
-                    encryption of data pakets. Should be at least 8
-                    bytes long. Maximum length is 32 characters.
+hosts::
+defines if the module should distribute execution of host checks.
++
+    Example: hosts=yes
 
-                    Example: key=secret
+
+hostgroups::
+sets a list of hostgroups which will go into seperate queues.
++
+    Example: hostgroups=name1,name2,name3
 
 
-keyfile:            The shared password will be read from this file.
-                    Use either key or keyfile. Only the first 32
-                    characters will be used.
+servicegroups::
+sets a list of servicegroups which will go into seperate queues.
++
+    Example: servicegroups=name1,name2,name3
 
-                    Example: keyfile=/path/to/secret.file
---------------------------------------
+
+encryption::
+enables or disables encryption. It is strongly advised to not disable
+encryption. Anybody will be able to inject packages to your worker. Encryption
+is enabled by default and you have to explicitly disable it. When using
+encryption, you will either have to specify a shared password with `key=...` or
+a keyfile with `keyfile=...`  Default is On.
++
+    Example: encryption=yes
+
+key::
+A shared password which will be used for encryption of data pakets. Should be at
+least 8 bytes long. Maximum length is 32 characters.
++
+    Example: key=secret
+
+keyfile::
+The shared password will be read from this file.  Use either key or keyfile.
+Only the first 32 characters will be used.
++
+    Example: keyfile=/path/to/secret.file
 
 
 Additional options for the NEB module:
 
---------------------------------------
-localhostgroups:    sets a list of hostgroups which will not be executed
-                    by gearman. They are just passed through.
-
-                    Example: localhostgroups=name1,name2,name3
-
-
-localservicegroups: sets a list of servicegroups which will not be executed
-                    by gearman. They are just passed through.
-
-                    Example: localservicegroups=name1,name2,name3
+localhostgroups::
+sets a list of hostgroups which will not be executed by gearman. They are just
+passed through.
++
+    Example: localhostgroups=name1,name2,name3
 
 
-result_workers      Number of result worker threads. Usually one is
-                    enough. You may increase the value if your
-                    result queue is not processed fast enough.
+localservicegroups::
+sets a list of servicegroups which will not be executed by gearman. They are
+just passed through.
++
+    Example: localservicegroups=name1,name2,name3
 
-                    Example: result_workers=3
+
+result_workers::
+Number of result worker threads. Usually one is enough. You may increase the
+value if your result queue is not processed fast enough.
++
+    Example: result_workers=3
 
 
-perfdata:           defines if the module should distribute perfdata
-                    to gearman.
-                    Note: processing of perfdata is not part of
-                    mod_gearman. You will need additional worker for
-                    handling performance data. For example: pnp4nagios
-                    Performance data is just written to the gearman
-                    queue.
+perfdata::
+defines if the module should distribute perfdata to gearman.  Note: processing
+of perfdata is not part of mod_gearman. You will need additional worker for
+handling performance data. For example: pnp4nagios Performance data is just
+written to the gearman queue.
++
+    Example: perfdata=yes
 
-                    Example: perfdata=yes
-
-result_queue:       sets the result queue. Necessary when putting jobs
-                    from several nagios instances into the same
-                    gearman queues.
-                    Default: check_results
-
-                    Example: result_queue=check_results_nagios1
---------------------------------------
+result_queue::
+sets the result queue. Necessary when putting jobs from several nagios instances
+into the same gearman queues. Default: `check_results`
++
+    Example: result_queue=check_results_nagios1
 
 
 Additional options for worker:
 
---------------------------------------
-identifier:         Identifier for this worker. Will be used for the
-                    'worker_identifier' queue for status requests. You
-                    may want to change it if you are using more than
-                    one worker on a single host.
-                    Default: current hostname
-
-                    Example: identifier=hostname_test
+identifier::
+Identifier for this worker. Will be used for the 'worker_identifier' queue for
+status requests. You may want to change it if you are using more than one worker
+on a single host.  Default: current hostname
++
+    Example: identifier=hostname_test
 
 
-pidfile:            Path to the pidfile.
-
-                    Example: pidfile=/path/to/pid.file
-
-
-logfile:            Path to the logfile.
-
-                    Example: logfile=/path/to/log.file
+pidfile::
+Path to the pidfile.
++
+    Example: pidfile=/path/to/pid.file
 
 
-min-worker:         Minimum number of worker processes which should
-                    run at any time.
-                    Default: 1
-
-                    Example: min-worker=1
-
-
-max-worker:         Maximum number of worker processes which should
-                    run at any time. You may set this equal to
-                    min-worker setting to disable dynamic starting of
-                    workers. When setting this to 1, all services from
-                    this worker will be executed one after another.
-                    Default: 20
-
-                    Example: max-worker=20
+logfile::
+Path to the logfile.
++
+    Example: logfile=/path/to/log.file
 
 
-idle-timeout:       Time after which an idling worker exists.  This
-                    parameter controls how fast your waiting workers
-                    will exit if there are no jobs waiting. Set to 0
-                    to disable the idle timeout.
-                    Default: 10
-
-                    Example: idle-timeout=30
+min-worker::
+Minimum number of worker processes which should run at any time.  Default: 1
++
+    Example: min-worker=1
 
 
-max-jobs:           Controls the amount of jobs a worker will do
-                    before he exits.  Use this to control how fast the
-                    amount of workers will go down after high load
-                    times. Disabled when set to 0.
-                    Default: 1000
-
-                    Example: max-jobs=500
-
-fork_on_exec:       Use this option to disable an extra fork for each
-                    plugin execution. This option will reduce the load
-                    on the worker host.
-                    Default: yes
-
-                    Example: fork_on_exec=no
-
-dup_server:         sets the address of gearman job server where
-                    duplicated result will be sent to. Can be specified
-                    more than once to add more server.
-                    Useful for duplicating results for a reporting
-                    installation or remote gui.
-
-                    Example: dup_server=logserver:4730,logserver2:4730
---------------------------------------
+max-worker::
+Maximum number of worker processes which should run at any time. You may set
+this equal to min-worker setting to disable dynamic starting of workers. When
+setting this to 1, all services from this worker will be executed one after
+another. Default: 20
++
+    Example: max-worker=20
 
 
+idle-timeout::
+Time after which an idling worker exists.  This parameter controls how fast your
+waiting workers will exit if there are no jobs waiting.  Set to 0 to disable the
+idle timeout.  Default: 10
++
+    Example: idle-timeout=30
+
+
+max-jobs::
+Controls the amount of jobs a worker will do before he exits.  Use this to
+control how fast the amount of workers will go down after high load times.
+Disabled when set to 0.  Default: 1000
++
+    Example: max-jobs=500
+
+fork_on_exec::
+Use this option to disable an extra fork for each plugin execution. This option
+will reduce the load on the worker host.  Default: yes
++
+    Example: fork_on_exec=no
+
+dup_server::
+sets the address of gearman job server where duplicated result will be sent to.
+Can be specified more than once to add more server.  Useful for duplicating
+results for a reporting installation or remote gui.
++
+    Example: dup_server=logserver:4730,logserver2:4730
 
 
 
@@ -411,60 +397,51 @@ and displays the current queue statistics.
 --------------------------------------
 
 
---------------------------------------
-check_results         this queue is monitored by the neb module to
-                      fetch results from the worker.
-                      You don't need an extra worker for this queue.
-                      The number of result workers can be set to a
-                      maximum of 256, but usually one is enough.
-                      One worker is capable of processing several
-                      thousand results per second.
+check_results::
+this queue is monitored by the neb module to fetch results from the worker.  You
+don't need an extra worker for this queue.  The number of result workers can be
+set to a maximum of 256, but usually one is enough.  One worker is capable of
+processing several thousand results per second.
 
 
-host                  This is the queue for generic host checks. If
-                      you enable host checks with the hosts=yes switch.
-                      Before a host goes into this queue, it is
-                      checked if any of the local groups matches or a
-                      seperate hostgroup machtes. If nothing matches,
-                      then this queue is used.
+host::
+This is the queue for generic host checks. If you enable host checks with the
+hosts=yes switch.  Before a host goes into this queue, it is checked if any of
+the local groups matches or a seperate hostgroup machtes. If nothing matches,
+then this queue is used.
 
 
-service               This is the queue for generic service checks. If
-                      you enable service checks with the services=yes
-                      switch. Before a service goes into this queue
-                      it is checked against the local host- and
-                      service-groups. Then the normal host- and
-                      servicegroups are checked and if none matches,
-                      this queue is used.
+service::
+This is the queue for generic service checks. If you enable service checks with
+the `services=yes` switch. Before a service goes into this queue it is checked
+against the local host- and service-groups. Then the normal host- and
+servicegroups are checked and if none matches, this queue is used.
 
 
-hostgroup_<name>      This queue is created for every hostgroup which
-                      has been defined by the hostgroups=... option.
-                      Make sure you have at least one worker for every
-                      hostgroup you specify. Start the worker with
-                      --hostgroups=... to work on hostgroup queues.
-                      Note that this queue may also contain service
-                      checks if the hostgroup of a service matches.
+hostgroup_<name>::
+This queue is created for every hostgroup which has been defined by the
+hostgroups=... option.  Make sure you have at least one worker for every
+hostgroup you specify. Start the worker with `--hostgroups=...` to work on
+hostgroup queues.  Note that this queue may also contain service checks if the
+hostgroup of a service matches.
 
 
-servicegroup_<name>   This queue is created for every servicegroup
-                      which has been defined by the servicegroup=...
-                      option.
+servicegroup_<name>::
+This queue is created for every servicegroup which has been defined by the
+`servicegroup=...`  option.
 
 
-eventhandler          This is the generic queue for all eventhandler.
-                      Make sure you have a worker for this queue if
-                      you have eventhandler enabled. Start the worker
-                      with --events to work on this queue.
+eventhandler::
+This is the generic queue for all eventhandler.  Make sure you have a worker for
+this queue if you have eventhandler enabled. Start the worker with `--events` to
+work on this queue.
 
 
-perfdata              This is the generic queue for all performance
-                      data. It is created and used if you switch on
-                      --perfdata=yes.
-                      Performance data cannot be processed by the
-                      gearman worker itself. You will need pnp4nagios
-                      (http://www.pnp4nagios.org) therefor.
---------------------------------------
+perfdata::
+This is the generic queue for all performance data. It is created and used if
+you switch on `--perfdata=yes`. Performance data cannot be processed by the
+gearman worker itself. You will need pnp4nagios (http://www.pnp4nagios.org)
+therefor.
 
 
 Performance
