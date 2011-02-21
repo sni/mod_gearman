@@ -1,0 +1,582 @@
+Gearman Module for Nagios
+=========================
+
+http://labs.consol.de/nagios/mod-gearman[Mod_Gearman] is a new
+way of distributing active Nagios checks across your network. It
+consists of two parts: There is a NEB module which resides in the
+Nagios core and adds servicechecks, hostchecks and eventhandler to a
+http://gearman.org[Gearman] queue. There can be multiple equal
+gearman servers.  The counterpart is one or more worker clients for
+the checks itself. They can be bound to host and servicegroups.
+
+Latest
+http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.0.tar.gz[version]
+is the 1.0 which has been released on February 8 2011.
+version
+
+
+Mod-Gearman has been succesfully tested with Nagios 3.2.3 and Icinga
+1.2.0 and there are no known bugs at the moment.
+
+
+Debian users may be interested in the
+http://labs.consol.de/nagios/mod-gearman/mod-gearman-quickstart-guide/[quickstart guide].
+
+
+Support & Questions
+-------------------
+Please use the following https://groups.google.com/group/mod_gearman[google groups mailinglist] for support or
+questions.
+
+
+How does it work
+----------------
+When the broker module is loaded, it captures all servicecheck,
+hostcheck and the eventhandler events. Eventhandler are sent to a
+generic 'eventhandler' queue. Checks for hosts which are in one of the
+specified hostgroups, are sent into a seperate hostgroup queue. All
+non matching hosts are sent to a generic 'hosts' queue. Checks for
+services are first checked against the list of servicegroups, then
+against the hostgroups and if none matches they will be sent into a
+generic 'service' queue.
+The NEB module starts a single thread, which monitors the
+'check_results' where all results come in.
+
+++++
+<a title="mod gearman architecture" rel="lightbox[mod_gm]" href="http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-e1284455350110.png"><img src="http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-e1284455350110.png" alt="mod_gearman architecture " width="480" height="300" style="float:none" /></a>
+++++
+
+A simple example queue would look like:
+
+--------------------------------------
++---------------+------------------+--------------+--------------+
+| Queue Name    | Worker Available | Jobs Waiting | Jobs Running |
++---------------+------------------+--------------+--------------+
+| check_results | 1                | 0            | 0            |
+| host          | 50               | 0            | 1            |
+| service       | 50               | 0            | 13           |
+| eventhandler  | 50               | 0            | 0            |
++---------------+------------------+--------------+--------------+
+--------------------------------------
+
+There is one queue for the results and two for the checks plus the
+eventhandler.
+
+The workflow is simple:
+
+ 1. Nagios wants to execute a service check.
+ 2. The check is intercepted by the mod_gearman neb module.
+ 3. mod_gearman puts the job into the 'service' queue.
+ 4. a worker grabs the job and puts back the result into the
+    'check_results' queue
+ 5. mod_gearman grabs the result job and puts back the result onto the
+    check result list
+ 6. The reaper reads all checks from the result list and updates hosts / services
+
+
+You can set some host or servicegroups for special worker. This
+example uses a seperate hostgroup for Japan and a seperate
+servicegroup for jmx4perl.
+
+It would look like this:
+--------------------------------------
++-----------------------+------------------+--------------+--------------+
+| Queue Name            | Worker Available | Jobs Waiting | Jobs Running |
++-----------------------+------------------+--------------+--------------+
+| check_results         | 1                | 0            | 0            |
+| host                  | 50               | 0            | 1            |
+| service               | 50               | 0            | 13           |
+| servicegroup_jmx4perl | 3                | 0            | 3            |
+| hostgroup_japan       | 3                | 1            | 3            |
+| eventhandler          | 50               | 0            | 0            |
++-----------------------+------------------+--------------+--------------+
+--------------------------------------
+
+You still have the generic queues and in addition there are two queues
+for the specific groups.
+
+
+The worker processes will take jobs from the queues and put the result
+back into the check_result queue which will then be taken back by the
+neb module and put back into the nagios core. A worker can work on one
+or more queues. So you could start a worker which only handles the
+'hostgroup_japan' group.  One worker for the 'jmx4perl' checks and one
+worker which covers the other queues. There can be more than one
+worker on each queue to share the load.
+
+++++
+<a title="mod gearman queues" rel="lightbox[mod_gm]" href="http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman_queues.png"><img src="http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman_queues.png" alt="mod_gearman architecture " width="360" height="270" style="float:none" /></a>
+++++
+
+
+Installation
+------------
+
+Pre Requirements: 
+
+ - gcc / g++
+ - autoconf / automake / autoheader
+ - libtool
+ - libgearman (>= 0.14)
+
+
+Download the tarball and perform the following steps:
+--------------------------------------
+#> ./configure
+#> make
+#> make install
+--------------------------------------
+
+Then add the mod_gearman.o to your nagios installation and add a
+broker line to your nagios.cfg:
+
+--------------------------------------
+broker_module=.../mod_gearman.o server=localhost:4730 eventhandler=yes services=yes hosts=yes
+--------------------------------------
+
+see <<_configuration,Configuration>> for details on all parameters
+
+
+The last step is to start one or more worker. You may use the same
+configuration file as for the neb module.
+
+--------------------------------------
+./mod_gearman_worker --server=localhost:4730 --services --hosts
+--------------------------------------
+or use the supplied init script.
+
+
+NOTE: Make sure you have started your gearmand job server. Usually
+it can be started with 
+
+--------------------------------------
+/usr/sbin/gearmand -t 10 -j 0
+--------------------------------------
+
+or a supplied init script (extras/gearmand-init).
+
+
+
+Patch Nagios
+~~~~~~~~~~~~
+
+NOTE: The needed patch is already included since Nagios 3.2.2. Use the patch if you
+use an older version.
+
+It is not possible to distribute eventhandler with Nagios versions
+prior 3.2.2. Just apply the patch from the patches directory to your
+Nagios sources and build Nagios again if you want to use an older
+version. You only need to replace the nagios binary. Nothing else has
+changed.  If you plan to distribute only Host/Servicechecks, no patch
+is needed.
+
+
+
+Configuration
+-------------
+
+NEB Module
+~~~~~~~~~~
+
+A sample broker in your nagios.cfg could look like:
+
+--------------------------------------
+broker_module=/usr/local/share/nagios/mod_gearman.o keyfile=/usr/local/share/nagios/secret.txt server=localhost eventhandler=yes hosts=yes services=yes
+--------------------------------------
+
+See the following list for a detailed explaination of available
+options:
+
+
+Shared options for worker and the NEB module:
+
+--------------------------------------
+config:             read config from this file. Options are the same
+                    like described here.
+
+                    Example: config=/etc/nagios3/mod_gm_worker.conf
+
+
+debug:              use debug to increase the verbosity of the module.
+                    Possible values are:
+                        0 = only errors
+                        1 = debug messages
+                        2 = trace messages
+                        3 = trace and all gearman related logs are going to stdout.
+                    Default is 0.
+
+                    Example: debug=1
+
+
+server:             sets the address of your gearman job server. Can be specified
+                    more than once to add more server. Gearman uses
+                    the first one available.
+
+                    Example: server=localhost:4730,remote_host:4730
+
+
+eventhandler:       defines if the module should distribute execution of
+                    eventhandlers.
+
+                    Example: eventhandler=yes
+
+
+services:           defines if the module should distribute execution of
+                    service checks.
+
+                    Example: services=yes
+
+
+hosts:              defines if the module should distribute execution of
+                    host checks.
+
+                    Example: hosts=yes
+
+
+hostgroups:         sets a list of hostgroups which will go into seperate
+                    queues.
+
+                    Example: hostgroups=name1,name2,name3
+
+
+servicegroups:      sets a list of servicegroups which will go into seperate
+                    queues.
+
+                    Example: servicegroups=name1,name2,name3
+
+
+encryption:         enables or disables encryption. It is strongly
+                    advised to not disable encryption. Anybody will be
+                    able to inject packages to your worker.
+                    Encryption is enabled by default and you have to
+                    explicitly disable it.
+                    When using encryption, you will either have to
+                    specify a shared password with key=... or a
+                    keyfile with keyfile=...
+                    Default is On.
+
+                    Example: encryption=yes
+
+
+key:                A shared password which will be used for
+                    encryption of data pakets. Should be at least 8
+                    bytes long. Maximum length is 32 characters.
+
+                    Example: key=secret
+
+
+keyfile:            The shared password will be read from this file.
+                    Use either key or keyfile. Only the first 32
+                    characters will be used.
+
+                    Example: keyfile=/path/to/secret.file
+--------------------------------------
+
+
+Additional options for the NEB module:
+
+--------------------------------------
+localhostgroups:    sets a list of hostgroups which will not be executed
+                    by gearman. They are just passed through.
+
+                    Example: localhostgroups=name1,name2,name3
+
+
+localservicegroups: sets a list of servicegroups which will not be executed
+                    by gearman. They are just passed through.
+
+                    Example: localservicegroups=name1,name2,name3
+
+
+result_workers      Number of result worker threads. Usually one is
+                    enough. You may increase the value if your
+                    result queue is not processed fast enough.
+
+                    Example: result_workers=3
+
+
+perfdata:           defines if the module should distribute perfdata
+                    to gearman.
+                    Note: processing of perfdata is not part of
+                    mod_gearman. You will need additional worker for
+                    handling performance data. For example: pnp4nagios
+                    Performance data is just written to the gearman
+                    queue.
+
+                    Example: perfdata=yes
+
+result_queue:       sets the result queue. Necessary when putting jobs
+                    from several nagios instances into the same
+                    gearman queues.
+                    Default: check_results
+
+                    Example: result_queue=check_results_nagios1
+--------------------------------------
+
+
+Additional options for worker:
+
+--------------------------------------
+identifier:         Identifier for this worker. Will be used for the
+                    'worker_identifier' queue for status requests. You
+                    may want to change it if you are using more than
+                    one worker on a single host.
+                    Default: current hostname
+
+                    Example: identifier=hostname_test
+
+
+pidfile:            Path to the pidfile.
+
+                    Example: pidfile=/path/to/pid.file
+
+
+logfile:            Path to the logfile.
+
+                    Example: logfile=/path/to/log.file
+
+
+min-worker:         Minimum number of worker processes which should
+                    run at any time.
+                    Default: 1
+
+                    Example: min-worker=1
+
+
+max-worker:         Maximum number of worker processes which should
+                    run at any time. You may set this equal to
+                    min-worker setting to disable dynamic starting of
+                    workers. When setting this to 1, all services from
+                    this worker will be executed one after another.
+                    Default: 20
+
+                    Example: max-worker=20
+
+
+idle-timeout:       Time after which an idling worker exists.  This
+                    parameter controls how fast your waiting workers
+                    will exit if there are no jobs waiting. Set to 0
+                    to disable the idle timeout.
+                    Default: 10
+
+                    Example: idle-timeout=30
+
+
+max-jobs:           Controls the amount of jobs a worker will do
+                    before he exits.  Use this to control how fast the
+                    amount of workers will go down after high load
+                    times. Disabled when set to 0.
+                    Default: 1000
+
+                    Example: max-jobs=500
+
+fork_on_exec:       Use this option to disable an extra fork for each
+                    plugin execution. This option will reduce the load
+                    on the worker host.
+                    Default: yes
+
+                    Example: fork_on_exec=no
+
+dup_server:         sets the address of gearman job server where
+                    duplicated result will be sent to. Can be specified
+                    more than once to add more server.
+                    Useful for duplicating results for a reporting
+                    installation or remote gui.
+
+                    Example: dup_server=logserver:4730,logserver2:4730
+--------------------------------------
+
+
+
+
+
+Queue Names
+-----------
+
+You may want to watch your gearman server job queue. The shipped
+tools/queue_top.pl does this. It polls the gearman server every second
+and displays the current queue statistics.
+
+--------------------------------------
++-----------------------+--------+-------+-------+---------+
+| Name                  | Worker | Avail | Queue | Running |
++-----------------------+--------+-------+-------+---------+
+| check_results         | 1      | 1     | 0     | 0       |
+| host                  | 3      | 3     | 0     | 0       |
+| service               | 3      | 3     | 0     | 0       |
+| eventhandler          | 3      | 3     | 0     | 0       |
+| servicegroup_jmx4perl | 3      | 3     | 0     | 0       |
+| hostgroup_japan       | 3      | 3     | 0     | 0       |
++-----------------------+--------+-------+-------+---------+
+--------------------------------------
+
+
+--------------------------------------
+check_results         this queue is monitored by the neb module to
+                      fetch results from the worker.
+                      You don't need an extra worker for this queue.
+                      The number of result workers can be set to a
+                      maximum of 256, but usually one is enough.
+                      One worker is capable of processing several
+                      thousand results per second.
+
+
+host                  This is the queue for generic host checks. If
+                      you enable host checks with the hosts=yes switch.
+                      Before a host goes into this queue, it is
+                      checked if any of the local groups matches or a
+                      seperate hostgroup machtes. If nothing matches,
+                      then this queue is used.
+
+
+service               This is the queue for generic service checks. If
+                      you enable service checks with the services=yes
+                      switch. Before a service goes into this queue
+                      it is checked against the local host- and
+                      service-groups. Then the normal host- and
+                      servicegroups are checked and if none matches,
+                      this queue is used.
+
+
+hostgroup_<name>      This queue is created for every hostgroup which
+                      has been defined by the hostgroups=... option.
+                      Make sure you have at least one worker for every
+                      hostgroup you specify. Start the worker with
+                      --hostgroups=... to work on hostgroup queues.
+                      Note that this queue may also contain service
+                      checks if the hostgroup of a service matches.
+
+
+servicegroup_<name>   This queue is created for every servicegroup
+                      which has been defined by the servicegroup=...
+                      option.
+
+
+eventhandler          This is the generic queue for all eventhandler.
+                      Make sure you have a worker for this queue if
+                      you have eventhandler enabled. Start the worker
+                      with --events to work on this queue.
+
+
+perfdata              This is the generic queue for all performance
+                      data. It is created and used if you switch on
+                      --perfdata=yes.
+                      Performance data cannot be processed by the
+                      gearman worker itself. You will need pnp4nagios
+                      (http://www.pnp4nagios.org) therefor.
+--------------------------------------
+
+
+Performance
+-----------
+
+While the main motivation was to ease distributed configuration, this
+plugin also helps to spread the load on multiple worker. Throughput is
+mainly limited by the amount of jobs a single nagios instance can put
+onto the Gearman job server. Keep the Gearman job server close to the
+nagios box. Best practice is to put both on the same machine. Both
+processes will utilize one core. Some testing with my workstation
+(Dual Core 2.50GHz) and two worker boxes gave me these results. I used
+a sample Nagios installation with 20.000 Services at a 1 minute
+interval and a sample plugin which returns just a single line of
+output. I got over 300 Servicechecks per second, which means you could
+easily setup 100.000 services at a 5 minute interval with a single
+nagios box. The amount of worker boxes depends on your check types.
+
+++++
+<a title="mod gearman performance" rel="lightbox[mod_gm]" href="http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman_performance_2.png"><img src="http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman_performance_2.png" alt="mod_gearman performance" width="473" height="122" style="float:none" /></a>
+<a title="mod gearman performance" rel="lightbox[mod_gm]" href="http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman_performance_1.png"><img src="http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman_performance_1.png" alt="mod_gearman performance" width="424" height="176" style="float:none" /></a>
+++++
+
+How to Monitor Job Server and Worker
+------------------------------------
+Use the supplied check_gearman to monitor your worker and job server.
+Worker have a own queue for status requests.
+
+--------------------------------------
+%> ./check_gearman -H <job server hostname> -q worker_<worker hostname> -t 10 -s check
+check_gearman OK - localhost has 10 worker and is working on 1 jobs|worker=10 running=1 total_jobs_done=1508
+--------------------------------------
+
+This will send a test job to the given job server and the worker will
+respond with some statistical data.
+
+
+Job server can be monitored with:
+
+--------------------------------------
+%> ./check_gearman -H localhost -t 20
+check_gearman OK - 6 jobs running and 0 jobs waiting.|check_results=0;0;1;10;100 host=0;0;9;10;100 service=0;6;9;10;100
+--------------------------------------
+
+
+
+How to Submit Passive Checks
+----------------------------
+
+You can use send_gearman to submit active and passive checks to a
+gearman job server where they will be processed just like a finished
+check would do.
+
+--------------------------------------
+%> ./send_gearman --server=<job server> --encryption=no --host="<hostname>" --service="<service>" --message="message"
+--------------------------------------
+
+
+
+How to Submit check_multi Results
+---------------------------------
+
+check_multi is a plugin which executes multiple child checks. 
+See more details about the feed_passive mode at: 
+http://www.my-plugin.de/wiki/projects/check_multi/feed_passive[www.my-plugin.de]
+
+You can pass such child checks to Nagios via the mod_gearman
+neb module: 
+
+--------------------------------------
+%> check_multi -f multi.cmd -r 256 | ./send_multi --server=<job server> --encryption=no --host="<hostname>" --service="<service>"
+--------------------------------------
+
+If you want to use only check_multi and no other workers, you can
+achieve this with the following neb module settings:
+
+ broker_module=/usr/local/share/nagios/mod_gearman.o server=localhost encryption=no eventhandler=no hosts=no services=no hostgroups=does_not_exist
+
+Note: encryption is not necessary if you both run the check_multi checks
+and the nagios check_results queue on the same server.
+
+
+What About Notifications
+------------------------
+Notifications are very difficult to distribute. And i think its not
+very useful too. So this feature will not be implemented in the near
+future.
+
+
+
+Hints
+-----
+ - Make sure you have at least one worker for every queue. You should
+   monitor that (check_gearman).
+
+ - Add Logfile checks for your gearmand server and mod_gearman
+   worker.
+
+ - Make sure all gearman checks are in local groups. Gearman self
+   checks should not be monitored through gearman.
+
+ - Keep the gearmand server close to Nagios for better performance.
+
+ - If you have some checks which should not run parallel, just setup a
+   single worker with --max-worker=1 and they will be executed one
+   after another. For example for cpu intesive checks with selenium.
+
+
+
+Download
+--------
+
+Mod Gearman is available for download at: http://labs.consol.de/nagios/mod-gearman
+
+The source is available at GitHub: http://github.com/sni/mod_gearman

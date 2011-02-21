@@ -210,7 +210,7 @@ docs:
 	fi;
 	$(RM) docs/images
 	cd docs && ln -s /usr/share/asciidoc/images .
-	cp -p README docs/ && cd docs && asciidoc --unsafe -a toc -a toclevels=2 -a max-width=800 README
+	cp -p README.asciidoc docs/README && cd docs && asciidoc --unsafe -a toc -a toclevels=2 -a max-width=800 README
 	chmod 644 docs/README.html
 	$(DOS2UNIX) docs/README.html
 	rm -f docs/README
