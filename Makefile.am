@@ -203,6 +203,10 @@ test: check
 	@echo "################################################################"
 
 docs:
+	@if [ -z "$(DOS2UNIX)" ]; then \
+	    printf "\n\n**** please install dos2unix or tofrodos package ****\n\n"; \
+	    exit 1; \
+	fi
 	@if [ `type doxygen > /dev/null 2>&1` ]; then \
 	    doxygen Doxyfile; \
 	else \
