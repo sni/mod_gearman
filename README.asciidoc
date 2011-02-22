@@ -48,7 +48,7 @@ The NEB module starts a single thread, which monitors the
 
 A simple example queue would look like:
 
---------------------------------------
+----
 +---------------+------------------+--------------+--------------+
 | Queue Name    | Worker Available | Jobs Waiting | Jobs Running |
 +---------------+------------------+--------------+--------------+
@@ -57,7 +57,7 @@ A simple example queue would look like:
 | service       | 50               | 0            | 13           |
 | eventhandler  | 50               | 0            | 0            |
 +---------------+------------------+--------------+--------------+
---------------------------------------
+----
 
 There is one queue for the results and two for the checks plus the
 eventhandler.
@@ -79,7 +79,8 @@ example uses a seperate hostgroup for Japan and a seperate
 servicegroup for jmx4perl.
 
 It would look like this:
---------------------------------------
+
+----
 +-----------------------+------------------+--------------+--------------+
 | Queue Name            | Worker Available | Jobs Waiting | Jobs Running |
 +-----------------------+------------------+--------------+--------------+
@@ -90,7 +91,7 @@ It would look like this:
 | hostgroup_japan       | 3                | 1            | 3            |
 | eventhandler          | 50               | 0            | 0            |
 +-----------------------+------------------+--------------+--------------+
---------------------------------------
+----
 
 You still have the generic queues and in addition there are two queues
 for the specific groups.
@@ -192,8 +193,10 @@ Shared options for worker and the NEB module:
 
 config::
     read config from this file. Options are the same like described here.
-
-    Example: config=/etc/nagios3/mod_gm_worker.conf
++
+=====
+    config=/etc/nagios3/mod_gm_worker.conf
+=====
 
 
 debug::
@@ -208,45 +211,59 @@ debug::
 +
 Default is 0.
 +
-    Example: debug=1
+====
+    debug=1
+====
 
 server::
 sets the address of your gearman job server. Can be specified
 more than once to add more server. Gearman uses
 the first one available.
 +
-    Example: server=localhost:4730,remote_host:4730
+====
+    server=localhost:4730,remote_host:4730
+====
 
 
 eventhandler::
 defines if the module should distribute execution of
 eventhandlers.
 +
-    Example: eventhandler=yes
+====
+    eventhandler=yes
+====
 
 
 services::
 defines if the module should distribute execution of service checks.
 +
-    Example: services=yes
+====
+    services=yes
+====
 
 
 hosts::
 defines if the module should distribute execution of host checks.
 +
-    Example: hosts=yes
+====
+    hosts=yes
+====
 
 
 hostgroups::
 sets a list of hostgroups which will go into seperate queues.
 +
-    Example: hostgroups=name1,name2,name3
+====
+    hostgroups=name1,name2,name3
+====
 
 
 servicegroups::
 sets a list of servicegroups which will go into seperate queues.
 +
-    Example: servicegroups=name1,name2,name3
+====
+    servicegroups=name1,name2,name3
+====
 
 
 encryption::
@@ -256,19 +273,25 @@ is enabled by default and you have to explicitly disable it. When using
 encryption, you will either have to specify a shared password with `key=...` or
 a keyfile with `keyfile=...`  Default is On.
 +
-    Example: encryption=yes
+====
+    encryption=yes
+====
 
 key::
 A shared password which will be used for encryption of data pakets. Should be at
 least 8 bytes long. Maximum length is 32 characters.
 +
-    Example: key=secret
+====
+    key=secret
+====
 
 keyfile::
 The shared password will be read from this file.  Use either key or keyfile.
 Only the first 32 characters will be used.
 +
-    Example: keyfile=/path/to/secret.file
+====
+    keyfile=/path/to/secret.file
+====
 
 
 Additional options for the NEB module:
@@ -277,21 +300,27 @@ localhostgroups::
 sets a list of hostgroups which will not be executed by gearman. They are just
 passed through.
 +
-    Example: localhostgroups=name1,name2,name3
+====
+    localhostgroups=name1,name2,name3
+====
 
 
 localservicegroups::
 sets a list of servicegroups which will not be executed by gearman. They are
 just passed through.
 +
-    Example: localservicegroups=name1,name2,name3
+====
+    localservicegroups=name1,name2,name3
+====
 
 
 result_workers::
 Number of result worker threads. Usually one is enough. You may increase the
 value if your result queue is not processed fast enough.
 +
-    Example: result_workers=3
+====
+    result_workers=3
+====
 
 
 perfdata::
@@ -300,13 +329,17 @@ of perfdata is not part of mod_gearman. You will need additional worker for
 handling performance data. For example: pnp4nagios Performance data is just
 written to the gearman queue.
 +
-    Example: perfdata=yes
+====
+    perfdata=yes
+====
 
 result_queue::
 sets the result queue. Necessary when putting jobs from several nagios instances
 into the same gearman queues. Default: `check_results`
 +
-    Example: result_queue=check_results_nagios1
+====
+    result_queue=check_results_nagios1
+====
 
 
 Additional options for worker:
@@ -316,25 +349,33 @@ Identifier for this worker. Will be used for the 'worker_identifier' queue for
 status requests. You may want to change it if you are using more than one worker
 on a single host.  Default: current hostname
 +
-    Example: identifier=hostname_test
+====
+    identifier=hostname_test
+====
 
 
 pidfile::
 Path to the pidfile.
 +
-    Example: pidfile=/path/to/pid.file
+====
+    pidfile=/path/to/pid.file
+====
 
 
 logfile::
 Path to the logfile.
 +
-    Example: logfile=/path/to/log.file
+====
+    logfile=/path/to/log.file
+====
 
 
 min-worker::
 Minimum number of worker processes which should run at any time.  Default: 1
 +
-    Example: min-worker=1
+====
+    min-worker=1
+====
 
 
 max-worker::
@@ -343,7 +384,9 @@ this equal to min-worker setting to disable dynamic starting of workers. When
 setting this to 1, all services from this worker will be executed one after
 another. Default: 20
 +
-    Example: max-worker=20
+====
+    max-worker=20
+====
 
 
 idle-timeout::
@@ -351,7 +394,9 @@ Time after which an idling worker exists.  This parameter controls how fast your
 waiting workers will exit if there are no jobs waiting.  Set to 0 to disable the
 idle timeout.  Default: 10
 +
-    Example: idle-timeout=30
+====
+    idle-timeout=30
+====
 
 
 max-jobs::
@@ -359,20 +404,26 @@ Controls the amount of jobs a worker will do before he exits.  Use this to
 control how fast the amount of workers will go down after high load times.
 Disabled when set to 0.  Default: 1000
 +
-    Example: max-jobs=500
+====
+    max-jobs=500
+====
 
 fork_on_exec::
 Use this option to disable an extra fork for each plugin execution. This option
 will reduce the load on the worker host.  Default: yes
 +
-    Example: fork_on_exec=no
+====
+    fork_on_exec=no
+====
 
 dup_server::
 sets the address of gearman job server where duplicated result will be sent to.
 Can be specified more than once to add more server.  Useful for duplicating
 results for a reporting installation or remote gui.
 +
-    Example: dup_server=logserver:4730,logserver2:4730
+====
+    dup_server=logserver:4730,logserver2:4730
+====
 
 
 
@@ -536,15 +587,11 @@ Hints
 -----
  - Make sure you have at least one worker for every queue. You should
    monitor that (check_gearman).
-
  - Add Logfile checks for your gearmand server and mod_gearman
    worker.
-
  - Make sure all gearman checks are in local groups. Gearman self
    checks should not be monitored through gearman.
-
  - Keep the gearmand server close to Nagios for better performance.
-
  - If you have some checks which should not run parallel, just setup a
    single worker with --max-worker=1 and they will be executed one
    after another. For example for cpu intesive checks with selenium.

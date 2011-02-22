@@ -768,9 +768,12 @@ config
 <p>
     read config from this file. Options are the same like described here.
 </p>
+<div class="exampleblock">
+<div class="exampleblock-content">
 <div class="literalblock">
 <div class="content">
-<pre><tt>Example: config=/etc/nagios3/mod_gm_worker.conf</tt></pre>
+<pre><tt>config=/etc/nagios3/mod_gm_worker.conf</tt></pre>
+</div></div>
 </div></div>
 </dd>
 <dt class="hdlist1">
@@ -799,9 +802,12 @@ debug
 </li>
 </ul></div>
 <div class="paragraph"><p>Default is 0.</p></div>
+<div class="exampleblock">
+<div class="exampleblock-content">
 <div class="literalblock">
 <div class="content">
-<pre><tt>Example: debug=1</tt></pre>
+<pre><tt>debug=1</tt></pre>
+</div></div>
 </div></div>
 </dd>
 <dt class="hdlist1">
@@ -813,9 +819,12 @@ sets the address of your gearman job server. Can be specified
 more than once to add more server. Gearman uses
 the first one available.
 </p>
+<div class="exampleblock">
+<div class="exampleblock-content">
 <div class="literalblock">
 <div class="content">
-<pre><tt>Example: server=localhost:4730,remote_host:4730</tt></pre>
+<pre><tt>server=localhost:4730,remote_host:4730</tt></pre>
+</div></div>
 </div></div>
 </dd>
 <dt class="hdlist1">
@@ -826,9 +835,12 @@ eventhandler
 defines if the module should distribute execution of
 eventhandlers.
 </p>
+<div class="exampleblock">
+<div class="exampleblock-content">
 <div class="literalblock">
 <div class="content">
-<pre><tt>Example: eventhandler=yes</tt></pre>
+<pre><tt>eventhandler=yes</tt></pre>
+</div></div>
 </div></div>
 </dd>
 <dt class="hdlist1">
@@ -838,9 +850,12 @@ services
 <p>
 defines if the module should distribute execution of service checks.
 </p>
+<div class="exampleblock">
+<div class="exampleblock-content">
 <div class="literalblock">
 <div class="content">
-<pre><tt>Example: services=yes</tt></pre>
+<pre><tt>services=yes</tt></pre>
+</div></div>
 </div></div>
 </dd>
 <dt class="hdlist1">
@@ -850,9 +865,12 @@ hosts
 <p>
 defines if the module should distribute execution of host checks.
 </p>
+<div class="exampleblock">
+<div class="exampleblock-content">
 <div class="literalblock">
 <div class="content">
-<pre><tt>Example: hosts=yes</tt></pre>
+<pre><tt>hosts=yes</tt></pre>
+</div></div>
 </div></div>
 </dd>
 <dt class="hdlist1">
@@ -862,9 +880,12 @@ hostgroups
 <p>
 sets a list of hostgroups which will go into seperate queues.
 </p>
+<div class="exampleblock">
+<div class="exampleblock-content">
 <div class="literalblock">
 <div class="content">
-<pre><tt>Example: hostgroups=name1,name2,name3</tt></pre>
+<pre><tt>hostgroups=name1,name2,name3</tt></pre>
+</div></div>
 </div></div>
 </dd>
 <dt class="hdlist1">
@@ -874,9 +895,12 @@ servicegroups
 <p>
 sets a list of servicegroups which will go into seperate queues.
 </p>
+<div class="exampleblock">
+<div class="exampleblock-content">
 <div class="literalblock">
 <div class="content">
-<pre><tt>Example: servicegroups=name1,name2,name3</tt></pre>
+<pre><tt>servicegroups=name1,name2,name3</tt></pre>
+</div></div>
 </div></div>
 </dd>
 <dt class="hdlist1">
@@ -890,9 +914,12 @@ is enabled by default and you have to explicitly disable it. When using
 encryption, you will either have to specify a shared password with <tt>key=...</tt> or
 a keyfile with <tt>keyfile=...</tt>  Default is On.
 </p>
+<div class="exampleblock">
+<div class="exampleblock-content">
 <div class="literalblock">
 <div class="content">
-<pre><tt>Example: encryption=yes</tt></pre>
+<pre><tt>encryption=yes</tt></pre>
+</div></div>
 </div></div>
 </dd>
 <dt class="hdlist1">
@@ -903,9 +930,12 @@ key
 A shared password which will be used for encryption of data pakets. Should be at
 least 8 bytes long. Maximum length is 32 characters.
 </p>
+<div class="exampleblock">
+<div class="exampleblock-content">
 <div class="literalblock">
 <div class="content">
-<pre><tt>Example: key=secret</tt></pre>
+<pre><tt>key=secret</tt></pre>
+</div></div>
 </div></div>
 </dd>
 <dt class="hdlist1">
@@ -916,9 +946,12 @@ keyfile
 The shared password will be read from this file.  Use either key or keyfile.
 Only the first 32 characters will be used.
 </p>
+<div class="exampleblock">
+<div class="exampleblock-content">
 <div class="literalblock">
 <div class="content">
-<pre><tt>Example: keyfile=/path/to/secret.file</tt></pre>
+<pre><tt>keyfile=/path/to/secret.file</tt></pre>
+</div></div>
 </div></div>
 </dd>
 </dl></div>
@@ -932,9 +965,12 @@ localhostgroups
 sets a list of hostgroups which will not be executed by gearman. They are just
 passed through.
 </p>
+<div class="exampleblock">
+<div class="exampleblock-content">
 <div class="literalblock">
 <div class="content">
-<pre><tt>Example: localhostgroups=name1,name2,name3</tt></pre>
+<pre><tt>localhostgroups=name1,name2,name3</tt></pre>
+</div></div>
 </div></div>
 </dd>
 <dt class="hdlist1">
@@ -945,9 +981,12 @@ localservicegroups
 sets a list of servicegroups which will not be executed by gearman. They are
 just passed through.
 </p>
+<div class="exampleblock">
+<div class="exampleblock-content">
 <div class="literalblock">
 <div class="content">
-<pre><tt>Example: localservicegroups=name1,name2,name3</tt></pre>
+<pre><tt>localservicegroups=name1,name2,name3</tt></pre>
+</div></div>
 </div></div>
 </dd>
 <dt class="hdlist1">
@@ -958,9 +997,12 @@ result_workers
 Number of result worker threads. Usually one is enough. You may increase the
 value if your result queue is not processed fast enough.
 </p>
+<div class="exampleblock">
+<div class="exampleblock-content">
 <div class="literalblock">
 <div class="content">
-<pre><tt>Example: result_workers=3</tt></pre>
+<pre><tt>result_workers=3</tt></pre>
+</div></div>
 </div></div>
 </dd>
 <dt class="hdlist1">
@@ -973,9 +1015,12 @@ of perfdata is not part of mod_gearman. You will need additional worker for
 handling performance data. For example: pnp4nagios Performance data is just
 written to the gearman queue.
 </p>
+<div class="exampleblock">
+<div class="exampleblock-content">
 <div class="literalblock">
 <div class="content">
-<pre><tt>Example: perfdata=yes</tt></pre>
+<pre><tt>perfdata=yes</tt></pre>
+</div></div>
 </div></div>
 </dd>
 <dt class="hdlist1">
@@ -986,9 +1031,12 @@ result_queue
 sets the result queue. Necessary when putting jobs from several nagios instances
 into the same gearman queues. Default: <tt>check_results</tt>
 </p>
+<div class="exampleblock">
+<div class="exampleblock-content">
 <div class="literalblock">
 <div class="content">
-<pre><tt>Example: result_queue=check_results_nagios1</tt></pre>
+<pre><tt>result_queue=check_results_nagios1</tt></pre>
+</div></div>
 </div></div>
 </dd>
 </dl></div>
@@ -1003,9 +1051,12 @@ Identifier for this worker. Will be used for the <em>worker_identifier</em> queu
 status requests. You may want to change it if you are using more than one worker
 on a single host.  Default: current hostname
 </p>
+<div class="exampleblock">
+<div class="exampleblock-content">
 <div class="literalblock">
 <div class="content">
-<pre><tt>Example: identifier=hostname_test</tt></pre>
+<pre><tt>identifier=hostname_test</tt></pre>
+</div></div>
 </div></div>
 </dd>
 <dt class="hdlist1">
@@ -1015,9 +1066,12 @@ pidfile
 <p>
 Path to the pidfile.
 </p>
+<div class="exampleblock">
+<div class="exampleblock-content">
 <div class="literalblock">
 <div class="content">
-<pre><tt>Example: pidfile=/path/to/pid.file</tt></pre>
+<pre><tt>pidfile=/path/to/pid.file</tt></pre>
+</div></div>
 </div></div>
 </dd>
 <dt class="hdlist1">
@@ -1027,9 +1081,12 @@ logfile
 <p>
 Path to the logfile.
 </p>
+<div class="exampleblock">
+<div class="exampleblock-content">
 <div class="literalblock">
 <div class="content">
-<pre><tt>Example: logfile=/path/to/log.file</tt></pre>
+<pre><tt>logfile=/path/to/log.file</tt></pre>
+</div></div>
 </div></div>
 </dd>
 <dt class="hdlist1">
@@ -1039,9 +1096,12 @@ min-worker
 <p>
 Minimum number of worker processes which should run at any time.  Default: 1
 </p>
+<div class="exampleblock">
+<div class="exampleblock-content">
 <div class="literalblock">
 <div class="content">
-<pre><tt>Example: min-worker=1</tt></pre>
+<pre><tt>min-worker=1</tt></pre>
+</div></div>
 </div></div>
 </dd>
 <dt class="hdlist1">
@@ -1054,9 +1114,12 @@ this equal to min-worker setting to disable dynamic starting of workers. When
 setting this to 1, all services from this worker will be executed one after
 another. Default: 20
 </p>
+<div class="exampleblock">
+<div class="exampleblock-content">
 <div class="literalblock">
 <div class="content">
-<pre><tt>Example: max-worker=20</tt></pre>
+<pre><tt>max-worker=20</tt></pre>
+</div></div>
 </div></div>
 </dd>
 <dt class="hdlist1">
@@ -1068,9 +1131,12 @@ Time after which an idling worker exists.  This parameter controls how fast your
 waiting workers will exit if there are no jobs waiting.  Set to 0 to disable the
 idle timeout.  Default: 10
 </p>
+<div class="exampleblock">
+<div class="exampleblock-content">
 <div class="literalblock">
 <div class="content">
-<pre><tt>Example: idle-timeout=30</tt></pre>
+<pre><tt>idle-timeout=30</tt></pre>
+</div></div>
 </div></div>
 </dd>
 <dt class="hdlist1">
@@ -1082,9 +1148,12 @@ Controls the amount of jobs a worker will do before he exits.  Use this to
 control how fast the amount of workers will go down after high load times.
 Disabled when set to 0.  Default: 1000
 </p>
+<div class="exampleblock">
+<div class="exampleblock-content">
 <div class="literalblock">
 <div class="content">
-<pre><tt>Example: max-jobs=500</tt></pre>
+<pre><tt>max-jobs=500</tt></pre>
+</div></div>
 </div></div>
 </dd>
 <dt class="hdlist1">
@@ -1095,9 +1164,12 @@ fork_on_exec
 Use this option to disable an extra fork for each plugin execution. This option
 will reduce the load on the worker host.  Default: yes
 </p>
+<div class="exampleblock">
+<div class="exampleblock-content">
 <div class="literalblock">
 <div class="content">
-<pre><tt>Example: fork_on_exec=no</tt></pre>
+<pre><tt>fork_on_exec=no</tt></pre>
+</div></div>
 </div></div>
 </dd>
 <dt class="hdlist1">
@@ -1109,9 +1181,12 @@ sets the address of gearman job server where duplicated result will be sent to.
 Can be specified more than once to add more server.  Useful for duplicating
 results for a reporting installation or remote gui.
 </p>
+<div class="exampleblock">
+<div class="exampleblock-content">
 <div class="literalblock">
 <div class="content">
-<pre><tt>Example: dup_server=logserver:4730,logserver2:4730</tt></pre>
+<pre><tt>dup_server=logserver:4730,logserver2:4730</tt></pre>
+</div></div>
 </div></div>
 </dd>
 </dl></div>
@@ -1327,7 +1402,7 @@ If you have some checks which should not run parallel, just setup a
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2011-02-21 23:50:11 CEST
+Last updated 2011-02-22 22:56:59 CEST
 </div>
 </div>
 </body>
