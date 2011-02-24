@@ -14,15 +14,21 @@
 
 PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 DAEMON=%WORKERBIN%
-NAME=mod_gm_worker
+NAME=mod_gearman_worker
 CONFIG=%CONFIG%
 PIDFILE=%PIDFILE%
 USER=%USER%
 USERID=`id -u`
 
+# create state dir
+if [ "$USERID" -eq 0 ]; then
+  mkdir -p $(dirname $PIDFILE)
+  chown $USER: $(dirname $PIDFILE)
+fi
+
 case "$1" in
     start)
-        echo -n "Starting $NAME "
+        echo -n "Starting $NAME..."
         CMD="$DAEMON -d --config=$CONFIG --pidfile=$PIDFILE"
         if [ "$USERID" -eq 0 ]; then
             su -s $SHELL - $USER -c  "$CMD"
@@ -30,13 +36,13 @@ case "$1" in
             $CMD
         fi
         if [ $? -eq 0 ]; then
-            echo "done"
+            echo "OK"
         else
             echo "failed"
         fi
         ;;
     stop)
-        echo -n "Stopping $NAME"
+        echo -n "Stopping $NAME..."
         pid=`cat $PIDFILE 2>/dev/null`
         if [ -z $pid ]; then
             echo ". Not running."
@@ -48,7 +54,7 @@ case "$1" in
             done
             ps -p $pid > /dev/null 2>&1;
             if [ $? -ne 0 ]; then
-                echo "done"
+                echo "OK"
                 exit 0;
             else
                 echo "failed"

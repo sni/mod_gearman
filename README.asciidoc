@@ -10,8 +10,8 @@ gearman servers.  The counterpart is one or more worker clients for
 the checks itself. They can be bound to host and servicegroups.
 
 Latest
-http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.0.tar.gz[version]
-is the 1.0 which has been released on February 8 2011.
+http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.0.1.tar.gz[version]
+is the 1.0.1 which has been released on February 24 2011.
 version
 
 

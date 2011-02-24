@@ -154,12 +154,7 @@ install-exec-local: install-local-state-dir
 
 install-local-state-dir:
 	$(RM) $(DESTDIR)$(pkglibdir)/mod_gearman.so
-	if [ `id -u` -eq 0 ]; then \
-	    $(install_sh_PROGRAM) -o $(user) -d $(DESTDIR)$(localstatedir)/mod_gearman/; \
-	else \
-	    $(install_sh_PROGRAM) -o $(user) -d $(DESTDIR)$(localstatedir)/mod_gearman/; \
-	    echo "*** You should run: sudo chown $(user) $(DESTDIR)$(localstatedir)/mod_gearman/"; \
-	fi
+	$(install_sh_PROGRAM) -d $(DESTDIR)$(localstatedir)/mod_gearman/
 
 install-data-local: install-local-state-dir
 	$(install_sh_PROGRAM) -m 644 extras/shared.conf            $(DESTDIR)$(datadir)/mod_gearman/shared.conf
