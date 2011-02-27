@@ -103,6 +103,10 @@
 #define GM_WORKER_STOP                  1
 #define GM_WORKER_RESTART               2
 
+/* perfdata modes */
+#define GM_PERFDATA_OVERWRITE           1
+#define GM_PERFDATA_APPEND              2
+
 
 #ifndef TRUE
 #define TRUE                            1
@@ -151,7 +155,8 @@ typedef struct mod_gm_opt_struct {
 /* neb module */
     char         * result_queue;                            /**< name of the result queue used by the neb module */
     int            result_workers;                          /**< number of result worker threads started */
-    int            perfdata;                                /**< flag whether perfdata are distributed or not */
+    int            perfdata;                                /**< flag whether perfdata will be distributed or not */
+    int            perfdata_mode;                           /**< flag whether perfdata will be sent with/without uniq set */
     char         * local_hostgroups_list[GM_LISTSIZE];      /**< list of hostgroups which will not be distributed */
     int            local_hostgroups_num;                    /**< number of elements in local_hostgroups_list */
     char         * local_servicegroups_list[GM_LISTSIZE];   /**< list of group  which will not be distributed */

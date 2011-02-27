@@ -851,6 +851,9 @@ int handle_perfdata(int event_type, void *data) {
                     break;
                 }
 
+                uniq[0]='\x0';
+                snprintf( uniq,sizeof( temp_buffer )-1,"%s", hostchkdata->host_name);
+
                 temp_buffer[0]='\x0';
                 snprintf( temp_buffer,sizeof( temp_buffer )-1,
                             "DATATYPE::HOSTPERFDATA\t"
@@ -884,6 +887,9 @@ int handle_perfdata(int event_type, void *data) {
                     break;
                 }
 
+                uniq[0]='\x0';
+                snprintf( uniq,sizeof( temp_buffer )-1,"%s-%s", srvchkdata->host_name, srvchkdata->service_description);
+
                 temp_buffer[0]='\x0';
                 snprintf( temp_buffer,sizeof( temp_buffer )-1,
                             "DATATYPE::SERVICEPERFDATA\t"
@@ -912,7 +918,7 @@ int handle_perfdata(int event_type, void *data) {
         if(add_job_to_queue( &client,
                              mod_gm_opt->server_list,
                              GM_PERFDATA_QUEUE,
-                             NULL,
+                             (mod_gm_opt->perfdata_mode == GM_PERFDATA_OVERWRITE ? uniq : NULL),
                              temp_buffer,
                              GM_JOB_PRIO_NORMAL,
                              GM_DEFAULT_JOB_RETRIES,

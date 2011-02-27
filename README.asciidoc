@@ -333,6 +333,27 @@ written to the gearman queue.
     perfdata=yes
 ====
 
+
+perfdata_mode::
+    There will be only a single job for each host or servier when putting
+    performance data onto the perfdata_queue in overwrite mode. In
+    append mode perfdata will be stored as long as there is memory
+    left. Setting this to "overwrite" helps preventing the perf_data
+    queue from getting to big.
+    Possible values are:
++
+--
+    * `1` - overwrite
+    * `2` - append
+--
++
+Default is 1.
++
+==== 
+    perfdata_mode=1
+====
+
+
 result_queue::
 sets the result queue. Necessary when putting jobs from several nagios instances
 into the same gearman queues. Default: `check_results`

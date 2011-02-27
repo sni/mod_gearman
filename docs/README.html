@@ -1024,6 +1024,39 @@ written to the gearman queue.
 </div></div>
 </dd>
 <dt class="hdlist1">
+perfdata_mode
+</dt>
+<dd>
+<p>
+    There will be only a single job for each host or servier when putting
+    performance data onto the perfdata_queue in overwrite mode. In
+    append mode perfdata will be stored as long as there is memory
+    left. Setting this to "overwrite" helps preventing the perf_data
+    queue from getting to big.
+    Possible values are:
+</p>
+<div class="ulist"><ul>
+<li>
+<p>
+<tt>1</tt> - overwrite
+</p>
+</li>
+<li>
+<p>
+<tt>2</tt> - append
+</p>
+</li>
+</ul></div>
+<div class="paragraph"><p>Default is 1.</p></div>
+<div class="exampleblock">
+<div class="exampleblock-content">
+<div class="literalblock">
+<div class="content">
+<pre><tt>perfdata_mode=1</tt></pre>
+</div></div>
+</div></div>
+</dd>
+<dt class="hdlist1">
 result_queue
 </dt>
 <dd>
@@ -1402,7 +1435,7 @@ If you have some checks which should not run parallel, just setup a
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2011-02-24 11:39:49 CEST
+Last updated 2011-02-27 22:03:14 CEST
 </div>
 </div>
 </body>

@@ -1,6 +1,7 @@
 This file documents the revision history for mod_gearman.
 
 1.0.1  Thu Feb 24 10:03:11 CET 2011
+          - added perfdata_mode option to prevent perfdata queue getting to big
           - made gearmand init script work with old libevent versions
           - fixed make dist
           - fixed "make rpm" for SLES11

@@ -204,6 +204,7 @@ int set_default_options(mod_gm_opt_t *opt) {
     opt->timeout            = 10;
     opt->debug_level        = GM_LOG_INFO;
     opt->perfdata           = GM_DISABLED;
+    opt->perfdata_mode      = GM_PERFDATA_OVERWRITE;
     opt->hosts              = GM_DISABLED;
     opt->services           = GM_DISABLED;
     opt->events             = GM_DISABLED;
@@ -501,6 +502,15 @@ int parse_args_line(mod_gm_opt_t *opt, char * arg, int recursion_level) {
     else if ( !strcmp( key, "max-jobs" ) ) {
         opt->max_jobs = atoi( value );
         if(opt->max_jobs < 0) { opt->max_jobs = GM_DEFAULT_MAX_JOBS; }
+    }
+
+    /* perfdata_mode */
+    else if ( !strcmp( key, "perfdata_mode" ) ) {
+        opt->perfdata_mode = atoi( value );
+        if(opt->perfdata_mode < 0 || opt->perfdata_mode > 2) {
+            gm_log( GM_LOG_INFO, "Warning: unknown perfdata_mode: %d\n", opt->perfdata_mode );
+            opt->perfdata_mode = GM_PERFDATA_OVERWRITE;
+        }
     }
 
     /* server */
