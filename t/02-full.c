@@ -196,6 +196,7 @@ int main(void) {
     skip(gearmand_pid <= 0 || worker_pid <= 0,
                tests-3,             /* Number of tests to skip */
                "Skipping all tests, no need to go on without gearmand or worker");
+    sleep(1);
 
     /* create server / worker / clients */
     create_modules();

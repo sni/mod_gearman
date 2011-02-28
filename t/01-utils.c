@@ -8,8 +8,18 @@
 #include <common.h>
 #include <utils.h>
 
+
+void printf_hex(char*, int);
+void printf_hex(char* text, int length) {
+    int i;
+    for(i=0; i<length; i++)
+        printf("%02x",text[i]);
+    printf("\n");
+    return;
+}
+
 int main(void) {
-    plan(37);
+    plan(39);
 
     /* lowercase */
     char test[100];
@@ -39,6 +49,24 @@ int main(void) {
     ok(trim(NULL) == NULL, "trim(NULL)");
     strcpy(test, " test "); ok(strcmp(trim(test), "test") == 0, "trim(' test ')");
 
+    /* reading keys */
+    mod_gm_opt_t *mod_gm_opt;
+    mod_gm_opt = malloc(sizeof(mod_gm_opt_t));
+    int rc = set_default_options(mod_gm_opt);
+    ok(rc == 0, "setting default options");
+    mod_gm_opt->keyfile = "t/test1.key";
+    read_keyfile(mod_gm_opt);
+    printf_hex(mod_gm_opt->crypt_key, 32);
+    test[0]='\x0';
+    int i = 0;
+    char hex[4];
+    for(i=0; i<32; i++) {
+        hex[0] = '\x0';
+        snprintf(hex, 4, "%02x", mod_gm_opt->crypt_key[i]);
+        strncat(test, hex, 4);
+    }
+    if(!ok(strcmp(test, "3131313131313131313131313131313131313131313131313131313131310a00") == 0, "read keyfile"))
+        diag("expected: '3131313131313131313131313131313131313131313131313131313131310a00'\n but got: '%s'", test );
 
     /* encrypt */
     char * key       = "test1234";
