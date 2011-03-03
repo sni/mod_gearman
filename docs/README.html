@@ -558,29 +558,49 @@ footnotes: function () {
 </div>
 </div>
 <div id="content">
-<div id="preamble">
+<h2 id="_what_is_mod_gearman">What is Mod-Gearman</h2>
 <div class="sectionbody">
-<div class="paragraph"><p><a href="http://labs.consol.de/nagios/mod-gearman">Mod_Gearman</a> is a new
-way of distributing active Nagios checks across your network. It
-consists of two parts: There is a NEB module which resides in the
-Nagios core and adds servicechecks, hostchecks and eventhandler to a
-<a href="http://gearman.org">Gearman</a> queue. There can be multiple equal
-gearman servers.  The counterpart is one or more worker clients for
-the checks itself. They can be bound to host and servicegroups.</p></div>
-<div class="paragraph"><p>Latest
+<div class="paragraph"><p><a href="http://labs.consol.de/nagios/mod-gearman">Mod_Gearman</a> is an easy way
+of distributing active Nagios checks across your network to increase
+nagios scalability. Mod-Gearman can even help to reduce the load on a
+single nagios host, because its much smaller and more efficient in
+exceuting checks. It consists of two parts: There is a NEB module
+which resides in the Nagios core and adds servicechecks, hostchecks
+and eventhandler to a <a href="http://gearman.org">Gearman</a> queue. The
+counterpart is one or more worker clients for the checks itself.
+Worker can be configured to only run checks for specific host- or
+servicegroups.</p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+Latest
 <a href="http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.0.1.tar.gz">version</a>
-is the 1.0.1 which has been released on February 24 2011.
-version</p></div>
-<div class="paragraph"><p>Mod-Gearman has been succesfully tested with Nagios 3.2.3 and Icinga
-1.2.0 and there are no known bugs at the moment.</p></div>
-<div class="paragraph"><p>Debian users may be interested in the
-<a href="http://labs.consol.de/nagios/mod-gearman/mod-gearman-quickstart-guide/">quickstart guide</a>.</p></div>
-</div>
+is the 1.0.1 which has been released on March 03 2011.
+version
+</p>
+</li>
+</ul></div>
 </div>
 <h2 id="_support_amp_questions">Support &amp; Questions</h2>
 <div class="sectionbody">
-<div class="paragraph"><p>Please use the following <a href="https://groups.google.com/group/mod_gearman">google groups mailinglist</a> for support or
-questions.</p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+Mod-Gearman has been succesfully tested with Nagios 3.2.3 and Icinga 1.2.0 and there are no known bugs at the moment.
+  Let me know if you fine one.
+</p>
+</li>
+<li>
+<p>
+Please use the following <a href="https://groups.google.com/group/mod_gearman">google groups mailinglist</a> for support, questions and bug reports.
+</p>
+</li>
+<li>
+<p>
+Debian users may be interested in the <a href="http://labs.consol.de/nagios/mod-gearman/mod-gearman-quickstart-guide/">quickstart guide</a>.
+</p>
+</li>
+</ul></div>
 </div>
 <h2 id="_how_does_it_work">How does it work</h2>
 <div class="sectionbody">
@@ -674,6 +694,23 @@ worker on each queue to share the load.</p></div>
 </div>
 <h2 id="_installation">Installation</h2>
 <div class="sectionbody">
+<h3 id="_omd">OMD</h3><div style="clear:left"></div>
+<div class="paragraph"><p>Using OMD is propably the easiest way of installing and using
+Mod-Gearman. You just have to enable distributed monitoring by
+mod-gearman.</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><tt>OMD[test]:~$ omd config set DISTRIBUTED_MONITORING mod-gearman</tt></pre>
+</div></div>
+<div class="admonitionblock">
+<table><tr>
+<td class="icon">
+<div class="title">Note</div>
+</td>
+<td class="content">Mod-Gearman is included in <a href="http://omdistro.org">OMD</a> since version 0.48.</td>
+</tr></table>
+</div>
+<h3 id="_from_source">From Source</h3><div style="clear:left"></div>
 <div class="paragraph"><p>Pre Requirements:</p></div>
 <div class="ulist"><ul>
 <li>
@@ -732,7 +769,7 @@ it can be started with</td>
 <pre><tt>/usr/sbin/gearmand -t 10 -j 0</tt></pre>
 </div></div>
 <div class="paragraph"><p>or a supplied init script (extras/gearmand-init).</p></div>
-<h3 id="_patch_nagios">Patch Nagios</h3><div style="clear:left"></div>
+<h4 id="_patch_nagios">Patch Nagios</h4>
 <div class="admonitionblock">
 <table><tr>
 <td class="icon">
@@ -751,7 +788,7 @@ is needed.</p></div>
 </div>
 <h2 id="_configuration">Configuration</h2>
 <div class="sectionbody">
-<h3 id="_neb_module">NEB Module</h3><div style="clear:left"></div>
+<h3 id="_nagios_core">Nagios Core</h3><div style="clear:left"></div>
 <div class="paragraph"><p>A sample broker in your nagios.cfg could look like:</p></div>
 <div class="listingblock">
 <div class="content">
@@ -759,6 +796,7 @@ is needed.</p></div>
 </div></div>
 <div class="paragraph"><p>See the following list for a detailed explaination of available
 options:</p></div>
+<h3 id="_common_options">Common Options</h3><div style="clear:left"></div>
 <div class="paragraph"><p>Shared options for worker and the NEB module:</p></div>
 <div class="dlist"><dl>
 <dt class="hdlist1">
@@ -955,7 +993,8 @@ Only the first 32 characters will be used.
 </div></div>
 </dd>
 </dl></div>
-<div class="paragraph"><p>Additional options for the NEB module:</p></div>
+<h3 id="_server_options">Server Options</h3><div style="clear:left"></div>
+<div class="paragraph"><p>Additional options for the NEB module only:</p></div>
 <div class="dlist"><dl>
 <dt class="hdlist1">
 localhostgroups
@@ -1010,7 +1049,7 @@ perfdata
 </dt>
 <dd>
 <p>
-defines if the module should distribute perfdata to gearman.  Note: processing
+defines if the module should distribute perfdata to gearman. Note: processing
 of perfdata is not part of mod_gearman. You will need additional worker for
 handling performance data. For example: pnp4nagios Performance data is just
 written to the gearman queue.
@@ -1073,6 +1112,7 @@ into the same gearman queues. Default: <tt>check_results</tt>
 </div></div>
 </dd>
 </dl></div>
+<h3 id="_worker_options">Worker Options</h3><div style="clear:left"></div>
 <div class="paragraph"><p>Additional options for worker:</p></div>
 <div class="dlist"><dl>
 <dt class="hdlist1">
@@ -1353,8 +1393,9 @@ nagios box. The amount of worker boxes depends on your check types.</p></div>
 <a title="mod gearman performance" rel="lightbox[mod_gm]" href="http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman_performance_2.png"><img src="http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman_performance_2.png" alt="mod_gearman performance" width="473" height="122" style="float:none" /></a>
 <a title="mod gearman performance" rel="lightbox[mod_gm]" href="http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman_performance_1.png"><img src="http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman_performance_1.png" alt="mod_gearman performance" width="424" height="176" style="float:none" /></a>
 </div>
-<h2 id="_how_to_monitor_job_server_and_worker">How to Monitor Job Server and Worker</h2>
+<h2 id="_how_to">How To</h2>
 <div class="sectionbody">
+<h3 id="_how_to_monitor_job_server_and_worker">How to Monitor Job Server and Worker</h3><div style="clear:left"></div>
 <div class="paragraph"><p>Use the supplied check_gearman to monitor your worker and job server.
 Worker have a own queue for status requests.</p></div>
 <div class="listingblock">
@@ -1370,9 +1411,7 @@ respond with some statistical data.</p></div>
 <pre><tt>%&gt; ./check_gearman -H localhost -t 20
 check_gearman OK - 6 jobs running and 0 jobs waiting.|check_results=0;0;1;10;100 host=0;0;9;10;100 service=0;6;9;10;100</tt></pre>
 </div></div>
-</div>
-<h2 id="_how_to_submit_passive_checks">How to Submit Passive Checks</h2>
-<div class="sectionbody">
+<h3 id="_how_to_submit_passive_checks">How to Submit Passive Checks</h3><div style="clear:left"></div>
 <div class="paragraph"><p>You can use send_gearman to submit active and passive checks to a
 gearman job server where they will be processed just like a finished
 check would do.</p></div>
@@ -1380,9 +1419,7 @@ check would do.</p></div>
 <div class="content">
 <pre><tt>%&gt; ./send_gearman --server=&lt;job server&gt; --encryption=no --host="&lt;hostname&gt;" --service="&lt;service&gt;" --message="message"</tt></pre>
 </div></div>
-</div>
-<h2 id="_how_to_submit_check_multi_results">How to Submit check_multi Results</h2>
-<div class="sectionbody">
+<h3 id="_how_to_submit_check_multi_results">How to Submit check_multi Results</h3><div style="clear:left"></div>
 <div class="paragraph"><p>check_multi is a plugin which executes multiple child checks.
 See more details about the feed_passive mode at:
 <a href="http://www.my-plugin.de/wiki/projects/check_multi/feed_passive">www.my-plugin.de</a></p></div>
@@ -1398,8 +1435,15 @@ achieve this with the following neb module settings:</p></div>
 <div class="content">
 <pre><tt>broker_module=/usr/local/share/nagios/mod_gearman.o server=localhost encryption=no eventhandler=no hosts=no services=no hostgroups=does_not_exist</tt></pre>
 </div></div>
-<div class="paragraph"><p>Note: encryption is not necessary if you both run the check_multi checks
-and the nagios check_results queue on the same server.</p></div>
+<div class="admonitionblock">
+<table><tr>
+<td class="icon">
+<div class="title">Note</div>
+</td>
+<td class="content">encryption is not necessary if you both run the check_multi checks
+and the nagios check_results queue on the same server.</td>
+</tr></table>
+</div>
 </div>
 <h2 id="_what_about_notifications">What About Notifications</h2>
 <div class="sectionbody">
@@ -1430,6 +1474,13 @@ Make sure all gearman checks are in local groups. Gearman self
 </li>
 <li>
 <p>
+Checks which write directly to the nagios command file (ex.:
+   check_mk) have to run on a local worker or have to be excluded by
+   the localservicegroups.
+</p>
+</li>
+<li>
+<p>
 Keep the gearmand server close to Nagios for better performance.
 </p>
 </li>
@@ -1444,14 +1495,72 @@ If you have some checks which should not run parallel, just setup a
 </div>
 <h2 id="_download">Download</h2>
 <div class="sectionbody">
-<div class="paragraph"><p>Mod Gearman is available for download at: <a href="http://labs.consol.de/nagios/mod-gearman">http://labs.consol.de/nagios/mod-gearman</a></p></div>
-<div class="paragraph"><p>The source is available at GitHub: <a href="http://github.com/sni/mod_gearman">http://github.com/sni/mod_gearman</a></p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+<a href="http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.0.1.tar.gz">version 1.0.1 - March 03 2011</a>
+</p>
+</li>
+<li>
+<p>
+Mod Gearman is available for download at: <a href="http://labs.consol.de/nagios/mod-gearman">http://labs.consol.de/nagios/mod-gearman</a>
+</p>
+</li>
+<li>
+<p>
+The source is available at GitHub: <a href="http://github.com/sni/mod_gearman">http://github.com/sni/mod_gearman</a>
+</p>
+</li>
+</ul></div>
+<h3 id="_archive">Archive</h3><div style="clear:left"></div>
+<div class="ulist"><ul>
+<li>
+<p>
+<a href="http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.0.1.tar.gz">version 1.0.1 - March 03 2011</a>
+</p>
+</li>
+<li>
+<p>
+<a href="http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.0.tar.gz">version 1.0 - February 08 2011</a>
+</p>
+</li>
+<li>
+<p>
+<a href="http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-0.9.tar.gz">version 0.9 - January 17 2011</a>
+</p>
+</li>
+<li>
+<p>
+<a href="http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-0.8.tar.gz">version 0.8 - November 17 2010</a>
+</p>
+</li>
+<li>
+<p>
+<a href="http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-0.7.tar.gz">version 0.7 - November 03 2010</a>
+</p>
+</li>
+<li>
+<p>
+<a href="http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-0.6.tar.gz">version 0.6 - October 13 2010</a>
+</p>
+</li>
+<li>
+<p>
+<a href="http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-0.5.tar.gz">version 0.5 - October 01 2010</a>
+</p>
+</li>
+<li>
+<p>
+<a href="http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-0.4.tar.gz">version 0.4 - September 25 2010</a>
+</p>
+</li>
+</ul></div>
 </div>
 </div>
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2011-03-03 13:34:37 CEST
+Last updated 2011-03-03 20:02:28 CEST
 </div>
 </div>
 </body>

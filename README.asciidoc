@@ -1,32 +1,33 @@
 Gearman Module for Nagios
 =========================
 
-http://labs.consol.de/nagios/mod-gearman[Mod_Gearman] is a new
-way of distributing active Nagios checks across your network. It
-consists of two parts: There is a NEB module which resides in the
-Nagios core and adds servicechecks, hostchecks and eventhandler to a
-http://gearman.org[Gearman] queue. There can be multiple equal
-gearman servers.  The counterpart is one or more worker clients for
-the checks itself. They can be bound to host and servicegroups.
+What is Mod-Gearman
+-------------------
 
-Latest
+http://labs.consol.de/nagios/mod-gearman[Mod_Gearman] is an easy way
+of distributing active Nagios checks across your network to increase
+nagios scalability. Mod-Gearman can even help to reduce the load on a
+single nagios host, because its much smaller and more efficient in
+exceuting checks. It consists of two parts: There is a NEB module
+which resides in the Nagios core and adds servicechecks, hostchecks
+and eventhandler to a http://gearman.org[Gearman] queue. The
+counterpart is one or more worker clients for the checks itself.
+Worker can be configured to only run checks for specific host- or
+servicegroups.
+
+
+* Latest
 http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.0.1.tar.gz[version]
-is the 1.0.1 which has been released on February 24 2011.
+is the 1.0.1 which has been released on March 03 2011.
 version
-
-
-Mod-Gearman has been succesfully tested with Nagios 3.2.3 and Icinga
-1.2.0 and there are no known bugs at the moment.
-
-
-Debian users may be interested in the
-http://labs.consol.de/nagios/mod-gearman/mod-gearman-quickstart-guide/[quickstart guide].
 
 
 Support & Questions
 -------------------
-Please use the following https://groups.google.com/group/mod_gearman[google groups mailinglist] for support or
-questions.
+* Mod-Gearman has been succesfully tested with Nagios 3.2.3 and Icinga 1.2.0 and there are no known bugs at the moment.
+  Let me know if you fine one.
+* Please use the following https://groups.google.com/group/mod_gearman[google groups mailinglist] for support, questions and bug reports.
+* Debian users may be interested in the http://labs.consol.de/nagios/mod-gearman/mod-gearman-quickstart-guide/[quickstart guide].
 
 
 How does it work
@@ -113,6 +114,23 @@ worker on each queue to share the load.
 Installation
 ------------
 
+OMD
+~~~
+
+Using OMD is propably the easiest way of installing and using
+Mod-Gearman. You just have to enable distributed monitoring by
+mod-gearman.
+
+--------------------------------------
+OMD[test]:~$ omd config set DISTRIBUTED_MONITORING mod-gearman
+--------------------------------------
+
+NOTE: Mod-Gearman is included in http://omdistro.org[OMD] since version 0.48.
+
+
+From Source
+~~~~~~~~~~~
+
 Pre Requirements: 
 
  - gcc / g++
@@ -159,7 +177,7 @@ or a supplied init script (extras/gearmand-init).
 
 
 Patch Nagios
-~~~~~~~~~~~~
+^^^^^^^^^^^^
 
 NOTE: The needed patch is already included since Nagios 3.2.2. Use the patch if you
 use an older version.
@@ -176,8 +194,8 @@ is needed.
 Configuration
 -------------
 
-NEB Module
-~~~~~~~~~~
+Nagios Core
+~~~~~~~~~~~
 
 A sample broker in your nagios.cfg could look like:
 
@@ -188,6 +206,9 @@ broker_module=/usr/local/share/nagios/mod_gearman.o keyfile=/usr/local/share/nag
 See the following list for a detailed explaination of available
 options:
 
+
+Common Options
+~~~~~~~~~~~~~~
 
 Shared options for worker and the NEB module:
 
@@ -294,7 +315,10 @@ Only the first 32 characters will be used.
 ====
 
 
-Additional options for the NEB module:
+Server Options
+~~~~~~~~~~~~~~
+
+Additional options for the NEB module only:
 
 localhostgroups::
 sets a list of hostgroups which will not be executed by gearman. They are just
@@ -324,7 +348,7 @@ value if your result queue is not processed fast enough.
 
 
 perfdata::
-defines if the module should distribute perfdata to gearman.  Note: processing
+defines if the module should distribute perfdata to gearman. Note: processing
 of perfdata is not part of mod_gearman. You will need additional worker for
 handling performance data. For example: pnp4nagios Performance data is just
 written to the gearman queue.
@@ -362,6 +386,9 @@ into the same gearman queues. Default: `check_results`
     result_queue=check_results_nagios1
 ====
 
+
+Worker Options
+~~~~~~~~~~~~~~
 
 Additional options for worker:
 
@@ -546,8 +573,11 @@ nagios box. The amount of worker boxes depends on your check types.
 <a title="mod gearman performance" rel="lightbox[mod_gm]" href="http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman_performance_1.png"><img src="http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman_performance_1.png" alt="mod_gearman performance" width="424" height="176" style="float:none" /></a>
 ++++
 
+How To
+------
+
 How to Monitor Job Server and Worker
-------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Use the supplied check_gearman to monitor your worker and job server.
 Worker have a own queue for status requests.
 
@@ -570,7 +600,7 @@ check_gearman OK - 6 jobs running and 0 jobs waiting.|check_results=0;0;1;10;100
 
 
 How to Submit Passive Checks
-----------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 You can use send_gearman to submit active and passive checks to a
 gearman job server where they will be processed just like a finished
@@ -583,7 +613,7 @@ check would do.
 
 
 How to Submit check_multi Results
----------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 check_multi is a plugin which executes multiple child checks. 
 See more details about the feed_passive mode at: 
@@ -601,7 +631,7 @@ achieve this with the following neb module settings:
 
  broker_module=/usr/local/share/nagios/mod_gearman.o server=localhost encryption=no eventhandler=no hosts=no services=no hostgroups=does_not_exist
 
-Note: encryption is not necessary if you both run the check_multi checks
+NOTE: encryption is not necessary if you both run the check_multi checks
 and the nagios check_results queue on the same server.
 
 
@@ -621,6 +651,9 @@ Hints
    worker.
  - Make sure all gearman checks are in local groups. Gearman self
    checks should not be monitored through gearman.
+ - Checks which write directly to the nagios command file (ex.:
+   check_mk) have to run on a local worker or have to be excluded by
+   the localservicegroups.
  - Keep the gearmand server close to Nagios for better performance.
  - If you have some checks which should not run parallel, just setup a
    single worker with --max-worker=1 and they will be executed one
@@ -631,6 +664,22 @@ Hints
 Download
 --------
 
-Mod Gearman is available for download at: http://labs.consol.de/nagios/mod-gearman
+* http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.0.1.tar.gz[version 1.0.1 - March 03 2011]
+* Mod Gearman is available for download at: http://labs.consol.de/nagios/mod-gearman
+* The source is available at GitHub: http://github.com/sni/mod_gearman
 
-The source is available at GitHub: http://github.com/sni/mod_gearman
+
+Archive
+~~~~~~~
+
+* http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.0.1.tar.gz[version 1.0.1 - March 03 2011]
+* http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.0.tar.gz[version 1.0 - February 08 2011]
+* http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-0.9.tar.gz[version 0.9 - January 17 2011]
+* http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-0.8.tar.gz[version 0.8 - November 17 2010]
+* http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-0.7.tar.gz[version 0.7 - November 03 2010]
+* http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-0.6.tar.gz[version 0.6 - October 13 2010]
+* http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-0.5.tar.gz[version 0.5 - October 01 2010]
+* http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-0.4.tar.gz[version 0.4 - September 25 2010]
+
+
+
