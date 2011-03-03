@@ -220,6 +220,7 @@ int set_default_options(mod_gm_opt_t *opt) {
     opt->fork_on_exec       = GM_ENABLED;
     opt->idle_timeout       = GM_DEFAULT_IDLE_TIMEOUT;
     opt->max_jobs           = GM_DEFAULT_MAX_JOBS;
+    opt->spawn_rate         = GM_DEFAULT_SPAWN_RATE;
     opt->identifier         = NULL;
 
     opt->host               = NULL;
@@ -504,6 +505,12 @@ int parse_args_line(mod_gm_opt_t *opt, char * arg, int recursion_level) {
         if(opt->max_jobs < 0) { opt->max_jobs = GM_DEFAULT_MAX_JOBS; }
     }
 
+    /* spawn-rate */
+    else if ( !strcmp( key, "spawn-rate" ) ) {
+        opt->spawn_rate = atoi( value );
+        if(opt->spawn_rate < 0) { opt->spawn_rate = GM_DEFAULT_SPAWN_RATE; }
+    }
+
     /* perfdata_mode */
     else if ( !strcmp( key, "perfdata_mode" ) ) {
         opt->perfdata_mode = atoi( value );
@@ -660,6 +667,7 @@ void dumpconfig(mod_gm_opt_t *opt, int mode) {
         gm_log( GM_LOG_DEBUG, "job timeout:         %d\n", opt->job_timeout);
         gm_log( GM_LOG_DEBUG, "min worker:          %d\n", opt->min_worker);
         gm_log( GM_LOG_DEBUG, "max worker:          %d\n", opt->max_worker);
+        gm_log( GM_LOG_DEBUG, "spawn rate:          %d\n", opt->spawn_rate);
         gm_log( GM_LOG_DEBUG, "fork on exec:        %s\n", opt->fork_on_exec == GM_ENABLED ? "yes" : "no");
     }
     if(mode == GM_NEB_MODE) {
@@ -679,7 +687,8 @@ void dumpconfig(mod_gm_opt_t *opt, int mode) {
         gm_log( GM_LOG_DEBUG, "dupserver:           %s\n", opt->dupserver_list[i]);
     gm_log( GM_LOG_DEBUG, "\n" );
     if(mode == GM_NEB_MODE) {
-        gm_log( GM_LOG_DEBUG, "perfdata:            %s\n", opt->perfdata     == GM_ENABLED ? "yes" : "no");
+        gm_log( GM_LOG_DEBUG, "perfdata:            %s\n", opt->perfdata      == GM_ENABLED ? "yes" : "no");
+        gm_log( GM_LOG_DEBUG, "perfdata mode:       %s\n", opt->perfdata_mode == GM_PERFDATA_OVERWRITE ? "overwrite" : "append");
     }
     if(mode == GM_NEB_MODE || mode == GM_WORKER_MODE) {
         gm_log( GM_LOG_DEBUG, "hosts:               %s\n", opt->hosts        == GM_ENABLED ? "yes" : "no");

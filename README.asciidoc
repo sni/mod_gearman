@@ -410,6 +410,15 @@ another. Default: 20
 ====
 
 
+spawn-rate::
+Defines the rate of spawed worker per second as long as there are jobs
+waiting. Default: 1
++
+====
+    spawn-rate=1
+====
+
+
 idle-timeout::
 Time after which an idling worker exists.  This parameter controls how fast your
 waiting workers will exit if there are no jobs waiting.  Set to 0 to disable the

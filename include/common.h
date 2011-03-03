@@ -86,9 +86,10 @@
 #define MAX_CMD_ARGS                 4096
 
 /* worker */
-#define GM_DEFAULT_MIN_WORKER           1      /**< minumum number of worker            */
-#define GM_DEFAULT_MAX_WORKER          20      /**< maximum number of concurrent worker */
-#define GM_DEFAULT_JOB_MAX_AGE        600      /**< discard jobs older than that        */
+#define GM_DEFAULT_MIN_WORKER           1      /**< minumum number of worker             */
+#define GM_DEFAULT_MAX_WORKER          20      /**< maximum number of concurrent worker  */
+#define GM_DEFAULT_JOB_MAX_AGE        600      /**< discard jobs older than that         */
+#define GM_DEFAULT_SPAWN_RATE           1      /**< number of spawned worker per seconds */
 
 /* transport modes */
 #define GM_ENCODE_AND_ENCRYPT           1
@@ -174,6 +175,7 @@ typedef struct mod_gm_opt_struct {
     int            fork_on_exec;                            /**< flag to disable additional forks for each job */
     int            idle_timeout;                            /**< number of seconds till a idle worker exits */
     int            max_jobs;                                /**< maximum number of jobs done after a worker exits */
+    int            spawn_rate;                              /**< number of spawned new worker */
 /* send_gearman */
     int            timeout;                                 /**< timeout for waiting reading on stdin */
     int            return_code;                             /**< return code */
