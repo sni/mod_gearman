@@ -561,9 +561,9 @@ static int handle_svc_check( int event_type, void *data ) {
         return NEB_OK;
     }
 
-    /* as we have to intercept host checks so early
+    /* as we have to intercept service checks so early
      * (we cannot cancel checks otherwise)
-     * we have to do some host check logic here
+     * we have to do some service check logic here
      * taken from checks.c:
      */
     /* clear check options - we don't want old check options retained */

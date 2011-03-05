@@ -19,7 +19,7 @@ void printf_hex(char* text, int length) {
 }
 
 int main(void) {
-    plan(39);
+    plan(40);
 
     /* lowercase */
     char test[100];
@@ -56,7 +56,7 @@ int main(void) {
     ok(rc == 0, "setting default options");
     mod_gm_opt->keyfile = "t/test1.key";
     read_keyfile(mod_gm_opt);
-    printf_hex(mod_gm_opt->crypt_key, 32);
+    //printf_hex(mod_gm_opt->crypt_key, 32);
     test[0]='\x0';
     int i = 0;
     char hex[4];
@@ -65,8 +65,14 @@ int main(void) {
         snprintf(hex, 4, "%02x", mod_gm_opt->crypt_key[i]);
         strncat(test, hex, 4);
     }
-    if(!ok(strcmp(test, "3131313131313131313131313131313131313131313131313131313131310a00") == 0, "read keyfile"))
-        diag("expected: '3131313131313131313131313131313131313131313131313131313131310a00'\n but got: '%s'", test );
+    if(!ok(strcmp(test, "3131313131313131313131313131313131313131313131313131313131310000") == 0, "read keyfile t/test1.key"))
+        diag("expected: '3131313131313131313131313131313131313131313131313131313131310000'\n but got: '%s'", test );
+
+    mod_gm_opt->keyfile = "t/test2.key";
+    read_keyfile(mod_gm_opt);
+    //printf_hex(mod_gm_opt->crypt_key, 32);
+    if(!ok(strcmp(mod_gm_opt->crypt_key, "abcdef") == 0, "reading keyfile t/test2.key"))
+        diag("expected: 'abcdef'\n but got: '%s'", mod_gm_opt->crypt_key );
 
     /* encrypt */
     char * key       = "test1234";

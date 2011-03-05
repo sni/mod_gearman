@@ -755,8 +755,6 @@ void mod_gm_free_opt(mod_gm_opt_t *opt) {
 /* read keyfile */
 int read_keyfile(mod_gm_opt_t *opt) {
     FILE *fp;
-    int i;
-    char c;
 
     if(opt->keyfile == NULL)
         return(GM_ERROR);
@@ -770,13 +768,11 @@ int read_keyfile(mod_gm_opt_t *opt) {
     if(opt->crypt_key != NULL)
         free(opt->crypt_key);
     opt->crypt_key = malloc(GM_BUFFERSIZE);
-    for(i=0; i<32; i++) {
-        c = fgetc(fp);
-        if(c == EOF)
-            c = 0;
-        opt->crypt_key[i] = c;
-    }
+
+    fgets(opt->crypt_key, 32, fp);
     fclose(fp);
+    rtrim(opt->crypt_key);
+
     return(GM_OK);
 }
 
