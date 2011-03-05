@@ -561,22 +561,27 @@ footnotes: function () {
 <h2 id="_what_is_mod_gearman">What is Mod-Gearman</h2>
 <div class="sectionbody">
 <div class="paragraph"><p><a href="http://labs.consol.de/nagios/mod-gearman">Mod_Gearman</a> is an easy way
-of distributing active Nagios checks across your network to increase
+of distributing active Nagios checks across your network and to increase
 nagios scalability. Mod-Gearman can even help to reduce the load on a
 single nagios host, because its much smaller and more efficient in
-exceuting checks. It consists of two parts: There is a NEB module
-which resides in the Nagios core and adds servicechecks, hostchecks
-and eventhandler to a <a href="http://gearman.org">Gearman</a> queue. The
-counterpart is one or more worker clients for the checks itself.
-Worker can be configured to only run checks for specific host- or
-servicegroups.</p></div>
+executing checks. It consists of three parts:</p></div>
 <div class="ulist"><ul>
 <li>
 <p>
-Latest
-<a href="http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.0.1.tar.gz">version</a>
-is the 1.0.1 which has been released on March 03 2011.
-version
+There is a NEB module which resides in the Nagios core and adds servicechecks, hostchecks
+and eventhandler to a Gearman queue.
+</p>
+</li>
+<li>
+<p>
+The counterpart is one or more worker clients executing the checks.
+Worker can be configured to only run checks for specific host- or
+servicegroups.
+</p>
+</li>
+<li>
+<p>
+You need at least one <a href="http://gearman.org">Gearman Job Server</a> running
 </p>
 </li>
 </ul></div>
@@ -587,12 +592,12 @@ version
 <li>
 <p>
 Mod-Gearman has been succesfully tested with Nagios 3.2.3 and Icinga 1.2.0 and there are no known bugs at the moment.
-  Let me know if you fine one.
+  Let me know if you find one.
 </p>
 </li>
 <li>
 <p>
-Please use the following <a href="https://groups.google.com/group/mod_gearman">google groups mailinglist</a> for support, questions and bug reports.
+Please use the Mod-Gearman <a href="https://groups.google.com/group/mod_gearman">google groups mailinglist</a> for support, questions and bug reports.
 </p>
 </li>
 <li>
@@ -638,29 +643,30 @@ Nagios wants to execute a service check.
 </li>
 <li>
 <p>
-The check is intercepted by the mod_gearman neb module.
+The check is intercepted by the Mod-Gearman neb module.
 </p>
 </li>
 <li>
 <p>
-mod_gearman puts the job into the <em>service</em> queue.
+Mod-Gearman puts the job into the <em>service</em> queue.
 </p>
 </li>
 <li>
 <p>
-a worker grabs the job and puts back the result into the
+A worker grabs the job and puts back the result into the
     <em>check_results</em> queue
 </p>
 </li>
 <li>
 <p>
-mod_gearman grabs the result job and puts back the result onto the
+Mod-Gearman grabs the result job and puts back the result onto the
     check result list
 </p>
 </li>
 <li>
 <p>
-The reaper reads all checks from the result list and updates hosts / services
+The nagios reaper reads all checks from the result list and
+    updates hosts and services
 </p>
 </li>
 </ol></div>
@@ -696,8 +702,8 @@ worker on each queue to share the load.</p></div>
 <div class="sectionbody">
 <h3 id="_omd">OMD</h3><div style="clear:left"></div>
 <div class="paragraph"><p>Using OMD is propably the easiest way of installing and using
-Mod-Gearman. You just have to enable distributed monitoring by
-mod-gearman.</p></div>
+Mod-Gearman. You just have to set distributed monitoring to
+<em>mod-gearman</em>.</p></div>
 <div class="listingblock">
 <div class="content">
 <pre><tt>OMD[test]:~$ omd config set DISTRIBUTED_MONITORING mod-gearman</tt></pre>
@@ -760,7 +766,7 @@ configuration file as for the neb module.</p></div>
 <td class="icon">
 <div class="title">Note</div>
 </td>
-<td class="content">Make sure you have started your gearmand job server. Usually
+<td class="content">Make sure you have started your Gearmand job server. Usually
 it can be started with</td>
 </tr></table>
 </div>
@@ -794,7 +800,7 @@ is needed.</p></div>
 <div class="content">
 <pre><tt>broker_module=/usr/local/share/nagios/mod_gearman.o keyfile=/usr/local/share/nagios/secret.txt server=localhost eventhandler=yes hosts=yes services=yes</tt></pre>
 </div></div>
-<div class="paragraph"><p>See the following list for a detailed explaination of available
+<div class="paragraph"><p>See the following list for a detailed explanation of available
 options:</p></div>
 <h3 id="_common_options">Common Options</h3><div style="clear:left"></div>
 <div class="paragraph"><p>Shared options for worker and the NEB module:</p></div>
@@ -804,7 +810,7 @@ config
 </dt>
 <dd>
 <p>
-    read config from this file. Options are the same like described here.
+    include config from this file. Options are the same as described here.
 </p>
 <div class="exampleblock">
 <div class="exampleblock-content">
@@ -854,8 +860,8 @@ server
 <dd>
 <p>
 sets the address of your gearman job server. Can be specified
-more than once to add more server. Gearman uses
-the first one available.
+more than once to add more server. Mod-Gearman uses
+the first server available.
 </p>
 <div class="exampleblock">
 <div class="exampleblock-content">
@@ -1051,8 +1057,8 @@ perfdata
 <p>
 defines if the module should distribute perfdata to gearman. Note: processing
 of perfdata is not part of mod_gearman. You will need additional worker for
-handling performance data. For example: pnp4nagios Performance data is just
-written to the gearman queue.
+handling performance data. For example: <a href="http://www.pnp4nagios.org">PNP4Nagios</a>
+Performance data is just written to the gearman queue.
 </p>
 <div class="exampleblock">
 <div class="exampleblock-content">
@@ -1070,8 +1076,9 @@ perfdata_mode
     There will be only a single job for each host or servier when putting
     performance data onto the perfdata_queue in overwrite mode. In
     append mode perfdata will be stored as long as there is memory
-    left. Setting this to "overwrite" helps preventing the perf_data
-    queue from getting to big.
+    left. Setting this to <em>overwrite</em> helps preventing the perf_data
+    queue from getting to big. Monitor your perfdata carefully when
+    using the <em>append</em> mode.
     Possible values are:
 </p>
 <div class="ulist"><ul>
@@ -1101,7 +1108,7 @@ result_queue
 <dd>
 <p>
 sets the result queue. Necessary when putting jobs from several nagios instances
-into the same gearman queues. Default: <tt>check_results</tt>
+onto the same gearman queues. Default: <tt>check_results</tt>
 </p>
 <div class="exampleblock">
 <div class="exampleblock-content">
@@ -1122,7 +1129,7 @@ identifier
 <p>
 Identifier for this worker. Will be used for the <em>worker_identifier</em> queue for
 status requests. You may want to change it if you are using more than one worker
-on a single host.  Default: current hostname
+on a single host.  Defaults to the current hostname.
 </p>
 <div class="exampleblock">
 <div class="exampleblock-content">
@@ -1167,7 +1174,7 @@ min-worker
 </dt>
 <dd>
 <p>
-Minimum number of worker processes which should run at any time.  Default: 1
+Minimum number of worker processes which should run at any time. Default: 1
 </p>
 <div class="exampleblock">
 <div class="exampleblock-content">
@@ -1216,9 +1223,9 @@ idle-timeout
 </dt>
 <dd>
 <p>
-Time after which an idling worker exists.  This parameter controls how fast your
-waiting workers will exit if there are no jobs waiting.  Set to 0 to disable the
-idle timeout.  Default: 10
+Time in seconds after which an idling worker exits. This parameter
+controls how fast your waiting workers will exit if there are no jobs
+waiting. Set to 0 to disable the idle timeout. Default: 10
 </p>
 <div class="exampleblock">
 <div class="exampleblock-content">
@@ -1233,9 +1240,9 @@ max-jobs
 </dt>
 <dd>
 <p>
-Controls the amount of jobs a worker will do before he exits.  Use this to
+Controls the amount of jobs a worker will do before he exits. Use this to
 control how fast the amount of workers will go down after high load times.
-Disabled when set to 0.  Default: 1000
+Disabled when set to 0. Default: 1000
 </p>
 <div class="exampleblock">
 <div class="exampleblock-content">
@@ -1251,7 +1258,7 @@ fork_on_exec
 <dd>
 <p>
 Use this option to disable an extra fork for each plugin execution. This option
-will reduce the load on the worker host.  Default: yes
+will reduce the load on the worker host. Default: yes
 </p>
 <div class="exampleblock">
 <div class="exampleblock-content">
@@ -1267,7 +1274,7 @@ dup_server
 <dd>
 <p>
 sets the address of gearman job server where duplicated result will be sent to.
-Can be specified more than once to add more server.  Useful for duplicating
+Can be specified more than once to add more server. Useful for duplicating
 results for a reporting installation or remote gui.
 </p>
 <div class="exampleblock">
@@ -1304,10 +1311,11 @@ check_results
 </dt>
 <dd>
 <p>
-this queue is monitored by the neb module to fetch results from the worker.  You
-don&#8217;t need an extra worker for this queue.  The number of result workers can be
-set to a maximum of 256, but usually one is enough.  One worker is capable of
-processing several thousand results per second.
+this queue is monitored by the neb module to fetch results from the
+worker. You don&#8217;t need an extra worker for this queue. The number of
+result workers can be set to a maximum of 256, but usually one is
+enough. One worker is capable of processing several thousand results
+per second.
 </p>
 </dd>
 <dt class="hdlist1">
@@ -1315,10 +1323,10 @@ host
 </dt>
 <dd>
 <p>
-This is the queue for generic host checks. If you enable host checks with the
-hosts=yes switch.  Before a host goes into this queue, it is checked if any of
-the local groups matches or a seperate hostgroup machtes. If nothing matches,
-then this queue is used.
+This is the queue for generic host checks. If you enable host checks
+with the hosts=yes switch. Before a host goes into this queue, it is
+checked if any of the local groups matches or a seperate hostgroup
+machtes. If nothing matches, then this queue is used.
 </p>
 </dd>
 <dt class="hdlist1">
@@ -1326,10 +1334,11 @@ service
 </dt>
 <dd>
 <p>
-This is the queue for generic service checks. If you enable service checks with
-the <tt>services=yes</tt> switch. Before a service goes into this queue it is checked
-against the local host- and service-groups. Then the normal host- and
-servicegroups are checked and if none matches, this queue is used.
+This is the queue for generic service checks. If you enable service
+checks with the <tt>services=yes</tt> switch. Before a service goes into this
+queue it is checked against the local host- and service-groups. Then
+the normal host- and servicegroups are checked and if none matches,
+this queue is used.
 </p>
 </dd>
 <dt class="hdlist1">
@@ -1337,11 +1346,11 @@ hostgroup_&lt;name&gt;
 </dt>
 <dd>
 <p>
-This queue is created for every hostgroup which has been defined by the
-hostgroups=&#8230; option.  Make sure you have at least one worker for every
-hostgroup you specify. Start the worker with <tt>--hostgroups=...</tt> to work on
-hostgroup queues.  Note that this queue may also contain service checks if the
-hostgroup of a service matches.
+This queue is created for every hostgroup which has been defined by
+the hostgroups=&#8230; option. Make sure you have at least one worker for
+every hostgroup you specify. Start the worker with <tt>--hostgroups=...</tt>
+to work on hostgroup queues. Note that this queue may also contain
+service checks if the hostgroup of a service matches.
 </p>
 </dd>
 <dt class="hdlist1">
@@ -1349,8 +1358,8 @@ servicegroup_&lt;name&gt;
 </dt>
 <dd>
 <p>
-This queue is created for every servicegroup which has been defined by the
-<tt>servicegroup=...</tt>  option.
+This queue is created for every servicegroup which has been defined by
+the <tt>servicegroup=...</tt> option.
 </p>
 </dd>
 <dt class="hdlist1">
@@ -1358,9 +1367,9 @@ eventhandler
 </dt>
 <dd>
 <p>
-This is the generic queue for all eventhandler.  Make sure you have a worker for
-this queue if you have eventhandler enabled. Start the worker with <tt>--events</tt> to
-work on this queue.
+This is the generic queue for all eventhandler. Make sure you have a
+worker for this queue if you have eventhandler enabled. Start the
+worker with <tt>--events</tt> to work on this queue.
 </p>
 </dd>
 <dt class="hdlist1">
@@ -1368,10 +1377,10 @@ perfdata
 </dt>
 <dd>
 <p>
-This is the generic queue for all performance data. It is created and used if
-you switch on <tt>--perfdata=yes</tt>. Performance data cannot be processed by the
-gearman worker itself. You will need pnp4nagios (<a href="http://www.pnp4nagios.org">http://www.pnp4nagios.org</a>)
-therefor.
+This is the generic queue for all performance data. It is created and
+used if you switch on <tt>--perfdata=yes</tt>. Performance data cannot be
+processed by the gearman worker itself. You will need
+<a href="http://www.pnp4nagios.org">PNP4Nagios</a> therefor.
 </p>
 </dd>
 </dl></div>
@@ -1498,7 +1507,7 @@ If you have some checks which should not run parallel, just setup a
 <div class="ulist"><ul>
 <li>
 <p>
-<a href="http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.0.1.tar.gz">version 1.0.1 - March 03 2011</a>
+<a href="http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.0.1.tar.gz">version 1.0.1 - March 05 2011</a>
 </p>
 </li>
 <li>
@@ -1516,7 +1525,7 @@ The source is available at GitHub: <a href="http://github.com/sni/mod_gearman">h
 <div class="ulist"><ul>
 <li>
 <p>
-<a href="http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.0.1.tar.gz">version 1.0.1 - March 03 2011</a>
+<a href="http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.0.1.tar.gz">version 1.0.1 - March 05 2011</a>
 </p>
 </li>
 <li>
@@ -1560,7 +1569,7 @@ The source is available at GitHub: <a href="http://github.com/sni/mod_gearman">h
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2011-03-03 20:02:28 CEST
+Last updated 2011-03-05 16:22:31 CEST
 </div>
 </div>
 </body>

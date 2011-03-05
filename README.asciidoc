@@ -5,28 +5,25 @@ What is Mod-Gearman
 -------------------
 
 http://labs.consol.de/nagios/mod-gearman[Mod_Gearman] is an easy way
-of distributing active Nagios checks across your network to increase
+of distributing active Nagios checks across your network and to increase
 nagios scalability. Mod-Gearman can even help to reduce the load on a
 single nagios host, because its much smaller and more efficient in
-exceuting checks. It consists of two parts: There is a NEB module
-which resides in the Nagios core and adds servicechecks, hostchecks
-and eventhandler to a http://gearman.org[Gearman] queue. The
-counterpart is one or more worker clients for the checks itself.
+executing checks. It consists of three parts: 
+
+* There is a NEB module which resides in the Nagios core and adds servicechecks, hostchecks
+and eventhandler to a Gearman queue.
+* The counterpart is one or more worker clients executing the checks.
 Worker can be configured to only run checks for specific host- or
-servicegroups.
+servicegroups. 
+* You need at least one http://gearman.org[Gearman Job Server] running
 
-
-* Latest
-http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.0.1.tar.gz[version]
-is the 1.0.1 which has been released on March 03 2011.
-version
 
 
 Support & Questions
 -------------------
 * Mod-Gearman has been succesfully tested with Nagios 3.2.3 and Icinga 1.2.0 and there are no known bugs at the moment.
-  Let me know if you fine one.
-* Please use the following https://groups.google.com/group/mod_gearman[google groups mailinglist] for support, questions and bug reports.
+  Let me know if you find one.
+* Please use the Mod-Gearman https://groups.google.com/group/mod_gearman[google groups mailinglist] for support, questions and bug reports.
 * Debian users may be interested in the http://labs.consol.de/nagios/mod-gearman/mod-gearman-quickstart-guide/[quickstart guide].
 
 
@@ -66,13 +63,14 @@ eventhandler.
 The workflow is simple:
 
  1. Nagios wants to execute a service check.
- 2. The check is intercepted by the mod_gearman neb module.
- 3. mod_gearman puts the job into the 'service' queue.
- 4. a worker grabs the job and puts back the result into the
+ 2. The check is intercepted by the Mod-Gearman neb module.
+ 3. Mod-Gearman puts the job into the 'service' queue.
+ 4. A worker grabs the job and puts back the result into the
     'check_results' queue
- 5. mod_gearman grabs the result job and puts back the result onto the
+ 5. Mod-Gearman grabs the result job and puts back the result onto the
     check result list
- 6. The reaper reads all checks from the result list and updates hosts / services
+ 6. The nagios reaper reads all checks from the result list and
+    updates hosts and services
 
 
 You can set some host or servicegroups for special worker. This
@@ -118,8 +116,8 @@ OMD
 ~~~
 
 Using OMD is propably the easiest way of installing and using
-Mod-Gearman. You just have to enable distributed monitoring by
-mod-gearman.
+Mod-Gearman. You just have to set distributed monitoring to
+'mod-gearman'.
 
 --------------------------------------
 OMD[test]:~$ omd config set DISTRIBUTED_MONITORING mod-gearman
@@ -165,7 +163,7 @@ configuration file as for the neb module.
 or use the supplied init script.
 
 
-NOTE: Make sure you have started your gearmand job server. Usually
+NOTE: Make sure you have started your Gearmand job server. Usually
 it can be started with 
 
 --------------------------------------
@@ -203,7 +201,7 @@ A sample broker in your nagios.cfg could look like:
 broker_module=/usr/local/share/nagios/mod_gearman.o keyfile=/usr/local/share/nagios/secret.txt server=localhost eventhandler=yes hosts=yes services=yes
 --------------------------------------
 
-See the following list for a detailed explaination of available
+See the following list for a detailed explanation of available
 options:
 
 
@@ -213,7 +211,7 @@ Common Options
 Shared options for worker and the NEB module:
 
 config::
-    read config from this file. Options are the same like described here.
+    include config from this file. Options are the same as described here.
 +
 =====
     config=/etc/nagios3/mod_gm_worker.conf
@@ -238,8 +236,8 @@ Default is 0.
 
 server::
 sets the address of your gearman job server. Can be specified
-more than once to add more server. Gearman uses
-the first one available.
+more than once to add more server. Mod-Gearman uses
+the first server available.
 +
 ====
     server=localhost:4730,remote_host:4730
@@ -350,8 +348,8 @@ value if your result queue is not processed fast enough.
 perfdata::
 defines if the module should distribute perfdata to gearman. Note: processing
 of perfdata is not part of mod_gearman. You will need additional worker for
-handling performance data. For example: pnp4nagios Performance data is just
-written to the gearman queue.
+handling performance data. For example: http://www.pnp4nagios.org[PNP4Nagios] 
+Performance data is just written to the gearman queue.
 +
 ====
     perfdata=yes
@@ -362,8 +360,9 @@ perfdata_mode::
     There will be only a single job for each host or servier when putting
     performance data onto the perfdata_queue in overwrite mode. In
     append mode perfdata will be stored as long as there is memory
-    left. Setting this to "overwrite" helps preventing the perf_data
-    queue from getting to big.
+    left. Setting this to 'overwrite' helps preventing the perf_data
+    queue from getting to big. Monitor your perfdata carefully when
+    using the 'append' mode.
     Possible values are:
 +
 --
@@ -380,7 +379,7 @@ Default is 1.
 
 result_queue::
 sets the result queue. Necessary when putting jobs from several nagios instances
-into the same gearman queues. Default: `check_results`
+onto the same gearman queues. Default: `check_results`
 +
 ====
     result_queue=check_results_nagios1
@@ -395,7 +394,7 @@ Additional options for worker:
 identifier::
 Identifier for this worker. Will be used for the 'worker_identifier' queue for
 status requests. You may want to change it if you are using more than one worker
-on a single host.  Default: current hostname
+on a single host.  Defaults to the current hostname.
 +
 ====
     identifier=hostname_test
@@ -419,7 +418,7 @@ Path to the logfile.
 
 
 min-worker::
-Minimum number of worker processes which should run at any time.  Default: 1
+Minimum number of worker processes which should run at any time. Default: 1
 +
 ====
     min-worker=1
@@ -447,9 +446,9 @@ waiting. Default: 1
 
 
 idle-timeout::
-Time after which an idling worker exists.  This parameter controls how fast your
-waiting workers will exit if there are no jobs waiting.  Set to 0 to disable the
-idle timeout.  Default: 10
+Time in seconds after which an idling worker exits. This parameter
+controls how fast your waiting workers will exit if there are no jobs
+waiting. Set to 0 to disable the idle timeout. Default: 10
 +
 ====
     idle-timeout=30
@@ -457,9 +456,9 @@ idle timeout.  Default: 10
 
 
 max-jobs::
-Controls the amount of jobs a worker will do before he exits.  Use this to
+Controls the amount of jobs a worker will do before he exits. Use this to
 control how fast the amount of workers will go down after high load times.
-Disabled when set to 0.  Default: 1000
+Disabled when set to 0. Default: 1000
 +
 ====
     max-jobs=500
@@ -467,7 +466,7 @@ Disabled when set to 0.  Default: 1000
 
 fork_on_exec::
 Use this option to disable an extra fork for each plugin execution. This option
-will reduce the load on the worker host.  Default: yes
+will reduce the load on the worker host. Default: yes
 +
 ====
     fork_on_exec=no
@@ -475,7 +474,7 @@ will reduce the load on the worker host.  Default: yes
 
 dup_server::
 sets the address of gearman job server where duplicated result will be sent to.
-Can be specified more than once to add more server.  Useful for duplicating
+Can be specified more than once to add more server. Useful for duplicating
 results for a reporting installation or remote gui.
 +
 ====
@@ -506,50 +505,52 @@ and displays the current queue statistics.
 
 
 check_results::
-this queue is monitored by the neb module to fetch results from the worker.  You
-don't need an extra worker for this queue.  The number of result workers can be
-set to a maximum of 256, but usually one is enough.  One worker is capable of
-processing several thousand results per second.
+this queue is monitored by the neb module to fetch results from the
+worker. You don't need an extra worker for this queue. The number of
+result workers can be set to a maximum of 256, but usually one is
+enough. One worker is capable of processing several thousand results
+per second.
 
 
 host::
-This is the queue for generic host checks. If you enable host checks with the
-hosts=yes switch.  Before a host goes into this queue, it is checked if any of
-the local groups matches or a seperate hostgroup machtes. If nothing matches,
-then this queue is used.
+This is the queue for generic host checks. If you enable host checks
+with the hosts=yes switch. Before a host goes into this queue, it is
+checked if any of the local groups matches or a seperate hostgroup
+machtes. If nothing matches, then this queue is used.
 
 
 service::
-This is the queue for generic service checks. If you enable service checks with
-the `services=yes` switch. Before a service goes into this queue it is checked
-against the local host- and service-groups. Then the normal host- and
-servicegroups are checked and if none matches, this queue is used.
+This is the queue for generic service checks. If you enable service
+checks with the `services=yes` switch. Before a service goes into this
+queue it is checked against the local host- and service-groups. Then
+the normal host- and servicegroups are checked and if none matches,
+this queue is used.
 
 
 hostgroup_<name>::
-This queue is created for every hostgroup which has been defined by the
-hostgroups=... option.  Make sure you have at least one worker for every
-hostgroup you specify. Start the worker with `--hostgroups=...` to work on
-hostgroup queues.  Note that this queue may also contain service checks if the
-hostgroup of a service matches.
+This queue is created for every hostgroup which has been defined by
+the hostgroups=... option. Make sure you have at least one worker for
+every hostgroup you specify. Start the worker with `--hostgroups=...`
+to work on hostgroup queues. Note that this queue may also contain
+service checks if the hostgroup of a service matches.
 
 
 servicegroup_<name>::
-This queue is created for every servicegroup which has been defined by the
-`servicegroup=...`  option.
+This queue is created for every servicegroup which has been defined by
+the `servicegroup=...` option.
 
 
 eventhandler::
-This is the generic queue for all eventhandler.  Make sure you have a worker for
-this queue if you have eventhandler enabled. Start the worker with `--events` to
-work on this queue.
+This is the generic queue for all eventhandler. Make sure you have a
+worker for this queue if you have eventhandler enabled. Start the
+worker with `--events` to work on this queue.
 
 
 perfdata::
-This is the generic queue for all performance data. It is created and used if
-you switch on `--perfdata=yes`. Performance data cannot be processed by the
-gearman worker itself. You will need pnp4nagios (http://www.pnp4nagios.org)
-therefor.
+This is the generic queue for all performance data. It is created and
+used if you switch on `--perfdata=yes`. Performance data cannot be
+processed by the gearman worker itself. You will need
+http://www.pnp4nagios.org[PNP4Nagios] therefor.
 
 
 Performance
@@ -664,7 +665,7 @@ Hints
 Download
 --------
 
-* http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.0.1.tar.gz[version 1.0.1 - March 03 2011]
+* http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.0.1.tar.gz[version 1.0.1 - March 05 2011]
 * Mod Gearman is available for download at: http://labs.consol.de/nagios/mod-gearman
 * The source is available at GitHub: http://github.com/sni/mod_gearman
 
@@ -672,7 +673,7 @@ Download
 Archive
 ~~~~~~~
 
-* http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.0.1.tar.gz[version 1.0.1 - March 03 2011]
+* http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.0.1.tar.gz[version 1.0.1 - March 05 2011]
 * http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.0.tar.gz[version 1.0 - February 08 2011]
 * http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-0.9.tar.gz[version 0.9 - January 17 2011]
 * http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-0.8.tar.gz[version 0.8 - November 17 2010]
