@@ -41,7 +41,7 @@ The NEB module starts a single thread, which monitors the
 'check_results' where all results come in.
 
 ++++
-<a title="mod gearman architecture" rel="lightbox[mod_gm]" href="http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-e1284455350110.png"><img src="http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-e1284455350110.png" alt="mod_gearman architecture " width="480" height="300" style="float:none" /></a>
+<a title="mod gearman architecture" rel="lightbox[mod_gm]" href="http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-e1284455350110.png"><img src="http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-e1284455350110.png" alt="mod_gearman architecture" width="480" height="300" style="float:none" /></a>
 ++++
 
 A simple example queue would look like:
@@ -107,6 +107,53 @@ worker on each queue to share the load.
 ++++
 <a title="mod gearman queues" rel="lightbox[mod_gm]" href="http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman_queues.png"><img src="http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman_queues.png" alt="mod_gearman architecture " width="360" height="270" style="float:none" /></a>
 ++++
+
+
+Common Scenarios
+----------------
+
+Load Balancing
+~~~~~~~~~~~~~~
+
+++++
+<a title="Load Balancing" rel="lightbox[mod_gm]"
+href="http://labs.consol.de/wp-content/uploads/2010/09/sample_load_balancing.png"><img
+src="http://labs.consol.de/wp-content/uploads/2010/09/sample_load_balancing.png"
+alt="Load Balancing" width="300" height="125" style="float:none" /></a>
+++++
+
+The easiest variant is a simple load balancing. For example if your
+single nagios box just cannot handle the load, you could just add a
+worker in the same network (or even on the same host) to reduce your
+load on the nagios box. Therefor we just enable hosts, services and
+eventhandler on the server and the worker.
+
+
+Distributed Monitoring
+~~~~~~~~~~~~~~~~~~~~~~
+
+++++
+<a title="Distributed Monitoring" rel="lightbox[mod_gm]" href="http://labs.consol.de/wp-content/uploads/2010/09/sample_distributed.png"><img src="http://labs.consol.de/wp-content/uploads/2010/09/sample_distributed.png" alt="Distributed Monitoring" width="350" height="125" style="float:none" /></a>
+++++
+
+If your checks have to be run from different network segments, then
+you can use the hostgroups (or servicegroups) to define a hostgroup
+for specific worker. The general hosts and services queue is disabled
+for this worker and just the hosts and services from the given
+hostgroup will be processed.
+
+
+Distributed Monitoring with Load Balancing
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+++++
+<a title="Distributed Monitoring with Load Balancing" rel="lightbox[mod_gm]" href="http://labs.consol.de/wp-content/uploads/2010/09/sample_distributed_load_balanced.png"><img src="http://labs.consol.de/wp-content/uploads/2010/09/sample_distributed_load_balanced.png" alt="Distributed Monitoring with Load Balancing" width="350" height="225" style="float:none" /></a>
+++++
+
+Your distributed setup could easily be extended to a load balanced
+setup with just adding more worker of the same config.
+
+
 
 
 Installation
@@ -659,6 +706,8 @@ Hints
  - If you have some checks which should not run parallel, just setup a
    single worker with --max-worker=1 and they will be executed one
    after another. For example for cpu intesive checks with selenium.
+ - Make sure all your worker have the nagios-plugins available under
+   the same path. Otherwise they could'nt be found by the worker.
 
 
 

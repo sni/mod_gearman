@@ -619,7 +619,7 @@ against the hostgroups and if none matches they will be sent into a
 generic <em>service</em> queue.
 The NEB module starts a single thread, which monitors the
 <em>check_results</em> where all results come in.</p></div>
-<a title="mod gearman architecture" rel="lightbox[mod_gm]" href="http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-e1284455350110.png"><img src="http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-e1284455350110.png" alt="mod_gearman architecture " width="480" height="300" style="float:none" /></a>
+<a title="mod gearman architecture" rel="lightbox[mod_gm]" href="http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-e1284455350110.png"><img src="http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-e1284455350110.png" alt="mod_gearman architecture" width="480" height="300" style="float:none" /></a>
 <div class="paragraph"><p>A simple example queue would look like:</p></div>
 <div class="listingblock">
 <div class="content">
@@ -697,6 +697,30 @@ or more queues. So you could start a worker which only handles the
 worker which covers the other queues. There can be more than one
 worker on each queue to share the load.</p></div>
 <a title="mod gearman queues" rel="lightbox[mod_gm]" href="http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman_queues.png"><img src="http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman_queues.png" alt="mod_gearman architecture " width="360" height="270" style="float:none" /></a>
+</div>
+<h2 id="_common_scenarios">Common Scenarios</h2>
+<div class="sectionbody">
+<h3 id="_load_balancing">Load Balancing</h3><div style="clear:left"></div>
+<a title="Load Balancing" rel="lightbox[mod_gm]"
+href="http://labs.consol.de/wp-content/uploads/2010/09/sample_load_balancing.png"><img
+src="http://labs.consol.de/wp-content/uploads/2010/09/sample_load_balancing.png"
+alt="Load Balancing" width="300" height="125" style="float:none" /></a>
+<div class="paragraph"><p>The easiest variant is a simple load balancing. For example if your
+single nagios box just cannot handle the load, you could just add a
+worker in the same network (or even on the same host) to reduce your
+load on the nagios box. Therefor we just enable hosts, services and
+eventhandler on the server and the worker.</p></div>
+<h3 id="_distributed_monitoring">Distributed Monitoring</h3><div style="clear:left"></div>
+<a title="Distributed Monitoring" rel="lightbox[mod_gm]" href="http://labs.consol.de/wp-content/uploads/2010/09/sample_distributed.png"><img src="http://labs.consol.de/wp-content/uploads/2010/09/sample_distributed.png" alt="Distributed Monitoring" width="350" height="125" style="float:none" /></a>
+<div class="paragraph"><p>If your checks have to be run from different network segments, then
+you can use the hostgroups (or servicegroups) to define a hostgroup
+for specific worker. The general hosts and services queue is disabled
+for this worker and just the hosts and services from the given
+hostgroup will be processed.</p></div>
+<h3 id="_distributed_monitoring_with_load_balancing">Distributed Monitoring with Load Balancing</h3><div style="clear:left"></div>
+<a title="Distributed Monitoring with Load Balancing" rel="lightbox[mod_gm]" href="http://labs.consol.de/wp-content/uploads/2010/09/sample_distributed_load_balanced.png"><img src="http://labs.consol.de/wp-content/uploads/2010/09/sample_distributed_load_balanced.png" alt="Distributed Monitoring with Load Balancing" width="350" height="225" style="float:none" /></a>
+<div class="paragraph"><p>Your distributed setup could easily be extended to a load balanced
+setup with just adding more worker of the same config.</p></div>
 </div>
 <h2 id="_installation">Installation</h2>
 <div class="sectionbody">
@@ -1500,6 +1524,12 @@ If you have some checks which should not run parallel, just setup a
    after another. For example for cpu intesive checks with selenium.
 </p>
 </li>
+<li>
+<p>
+Make sure all your worker have the nagios-plugins available under
+   the same path. Otherwise they could&#8217;nt be found by the worker.
+</p>
+</li>
 </ul></div>
 </div>
 <h2 id="_download">Download</h2>
@@ -1569,7 +1599,7 @@ The source is available at GitHub: <a href="http://github.com/sni/mod_gearman">h
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2011-03-05 16:22:31 CEST
+Last updated 2011-03-07 14:19:11 CEST
 </div>
 </div>
 </body>
