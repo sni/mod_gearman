@@ -163,11 +163,11 @@ OMD
 ~~~
 
 Using OMD is propably the easiest way of installing and using
-Mod-Gearman. You just have to set distributed monitoring to
-'mod-gearman'.
+Mod-Gearman. You just have to run 'omd config' or set Mod-Gearman
+to 'on'.
 
 --------------------------------------
-OMD[test]:~$ omd config set DISTRIBUTED_MONITORING mod-gearman
+OMD[test]:~$ omd config set MOD_GEARMAN on
 --------------------------------------
 
 NOTE: Mod-Gearman is included in http://omdistro.org[OMD] since version 0.48.
