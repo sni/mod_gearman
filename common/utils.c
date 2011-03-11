@@ -769,7 +769,7 @@ int read_keyfile(mod_gm_opt_t *opt) {
         free(opt->crypt_key);
     opt->crypt_key = malloc(GM_BUFFERSIZE);
 
-    fgets(opt->crypt_key, 32, fp);
+    fgets(opt->crypt_key, 33, fp);
     fclose(fp);
     rtrim(opt->crypt_key);
 

@@ -352,8 +352,9 @@ least 8 bytes long. Maximum length is 32 characters.
 ====
 
 keyfile::
-The shared password will be read from this file.  Use either key or keyfile.
-Only the first 32 characters will be used.
+The shared password will be read from this file. Use either key or keyfile.
+Only the first 32 characters from the first line will be used.
+Whitespace to the right will be trimmed.
 +
 ====
     keyfile=/path/to/secret.file
