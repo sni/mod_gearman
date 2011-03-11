@@ -205,6 +205,7 @@ int set_default_options(mod_gm_opt_t *opt) {
     opt->debug_level        = GM_LOG_INFO;
     opt->perfdata           = GM_DISABLED;
     opt->perfdata_mode      = GM_PERFDATA_OVERWRITE;
+    opt->do_hostchecks      = GM_ENABLED;
     opt->hosts              = GM_DISABLED;
     opt->services           = GM_DISABLED;
     opt->events             = GM_DISABLED;
@@ -349,6 +350,12 @@ int parse_args_line(mod_gm_opt_t *opt, char * arg, int recursion_level) {
     /* fork_on_exec */
     else if ( !strcmp( key, "fork_on_exec" ) ) {
         opt->fork_on_exec = parse_yes_or_no(value, GM_ENABLED);
+        return(GM_OK);
+    }
+
+    /* do_hostchecks */
+    else if ( !strcmp( key, "do_hostchecks" ) ) {
+        opt->do_hostchecks = parse_yes_or_no(value, GM_ENABLED);
         return(GM_OK);
     }
 
@@ -673,6 +680,7 @@ void dumpconfig(mod_gm_opt_t *opt, int mode) {
     if(mode == GM_NEB_MODE) {
         gm_log( GM_LOG_DEBUG, "debug result:        %s\n", opt->debug_result == GM_ENABLED ? "yes" : "no");
         gm_log( GM_LOG_DEBUG, "result_worker:       %d\n", opt->result_workers);
+        gm_log( GM_LOG_DEBUG, "do_hostchecks:       %s\n", opt->do_hostchecks == GM_ENABLED ? "yes" : "no");
     }
     if(mode == GM_NEB_MODE || mode == GM_SEND_GEARMAN_MODE) {
         gm_log( GM_LOG_DEBUG, "result_queue:        %s\n", opt->result_queue);

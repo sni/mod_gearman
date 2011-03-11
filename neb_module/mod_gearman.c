@@ -162,7 +162,7 @@ int nebmodule_init( int flags, char *args, nebmodule *handle ) {
 static void register_neb_callbacks(void) {
 
     /* only if we have hostgroups defined or general hosts enabled */
-    if ( mod_gm_opt->hostgroups_num > 0 || mod_gm_opt->hosts == GM_ENABLED )
+    if ( mod_gm_opt->do_hostchecks == GM_ENABLED && ( mod_gm_opt->hostgroups_num > 0 || mod_gm_opt->hosts == GM_ENABLED ))
         neb_register_callback( NEBCALLBACK_HOST_CHECK_DATA,    gearman_module_handle, 0, handle_host_check );
 
     /* only if we have groups defined or general services enabled */
@@ -194,7 +194,7 @@ int nebmodule_deinit( int flags, int reason ) {
     neb_deregister_callback( NEBCALLBACK_TIMED_EVENT_DATA, gearman_module_handle );
 
     /* only if we have hostgroups defined or general hosts enabled */
-    if ( mod_gm_opt->hostgroups_num > 0 || mod_gm_opt->hosts == GM_ENABLED )
+    if ( mod_gm_opt->do_hostchecks == GM_ENABLED && ( mod_gm_opt->hostgroups_num > 0 || mod_gm_opt->hosts == GM_ENABLED ))
         neb_deregister_callback( NEBCALLBACK_HOST_CHECK_DATA, gearman_module_handle );
 
     /* only if we have groups defined or general services enabled */
@@ -405,6 +405,9 @@ static int handle_host_check( int event_type, void *data ) {
     host * hst;
 
     gm_log( GM_LOG_TRACE, "handle_host_check(%i)\n", event_type );
+
+    if ( mod_gm_opt->do_hostchecks != GM_ENABLED )
+        return NEB_OK;
 
     hostdata = ( nebstruct_host_check_data * )data;
 

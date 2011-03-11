@@ -1011,8 +1011,9 @@ keyfile
 </dt>
 <dd>
 <p>
-The shared password will be read from this file.  Use either key or keyfile.
-Only the first 32 characters will be used.
+The shared password will be read from this file. Use either key or keyfile.
+Only the first 32 characters from the first line will be used.
+Whitespace to the right will be trimmed.
 </p>
 <div class="exampleblock">
 <div class="exampleblock-content">
@@ -1055,6 +1056,27 @@ just passed through.
 <div class="literalblock">
 <div class="content">
 <pre><tt>localservicegroups=name1,name2,name3</tt></pre>
+</div></div>
+</div></div>
+</dd>
+<dt class="hdlist1">
+do_hostchecks
+</dt>
+<dd>
+<p>
+Set this to <em>no</em> if you want Mod-Gearman to only take care about
+servicechecks. No hostchecks will be processed by Mod-Gearman. Use
+this option to disable hostchecks and still have the possibility to
+use hostgroups for easy configuration of your services.
+If set to yes, you still have to define which hostchecks should be
+processed by either using <em>hosts</em> or the <em>hostgroups</em> option.
+Default: <tt>yes</tt>
+</p>
+<div class="exampleblock">
+<div class="exampleblock-content">
+<div class="literalblock">
+<div class="content">
+<pre><tt>do_hostchecks=yes</tt></pre>
 </div></div>
 </div></div>
 </dd>
@@ -1599,7 +1621,7 @@ The source is available at GitHub: <a href="http://github.com/sni/mod_gearman">h
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2011-03-11 08:40:50 CEST
+Last updated 2011-03-11 10:50:25 CEST
 </div>
 </div>
 </body>

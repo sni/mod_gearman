@@ -162,6 +162,7 @@ typedef struct mod_gm_opt_struct {
     int            local_hostgroups_num;                    /**< number of elements in local_hostgroups_list */
     char         * local_servicegroups_list[GM_LISTSIZE];   /**< list of group  which will not be distributed */
     int            local_servicegroups_num;                 /**< number of elements in local_servicegroups_list */
+    int            do_hostchecks;                           /**< flag whether mod-gearman will process hostchecks at all */
 /* worker */
     char         * identifier;                              /**< identifier for this worker */
     char         * pidfile;                                 /**< path to a pidfile */
