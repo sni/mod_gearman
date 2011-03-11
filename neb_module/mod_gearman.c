@@ -72,6 +72,7 @@ static void move_results_to_core(void);
 
 int nebmodule_init( int flags, char *args, nebmodule *handle ) {
     int i,j;
+    int broker_option_errors = 0;
 
     /* save our handle */
     gearman_module_handle=handle;
@@ -97,11 +98,11 @@ int nebmodule_init( int flags, char *args, nebmodule *handle ) {
     /* check for minimum eventbroker options */
     if(!(event_broker_options & BROKER_PROGRAM_STATE)) {
         gm_log( GM_LOG_ERROR, "mod_gearman needs BROKER_PROGRAM_STATE (%i) event_broker_options enabled to work\n", BROKER_PROGRAM_STATE );
-        return NEB_ERROR;
+        broker_option_errors++;
     }
     if(!(event_broker_options & BROKER_TIMED_EVENTS)) {
         gm_log( GM_LOG_ERROR, "mod_gearman needs BROKER_TIMED_EVENTS (%i) event_broker_options enabled to work\n", BROKER_TIMED_EVENTS );
-        return NEB_ERROR;
+        broker_option_errors++;
     }
     if(    (    mod_gm_opt->perfdata == GM_ENABLED
              || mod_gm_opt->hostgroups_num > 0
@@ -109,7 +110,7 @@ int nebmodule_init( int flags, char *args, nebmodule *handle ) {
            )
         && !(event_broker_options & BROKER_HOST_CHECKS)) {
         gm_log( GM_LOG_ERROR, "mod_gearman needs BROKER_HOST_CHECKS (%i) event_broker_options enabled to work\n", BROKER_HOST_CHECKS );
-        return NEB_ERROR;
+        broker_option_errors++;
     }
     if(    (    mod_gm_opt->perfdata == GM_ENABLED
              || mod_gm_opt->servicegroups_num > 0
@@ -117,12 +118,14 @@ int nebmodule_init( int flags, char *args, nebmodule *handle ) {
            )
         && !(event_broker_options & BROKER_SERVICE_CHECKS)) {
         gm_log( GM_LOG_ERROR, "mod_gearman needs BROKER_SERVICE_CHECKS (%i) event_broker_options enabled to work\n", BROKER_SERVICE_CHECKS );
-        return NEB_ERROR;
+        broker_option_errors++;
     }
     if(mod_gm_opt->events == GM_ENABLED && !(event_broker_options & BROKER_EVENT_HANDLERS)) {
         gm_log( GM_LOG_ERROR, "mod_gearman needs BROKER_EVENT_HANDLERS (%i) event_broker option enabled to work\n", BROKER_EVENT_HANDLERS );
-        return NEB_ERROR;
+        broker_option_errors++;
     }
+    if(broker_option_errors > 0)
+        return NEB_ERROR;
 
     /* check the minimal gearman version */
     if((float)atof(gearman_version()) < (float)GM_MIN_LIB_GEARMAN_VERSION) {
@@ -168,7 +171,7 @@ int nebmodule_init( int flags, char *args, nebmodule *handle ) {
 static void register_neb_callbacks(void) {
 
     /* only if we have hostgroups defined or general hosts enabled */
-    if ( mod_gm_opt->hostgroups_num > 0 || mod_gm_opt->hosts == GM_ENABLED )
+    if ( mod_gm_opt->do_hostchecks == GM_ENABLED && ( mod_gm_opt->hostgroups_num > 0 || mod_gm_opt->hosts == GM_ENABLED ))
         neb_register_callback( NEBCALLBACK_HOST_CHECK_DATA,    gearman_module_handle, 0, handle_host_check );
 
     /* only if we have groups defined or general services enabled */
@@ -179,6 +182,8 @@ static void register_neb_callbacks(void) {
         neb_register_callback( NEBCALLBACK_EVENT_HANDLER_DATA, gearman_module_handle, 0, handle_eventhandler );
 
     if ( mod_gm_opt->perfdata == GM_ENABLED ) {
+        if(process_performance_data == 0)
+            gm_log( GM_LOG_INFO, "Warning: process_performance_data is disabled globally, cannot process performance data\n" );
         neb_register_callback( NEBCALLBACK_HOST_CHECK_DATA, gearman_module_handle, 0, handle_perfdata );
         neb_register_callback( NEBCALLBACK_SERVICE_CHECK_DATA, gearman_module_handle, 0, handle_perfdata );
     }
@@ -198,7 +203,7 @@ int nebmodule_deinit( int flags, int reason ) {
     neb_deregister_callback( NEBCALLBACK_TIMED_EVENT_DATA, gearman_module_handle );
 
     /* only if we have hostgroups defined or general hosts enabled */
-    if ( mod_gm_opt->hostgroups_num > 0 || mod_gm_opt->hosts == GM_ENABLED )
+    if ( mod_gm_opt->do_hostchecks == GM_ENABLED && ( mod_gm_opt->hostgroups_num > 0 || mod_gm_opt->hosts == GM_ENABLED ))
         neb_deregister_callback( NEBCALLBACK_HOST_CHECK_DATA, gearman_module_handle );
 
     /* only if we have groups defined or general services enabled */
@@ -410,6 +415,9 @@ static int handle_host_check( int event_type, void *data ) {
 
     gm_log( GM_LOG_TRACE, "handle_host_check(%i)\n", event_type );
 
+    if ( mod_gm_opt->do_hostchecks != GM_ENABLED )
+        return NEB_OK;
+
     hostdata = ( nebstruct_host_check_data * )data;
 
     gm_log( GM_LOG_TRACE, "---------------\nhost Job -> %i, %i\n", event_type, hostdata->type );
@@ -565,9 +573,9 @@ static int handle_svc_check( int event_type, void *data ) {
         return NEB_OK;
     }
 
-    /* as we have to intercept host checks so early
+    /* as we have to intercept service checks so early
      * (we cannot cancel checks otherwise)
-     * we have to do some host check logic here
+     * we have to do some service check logic here
      * taken from checks.c:
      */
     /* clear check options - we don't want old check options retained */
@@ -861,6 +869,9 @@ int handle_perfdata(int event_type, void *data) {
                     break;
                 }
 
+                uniq[0]='\x0';
+                snprintf( uniq,sizeof( temp_buffer )-1,"%s", hostchkdata->host_name);
+
                 temp_buffer[0]='\x0';
                 snprintf( temp_buffer,sizeof( temp_buffer )-1,
                             "DATATYPE::HOSTPERFDATA\t"
@@ -894,6 +905,9 @@ int handle_perfdata(int event_type, void *data) {
                     break;
                 }
 
+                uniq[0]='\x0';
+                snprintf( uniq,sizeof( temp_buffer )-1,"%s-%s", srvchkdata->host_name, srvchkdata->service_description);
+
                 temp_buffer[0]='\x0';
                 snprintf( temp_buffer,sizeof( temp_buffer )-1,
                             "DATATYPE::SERVICEPERFDATA\t"
@@ -922,7 +936,7 @@ int handle_perfdata(int event_type, void *data) {
         if(add_job_to_queue( &client,
                              mod_gm_opt->server_list,
                              GM_PERFDATA_QUEUE,
-                             NULL,
+                             (mod_gm_opt->perfdata_mode == GM_PERFDATA_OVERWRITE ? uniq : NULL),
                              temp_buffer,
                              GM_JOB_PRIO_NORMAL,
                              GM_DEFAULT_JOB_RETRIES,

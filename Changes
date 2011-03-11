@@ -1,7 +1,14 @@
 This file documents the revision history for mod_gearman.
 
-1.1    Mon...
-          - added general export option
+1.0.2  Fri Mar 11 10:30:21 CET 2011
+          - added new option do_hostchecks to completly disable hostchecks
+          - fixed reading keyfiles
+
+1.0.1  Sat Mar  5 15:47:22 CET 2011
+          - added spawn-rate option for worker
+          - added perfdata_mode option to prevent perfdata queue getting to big
+          - made gearmand init script work with old libevent versions
+          - fixed make dist
           - fixed "make rpm" for SLES11
 
 1.0    Mon Feb  7 11:05:29 CET 2011

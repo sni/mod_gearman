@@ -228,8 +228,9 @@ void check_worker_population() {
         current_number_of_workers++;
     }
 
+    /* check every second */
     now = (int)time(NULL);
-    if(last_time_increased +2 > now)
+    if(last_time_increased >= now)
         return;
 
     target_number_of_workers = adjust_number_of_worker(mod_gm_opt->min_worker, mod_gm_opt->max_worker, current_number_of_workers, current_number_of_jobs);
@@ -508,8 +509,8 @@ int adjust_number_of_worker(int min, int max, int cur_workers, int cur_jobs) {
     /* > 90% workers running */
     if(cur_jobs > 0 && ( perc_running > 90 || idle <= 2 )) {
         /* increase target number by 2 */
-        gm_log( GM_LOG_TRACE, "starting 2 new workers\n");
-        target = cur_workers + 2;
+        gm_log( GM_LOG_TRACE, "starting %d new workers\n", mod_gm_opt->spawn_rate);
+        target = cur_workers + mod_gm_opt->spawn_rate;
     }
 
     /* dont go over the top */

@@ -3,7 +3,7 @@
 
 ##############################################
 AC_PREREQ([2.59])
-AC_INIT([mod_gearman], [1.1], [sven.nierlein@consol.de])
+AC_INIT([mod_gearman], [1.0.2], [sven.nierlein@consol.de])
 AM_INIT_AUTOMAKE([-Wall foreign subdir-objects])
 AC_CONFIG_SRCDIR([neb_module/mod_gearman.c],[worker/worker.c],[tools/send_gearman.c],[tools/check_gearman.c],[tools/gearman_top.c])
 AC_CONFIG_HEADER([config.h])
@@ -55,15 +55,6 @@ AC_ARG_WITH([user],
 [], [with_user="nagios"])
 user="$with_user"
 AC_SUBST(user)
-
-AC_MSG_CHECKING(if user $user exists)
-id -a $user > /dev/null 2>&1
-if test "$?" != "0" ; then
-    AC_MSG_RESULT(no)
-    AC_MSG_ERROR(user $user does not exist)
-else
-    AC_MSG_RESULT(yes)
-fi
 
 ##############################################
 # Check some functions

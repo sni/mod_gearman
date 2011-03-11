@@ -204,6 +204,8 @@ int set_default_options(mod_gm_opt_t *opt) {
     opt->timeout            = 10;
     opt->debug_level        = GM_LOG_INFO;
     opt->perfdata           = GM_DISABLED;
+    opt->perfdata_mode      = GM_PERFDATA_OVERWRITE;
+    opt->do_hostchecks      = GM_ENABLED;
     opt->hosts              = GM_DISABLED;
     opt->services           = GM_DISABLED;
     opt->events             = GM_DISABLED;
@@ -219,6 +221,7 @@ int set_default_options(mod_gm_opt_t *opt) {
     opt->fork_on_exec       = GM_ENABLED;
     opt->idle_timeout       = GM_DEFAULT_IDLE_TIMEOUT;
     opt->max_jobs           = GM_DEFAULT_MAX_JOBS;
+    opt->spawn_rate         = GM_DEFAULT_SPAWN_RATE;
     opt->identifier         = NULL;
 
     opt->host               = NULL;
@@ -350,6 +353,12 @@ int parse_args_line(mod_gm_opt_t *opt, char * arg, int recursion_level) {
     /* fork_on_exec */
     else if ( !strcmp( key, "fork_on_exec" ) ) {
         opt->fork_on_exec = parse_yes_or_no(value, GM_ENABLED);
+        return(GM_OK);
+    }
+
+    /* do_hostchecks */
+    else if ( !strcmp( key, "do_hostchecks" ) ) {
+        opt->do_hostchecks = parse_yes_or_no(value, GM_ENABLED);
         return(GM_OK);
     }
 
@@ -504,6 +513,21 @@ int parse_args_line(mod_gm_opt_t *opt, char * arg, int recursion_level) {
     else if ( !strcmp( key, "max-jobs" ) ) {
         opt->max_jobs = atoi( value );
         if(opt->max_jobs < 0) { opt->max_jobs = GM_DEFAULT_MAX_JOBS; }
+    }
+
+    /* spawn-rate */
+    else if ( !strcmp( key, "spawn-rate" ) ) {
+        opt->spawn_rate = atoi( value );
+        if(opt->spawn_rate < 0) { opt->spawn_rate = GM_DEFAULT_SPAWN_RATE; }
+    }
+
+    /* perfdata_mode */
+    else if ( !strcmp( key, "perfdata_mode" ) ) {
+        opt->perfdata_mode = atoi( value );
+        if(opt->perfdata_mode < 0 || opt->perfdata_mode > 2) {
+            gm_log( GM_LOG_INFO, "Warning: unknown perfdata_mode: %d\n", opt->perfdata_mode );
+            opt->perfdata_mode = GM_PERFDATA_OVERWRITE;
+        }
     }
 
     /* server */
@@ -677,11 +701,13 @@ void dumpconfig(mod_gm_opt_t *opt, int mode) {
         gm_log( GM_LOG_DEBUG, "job timeout:         %d\n", opt->job_timeout);
         gm_log( GM_LOG_DEBUG, "min worker:          %d\n", opt->min_worker);
         gm_log( GM_LOG_DEBUG, "max worker:          %d\n", opt->max_worker);
+        gm_log( GM_LOG_DEBUG, "spawn rate:          %d\n", opt->spawn_rate);
         gm_log( GM_LOG_DEBUG, "fork on exec:        %s\n", opt->fork_on_exec == GM_ENABLED ? "yes" : "no");
     }
     if(mode == GM_NEB_MODE) {
         gm_log( GM_LOG_DEBUG, "debug result:        %s\n", opt->debug_result == GM_ENABLED ? "yes" : "no");
         gm_log( GM_LOG_DEBUG, "result_worker:       %d\n", opt->result_workers);
+        gm_log( GM_LOG_DEBUG, "do_hostchecks:       %s\n", opt->do_hostchecks == GM_ENABLED ? "yes" : "no");
     }
     if(mode == GM_NEB_MODE || mode == GM_SEND_GEARMAN_MODE) {
         gm_log( GM_LOG_DEBUG, "result_queue:        %s\n", opt->result_queue);
@@ -696,7 +722,8 @@ void dumpconfig(mod_gm_opt_t *opt, int mode) {
         gm_log( GM_LOG_DEBUG, "dupserver:           %s\n", opt->dupserver_list[i]);
     gm_log( GM_LOG_DEBUG, "\n" );
     if(mode == GM_NEB_MODE) {
-        gm_log( GM_LOG_DEBUG, "perfdata:            %s\n", opt->perfdata     == GM_ENABLED ? "yes" : "no");
+        gm_log( GM_LOG_DEBUG, "perfdata:            %s\n", opt->perfdata      == GM_ENABLED ? "yes" : "no");
+        gm_log( GM_LOG_DEBUG, "perfdata mode:       %s\n", opt->perfdata_mode == GM_PERFDATA_OVERWRITE ? "overwrite" : "append");
     }
     if(mode == GM_NEB_MODE || mode == GM_WORKER_MODE) {
         gm_log( GM_LOG_DEBUG, "hosts:               %s\n", opt->hosts        == GM_ENABLED ? "yes" : "no");
@@ -780,7 +807,6 @@ void mod_gm_free_opt(mod_gm_opt_t *opt) {
 /* read keyfile */
 int read_keyfile(mod_gm_opt_t *opt) {
     FILE *fp;
-    int i;
 
     if(opt->keyfile == NULL)
         return(GM_ERROR);
@@ -794,9 +820,11 @@ int read_keyfile(mod_gm_opt_t *opt) {
     if(opt->crypt_key != NULL)
         free(opt->crypt_key);
     opt->crypt_key = malloc(GM_BUFFERSIZE);
-    for(i=0;i<32;i++)
-        opt->crypt_key[i] = fgetc(fp);
+
+    fgets(opt->crypt_key, 33, fp);
     fclose(fp);
+    rtrim(opt->crypt_key);
+
     return(GM_OK);
 }
 

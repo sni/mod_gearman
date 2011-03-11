@@ -52,7 +52,7 @@
 #define MOD_GM_COMMON_H
 
 /* constants */
-#define GM_VERSION                   "1.1"
+#define GM_VERSION                 "1.0.2"
 #define GM_ENABLED                      1
 #define GM_DISABLED                     0
 #define GM_BUFFERSIZE               98304
@@ -86,9 +86,10 @@
 #define MAX_CMD_ARGS                 4096
 
 /* worker */
-#define GM_DEFAULT_MIN_WORKER           1      /**< minumum number of worker            */
-#define GM_DEFAULT_MAX_WORKER          20      /**< maximum number of concurrent worker */
-#define GM_DEFAULT_JOB_MAX_AGE        600      /**< discard jobs older than that        */
+#define GM_DEFAULT_MIN_WORKER           1      /**< minumum number of worker             */
+#define GM_DEFAULT_MAX_WORKER          20      /**< maximum number of concurrent worker  */
+#define GM_DEFAULT_JOB_MAX_AGE        600      /**< discard jobs older than that         */
+#define GM_DEFAULT_SPAWN_RATE           1      /**< number of spawned worker per seconds */
 
 /* transport modes */
 #define GM_ENCODE_AND_ENCRYPT           1
@@ -102,6 +103,10 @@
 /* worker stop modes */
 #define GM_WORKER_STOP                  1
 #define GM_WORKER_RESTART               2
+
+/* perfdata modes */
+#define GM_PERFDATA_OVERWRITE           1
+#define GM_PERFDATA_APPEND              2
 
 
 #ifndef TRUE
@@ -163,11 +168,13 @@ typedef struct mod_gm_opt_struct {
 /* neb module */
     char         * result_queue;                            /**< name of the result queue used by the neb module */
     int            result_workers;                          /**< number of result worker threads started */
-    int            perfdata;                                /**< flag whether perfdata are distributed or not */
+    int            perfdata;                                /**< flag whether perfdata will be distributed or not */
+    int            perfdata_mode;                           /**< flag whether perfdata will be sent with/without uniq set */
     char         * local_hostgroups_list[GM_LISTSIZE];      /**< list of hostgroups which will not be distributed */
     int            local_hostgroups_num;                    /**< number of elements in local_hostgroups_list */
     char         * local_servicegroups_list[GM_LISTSIZE];   /**< list of group  which will not be distributed */
     int            local_servicegroups_num;                 /**< number of elements in local_servicegroups_list */
+    int            do_hostchecks;                           /**< flag whether mod-gearman will process hostchecks at all */
     mod_gm_exp_t * exports[GM_LISTSIZE];                    /**< list of exporter queues */
     int            exports_num;                             /**< number of elements in exports */
 /* worker */
@@ -183,6 +190,7 @@ typedef struct mod_gm_opt_struct {
     int            fork_on_exec;                            /**< flag to disable additional forks for each job */
     int            idle_timeout;                            /**< number of seconds till a idle worker exits */
     int            max_jobs;                                /**< maximum number of jobs done after a worker exits */
+    int            spawn_rate;                              /**< number of spawned new worker */
 /* send_gearman */
     int            timeout;                                 /**< timeout for waiting reading on stdin */
     int            return_code;                             /**< return code */

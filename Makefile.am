@@ -8,11 +8,12 @@
 ###############################################################################
 
 RPM_TOPDIR=$$(pwd)/rpm.topdir
+DOS2UNIX=$(shell which dos2unix || which fromdos)
 
 .PHONY: docs
 
 # -g adds debug symbols, -s strips
-CFLAGS=-Wall -W -Wstrict-prototypes -Wmissing-prototypes -Wnested-externs -s -O -fPIC
+CFLAGS=-Wall -W -Wstrict-prototypes -Wmissing-prototypes -Wnested-externs -g -O -fPIC
 # for debugging
 #CFLAGS=-pedantic -Wfatal-errors -Wall -W -Wstrict-prototypes -Wshadow -Wpointer-arith -Wcast-qual -Wcast-align -Wstrict-prototypes -Wmissing-prototypes -Wnested-externs -g3 -O -fPIC
 AM_CPPFLAGS=-Iinclude
@@ -153,12 +154,7 @@ install-exec-local: install-local-state-dir
 
 install-local-state-dir:
 	$(RM) $(DESTDIR)$(pkglibdir)/mod_gearman.so
-	if [ `id -u` -eq 0 ]; then \
-	    $(install_sh_PROGRAM) -o $(user) -d $(DESTDIR)$(localstatedir)/mod_gearman/; \
-	else \
-	    $(install_sh_PROGRAM) -o $(user) -d $(DESTDIR)$(localstatedir)/mod_gearman/; \
-	    echo "*** You should run: sudo chown $(user) $(DESTDIR)$(localstatedir)/mod_gearman/"; \
-	fi
+	$(install_sh_PROGRAM) -d $(DESTDIR)$(localstatedir)/mod_gearman/
 
 install-data-local: install-local-state-dir
 	$(install_sh_PROGRAM) -m 644 extras/shared.conf            $(DESTDIR)$(datadir)/mod_gearman/shared.conf
@@ -202,6 +198,10 @@ test: check
 	@echo "################################################################"
 
 docs:
+	@if [ -z "$(DOS2UNIX)" ]; then \
+	    printf "\n\n**** please install dos2unix or tofrodos package ****\n\n"; \
+	    exit 1; \
+	fi
 	@if [ `type doxygen > /dev/null 2>&1` ]; then \
 	    doxygen Doxyfile; \
 	else \
@@ -209,11 +209,13 @@ docs:
 	fi;
 	$(RM) docs/images
 	cd docs && ln -s /usr/share/asciidoc/images .
-	cp -p README docs/ && cd docs && asciidoc --unsafe -a toc -a toclevels=2 -a icons -a data-uri -a max-width=800 README
+	cp -p README.asciidoc docs/README && cd docs && asciidoc --unsafe -a toc -a toclevels=2 -a max-width=800 README
 	chmod 644 docs/README.html
+	$(DOS2UNIX) docs/README.html
 	rm -f docs/README
-	cd docs && asciidoc --unsafe -a toc -a toclevels=2 -a icons -a data-uri -a max-width=800 QUICKSTART
+	cd docs && asciidoc --unsafe -a toc -a toclevels=2 -a max-width=800 QUICKSTART
 	chmod 644 docs/QUICKSTART.html
+	$(DOS2UNIX) docs/QUICKSTART.html
 
 rpm: dist
 	mkdir -p $(RPM_TOPDIR)/{SOURCES,BUILD,RPMS,SRPMS,SPECS}

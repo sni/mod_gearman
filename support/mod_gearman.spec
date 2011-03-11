@@ -1,5 +1,5 @@
 Name:          mod_gearman
-Version:       1.0
+Version:       1.0.2
 Release:       3
 License:       GNU Public License version 2
 Packager:      Olivier Raginel <babar@cern.ch>
