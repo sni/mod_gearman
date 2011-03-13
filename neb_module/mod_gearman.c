@@ -966,10 +966,11 @@ int handle_perfdata(int event_type, void *data) {
 
 
 /* handle generic exports */
-int handle_export(int event_type, void *data) {
+int handle_export(int callback_type, void *data) {
     int i;
     char * buffer;
     char * type;
+    char * event_type;
     temp_buffer[0]          = '\x0';
     int debug_level_orig    = mod_gm_opt->debug_level;
     mod_gm_opt->debug_level = -1;
@@ -979,7 +980,7 @@ int handle_export(int event_type, void *data) {
     nebstruct_timed_event_data  * nted;
 
     /* what type of event/data do we have? */
-    switch (event_type) {
+    switch (callback_type) {
         case NEBCALLBACK_RESERVED0:                         /*  0 */
             break;
         case NEBCALLBACK_RESERVED1:                         /*  1 */
@@ -995,32 +996,39 @@ int handle_export(int event_type, void *data) {
         case NEBCALLBACK_NEB_DATA:                          /*  6 */
             break;
         case NEBCALLBACK_PROCESS_DATA:                      /*  7 */
-            npd = (nebstruct_process_data *)data;
-            snprintf( temp_buffer,sizeof( temp_buffer )-1, "{\"event_type\":\"%s\",\"type\":\"%d\",\"flags\":%d,\"attr\":%d,\"timestamp\":%d.%d}",
+            npd    = (nebstruct_process_data *)data;
+            type   = nebtype2str(npd->type);
+            snprintf( temp_buffer,sizeof( temp_buffer )-1, "{\"callback_type\":\"%s\",\"type\":\"%s\",\"flags\":%d,\"attr\":%d,\"timestamp\":%d.%d}",
                     "NEBCALLBACK_PROCESS_DATA",
-                    npd->type,
+                    type,
                     npd->flags,
                     npd->attr,
                     (int)npd->timestamp.tv_sec, (int)npd->timestamp.tv_usec
                     );
+            free(type);
             break;
         case NEBCALLBACK_TIMED_EVENT_DATA:                  /*  8 */
-            nted = (nebstruct_timed_event_data *)data;
-            snprintf( temp_buffer,sizeof( temp_buffer )-1, "{\"event_type\":\"%s\",\"type\":\"%d\",\"flags\":%d,\"attr\":%d,\"timestamp\":%d.%d,\"recurring\":%d,\"run_time\":%d}",
+            nted       = (nebstruct_timed_event_data *)data;
+            event_type = eventtype2str(nted->event_type);
+            type       = nebtype2str(nted->type);
+            snprintf( temp_buffer,sizeof( temp_buffer )-1, "{\"callback_type\":\"%s\",\"event_type\":\"%s\",\"type\":\"%s\",\"flags\":%d,\"attr\":%d,\"timestamp\":%d.%d,\"recurring\":%d,\"run_time\":%d}",
                     "NEBCALLBACK_TIMED_EVENT_DATA",
-                    nted->type,
+                    event_type,
+                    type,
                     nted->flags,
                     nted->attr,
                     (int)nted->timestamp.tv_sec, (int)nted->timestamp.tv_usec,
                     nted->recurring,
                     (int)nted->run_time
                     );
+            free(event_type);
+            free(type);
             break;
         case NEBCALLBACK_LOG_DATA:                          /*  9 */
             nld    = (nebstruct_log_data *)data;
             buffer = escapestring(nld->data);
-            type   = neb_type2str(nld->type);
-            snprintf( temp_buffer,sizeof( temp_buffer )-1, "{\"event_type\":\"%s\",\"type\":\"%s\",\"flags\":%d,\"attr\":%d,\"timestamp\":%d.%d,\"entry_time\":%d,\"data_type\":%d,\"data\":\"%s\"}",
+            type   = nebtype2str(nld->type);
+            snprintf( temp_buffer,sizeof( temp_buffer )-1, "{\"callback_type\":\"%s\",\"type\":\"%s\",\"flags\":%d,\"attr\":%d,\"timestamp\":%d.%d,\"entry_time\":%d,\"data_type\":%d,\"data\":\"%s\"}",
                     "NEBCALLBACK_LOG_DATA",
                     type,
                     nld->flags,
@@ -1079,7 +1087,7 @@ int handle_export(int event_type, void *data) {
         case NEBCALLBACK_ADAPTIVE_CONTACT_DATA:             /* 32 */
             break;
         default:
-            gm_log( GM_LOG_ERROR, "handle_export() unknown export type: %d\n", event_type );
+            gm_log( GM_LOG_ERROR, "handle_export() unknown export type: %d\n", callback_type );
             mod_gm_opt->debug_level = debug_level_orig;
             return 0;
     }
@@ -1087,11 +1095,11 @@ int handle_export(int event_type, void *data) {
     temp_buffer[sizeof( temp_buffer )-1]='\x0';
     if(temp_buffer[0] != '\x0') {
 
-        for(i=0;i<mod_gm_opt->exports[event_type]->elem_number;i++) {
-            return_code = mod_gm_opt->exports[event_type]->return_code[i];
+        for(i=0;i<mod_gm_opt->exports[callback_type]->elem_number;i++) {
+            return_code = mod_gm_opt->exports[callback_type]->return_code[i];
             add_job_to_queue( &client,
                               mod_gm_opt->server_list,
-                              mod_gm_opt->exports[event_type]->name[i], /* queue name */
+                              mod_gm_opt->exports[callback_type]->name[i], /* queue name */
                               NULL,
                               temp_buffer,
                               GM_JOB_PRIO_NORMAL,

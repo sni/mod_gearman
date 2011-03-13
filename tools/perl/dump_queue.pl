@@ -9,9 +9,10 @@ dump_queue.pl
 
 ./dump_queue.pl [ -v ]
                 [ -h ]
-                [ -H=hostname:port ]
-                [ -q=queue ]
-                [ -c=configfile ]
+                [ -H hostname:port ]
+                [ -q queue ]
+                [ -c configfile ]
+                [ -p password ]
 
 =head1 DESCRIPTION
 
@@ -35,19 +36,25 @@ enable verbose mode
 
 =head2 hostname
 
-  -H=hostname:port
+  -H hostname:port
 
 hostname to connect to. Defaults to localhost:4731
 
 =head2 queue
 
-  -q=queue
+  -q queue
 
 which queue to dump
 
+=head2 password
+
+  -p password
+
+password to encrypt data
+
 =head2 configfile
 
-  -c=configfile
+  -c configfile
 
 read config from config file
 
@@ -127,8 +134,8 @@ sub dump_job {
         $data = $cypher->decrypt($data);
     }
     print "###################\n";
-    print Dumper($data);
-    $data = decode_json($data);
     #print Dumper($data);
+    $data = decode_json($data);
+    print Dumper($data);
     return 1;
 }

@@ -398,27 +398,38 @@ int escaped(int ch);
 void escape(char *out, int ch);
 
 /**
- * neb_type2str
+ * callback_type2str
  *
- * get human readable name for neb type int
+ * get human readable name for neb type
  *
  * @param[in] i - integer to translate
  *
  * @return the human readable string
  */
-char * neb_type2str(int i);
+char * nebtype2str(int i);
 
 
 /**
- * event_type2str
+ * nebcallback2str
  *
- * get human readable name for event type int
+ * get human readable name for nebcallback type int
  *
  * @param[in] i - integer to translate
  *
  * @return the human readable string
  */
-char * event_type2str(int i);
+char * nebcallback2str(int i);
+
+/**
+ * eventtype2str
+ *
+ * get human readable name for eventtype type int
+ *
+ * @param[in] i - integer to translate
+ *
+ * @return the human readable string
+ */
+char * eventtype2str(int i);
 
 
 /**

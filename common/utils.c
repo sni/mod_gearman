@@ -629,10 +629,11 @@ int parse_args_line(mod_gm_opt_t *opt, char * arg, int recursion_level) {
                 /* get neb callback number by name */
                 int i;
                 for(i=0;i<=GM_NEBTYPESSIZE;i++) {
-                    char * type = event_type2str(i);
+                    char * type = nebcallback2str(i);
                     if(!strcmp(type, callback)) {
                         callback_num = i;
                     }
+                    free(type);
                 }
                 if(callback_num == -1) {
                     gm_log( GM_LOG_ERROR, "unknown nebcallback : %s\n", callback);
@@ -759,9 +760,10 @@ void dumpconfig(mod_gm_opt_t *opt, int mode) {
             gm_log( GM_LOG_DEBUG, "local_servicegroups:      %s\n", opt->local_servicegroups_list[i]);
         /* export queues*/
         for(i=0;i<=GM_NEBTYPESSIZE;i++) {
-            char * type = event_type2str(i);
+            char * type = nebcallback2str(i);
             for(j=0;j<opt->exports[i]->elem_number;j++)
                 gm_log( GM_LOG_DEBUG, "export:              %-45s -> %s\n", type, opt->exports[i]->name[j]);
+            free(type);
         }
     }
 
@@ -1374,8 +1376,8 @@ void escape(char *out, int ch) {
 }
 
 
-/* return human readable name for event type int */
-char * neb_type2str(int i) {
+/* return human readable name for neb type */
+char * nebtype2str(int i) {
     switch(i) {
         case 0:
             return strdup("NEBTYPE_NONE"); break;
@@ -1524,8 +1526,8 @@ char * neb_type2str(int i) {
 }
 
 
-/* return human readable name for event type int */
-char * event_type2str(int i) {
+/* return human readable name for nebcallback */
+char * nebcallback2str(int i) {
     switch(i) {
         case 0:
             return strdup("NEBCALLBACK_RESERVED0"); break;
@@ -1593,6 +1595,51 @@ char * event_type2str(int i) {
             return strdup("NEBCALLBACK_CONTACT_STATUS_DATA"); break;
         case 32:
             return strdup("NEBCALLBACK_ADAPTIVE_CONTACT_DATA"); break;
+    }
+    return strdup("UNKNOWN");
+}
+
+/* return human readable name for eventtype */
+char * eventtype2str(int i) {
+    switch(i) {
+        case 0:
+            return strdup("EVENT_SERVICE_CHECK"); break;
+        case 1:
+            return strdup("EVENT_COMMAND_CHECK"); break;
+        case 2:
+            return strdup("EVENT_LOG_ROTATION"); break;
+        case 3:
+            return strdup("EVENT_PROGRAM_SHUTDOWN"); break;
+        case 4:
+            return strdup("EVENT_PROGRAM_RESTART"); break;
+        case 5:
+            return strdup("EVENT_CHECK_REAPER"); break;
+        case 6:
+            return strdup("EVENT_ORPHAN_CHECK"); break;
+        case 7:
+            return strdup("EVENT_RETENTION_SAVE"); break;
+        case 8:
+            return strdup("EVENT_STATUS_SAVE"); break;
+        case 9:
+            return strdup("EVENT_SCHEDULED_DOWNTIME"); break;
+        case 10:
+            return strdup("EVENT_SFRESHNESS_CHECK"); break;
+        case 11:
+            return strdup("EVENT_EXPIRE_DOWNTIME"); break;
+        case 12:
+            return strdup("EVENT_HOST_CHECK"); break;
+        case 13:
+            return strdup("EVENT_HFRESHNESS_CHECK"); break;
+        case 14:
+            return strdup("EVENT_RESCHEDULE_CHECKS"); break;
+        case 15:
+            return strdup("EVENT_EXPIRE_COMMENT"); break;
+        case 16:
+            return strdup("EVENT_CHECK_PROGRAM_UPDATE"); break;
+        case 98:
+            return strdup("EVENT_SLEEP"); break;
+        case 99:
+            return strdup("EVENT_USER_FUNCTION"); break;
     }
     return strdup("UNKNOWN");
 }
