@@ -970,11 +970,13 @@ int handle_export(int event_type, void *data) {
     int i;
     char * buffer;
     char * type;
-    nebstruct_log_data * nld;
     temp_buffer[0]          = '\x0';
     int debug_level_orig    = mod_gm_opt->debug_level;
     mod_gm_opt->debug_level = -1;
     int return_code         = 0;
+    nebstruct_log_data          * nld;
+    nebstruct_process_data      * npd;
+    nebstruct_timed_event_data  * nted;
 
     /* what type of event/data do we have? */
     switch (event_type) {
@@ -993,8 +995,26 @@ int handle_export(int event_type, void *data) {
         case NEBCALLBACK_NEB_DATA:                          /*  6 */
             break;
         case NEBCALLBACK_PROCESS_DATA:                      /*  7 */
+            npd = (nebstruct_process_data *)data;
+            snprintf( temp_buffer,sizeof( temp_buffer )-1, "{\"event_type\":\"%s\",\"type\":\"%d\",\"flags\":%d,\"attr\":%d,\"timestamp\":%d.%d}",
+                    "NEBCALLBACK_PROCESS_DATA",
+                    npd->type,
+                    npd->flags,
+                    npd->attr,
+                    (int)npd->timestamp.tv_sec, (int)npd->timestamp.tv_usec
+                    );
             break;
         case NEBCALLBACK_TIMED_EVENT_DATA:                  /*  8 */
+            nted = (nebstruct_timed_event_data *)data;
+            snprintf( temp_buffer,sizeof( temp_buffer )-1, "{\"event_type\":\"%s\",\"type\":\"%d\",\"flags\":%d,\"attr\":%d,\"timestamp\":%d.%d,\"recurring\":%d,\"run_time\":%d}",
+                    "NEBCALLBACK_TIMED_EVENT_DATA",
+                    nted->type,
+                    nted->flags,
+                    nted->attr,
+                    (int)nted->timestamp.tv_sec, (int)nted->timestamp.tv_usec,
+                    nted->recurring,
+                    (int)nted->run_time
+                    );
             break;
         case NEBCALLBACK_LOG_DATA:                          /*  9 */
             nld    = (nebstruct_log_data *)data;
