@@ -76,7 +76,7 @@ void *start_worker(void*data) {
 void test_eventhandler(int transportmode);
 void test_eventhandler(int transportmode) {
     char * testdata = "type=eventhandler\ncommand_line=/bin/hostname\n\n\n";
-    int rt = add_job_to_queue( &client, mod_gm_opt->server_list, "eventhandler", NULL, testdata, GM_JOB_PRIO_NORMAL, 1, transportmode);
+    int rt = add_job_to_queue( &client, mod_gm_opt->server_list, "eventhandler", NULL, testdata, GM_JOB_PRIO_NORMAL, 1, transportmode, TRUE );
     ok(rt == GM_OK, "eventhandler sent successfully in mode %s", transportmode == GM_ENCODE_ONLY ? "base64" : "aes256");
     return;
 }
@@ -103,7 +103,7 @@ void test_servicecheck(int transportmode) {
               "/bin/hostname"
             );
     temp_buffer[sizeof( temp_buffer )-1]='\x0';
-    int rt = add_job_to_queue( &client, mod_gm_opt->server_list, "service", NULL, temp_buffer, GM_JOB_PRIO_NORMAL, 1, transportmode);
+    int rt = add_job_to_queue( &client, mod_gm_opt->server_list, "service", NULL, temp_buffer, GM_JOB_PRIO_NORMAL, 1, transportmode, TRUE );
     ok(rt == GM_OK, "servicecheck sent successfully in mode %s", transportmode == GM_ENCODE_ONLY ? "base64" : "aes256");
     return;
 }

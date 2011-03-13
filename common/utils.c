@@ -625,16 +625,19 @@ int parse_args_line(mod_gm_opt_t *opt, char * arg, int recursion_level) {
         while ( (callback = strsep( &callbacks, "," )) != NULL ) {
             int callback_num = atoi(trim(callback));
             if(index(callback, 'N') != NULL) {
+                callback_num = -1;
                 /* get neb callback number by name */
                 int i;
                 for(i=0;i<=GM_NEBTYPESSIZE;i++) {
                     char * type = event_type2str(i);
                     if(!strcmp(type, callback)) {
                         callback_num = i;
-                        break;
                     }
                 }
-                gm_log( GM_LOG_ERROR, "unknown nebcallback : %s\n", callback);
+                if(callback_num == -1) {
+                    gm_log( GM_LOG_ERROR, "unknown nebcallback : %s\n", callback);
+                    continue;
+                }
             }
 
             int number = opt->exports[callback_num]->elem_number;

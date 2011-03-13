@@ -30,9 +30,10 @@ void gm_log( int lvl, const char *text, ... ) {
     va_list ap;
 
     /* check log level */
-    if ( lvl != GM_LOG_ERROR && lvl > mod_gm_opt->debug_level ) {
+    if ( mod_gm_opt->debug_level < 0 )
         return;
-    }
+    if ( lvl != GM_LOG_ERROR && lvl > mod_gm_opt->debug_level )
+        return;
 
     if ( lvl == GM_LOG_ERROR ) {
         snprintf( buffer, 22, "mod_gearman: ERROR - " );

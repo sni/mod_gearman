@@ -49,6 +49,7 @@ static pthread_mutex_t mod_gm_result_list_mutex = PTHREAD_MUTEX_INITIALIZER;
 void *gearman_module_handle=NULL;
 gearman_client_st client;
 
+int send_now               = FALSE;
 int result_threads_running = 0;
 pthread_t result_thr[GM_LISTSIZE];
 char target_queue[GM_BUFFERSIZE];
@@ -150,15 +151,15 @@ int nebmodule_init( int flags, char *args, nebmodule *handle ) {
         return NEB_ERROR;
     }
 
+    /* register callback for process event where everything else starts */
+    neb_register_callback( NEBCALLBACK_PROCESS_DATA, gearman_module_handle, 0, handle_process_events );
+    neb_register_callback( NEBCALLBACK_TIMED_EVENT_DATA, gearman_module_handle, 0, handle_timed_events );
+
     /* register export callbacks */
     for(i=0;i<=GM_NEBTYPESSIZE;i++) {
         if(mod_gm_opt->exports[i]->elem_number > 0)
             neb_register_callback( i, gearman_module_handle, 0, handle_export );
     }
-
-    /* register callback for process event where everything else starts */
-    neb_register_callback( NEBCALLBACK_PROCESS_DATA, gearman_module_handle, 0, handle_process_events );
-    neb_register_callback( NEBCALLBACK_TIMED_EVENT_DATA, gearman_module_handle, 0, handle_timed_events );
 
     gm_log( GM_LOG_DEBUG, "finished initializing\n" );
 
@@ -216,6 +217,14 @@ int nebmodule_deinit( int flags, int reason ) {
         neb_deregister_callback( NEBCALLBACK_HOST_CHECK_DATA, gearman_module_handle );
         neb_deregister_callback( NEBCALLBACK_SERVICE_CHECK_DATA, gearman_module_handle );
     }
+
+    /* register export callbacks */
+    for(x=0;x<=GM_NEBTYPESSIZE;x++) {
+        if(mod_gm_opt->exports[x]->elem_number > 0)
+            neb_deregister_callback( x, gearman_module_handle );
+    }
+
+    neb_deregister_callback( NEBCALLBACK_PROCESS_DATA, gearman_module_handle );
 
     gm_log( GM_LOG_DEBUG, "deregistered callbacks\n" );
 
@@ -314,10 +323,10 @@ static int handle_process_events( int event_type, void *data ) {
 
     ps = ( struct nebstruct_process_struct * )data;
     if ( ps->type == NEBTYPE_PROCESS_EVENTLOOPSTART ) {
+
         register_neb_callbacks();
         start_threads();
-
-        neb_deregister_callback( NEBCALLBACK_PROCESS_DATA, gearman_module_handle );
+        send_now = TRUE;
 
         /* verify names of supplied groups
          * this cannot be done befor nagios has finished reading his config
@@ -391,7 +400,8 @@ static int handle_eventhandler( int event_type, void *data ) {
                          temp_buffer,
                          GM_JOB_PRIO_NORMAL,
                          GM_DEFAULT_JOB_RETRIES,
-                         mod_gm_opt->transportmode
+                         mod_gm_opt->transportmode,
+                         FALSE
                         ) == GM_OK) {
         gm_log( GM_LOG_TRACE, "handle_eventhandler() finished successfully\n" );
     }
@@ -505,7 +515,8 @@ static int handle_host_check( int event_type, void *data ) {
                          temp_buffer,
                          GM_JOB_PRIO_NORMAL,
                          GM_DEFAULT_JOB_RETRIES,
-                         mod_gm_opt->transportmode
+                         mod_gm_opt->transportmode,
+                         TRUE
                         ) == GM_OK) {
     }
     else {
@@ -638,7 +649,8 @@ static int handle_svc_check( int event_type, void *data ) {
                          temp_buffer,
                          prio,
                          GM_DEFAULT_JOB_RETRIES,
-                         mod_gm_opt->transportmode
+                         mod_gm_opt->transportmode,
+                         TRUE
                         ) == GM_OK) {
         gm_log( GM_LOG_TRACE, "handle_svc_check() finished successfully\n" );
     }
@@ -939,7 +951,8 @@ int handle_perfdata(int event_type, void *data) {
                              temp_buffer,
                              GM_JOB_PRIO_NORMAL,
                              GM_DEFAULT_JOB_RETRIES,
-                             mod_gm_opt->transportmode
+                             mod_gm_opt->transportmode,
+                             TRUE
                             ) == GM_OK) {
             gm_log( GM_LOG_TRACE, "handle_perfdata() finished successfully\n" );
         }
@@ -958,11 +971,10 @@ int handle_export(int event_type, void *data) {
     char * buffer;
     char * type;
     nebstruct_log_data * nld;
-
-    if(event_type != NEBCALLBACK_LOG_DATA || mod_gm_opt->debug_level >= 3)
-        gm_log( GM_LOG_TRACE, "handle_export(%d)\n", event_type );
-
-    temp_buffer[0]='\x0';
+    temp_buffer[0]          = '\x0';
+    int debug_level_orig    = mod_gm_opt->debug_level;
+    mod_gm_opt->debug_level = -1;
+    int return_code         = 0;
 
     /* what type of event/data do we have? */
     switch (event_type) {
@@ -1047,8 +1059,8 @@ int handle_export(int event_type, void *data) {
         case NEBCALLBACK_ADAPTIVE_CONTACT_DATA:             /* 32 */
             break;
         default:
-            if(event_type != NEBCALLBACK_LOG_DATA || mod_gm_opt->debug_level >= 3)
-                gm_log( GM_LOG_DEBUG, "handle_export() unknown export type: %d\n", event_type );
+            gm_log( GM_LOG_ERROR, "handle_export() unknown export type: %d\n", event_type );
+            mod_gm_opt->debug_level = debug_level_orig;
             return 0;
     }
 
@@ -1056,26 +1068,20 @@ int handle_export(int event_type, void *data) {
     if(temp_buffer[0] != '\x0') {
 
         for(i=0;i<mod_gm_opt->exports[event_type]->elem_number;i++) {
-            if(add_job_to_queue( &client,
-                                 mod_gm_opt->server_list,
-                                 mod_gm_opt->exports[event_type]->name[i], /* queue name */
-                                 NULL,
-                                 temp_buffer,
-                                 GM_JOB_PRIO_NORMAL,
-                                 GM_DEFAULT_JOB_RETRIES,
-                                 mod_gm_opt->transportmode
-                                ) == GM_OK) {
-                if(event_type != NEBCALLBACK_LOG_DATA || mod_gm_opt->debug_level >= 3)
-                    gm_log( GM_LOG_TRACE, "handle_export() send successfully\n" );
-            }
-            else {
-                if(event_type != NEBCALLBACK_LOG_DATA || mod_gm_opt->debug_level >= 3)
-                    gm_log( GM_LOG_TRACE, "handle_export() send failed\n" );
-            }
+            return_code = mod_gm_opt->exports[event_type]->return_code[i];
+            add_job_to_queue( &client,
+                              mod_gm_opt->server_list,
+                              mod_gm_opt->exports[event_type]->name[i], /* queue name */
+                              NULL,
+                              temp_buffer,
+                              GM_JOB_PRIO_NORMAL,
+                              GM_DEFAULT_JOB_RETRIES,
+                              mod_gm_opt->transportmode,
+                              send_now
+                            );
         }
-    } else {
-        gm_log( GM_LOG_TRACE, "handle_export() finished\n" );
     }
 
-    return 0;
+    mod_gm_opt->debug_level = debug_level_orig;
+    return return_code;
 }
