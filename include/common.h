@@ -58,6 +58,7 @@
 #define GM_BUFFERSIZE               98304
 #define GM_MAX_OUTPUT               65536   /* must be ~30% below GM_BUFFERSIZE for base64/encryption */
 #define GM_LISTSIZE                   512
+#define GM_NEBTYPESSIZE                32   /* maximum number of neb types */
 
 #define GM_MIN_LIB_GEARMAN_VERSION   0.14
 #define GM_SERVER_DEFAULT_PORT       4730
@@ -133,10 +134,9 @@
  *
  */
 typedef struct mod_gm_export {
-    char   * name;                          /**< queue name to export into */
-    int      return_code;                   /**< return code which should be returned to nagios */
-    int      callbacks[GM_LISTSIZE];        /**< list of callbacks */
-    int      callbacks_num;                 /**< number of callbacks elements */
+    char   * name[GM_LISTSIZE];             /**< list of queue names to export into */
+    int      return_code[GM_LISTSIZE];      /**< list of return codes which should be returned to nagios */
+    int      elem_number;                   /**< number of elements */
 } mod_gm_exp_t;
 
 /** options structure
@@ -175,8 +175,8 @@ typedef struct mod_gm_opt_struct {
     char         * local_servicegroups_list[GM_LISTSIZE];   /**< list of group  which will not be distributed */
     int            local_servicegroups_num;                 /**< number of elements in local_servicegroups_list */
     int            do_hostchecks;                           /**< flag whether mod-gearman will process hostchecks at all */
-    mod_gm_exp_t * exports[GM_LISTSIZE];                    /**< list of exporter queues */
-    int            exports_num;                             /**< number of elements in exports */
+    mod_gm_exp_t * exports[GM_NEBTYPESSIZE];                /**< list of exporter queues */
+    int            exports_count;                           /**< number of export queues */
 /* worker */
     char         * identifier;                              /**< identifier for this worker */
     char         * pidfile;                                 /**< path to a pidfile */

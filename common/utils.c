@@ -245,9 +245,12 @@ int set_default_options(mod_gm_opt_t *opt) {
     opt->local_servicegroups_num  = 0;
     for(i=0;i<=GM_LISTSIZE;i++)
         opt->local_servicegroups_list[i] = NULL;
-    opt->exports_num  = 0;
-    for(i=0;i<=GM_LISTSIZE;i++)
-        opt->exports[i] = NULL;
+    for(i=0;i<=GM_NEBTYPESSIZE;i++) {
+        mod_gm_exp_t *mod_gm_exp;
+        mod_gm_exp              = malloc(sizeof(mod_gm_exp_t));
+        mod_gm_exp->elem_number = 0;
+        opt->exports[i]         = mod_gm_exp;
+    }
 
     return(GM_OK);
 }
@@ -612,21 +615,34 @@ int parse_args_line(mod_gm_opt_t *opt, char * arg, int recursion_level) {
 
     /* export queues */
     else if ( !strcmp( key, "export" ) ) {
-        mod_gm_exp_t *mod_gm_exp;
         char *callback;
-        mod_gm_exp          = malloc(sizeof(mod_gm_exp_t));
-        mod_gm_exp->name    = strsep( &value, ":" );
-        mod_gm_exp->name    = trim(mod_gm_exp->name);
+        char *export_queue;
+        export_queue        = strsep( &value, ":" );
+        export_queue        = trim(export_queue);
         char *return_code   = strsep( &value, ":" );
-        mod_gm_exp->return_code = atoi(return_code);
-        char *callbacks = strsep( &value, ":" );
-        mod_gm_exp->callbacks_num = 0;
+        int return_code_num = atoi(return_code);
+        char *callbacks     = strsep( &value, ":" );
         while ( (callback = strsep( &callbacks, "," )) != NULL ) {
-            mod_gm_exp->callbacks[mod_gm_exp->callbacks_num] = atoi(callback);
-            mod_gm_exp->callbacks_num++;
+            int callback_num = atoi(trim(callback));
+            if(index(callback, 'N') != NULL) {
+                /* get neb callback number by name */
+                int i;
+                for(i=0;i<=GM_NEBTYPESSIZE;i++) {
+                    char * type = event_type2str(i);
+                    if(!strcmp(type, callback)) {
+                        callback_num = i;
+                        break;
+                    }
+                }
+                gm_log( GM_LOG_ERROR, "unknown nebcallback : %s\n", callback);
+            }
+
+            int number = opt->exports[callback_num]->elem_number;
+            opt->exports[callback_num]->name[number]        = strdup(export_queue);
+            opt->exports[callback_num]->return_code[number] = return_code_num;
+            opt->exports[callback_num]->elem_number++;
         }
-        opt->exports[opt->exports_num] = mod_gm_exp;
-        opt->exports_num++;
+        opt->exports_count++;
     }
 
     else {
@@ -687,8 +703,6 @@ int read_config_file(mod_gm_opt_t *opt, char*filename, int recursion_level) {
 void dumpconfig(mod_gm_opt_t *opt, int mode) {
     int i=0;
     int j=0;
-    char temp_buffer[GM_BUFFERSIZE];
-    char callbacks[GM_BUFFERSIZE];
     gm_log( GM_LOG_DEBUG, "--------------------------------\n" );
     gm_log( GM_LOG_DEBUG, "configuration:\n" );
     gm_log( GM_LOG_DEBUG, "log level:           %d\n", opt->debug_level);
@@ -741,16 +755,10 @@ void dumpconfig(mod_gm_opt_t *opt, int mode) {
         for(i=0;i<opt->local_servicegroups_num;i++)
             gm_log( GM_LOG_DEBUG, "local_servicegroups:      %s\n", opt->local_servicegroups_list[i]);
         /* export queues*/
-        for(i=0;i<opt->exports_num;i++) {
-            callbacks[0]='\x0';
-            for(j=0;j<opt->exports[i]->callbacks_num;j++) {
-                temp_buffer[0]='\x0';
-                snprintf( temp_buffer,sizeof( temp_buffer )-1, "%d", opt->exports[i]->callbacks[j]);
-                strcat(callbacks, temp_buffer );
-                if(j < opt->exports[i]->callbacks_num-1)
-                    strcat(callbacks, ",");
-            }
-            gm_log( GM_LOG_DEBUG, "export:              %s -> %s\n", opt->exports[i]->name, callbacks);
+        for(i=0;i<=GM_NEBTYPESSIZE;i++) {
+            char * type = event_type2str(i);
+            for(j=0;j<opt->exports[i]->elem_number;j++)
+                gm_log( GM_LOG_DEBUG, "export:              %-45s -> %s\n", type, opt->exports[i]->name[j]);
         }
     }
 
@@ -774,7 +782,7 @@ void dumpconfig(mod_gm_opt_t *opt, int mode) {
 
 /* free options structure */
 void mod_gm_free_opt(mod_gm_opt_t *opt) {
-    int i;
+    int i,j;
     for(i=0;i<opt->server_num;i++)
         free(opt->server_list[i]);
     for(i=0;i<opt->dupserver_num;i++)
@@ -787,9 +795,10 @@ void mod_gm_free_opt(mod_gm_opt_t *opt) {
         free(opt->local_hostgroups_list[i]);
     for(i=0;i<opt->local_servicegroups_num;i++)
         free(opt->local_servicegroups_list[i]);
-    for(i=0;i<opt->exports_num;i++) {
-        free(opt->exports[i]->name);
-        free(opt->exports[i]->callbacks);
+    for(i=0;i<=GM_NEBTYPESSIZE;i++) {
+        for(j=0;j<opt->exports[i]->elem_number;j++) {
+          free(opt->exports[i]->name[j]);
+        }
         free(opt->exports[i]);
     }
     free(opt->crypt_key);
@@ -1362,8 +1371,8 @@ void escape(char *out, int ch) {
 }
 
 
-/* return human readable name for type int */
-char * type2str(int i) {
+/* return human readable name for event type int */
+char * neb_type2str(int i) {
     switch(i) {
         case 0:
             return strdup("NEBTYPE_NONE"); break;
@@ -1507,6 +1516,80 @@ char * type2str(int i) {
             return strdup("NEBTYPE_STATECHANGE_START"); break;
         case 1801:
             return strdup("NEBTYPE_STATECHANGE_END"); break;
+    }
+    return strdup("UNKNOWN");
+}
+
+
+/* return human readable name for event type int */
+char * event_type2str(int i) {
+    switch(i) {
+        case 0:
+            return strdup("NEBCALLBACK_RESERVED0"); break;
+        case 1:
+            return strdup("NEBCALLBACK_RESERVED1"); break;
+        case 2:
+            return strdup("NEBCALLBACK_RESERVED2"); break;
+        case 3:
+            return strdup("NEBCALLBACK_RESERVED3"); break;
+        case 4:
+            return strdup("NEBCALLBACK_RESERVED4"); break;
+        case 5:
+            return strdup("NEBCALLBACK_RAW_DATA"); break;
+        case 6:
+            return strdup("NEBCALLBACK_NEB_DATA"); break;
+        case 7:
+            return strdup("NEBCALLBACK_PROCESS_DATA"); break;
+        case 8:
+            return strdup("NEBCALLBACK_TIMED_EVENT_DATA"); break;
+        case 9:
+            return strdup("NEBCALLBACK_LOG_DATA"); break;
+        case 10:
+            return strdup("NEBCALLBACK_SYSTEM_COMMAND_DATA"); break;
+        case 11:
+            return strdup("NEBCALLBACK_EVENT_HANDLER_DATA"); break;
+        case 12:
+            return strdup("NEBCALLBACK_NOTIFICATION_DATA"); break;
+        case 13:
+            return strdup("NEBCALLBACK_SERVICE_CHECK_DATA"); break;
+        case 14:
+            return strdup("NEBCALLBACK_HOST_CHECK_DATA"); break;
+        case 15:
+            return strdup("NEBCALLBACK_COMMENT_DATA"); break;
+        case 16:
+            return strdup("NEBCALLBACK_DOWNTIME_DATA"); break;
+        case 17:
+            return strdup("NEBCALLBACK_FLAPPING_DATA"); break;
+        case 18:
+            return strdup("NEBCALLBACK_PROGRAM_STATUS_DATA"); break;
+        case 19:
+            return strdup("NEBCALLBACK_HOST_STATUS_DATA"); break;
+        case 20:
+            return strdup("NEBCALLBACK_SERVICE_STATUS_DATA"); break;
+        case 21:
+            return strdup("NEBCALLBACK_ADAPTIVE_PROGRAM_DATA"); break;
+        case 22:
+            return strdup("NEBCALLBACK_ADAPTIVE_HOST_DATA"); break;
+        case 23:
+            return strdup("NEBCALLBACK_ADAPTIVE_SERVICE_DATA"); break;
+        case 24:
+            return strdup("NEBCALLBACK_EXTERNAL_COMMAND_DATA"); break;
+        case 25:
+            return strdup("NEBCALLBACK_AGGREGATED_STATUS_DATA"); break;
+        case 26:
+            return strdup("NEBCALLBACK_RETENTION_DATA"); break;
+        case 27:
+            return strdup("NEBCALLBACK_CONTACT_NOTIFICATION_DATA"); break;
+        case 28:
+            return strdup("NEBCALLBACK_CONTACT_NOTIFICATION_METHOD_DATA"); break;
+        case 29:
+            return strdup("NEBCALLBACK_ACKNOWLEDGEMENT_DATA"); break;
+        case 30:
+            return strdup("NEBCALLBACK_STATE_CHANGE_DATA"); break;
+        case 31:
+            return strdup("NEBCALLBACK_CONTACT_STATUS_DATA"); break;
+        case 32:
+            return strdup("NEBCALLBACK_ADAPTIVE_CONTACT_DATA"); break;
     }
     return strdup("UNKNOWN");
 }
