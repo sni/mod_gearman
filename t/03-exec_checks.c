@@ -16,7 +16,7 @@ int main(void) {
     char cmd[100];
     char hostname[GM_BUFFERSIZE];
 
-    plan(34);
+    plan(40);
 
     /* set hostname */
     gethostname(hostname, GM_BUFFERSIZE-1);
@@ -158,6 +158,23 @@ int main(void) {
     cmp_ok(exec_job->return_code, "==", 2, "cmd '%s' returns rc 2", exec_job->command_line);
     like(exec_job->output, "CRITICAL: Return code of 5 is out of bounds. \\(worker:", "returned result string");
 
+    /* unknown exit code 3 */
+    exec_job->command_line = strdup("./t/rc 128 2>&1");
+    execute_safe_command(exec_job, fork_on_exec, hostname);
+    cmp_ok(exec_job->return_code, "==", 2, "cmd '%s' returns rc 2", exec_job->command_line);
+    like(exec_job->output, "CRITICAL: Return code of 128 is out of bounds. Plugin exited by signal signal 0. \\(worker:", "returned result string");
+
+    /* unknown exit code 4 */
+    exec_job->command_line = strdup("./t/rc 137 2>&1");
+    execute_safe_command(exec_job, fork_on_exec, hostname);
+    cmp_ok(exec_job->return_code, "==", 2, "cmd '%s' returns rc 2", exec_job->command_line);
+    like(exec_job->output, "CRITICAL: Return code of 137 is out of bounds. Plugin exited by signal SIGKILL. \\(worker:", "returned result string");
+
+    /* unknown exit code 5 */
+    exec_job->command_line = strdup("./t/rc 255 2>&1");
+    execute_safe_command(exec_job, fork_on_exec, hostname);
+    cmp_ok(exec_job->return_code, "==", 2, "cmd '%s' returns rc 2", exec_job->command_line);
+    like(exec_job->output, "CRITICAL: Return code of 255 is out of bounds. \\(worker:", "returned result string");
 
 
     /*****************************************

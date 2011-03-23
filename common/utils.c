@@ -879,7 +879,9 @@ char * nr2signal(int sig) {
                  break;
         case 16: signame = "SIGURG";
                  break;
-        default: snprintf(signame, 20, "signal %d", sig);
+        default: signame = malloc(20);
+                 snprintf(signame, 20, "signal %d", sig);
+                 return signame;
                  break;
     }
     return strdup(signame);
@@ -1174,7 +1176,7 @@ int execute_safe_command(gm_job_t * exec_job, int fork_exec, char * hostname) {
             snprintf( buffer, sizeof( buffer )-1, "CRITICAL: Return code of 127 is out of bounds. Make sure the plugin you're trying to run actually exists. (worker: %s)", hostname);
         }
         /* signaled */
-        else if(return_code >= 128 && return_code < 256) {
+        else if(return_code >= 128 && return_code < 144) {
             char * signame = nr2signal((int)(return_code-128));
             snprintf( buffer, sizeof( buffer )-1, "CRITICAL: Return code of %d is out of bounds. Plugin exited by signal %s. (worker: %s)", (int)(return_code), signame, hostname);
             return_code = STATE_CRITICAL;
