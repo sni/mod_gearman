@@ -154,6 +154,22 @@ Your distributed setup could easily be extended to a load balanced
 setup with just adding more worker of the same config.
 
 
+NSCA Replacement
+~~~~~~~~~~~~~~~~
+
+++++
+<a title="NSCA Replacement" rel="lightbox[mod_gm]" href="http://labs.consol.de/wp-content/uploads/2010/09/nsca_replacement.png"><img src="http://labs.consol.de/wp-content/uploads/2010/09/nsca_replacement.png" alt="NSCA Replacement" width="300" height="220" style="float:none" /></a>
+++++
+
+If you just want to replace a current NSCA solution, you could load
+the Mod-Gearman NEB module and disable all distribution features. You
+still can receive passive results by the core send via
+send_gearman / send_multi. Make sure you use the same encryption
+settings like the neb module or your core won't be able to process the
+results.
+
+
+
 
 
 Installation
