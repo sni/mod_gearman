@@ -11,7 +11,9 @@ General
 
 Bugs
 ----
- - none known
+ - problems with logging and threads
+   - make neb module log to seperate file (thread safe)
+   - check worker logfile on logfile rotation
 
 WISH LIST
 =========
