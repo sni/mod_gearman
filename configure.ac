@@ -58,7 +58,7 @@ AC_SUBST(user)
 
 ##############################################
 # Check some functions
-AC_CHECK_FUNCS([gettimeofday strdup strchr strstr strtoul alarm gethostname memset strcspn strerror atexit gethostbyname socket])
+AC_CHECK_FUNCS([gettimeofday strsep strtok strdup strchr strstr strtoul alarm gethostname memset strcspn strerror atexit gethostbyname socket dup2 localtime_r memmove strpbrk])
 AC_PROG_LN_S
 
 ##############################################

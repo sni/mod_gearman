@@ -228,3 +228,6 @@ rpm: dist
 
 deb:
 	dpkg-buildpackage -us -uc
+
+mrproper:
+	git clean -xfd
