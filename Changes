@@ -1,5 +1,11 @@
 This file documents the revision history for mod_gearman.
 
+1.0.4  Wed...
+          - added nsca replacements docs
+
+1.0.3  Wed Mar 23 21:53:09 CET 2011
+          - fixed worker handling exit codes > 127
+
 1.0.2  Fri Mar 11 10:30:21 CET 2011
           - added new option do_hostchecks to completly disable hostchecks
           - fixed reading keyfiles
