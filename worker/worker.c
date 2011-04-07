@@ -95,6 +95,11 @@ int main (int argc, char **argv) {
         gm_log( GM_LOG_INFO, "mod_gearman worker started with pid %d\n", getpid());
     }
 
+    /* print some version information */
+    gm_log( GM_LOG_DEBUG, "Version %s\n", GM_VERSION );
+    gm_log( GM_LOG_DEBUG, "running on libgearman %s\n", gearman_version() );
+
+
     /* set signal handlers for a clean exit */
     signal(SIGINT, clean_exit);
     signal(SIGTERM,clean_exit);
