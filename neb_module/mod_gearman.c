@@ -22,10 +22,8 @@
  *****************************************************************************/
 
 /* include header */
-#include "utils.h"
 #include "result_thread.h"
 #include "mod_gearman.h"
-#include "gm_log.h"
 #include "gearman.h"
 
 /* specify event broker API version (required) */
@@ -712,14 +710,26 @@ static int read_arguments( const char *args_orig ) {
 
 /* verify our option */
 static int verify_options(mod_gm_opt_t *opt) {
+
+    /* open new logfile */
+    if ( opt->logmode == GM_LOG_MODE_AUTO && opt->logfile ) {
+        opt->logmode = GM_LOG_MODE_FILE;
+    }
+    if(opt->logmode == GM_LOG_MODE_FILE && opt->logfile && opt->debug_level < GM_LOG_STDOUT) {
+        opt->logfile_fp = fopen(opt->logfile, "a+");
+        if(opt->logfile_fp == NULL) {
+            gm_log( GM_LOG_ERROR, "error opening logfile: %s\n", opt->logfile );
+        }
+    }
+
     /* did we get any server? */
     if(opt->server_num == 0) {
         gm_log( GM_LOG_ERROR, "please specify at least one server\n" );
         return(GM_ERROR);
     }
 
-    if ( mod_gm_opt->result_queue == NULL )
-        mod_gm_opt->result_queue = GM_DEFAULT_RESULT_QUEUE;
+    if ( opt->result_queue == NULL )
+        opt->result_queue = GM_DEFAULT_RESULT_QUEUE;
 
     /* nothing set by hand -> defaults */
     if( opt->set_queues_by_hand == 0 ) {
@@ -1110,4 +1120,11 @@ int handle_export(int callback_type, void *data) {
 
     mod_gm_opt->debug_level = debug_level_orig;
     return return_code;
+}
+
+
+/* core log wrapper */
+void write_core_log(char *data) {
+    write_to_all_logs( data, NSLOG_INFO_MESSAGE );
+    return;
 }

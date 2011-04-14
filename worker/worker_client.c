@@ -26,7 +26,6 @@
 #include "common.h"
 #include "worker_client.h"
 #include "utils.h"
-#include "worker_logger.h"
 #include "gearman.h"
 
 char temp_buffer1[GM_BUFFERSIZE];

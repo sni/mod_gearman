@@ -22,8 +22,10 @@
  *****************************************************************************/
 
 #define MOD_GM_NEB  /**< set mod_gearman neb features */
+#define NSCORE      /**< enable core features         */
 
-#include <common.h>
+#include "utils.h"
+#include "common.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -32,7 +34,6 @@
 #include <pthread.h>
 
 #define GM_PERFDATA_QUEUE    "perfdata"  /**< default performance data queue */
-#define NSCORE                           /**< enable core features           */
 
 /** @file
  *  @brief Mod-Gearman NEB Module
@@ -90,9 +91,6 @@ int nebmodule_deinit( int flags, int reason );
  * @return nothing
  */
 void mod_gm_add_result_to_list(check_result * newcheckresult);
-
-/** options structure */
-mod_gm_opt_t *mod_gm_opt;
 
 /**
  * @}

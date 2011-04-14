@@ -22,7 +22,6 @@
  *****************************************************************************/
 
 #include "utils.h"
-#include "gm_log.h"
 #include "crypt.h"
 #include "base64.h"
 
@@ -198,6 +197,7 @@ int set_default_options(mod_gm_opt_t *opt) {
     opt->result_queue       = NULL;
     opt->keyfile            = NULL;
     opt->logfile            = NULL;
+    opt->logmode            = GM_LOG_MODE_AUTO;
     opt->logfile_fp         = NULL;
     opt->message            = NULL;
     opt->return_code        = 0;
@@ -382,6 +382,29 @@ int parse_args_line(mod_gm_opt_t *opt, char * arg, int recursion_level) {
     if ( !strcmp( key, "debug" ) ) {
         opt->debug_level = atoi( value );
         if(opt->debug_level < 0) { opt->debug_level = 0; }
+    }
+
+    /* logmode */
+    else if ( !strcmp( key, "logmode" ) ) {
+        opt->logmode = GM_LOG_MODE_AUTO;
+        if ( !strcmp( value, "automatic" ) ) {
+            opt->logmode = GM_LOG_MODE_AUTO;
+        }
+        else if ( !strcmp( value, "file" ) ) {
+            opt->logmode = GM_LOG_MODE_FILE;
+        }
+        else if ( !strcmp( value, "stdout" ) ) {
+            opt->logmode = GM_LOG_MODE_STDOUT;
+        }
+        else if ( !strcmp( value, "syslog" ) ) {
+            opt->logmode = GM_LOG_MODE_SYSLOG;
+        }
+        else if ( !strcmp( value, "core" ) ) {
+            opt->logmode = GM_LOG_MODE_CORE;
+        }
+        else {
+            gm_log( GM_LOG_ERROR, "unknown log mode '%s', use one of 'automatic', 'file', 'stdout', 'syslog' and 'core'\n", value );
+        }
     }
 
     /* result worker */
@@ -710,6 +733,20 @@ void dumpconfig(mod_gm_opt_t *opt, int mode) {
     gm_log( GM_LOG_DEBUG, "--------------------------------\n" );
     gm_log( GM_LOG_DEBUG, "configuration:\n" );
     gm_log( GM_LOG_DEBUG, "log level:           %d\n", opt->debug_level);
+
+    if(opt->logmode == GM_LOG_MODE_AUTO)
+        gm_log( GM_LOG_DEBUG, "log mode:            auto (%d)\n", opt->logmode);
+    if(opt->logmode == GM_LOG_MODE_FILE)
+        gm_log( GM_LOG_DEBUG, "log mode:            file (%d)\n", opt->logmode);
+    if(opt->logmode == GM_LOG_MODE_STDOUT)
+        gm_log( GM_LOG_DEBUG, "log mode:            stdout (%d)\n", opt->logmode);
+    if(opt->logmode == GM_LOG_MODE_CORE)
+        gm_log( GM_LOG_DEBUG, "log mode:            core (%d)\n", opt->logmode);
+    if(opt->logmode == GM_LOG_MODE_SYSLOG)
+        gm_log( GM_LOG_DEBUG, "log mode:            syslog (%d)\n", opt->logmode);
+    if(opt->logmode == GM_LOG_MODE_TOOLS)
+        gm_log( GM_LOG_DEBUG, "log mode:            tools (%d)\n", opt->logmode);
+
     if(mode == GM_WORKER_MODE) {
         gm_log( GM_LOG_DEBUG, "identifier:          %s\n", opt->identifier);
         gm_log( GM_LOG_DEBUG, "pidfile:             %s\n", opt->pidfile == NULL ? "no" : opt->pidfile);
@@ -1218,7 +1255,7 @@ int execute_safe_command(gm_job_t * exec_job, int fork_exec, char * hostname) {
 
 
 /* set empty default job */
-int set_default_job(gm_job_t *job, mod_gm_opt_t *mod_gm_opt) {
+int set_default_job(gm_job_t *job, mod_gm_opt_t *opt) {
 
     job->type                = NULL;
     job->host_name           = NULL;
@@ -1231,7 +1268,7 @@ int set_default_job(gm_job_t *job, mod_gm_opt_t *mod_gm_opt) {
     job->reschedule_check    = TRUE;
     job->return_code         = STATE_OK;
     job->latency             = 0.0;
-    job->timeout             = mod_gm_opt->job_timeout;
+    job->timeout             = opt->job_timeout;
     job->start_time.tv_sec   = 0L;
     job->start_time.tv_usec  = 0L;
 
@@ -1644,4 +1681,104 @@ char * eventtype2str(int i) {
             return strdup("EVENT_USER_FUNCTION"); break;
     }
     return strdup("UNKNOWN");
+}
+
+/* generic logger function */
+void gm_log( int lvl, const char *text, ... ) {
+    FILE * fp       = NULL;
+    int debug_level = GM_LOG_ERROR;
+    int logmode     = GM_LOG_MODE_STDOUT;
+    int slevel;
+    char * level;
+    char buffer1[GM_BUFFERSIZE];
+    char buffer2[GM_BUFFERSIZE];
+    char buffer3[GM_BUFFERSIZE];
+    time_t t;
+    va_list ap;
+    struct tm now;
+
+    if(mod_gm_opt != NULL) {
+        debug_level = mod_gm_opt->debug_level;
+        logmode     = mod_gm_opt->logmode;
+        fp          = mod_gm_opt->logfile_fp;
+    }
+
+    if(logmode == GM_LOG_MODE_CORE) {
+        if ( debug_level < 0 )
+            return;
+        if ( lvl != GM_LOG_ERROR && lvl > debug_level )
+            return;
+
+        if ( lvl == GM_LOG_ERROR ) {
+            snprintf( buffer1, 22, "mod_gearman: ERROR - " );
+        } else {
+            snprintf( buffer1, 14, "mod_gearman: " );
+        }
+        va_start( ap, text );
+        vsnprintf( buffer1 + strlen( buffer1 ), sizeof( buffer1 ) - strlen( buffer1 ), text, ap );
+        va_end( ap );
+
+        if ( debug_level >= GM_LOG_STDOUT ) {
+            printf( "%s", buffer1 );
+            return;
+        }
+        write_core_log( buffer1 );
+        return;
+    }
+
+    /* check log level */
+    if ( lvl != GM_LOG_ERROR && lvl > debug_level ) {
+        return;
+    }
+    if ( lvl == GM_LOG_ERROR ) {
+        level  = "ERROR";
+        slevel = LOG_ERR;
+    }
+    else if ( lvl == GM_LOG_INFO ) {
+        level  = "INFO ";
+        slevel = LOG_INFO;
+    }
+    else if ( lvl == GM_LOG_DEBUG ) {
+        level  = "DEBUG";
+        slevel = LOG_DEBUG;
+    }
+    else if ( lvl == GM_LOG_TRACE ) {
+        level  = "TRACE";
+        slevel = LOG_DEBUG;
+    }
+    else {
+        level = "UNKNOWN";
+        slevel = LOG_DEBUG;
+    }
+
+    /* set timestring */
+    t = time(NULL);
+    localtime_r(&t, &now);
+    strftime(buffer1, sizeof(buffer1), "[%Y-%m-%d %H:%M:%S]", &now );
+
+    /* set timestring */
+    snprintf(buffer2, sizeof(buffer2), "[%i][%s]", getpid(), level );
+
+    va_start( ap, text );
+    vsnprintf( buffer3, GM_BUFFERSIZE, text, ap );
+    va_end( ap );
+
+    if ( debug_level >= GM_LOG_STDOUT || logmode == GM_LOG_MODE_TOOLS ) {
+        printf( "%s", buffer3 );
+        return;
+    }
+
+    if(logmode == GM_LOG_MODE_FILE && fp != NULL) {
+        fprintf( fp, "%s%s %s", buffer1, buffer2, buffer3 );
+        fflush( fp );
+    }
+    else if(logmode == GM_LOG_MODE_SYSLOG) {
+        syslog(slevel , "%s %s", buffer2, buffer3 );
+    }
+    else {
+        /* stdout logging */
+        printf( "%s%s %s", buffer1, buffer2, buffer3 );
+    }
+
+    return;
 }

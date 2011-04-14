@@ -73,6 +73,14 @@
 #define GM_LOG_TRACE                    2
 #define GM_LOG_STDOUT                   3
 
+/* log modes */
+#define GM_LOG_MODE_AUTO                0
+#define GM_LOG_MODE_FILE                1
+#define GM_LOG_MODE_STDOUT              2
+#define GM_LOG_MODE_CORE                3
+#define GM_LOG_MODE_SYSLOG              4
+#define GM_LOG_MODE_TOOLS               5
+
 /* job priorities */
 #define GM_JOB_PRIO_LOW                 1
 #define GM_JOB_PRIO_NORMAL              2
@@ -165,6 +173,9 @@ typedef struct mod_gm_opt_struct {
     int            job_timeout;                             /**< override job timeout */
     int            encryption;                              /**< flag wheter messages are encrypted */
     int            transportmode;                           /**< flag for the transportmode, base64 only or base64 and encrypted  */
+    int            logmode;                                 /**< logmode: auto, syslog, file or nagios */
+    char         * logfile;                                 /**< path for the logfile */
+    FILE         * logfile_fp;                              /**< filedescriptor for the logfile */
 /* neb module */
     char         * result_queue;                            /**< name of the result queue used by the neb module */
     int            result_workers;                          /**< number of result worker threads started */
@@ -180,8 +191,6 @@ typedef struct mod_gm_opt_struct {
 /* worker */
     char         * identifier;                              /**< identifier for this worker */
     char         * pidfile;                                 /**< path to a pidfile */
-    char         * logfile;                                 /**< path for the logfile */
-    FILE         * logfile_fp;                              /**< filedescriptor for the logfile */
     int            daemon_mode;                             /**< running as daemon ot not? */
     int            debug_result;                            /**< flag to write a debug file for each result */
     int            max_age;                                 /**< max age in seconds for new jobs */
@@ -226,20 +235,8 @@ typedef struct gm_job_struct {
 } gm_job_t;
 
 
-/**
- * general logger
- *
- * logger is then defined in worker_logger.c
- * and the neb logger in logger.c
- * tools logger is in the tools_logger.c
- *
- * @param[in] lvl  - debug level for this message
- * @param[in] text - text to log
- *
- * @return nothing
- */
-void gm_log( int lvl, const char *text, ... );
-
+/** options structure */
+mod_gm_opt_t *mod_gm_opt;
 
 /*
  * @}

@@ -27,6 +27,19 @@
  *  @{
  */
 
+#include <stdio.h>
+#include <string.h>
+#include <time.h>
+#include <stdarg.h>
+#include <unistd.h>
+#include <errno.h>
+#include <stdlib.h>
+#include <ctype.h>
+#include <syslog.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <sys/stat.h>
+
 #include "common.h"
 
 /**
@@ -431,8 +444,26 @@ char * nebcallback2str(int i);
  */
 char * eventtype2str(int i);
 
+/**
+ * gm_log
+ *
+ * general logger
+ *
+ * @param[in] lvl  - debug level for this message
+ * @param[in] text - text to log
+ *
+ * @return nothing
+ */
+void gm_log( int lvl, const char *text, ... );
+
+/** write log line with core logger
+ *
+ * @param[in] data - log message
+ *
+ * @return nothing
+ */
+void write_core_log(char *data);
 
 /**
  * @}
  */
-

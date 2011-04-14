@@ -44,7 +44,6 @@
  */
 
 int mod_gm_shm_key;        /**< key for the shared memory segment */
-mod_gm_opt_t *mod_gm_opt;  /**< global options structure          */
 
 /** Mod-Gearman Worker
  *
@@ -193,4 +192,3 @@ void count_current_worker(void);
 /**
  * @}
  */
-

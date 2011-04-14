@@ -7,7 +7,6 @@
 #include <sys/time.h>
 
 #include <t/tap.h>
-#include <worker_logger.h>
 #include <common.h>
 #include <utils.h>
 #include <gearman.h>

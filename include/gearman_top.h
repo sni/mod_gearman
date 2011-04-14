@@ -38,8 +38,6 @@
 #include <time.h>
 #include "common.h"
 
-mod_gm_opt_t *mod_gm_opt;            /**< global options structure */
-
 /** gearman_top
  *
  * main function of gearman_top

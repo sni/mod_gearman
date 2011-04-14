@@ -26,7 +26,6 @@
 #include "result_thread.h"
 #include "utils.h"
 #include "mod_gearman.h"
-#include "gm_log.h"
 #include "gearman.h"
 
 /* cleanup and exit this thread */

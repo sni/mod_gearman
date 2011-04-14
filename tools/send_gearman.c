@@ -24,7 +24,6 @@
 /* include header */
 #include "send_gearman.h"
 #include "utils.h"
-#include "worker_logger.h"
 #include "gearman.h"
 
 gearman_client_st client;
@@ -41,6 +40,10 @@ int main (int argc, char **argv) {
         print_usage();
         exit( EXIT_FAILURE );
     }
+
+    /* set logging */
+    mod_gm_opt->debug_level = GM_LOG_INFO;
+    mod_gm_opt->logmode     = GM_LOG_MODE_TOOLS;
 
     /* init crypto functions */
     if(mod_gm_opt->encryption == GM_ENABLED) {
@@ -124,6 +127,8 @@ int verify_options(mod_gm_opt_t *opt) {
 
     if ( mod_gm_opt->result_queue == NULL )
         mod_gm_opt->result_queue = GM_DEFAULT_RESULT_QUEUE;
+
+    mod_gm_opt->logmode = GM_LOG_MODE_STDOUT;
 
     return(GM_OK);
 }
@@ -279,4 +284,11 @@ void print_version() {
     printf("send_gearman: version %s running on libgearman %s\n", GM_VERSION, gearman_version());
     printf("\n");
     exit( STATE_UNKNOWN );
+}
+
+
+/* core log wrapper */
+void write_core_log(char *data) {
+    printf("core logger is not available for tools: %s", data);
+    return;
 }

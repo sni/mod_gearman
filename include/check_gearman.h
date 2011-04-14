@@ -40,9 +40,6 @@
 #include <signal.h>
 #include "common.h"
 
-mod_gm_opt_t *mod_gm_opt;                /**< global options structure */
-
-
 /** check_gearman
  *
  * main function of check_gearman
@@ -105,4 +102,3 @@ int check_worker(char * queue, char * send, char * expect);
 /**
  * @}
  */
-

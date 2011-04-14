@@ -25,7 +25,6 @@
 /* include header */
 #include "send_multi.h"
 #include "utils.h"
-#include "worker_logger.h"
 #include "gearman.h"
 
 gearman_client_st client;
@@ -42,6 +41,10 @@ int main (int argc, char **argv) {
         print_usage();
         exit( 3 );
     }
+
+    /* set logging */
+    mod_gm_opt->debug_level = GM_LOG_INFO;
+    mod_gm_opt->logmode     = GM_LOG_MODE_TOOLS;
 
     /* init crypto functions */
     if(mod_gm_opt->encryption == GM_ENABLED) {
@@ -462,4 +465,11 @@ char *decode_xml(char *string) {
         }
     }
     return string;
+}
+
+
+/* core log wrapper */
+void write_core_log(char *data) {
+    printf("core logger is not available for tools: %s", data);
+    return;
 }

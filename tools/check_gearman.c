@@ -88,6 +88,7 @@ int main (int argc, char **argv) {
         }
     }
     mod_gm_opt->debug_level = opt_verbose;
+    mod_gm_opt->logmode     = GM_LOG_MODE_TOOLS;
     server_list[server_list_num] = NULL;
 
     if(opt_server == NULL) {
@@ -354,4 +355,11 @@ int check_worker(char * queue, char * to_send, char * expect) {
 
     printf("%s OK - %s\n", PLUGIN_NAME, result );
     return( STATE_OK );
+}
+
+
+/* core log wrapper */
+void write_core_log(char *data) {
+    printf("core logger is not available for tools: %s", data);
+    return;
 }

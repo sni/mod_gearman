@@ -43,8 +43,6 @@
 #include <libgearman/gearman.h>
 #include "common.h"
 
-mod_gm_opt_t *mod_gm_opt;   /**< options structure */
-
 /** send_multi
  *
  * main function of send_multi
@@ -155,4 +153,3 @@ char *decode_xml(char * xml);
 /**
  * @}
  */
-

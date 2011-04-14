@@ -29,7 +29,6 @@ common_SOURCES             = common/base64.c \
 
 pkglib_LIBRARIES           = mod_gearman.so
 mod_gearman_so_SOURCES     = $(common_SOURCES) \
-                             neb_module/gm_log.c \
                              neb_module/result_thread.c \
                              neb_module/mod_gearman.c
 
@@ -40,32 +39,28 @@ bin_PROGRAMS               = mod_gearman_worker \
                              gearman_top
 
 mod_gearman_worker_SOURCES = $(common_SOURCES) \
-                             worker/worker_logger.c   \
                              worker/worker_client.c   \
                              worker/worker.c
 
 send_gearman_SOURCES       = $(common_SOURCES) \
-                             tools/tools_logger.c \
                              tools/send_gearman.c
 
 send_multi_SOURCES         = $(common_SOURCES) \
-                             tools/tools_logger.c \
                              tools/send_multi.c
 
 check_gearman_SOURCES      = $(common_SOURCES) \
-                             tools/tools_logger.c \
                              tools/check_gearman.c
 
 gearman_top_SOURCES        = $(common_SOURCES) \
-                             tools/tools_logger.c \
                              tools/gearman_top.c
 gearman_top_LDFLAGS        = -lncurses
 
 # tests
-check_PROGRAMS   = 01_utils 02_full 03_exec
-01_utils_SOURCES = $(common_SOURCES) t/tap.h t/tap.c worker/worker_logger.c t/01-utils.c
-02_full_SOURCES  = $(common_SOURCES) t/tap.h t/tap.c worker/worker_logger.c t/02-full.c
-03_exec_SOURCES  = $(common_SOURCES) t/tap.h t/tap.c worker/worker_logger.c t/03-exec_checks.c
+check_PROGRAMS   = 01_utils 02_full 03_exec 04_log
+01_utils_SOURCES = $(common_SOURCES) t/tap.h t/tap.c t/01-utils.c
+02_full_SOURCES  = $(common_SOURCES) t/tap.h t/tap.c t/02-full.c
+03_exec_SOURCES  = $(common_SOURCES) t/tap.h t/tap.c t/03-exec_checks.c
+04_log_SOURCES   = $(common_SOURCES) t/tap.h t/tap.c t/04-log.c
 TESTS            = $(check_PROGRAMS)
 
 

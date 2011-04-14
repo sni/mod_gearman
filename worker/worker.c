@@ -24,7 +24,6 @@
 /* include header */
 #include "worker.h"
 #include "utils.h"
-#include "worker_logger.h"
 #include "worker_client.h"
 
 int current_number_of_workers                = 0;
@@ -347,7 +346,10 @@ int parse_arguments(int argc, char **argv) {
     }
 
     /* open new logfile */
-    if(mod_gm_opt->logfile && mod_gm_opt->debug_level < GM_LOG_STDOUT) {
+    if ( mod_gm_new_opt->logmode == GM_LOG_MODE_AUTO && mod_gm_new_opt->logfile ) {
+        mod_gm_opt->logmode = GM_LOG_MODE_FILE;
+    }
+    if(mod_gm_new_opt->logmode == GM_LOG_MODE_FILE && mod_gm_opt->logfile && mod_gm_opt->debug_level < GM_LOG_STDOUT) {
         mod_gm_opt->logfile_fp = fopen(mod_gm_opt->logfile, "a+");
         if(mod_gm_opt->logfile_fp == NULL) {
             perror(mod_gm_opt->logfile);
@@ -754,6 +756,12 @@ int get_next_shm_index() {
     return next_index;
 }
 
+
+/* core log wrapper */
+void write_core_log(char *data) {
+    printf("core logger is not available for worker: %s", data);
+    return;
+}
 
 /* print version */
 void print_version() {

@@ -42,6 +42,7 @@ int main (int argc, char **argv) {
     mod_gm_opt = malloc(sizeof(mod_gm_opt_t));
     set_default_options(mod_gm_opt);
 
+
     /*
      * and parse command line
      */
@@ -66,6 +67,7 @@ int main (int argc, char **argv) {
         }
     }
     mod_gm_opt->debug_level = opt_verbose;
+    mod_gm_opt->logmode     = GM_LOG_MODE_TOOLS;
     if(server_list_num == 0)
         server_list[server_list_num++] = "localhost";
     server_list[server_list_num] = NULL;
@@ -209,5 +211,12 @@ void print_stats(char * hostname) {
     free(message);
     free(version);
     free_mod_gm_status_server(stats);
+    return;
+}
+
+
+/* core log wrapper */
+void write_core_log(char *data) {
+    printf("core logger is not available for tools: %s", data);
     return;
 }

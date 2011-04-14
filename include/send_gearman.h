@@ -42,9 +42,6 @@
 #include <libgearman/gearman.h>
 #include "common.h"
 
-mod_gm_opt_t *mod_gm_opt;            /**< global options structure */
-
-
 /** send_gearman
  *
  * main function of gearman_top
@@ -115,4 +112,3 @@ void alarm_sighandler(int sig);
 /**
  * @}
  */
-
