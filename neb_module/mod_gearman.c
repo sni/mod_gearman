@@ -419,7 +419,6 @@ static int handle_host_check( int event_type, void *data ) {
     nebstruct_host_check_data * hostdata;
     char *raw_command=NULL;
     char *processed_command=NULL;
-    struct timeval start_time;
     host * hst;
 
     gm_log( GM_LOG_TRACE, "handle_host_check(%i)\n", event_type );
@@ -446,7 +445,10 @@ static int handle_host_check( int event_type, void *data ) {
     }
 
     /* get objects and set target function */
-    hst = find_host( hostdata->host_name );
+    if((hst=hostdata->object_ptr)==NULL) {
+        gm_log( GM_LOG_ERROR, "Host handler received NULL host object pointer.\n" );
+        return NEBERROR_CALLBACKCANCEL;
+    }
     set_target_queue( hst, NULL );
 
     /* local check? */
@@ -486,9 +488,6 @@ static int handle_host_check( int event_type, void *data ) {
         return NEBERROR_CALLBACKCANCEL;
     }
 
-    /* get the command start time */
-    gettimeofday(&start_time,NULL);
-
     /* increment number of host checks that are currently running */
     currently_running_host_checks++;
 
@@ -498,11 +497,10 @@ static int handle_host_check( int event_type, void *data ) {
     gm_log( GM_LOG_TRACE, "cmd_line: %s\n", processed_command );
 
     temp_buffer[0]='\x0';
-    snprintf( temp_buffer,sizeof( temp_buffer )-1,"type=host\nresult_queue=%s\nhost_name=%s\nstart_time=%i.%i\ntimeout=%d\ncommand_line=%s\n\n\n",
+    snprintf( temp_buffer,sizeof( temp_buffer )-1,"type=host\nresult_queue=%s\nhost_name=%s\nstart_time=%i.0\ntimeout=%d\ncommand_line=%s\n\n\n",
               mod_gm_opt->result_queue,
               hst->name,
-              ( int )start_time.tv_sec,
-              ( int )start_time.tv_usec,
+              ( int )hst->next_check,
               host_check_timeout,
               processed_command
             );
@@ -549,7 +547,6 @@ static int handle_svc_check( int event_type, void *data ) {
     service * svc = NULL;
     char *raw_command=NULL;
     char *processed_command=NULL;
-    struct timeval start_time;
     nebstruct_service_check_data * svcdata;
     int prio = GM_JOB_PRIO_LOW;
 
@@ -570,11 +567,16 @@ static int handle_svc_check( int event_type, void *data ) {
     }
 
     /* get objects and set target function */
-    svc = find_service( svcdata->host_name, svcdata->service_description );
+    if((svc=svcdata->object_ptr)==NULL) {
+        gm_log( GM_LOG_ERROR, "Service handler received NULL service object pointer.\n" );
+        return NEBERROR_CALLBACKCANCEL;
+    }
 
     /* find the host associated with this service */
-    if((hst=svc->host_ptr)==NULL)
+    if((hst=svc->host_ptr)==NULL) {
+        gm_log( GM_LOG_ERROR, "Service handler received NULL host object pointer.\n" );
         return NEBERROR_CALLBACKCANCEL;
+    }
     set_target_queue( hst, svc );
 
     /* local check? */
@@ -611,9 +613,6 @@ static int handle_svc_check( int event_type, void *data ) {
         return NEBERROR_CALLBACKCANCEL;
     }
 
-    /* get the command start time */
-    gettimeofday(&start_time,NULL);
-
     /* increment number of service checks that are currently running... */
     currently_running_service_checks++;
 
@@ -624,12 +623,11 @@ static int handle_svc_check( int event_type, void *data ) {
     gm_log( GM_LOG_TRACE, "cmd_line: %s\n", processed_command );
 
     temp_buffer[0]='\x0';
-    snprintf( temp_buffer,sizeof( temp_buffer )-1,"type=service\nresult_queue=%s\nhost_name=%s\nservice_description=%s\nstart_time=%i.%i\ntimeout=%d\ncommand_line=%s\n\n\n",
+    snprintf( temp_buffer,sizeof( temp_buffer )-1,"type=service\nresult_queue=%s\nhost_name=%s\nservice_description=%s\nstart_time=%i.0\ntimeout=%d\ncommand_line=%s\n\n\n",
               mod_gm_opt->result_queue,
               svcdata->host_name,
               svcdata->service_description,
-              ( int )start_time.tv_sec,
-              ( int )start_time.tv_usec,
+              ( int )svc->next_check,
               service_check_timeout,
               processed_command
             );
