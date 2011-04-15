@@ -297,6 +297,37 @@ Default is 0.
     debug=1
 ====
 
+
+logmode::
+    set way of logging.
+    Possible values are:
++
+--
+    * `automatic` - logfile when a logfile is specified. stdout when
+                    no logfile is given.
+                    stdout for tools.
+    * `stdout`    - just print all messages to stdout
+    * `syslog`    - use syslog for all log events
+    * `file`      - use logfile
+    * `core`      - use nagios internal loging (not thread safe! Use
+                    with care)
+--
++
+Default is automatic.
++
+====
+    debug=1
+====
+
+
+logfile::
+Path to the logfile.
++
+====
+    logfile=/path/to/log.file
+====
+
+
 server::
 sets the address of your gearman job server. Can be specified
 more than once to add more server. Mod-Gearman uses
@@ -484,14 +515,6 @@ Path to the pidfile.
 +
 ====
     pidfile=/path/to/pid.file
-====
-
-
-logfile::
-Path to the logfile.
-+
-====
-    logfile=/path/to/log.file
 ====
 
 
@@ -745,7 +768,7 @@ Hints
 Download
 --------
 
-* http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.0.3.tar.gz[version 1.0.3 - March 23 2011]
+* http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.0.4.tar.gz[version 1.0.4 - April 17 2011]
 * Mod Gearman is available for download at: http://labs.consol.de/nagios/mod-gearman
 * The source is available at GitHub: http://github.com/sni/mod_gearman
 
@@ -753,6 +776,7 @@ Download
 Archive
 ~~~~~~~
 
+* http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.0.4.tar.gz[version 1.0.4 - April 17 2011]
 * http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.0.3.tar.gz[version 1.0.3 - March 23 2011]
 * http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.0.2.tar.gz[version 1.0.2 - March 13 2011]
 * http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.0.1.tar.gz[version 1.0.1 - March 05 2011]

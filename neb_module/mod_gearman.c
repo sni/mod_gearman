@@ -721,6 +721,9 @@ static int verify_options(mod_gm_opt_t *opt) {
             gm_log( GM_LOG_ERROR, "error opening logfile: %s\n", opt->logfile );
         }
     }
+    if ( opt->logmode == GM_LOG_MODE_AUTO ) {
+        opt->logmode = GM_LOG_MODE_CORE;
+    }
 
     /* did we get any server? */
     if(opt->server_num == 0) {
