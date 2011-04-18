@@ -77,19 +77,19 @@ int nebmodule_init( int flags, char *args, nebmodule *handle ) {
     gearman_module_handle=handle;
 
     /* set some module info */
-    neb_set_module_info( gearman_module_handle, NEBMODULE_MODINFO_TITLE,   "mod_gearman" );
+    neb_set_module_info( gearman_module_handle, NEBMODULE_MODINFO_TITLE,   "Mod-Gearman" );
     neb_set_module_info( gearman_module_handle, NEBMODULE_MODINFO_AUTHOR,  "Sven Nierlein" );
-    neb_set_module_info( gearman_module_handle, NEBMODULE_MODINFO_TITLE,   "Copyright (c) 2010 Sven Nierlein" );
+    neb_set_module_info( gearman_module_handle, NEBMODULE_MODINFO_TITLE,   "Copyright (c) 2010-2011 Sven Nierlein" );
     neb_set_module_info( gearman_module_handle, NEBMODULE_MODINFO_VERSION, GM_VERSION );
     neb_set_module_info( gearman_module_handle, NEBMODULE_MODINFO_LICENSE, "GPL v3" );
     neb_set_module_info( gearman_module_handle, NEBMODULE_MODINFO_DESC,    "distribute host/service checks and eventhandler via gearman" );
 
     mod_gm_opt = malloc(sizeof(mod_gm_opt_t));
     set_default_options(mod_gm_opt);
-    gm_log( GM_LOG_INFO,  "Version %s\n", GM_VERSION );
 
     /* parse arguments */
     read_arguments( args );
+    gm_log( GM_LOG_INFO,  "Version %s\n", GM_VERSION );
     gm_log( GM_LOG_TRACE, "args: %s\n", args );
     gm_log( GM_LOG_TRACE, "nebmodule_init(%i, %i)\n", flags );
     gm_log( GM_LOG_DEBUG, "running on libgearman %s\n", gearman_version() );
