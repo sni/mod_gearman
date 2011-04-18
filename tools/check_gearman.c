@@ -133,10 +133,10 @@ void print_usage() {
     printf("\n");
     printf("check_gearman [ -H=<hostname>                ]\n");
     printf("              [ -t=<timeout>                 ]\n");
-    printf("              [ -w=<jobs warning level>      ]  default: 10\n");
-    printf("              [ -c=<jobs critical level>     ]  default: 100\n");
-    printf("              [ -W=<worker warning level>    ]  default: 25\n");
-    printf("              [ -C=<worker critical level>   ]  default: 50\n");
+    printf("              [ -w=<jobs warning level>      ]  default: %i\n", opt_job_warning);
+    printf("              [ -c=<jobs critical level>     ]  default: %i\n", opt_job_critical);
+    printf("              [ -W=<worker warning level>    ]  default: %i\n", opt_worker_warning);
+    printf("              [ -C=<worker critical level>   ]  default: %i\n", opt_worker_critical);
     printf("              [ -q=<queue>                   ]\n");
     printf("\n");
     printf("\n");
