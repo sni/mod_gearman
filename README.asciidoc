@@ -23,7 +23,8 @@ Support & Questions
 -------------------
 * Mod-Gearman has been succesfully tested with Nagios 3.2.3 and Icinga 1.2.0 and there are no known bugs at the moment.
   Let me know if you find one.
-* Please use the Mod-Gearman https://groups.google.com/group/mod_gearman[google groups mailinglist] for support, questions and bug reports.
+* https://groups.google.com/group/mod_gearman[google groups mailinglist]
+* http://labs.consol.de/lang/de/forum/#/categories/mod-gearman[support forum]
 * Debian users may be interested in the http://labs.consol.de/nagios/mod-gearman/mod-gearman-quickstart-guide/[quickstart guide].
 
 
@@ -787,6 +788,4 @@ Archive
 * http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-0.6.tar.gz[version 0.6 - October 13 2010]
 * http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-0.5.tar.gz[version 0.5 - October 01 2010]
 * http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-0.4.tar.gz[version 0.4 - September 25 2010]
-
-
 
