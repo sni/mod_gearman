@@ -248,3 +248,9 @@ int main(void) {
     endskip;
     return exit_status();
 }
+
+/* core log wrapper */
+void write_core_log(char *data) {
+    printf("core logger is not available for tests: %s", data);
+    return;
+}
