@@ -21,7 +21,7 @@ This file documents the revision history for mod_gearman.
           - fixed "make rpm" for SLES11
 
 1.0    Mon Feb  7 11:05:29 CET 2011
-          - added dup_server option (Mark Clarkson)
+          - added dupserver option (Mark Clarkson)
           - added stderr to send_multi
           - added missing performance data to send_multi
           - added error message when using unknown option

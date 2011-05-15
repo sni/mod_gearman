@@ -575,13 +575,13 @@ will reduce the load on the worker host. Default: yes
     fork_on_exec=no
 ====
 
-dup_server::
+dupserver::
 sets the address of gearman job server where duplicated result will be sent to.
 Can be specified more than once to add more server. Useful for duplicating
 results for a reporting installation or remote gui.
 +
 ====
-    dup_server=logserver:4730,logserver2:4730
+    dupserver=logserver:4730,logserver2:4730
 ====
 
 
