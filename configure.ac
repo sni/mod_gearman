@@ -3,7 +3,7 @@
 
 ##############################################
 AC_PREREQ([2.59])
-AC_INIT([mod_gearman], [1.0.4], [sven.nierlein@consol.de])
+AC_INIT([mod_gearman], [1.0.5], [sven.nierlein@consol.de])
 AM_INIT_AUTOMAKE([-Wall foreign subdir-objects])
 AC_CONFIG_SRCDIR([neb_module/mod_gearman.c],[worker/worker.c],[tools/send_gearman.c],[tools/check_gearman.c],[tools/gearman_top.c])
 AC_CONFIG_HEADER([config.h])

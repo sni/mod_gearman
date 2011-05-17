@@ -27,6 +27,7 @@
 #include "gearman.h"
 
 gearman_client_st client;
+gearman_client_st client_dup;
 
 /* work starts here */
 int main (int argc, char **argv) {
@@ -58,11 +59,19 @@ int main (int argc, char **argv) {
         exit( EXIT_FAILURE );
     }
 
+    /* create duplicate client */
+    if ( create_client_dup( mod_gm_opt->dupserver_list, &client_dup ) != GM_OK ) {
+        gm_log( GM_LOG_ERROR, "cannot start client for duplicate server\n" );
+        exit( EXIT_FAILURE );
+    }
+
     /* send result message */
     signal(SIGALRM, alarm_sighandler);
     rc = send_result();
 
     gearman_client_free( &client );
+    if( mod_gm_opt->dupserver_num )
+        gearman_client_free( &client_dup );
     mod_gm_free_opt(mod_gm_opt);
     exit( rc );
 }
@@ -260,6 +269,24 @@ int send_result() {
                          TRUE
                         ) == GM_OK) {
         gm_log( GM_LOG_TRACE, "send_result_back() finished successfully\n" );
+
+        if( mod_gm_opt->dupserver_num ) {
+            if(add_job_to_queue( &client,
+                                 mod_gm_opt->dupserver_list,
+                                 mod_gm_opt->result_queue,
+                                 NULL,
+                                 temp_buffer1,
+                                 GM_JOB_PRIO_NORMAL,
+                                 GM_DEFAULT_JOB_RETRIES,
+                                 mod_gm_opt->transportmode,
+                                 TRUE
+                            ) == GM_OK) {
+                gm_log( GM_LOG_TRACE, "send_result_back() finished successfully for duplicate server.\n" );
+            }
+            else {
+                gm_log( GM_LOG_TRACE, "send_result_back() finished unsuccessfully for duplicate server\n" );
+            }
+        }
     }
     else {
         gm_log( GM_LOG_TRACE, "send_result_back() finished unsuccessfully\n" );
