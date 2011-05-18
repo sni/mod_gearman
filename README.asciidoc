@@ -22,7 +22,7 @@ servicegroups.
 Support & Questions
 -------------------
 * Mod-Gearman has been succesfully tested with Nagios 3.2.3 and Icinga
-  1.2.0 running on Gearman 0.14. There are no known bugs at the moment.
+  1.2.0 running on Lib-Gearman 0.14. There are no known bugs at the moment.
   Let me know if you find one.
 * https://groups.google.com/group/mod_gearman[google groups mailinglist]
 * http://labs.consol.de/lang/de/forum/#/categories/mod-gearman[support forum]
@@ -770,7 +770,7 @@ Hints
 Download
 --------
 
-* http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.0.4.tar.gz[version 1.0.4 - April 17 2011]
+* http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.0.5.tar.gz[version 1.0.5 - May 17 2011]
 * Mod Gearman is available for download at: http://labs.consol.de/nagios/mod-gearman
 * The source is available at GitHub: http://github.com/sni/mod_gearman
 
@@ -778,6 +778,7 @@ Download
 Archive
 ~~~~~~~
 
+* http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.0.5.tar.gz[version 1.0.5 - May 17 2011]
 * http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.0.4.tar.gz[version 1.0.4 - April 17 2011]
 * http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.0.3.tar.gz[version 1.0.3 - March 23 2011]
 * http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.0.2.tar.gz[version 1.0.2 - March 13 2011]

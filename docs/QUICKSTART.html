@@ -606,9 +606,9 @@ install Gearman from source.</p></div>
 <div class="listingblock">
 <div class="content">
 <pre><tt>#&gt; cd /tmp
-#&gt; wget "http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.0.3.tar.gz"
-#&gt; tar zxf mod_gearman-1.0.3.tar.gz
-#&gt; cd mod_gearman-1.0.3
+#&gt; wget "http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.0.5.tar.gz"
+#&gt; tar zxf mod_gearman-1.0.5.tar.gz
+#&gt; cd mod_gearman-1.0.5
 #&gt; ./configure --prefix=/opt --with-gearman=/opt --with-user=nagios --with-init-dir=/etc/init.d
 #&gt; make
 #&gt; make install
@@ -666,7 +666,7 @@ Restarting nagios3 monitoring daemon: nagios3</tt></pre>
 <div class="listingblock">
 <div class="content">
 <pre><tt>#&gt; grep mod_gearman /var/log/nagios3/nagios.log
-[1295003042] mod_gearman: Version 1.0.3
+[1295003042] mod_gearman: Version 1.0.5
 [1295003042] Event broker module '/opt/lib/mod_gearman/mod_gearman.o' initialized successfully.</tt></pre>
 </div></div>
 </div>
@@ -696,7 +696,7 @@ worker_debian64 |               1  |           0  |           0</p></div>
 <div class="listingblock">
 <div class="content">
 <pre><tt>#&gt; /opt/bin/check_gearman -H localhost -q worker_`hostname` -t 10 -s check
-check_gearman OK - debian64 has 1 worker and is working on 0 jobs. Version: 1.0.3|worker=1 jobs=2c</tt></pre>
+check_gearman OK - debian64 has 1 worker and is working on 0 jobs. Version: 1.0.5|worker=1 jobs=2c</tt></pre>
 </div></div>
 <div class="paragraph"><p>The interesting number is the last one, <em>2c</em> in our case, which means there
 have been already 2 jobs executed by this worker.</p></div>
@@ -736,7 +736,7 @@ Mod-Gearman Worker: /opt/var/mod_gearman/mod_gearman_worker.log
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2011-03-27 19:51:17 CEST
+Last updated 2011-05-18 23:22:17 CEST
 </div>
 </div>
 </body>
