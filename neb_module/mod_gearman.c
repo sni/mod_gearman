@@ -742,28 +742,6 @@ static int verify_options(mod_gm_opt_t *opt) {
         opt->events   = GM_ENABLED;
     }
 
-    if(   opt->servicegroups_num == 0
-       && opt->hostgroups_num    == 0
-       && opt->exports_count     == 0
-       && opt->hosts             == GM_DISABLED
-       && opt->services          == GM_DISABLED
-       && opt->events            == GM_DISABLED
-       && opt->perfdata          == GM_DISABLED
-      ) {
-        gm_log( GM_LOG_ERROR, "loading Mod-Gearman NEB module without any queues is useless\n" );
-        return(GM_ERROR);
-    }
-
-    /* do we need a result thread? */
-    if(   opt->servicegroups_num == 0
-       && opt->hostgroups_num    == 0
-       && opt->hosts    == GM_DISABLED
-       && opt->services == GM_DISABLED
-      ) {
-        gm_log( GM_LOG_DEBUG, "disabled unused result threads\n" );
-        mod_gm_opt->result_workers = 0;
-    }
-
     return(GM_OK);
 }
 
