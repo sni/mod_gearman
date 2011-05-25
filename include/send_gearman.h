@@ -44,7 +44,7 @@
 
 /** send_gearman
  *
- * main function of gearman_top
+ * main function of send_gearman
  *
  * @param[in] argc - number of arguments
  * @param[in] argv - list of arguments
