@@ -232,7 +232,14 @@ void *get_results( gearman_job_st *job, void *context, size_t *result_size, gear
     finishtime_f     = (double)chk_result->finish_time.tv_sec + (double)chk_result->finish_time.tv_usec / 1000000;
     exec_time        = finishtime_f - starttime_f;
     latency          = now_f - exec_time - core_starttime_f;
-    chk_result->latency    += latency;
+
+    if(latency < 0)
+        latency = 0;
+    if(chk_result->latency < 0)
+        chk_result->latency = 0;
+
+    chk_result->latency += latency;
+
 #ifdef GM_DEBUG
     if(chk_result->latency > 1000)
         write_debug_file(&decrypted_orig);

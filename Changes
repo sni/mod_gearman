@@ -1,5 +1,8 @@
 This file documents the revision history for mod_gearman.
 
+1.0.6  Tue May 24 13:23:34 CEST 2011
+          - fixed latency calculation (was below zero sometimes)
+
 1.0.5  Tue May 17 17:46:36 CEST 2011
           - added dupserver option to send_gearman and send_multi too
           - removed warning for the passive only mode
