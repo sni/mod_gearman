@@ -135,18 +135,15 @@ Gearman-Top
 First we have a look at '/opt/bin/gearman_top'. You should have at least one
 worker for each queue.
 
---------------------------------------
-2011-01-07 23:23:24  -  localhost:4730   -  v0.14
-
-Queue Name      | Worker Available | Jobs Waiting | Jobs Running
-------------------------------------------------------------------
-check_results   |               1  |           0  |           0
-eventhandler    |               1  |           0  |           0
-host            |               1  |           0  |           0
-service         |               1  |           0  |           0
-worker_debian64 |               1  |           0  |           0
-------------------------------------------------------------------
---------------------------------------
+ 2011-01-07 23:23:24  -  localhost:4730   -  v0.14
+ Queue Name      | Worker Available | Jobs Waiting | Jobs Running
+ ------------------------------------------------------------------
+ check_results   |               1  |           0  |           0
+ eventhandler    |               1  |           0  |           0
+ host            |               1  |           0  |           0
+ service         |               1  |           0  |           0
+ worker_debian64 |               1  |           0  |           0
+ ------------------------------------------------------------------
 
 Check-Gearman
 ~~~~~~~~~~~~~
