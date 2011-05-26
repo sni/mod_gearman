@@ -288,6 +288,7 @@ int parse_yes_or_no(char*value, int dfl) {
 int parse_args_line(mod_gm_opt_t *opt, char * arg, int recursion_level) {
     char *key;
     char *value;
+    char temp_buffer[GM_BUFFERSIZE];
 
     gm_log( GM_LOG_TRACE, "parse_args_line(%s, %d)\n", arg, recursion_level);
 
@@ -562,7 +563,14 @@ int parse_args_line(mod_gm_opt_t *opt, char * arg, int recursion_level) {
         while ( (servername = strsep( &value, "," )) != NULL ) {
             servername = trim(servername);
             if ( strcmp( servername, "" ) ) {
-                opt->server_list[opt->server_num] = strdup(servername);
+                if(strcspn(servername, ":") == 0) {
+                    temp_buffer[0]='\x0';
+                    snprintf( temp_buffer,sizeof( temp_buffer )-1, "localhost%s", servername);
+                    temp_buffer[sizeof( temp_buffer )-1]='\x0';
+                    opt->server_list[opt->server_num] = strdup(temp_buffer);
+                } else {
+                    opt->server_list[opt->server_num] = strdup(servername);
+                }
                 opt->server_num++;
             }
         }

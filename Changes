@@ -1,6 +1,7 @@
 This file documents the revision history for mod_gearman.
 
 1.0.6  Tue May 24 13:23:34 CEST 2011
+          - expand server definitions from :4730 to localhost:4730
           - fixed latency calculation (was below zero sometimes)
 
 1.0.5  Tue May 17 17:46:36 CEST 2011
