@@ -18,14 +18,14 @@ void printf_hex(char* text, int length) {
 }
 
 int main(void) {
-    plan(42);
+    plan(44);
 
     /* lowercase */
     char test[100];
     ok(lc(NULL) == NULL, "lc(NULL)");
-    strcpy(test, "Yes"); ok(strcmp(lc(test), "yes") == 0, "lc(yes)");
-    strcpy(test, "YES"); ok(strcmp(lc(test), "yes") == 0, "lc(YES)");
-    strcpy(test, "yeS"); ok(strcmp(lc(test), "yes") == 0, "lc(yeS)");
+    strcpy(test, "Yes"); like(lc(test), "yes", "lc(yes)");
+    strcpy(test, "YES"); like(lc(test), "yes", "lc(YES)");
+    strcpy(test, "yeS"); like(lc(test), "yes", "lc(yeS)");
 
 
     /* parse_yes_or_no */
@@ -46,7 +46,7 @@ int main(void) {
 
     /* trim */
     ok(trim(NULL) == NULL, "trim(NULL)");
-    strcpy(test, " test "); ok(strcmp(trim(test), "test") == 0, "trim(' test ')");
+    strcpy(test, " test "); like(trim(test), "test", "trim(' test ')");
 
     /* reading keys */
     mod_gm_opt_t *mod_gm_opt;
@@ -64,20 +64,17 @@ int main(void) {
         snprintf(hex, 4, "%02x", mod_gm_opt->crypt_key[i]);
         strncat(test, hex, 4);
     }
-    if(!ok(strcmp(test, "3131313131313131313131313131313131313131313131313131313131310000") == 0, "read keyfile t/data/test1.key"))
-        diag("expected: '3131313131313131313131313131313131313131313131313131313131310000'\n but got: '%s'", test );
+    like(test, "3131313131313131313131313131313131313131313131313131313131310000", "read keyfile t/data/test1.key");
 
     mod_gm_opt->keyfile = "t/data/test2.key";
     read_keyfile(mod_gm_opt);
-    //printf_hex(mod_gm_opt->crypt_key, 32);
-    if(!ok(strcmp(mod_gm_opt->crypt_key, "abcdef") == 0, "reading keyfile t/data/test2.key"))
-        diag("expected: 'abcdef'\n but got: '%s'", mod_gm_opt->crypt_key );
+
+    like(mod_gm_opt->crypt_key, "abcdef", "reading keyfile t/data/test2.key");
 
     mod_gm_opt->keyfile = "t/data/test3.key";
     read_keyfile(mod_gm_opt);
     //printf_hex(mod_gm_opt->crypt_key, 32);
-    if(!ok(strcmp(mod_gm_opt->crypt_key, "11111111111111111111111111111111") == 0, "reading keyfile t/data/test3.key"))
-        diag("expected: '11111111111111111111111111111111'\n but got: '%s'", mod_gm_opt->crypt_key );
+    like(mod_gm_opt->crypt_key, "11111111111111111111111111111111", "reading keyfile t/data/test3.key");
     ok(strlen(mod_gm_opt->crypt_key) == 32, "key size for t/data/test3.key");
 
 
@@ -90,14 +87,12 @@ int main(void) {
     int len;
     len = mod_gm_encrypt(&encrypted, text, GM_ENCODE_AND_ENCRYPT);
     ok(len == 24, "length of encrypted only");
-    if(!ok(!strcmp(encrypted, base), "encrypted string"))
-        diag("expected: '%s' but got: '%s'", base, encrypted);
+    like(encrypted, base, "encrypted string");
 
     /* decrypt */
     char * decrypted = malloc(GM_BUFFERSIZE);
     mod_gm_decrypt(&decrypted, encrypted, GM_ENCODE_AND_ENCRYPT);
-    if(!ok(!strcmp(decrypted, text), "decrypted text"))
-        diag("expected: '%s' but got: '%s'", text, decrypted);
+    like(decrypted, text, "decrypted text");
     free(decrypted);
     free(encrypted);
 
@@ -105,13 +100,12 @@ int main(void) {
     char * base64 = malloc(GM_BUFFERSIZE);
     len = mod_gm_encrypt(&base64, text, GM_ENCODE_ONLY);
     ok(len == 16, "length of encode only");
-    ok(!strcmp(base64, "dGVzdCBtZXNzYWdl"), "base64 only string");
+    like(base64, "dGVzdCBtZXNzYWdl", "base64 only string");
 
     /* debase 64 */
     char * debase64 = malloc(GM_BUFFERSIZE);
     mod_gm_decrypt(&debase64, base64, GM_ENCODE_ONLY);
-    if(!ok(!strcmp(debase64, text), "debase64 text"))
-        diag("expected: '%s' but got: '%s'", text, debase64);
+    like(debase64, text, "debase64 text");
     free(debase64);
     free(base64);
 
@@ -122,13 +116,11 @@ int main(void) {
 
     /* nr2signal */
     char * signame1 = nr2signal(9);
-    if(!ok(!strcmp(signame1, "SIGKILL"), "get SIGKILL for 9"))
-        diag("expected: 'SIGKILL' but got: '%s'", signame1);
+    like(signame1, "SIGKILL", "get SIGKILL for 9");
     free(signame1);
 
     char * signame2 = nr2signal(15);
-    if(!ok(!strcmp(signame2, "SIGTERM"), "get SIGTERM for 15"))
-        diag("expected: 'SIGTERM' but got: '%s'", signame2);
+    like(signame2, "SIGTERM", "get SIGTERM for 15");
     free(signame2);
 
 
@@ -149,6 +141,15 @@ int main(void) {
     string2timeval(NULL, &t);
     ok(t.tv_sec  == 0, "string2timeval 7");
     ok(t.tv_usec == 0, "string2timeval 8");
+
+    /* command line parsing */
+    strcpy(test, "server=host:4730");
+    parse_args_line(mod_gm_opt, test, 0);
+    like(mod_gm_opt->server_list[0], "host:4730", "server=host:4730");
+
+    strcpy(test, "server=:4730");
+    parse_args_line(mod_gm_opt, test, 0);
+    like(mod_gm_opt->server_list[1], "localhost:4730", "server=:4730");
 
     return exit_status();
 }

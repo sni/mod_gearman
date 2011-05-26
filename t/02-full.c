@@ -30,8 +30,8 @@ void *start_gearmand(void*data) {
     if(pid == 0) {
         sid = setsid();
         char port[30];
-        snprintf(port, 30, "-p %d", GEARMAND_TEST_PORT);
-        execlp("gearmand", "gearmand", "-t 10", "-j 0", port, (char *)NULL);
+        snprintf(port, 30, "--port=%d", GEARMAND_TEST_PORT);
+        execlp("gearmand", "gearmand", "--threads=10", "--job-retries=0", port, "--verbose=5", (char *)NULL);
         perror("gearmand");
         exit(1);
     }
@@ -179,7 +179,7 @@ int main(void) {
         diag( "waitpid() %d exited with %d\n", chld, status);
     }
 
-    if(!ok(gearmand_pid > 0, "'gearmand -t 10 -j 0 -p %d -v -v -v' started with pid: %d", GEARMAND_TEST_PORT, gearmand_pid)) {
+    if(!ok(gearmand_pid > 0, "'gearmand --threads=10 --job-retries=0 --port=%d --verbose=5' started with pid: %d", GEARMAND_TEST_PORT, gearmand_pid)) {
         diag("make sure gearmand is in your PATH. Common locations are /usr/sbin or /usr/local/sbin");
         exit( EXIT_FAILURE );
     }

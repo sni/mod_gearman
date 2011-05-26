@@ -31,55 +31,44 @@ int main(void) {
     char *argv[MAX_CMD_ARGS];
     strcpy(cmd, "/bin/true");
     parse_command_line(cmd, argv);
-    if(!ok(argv[0] == cmd, "parsing args cmd 1"))
-        diag("expected '%s' but got '%s'", cmd, argv[0]);
+    like(argv[0], cmd, "parsing args cmd 1");
 
     /*****************************************
      * arg parsing test 2
      */
     strcpy(cmd, "/bin/cmd blah blub   foo");
     parse_command_line(cmd,argv);
-    if(!ok(!strcmp(argv[0], "/bin/cmd"), "parsing args cmd 2"))
-        diag("expected '/bin/cmd' but got '%s'", argv[0]);
-    if(!ok(!strcmp(argv[1], "blah"), "parsing args cmd 2"))
-        diag("expected 'blah' but got '%s'", argv[1]);
-    if(!ok(!strcmp(argv[2], "blub"), "parsing args cmd 2"))
-        diag("expected 'blub' but got '%s'", argv[2]);
-    if(!ok(!strcmp(argv[3], "foo"), "parsing args cmd 2"))
-        diag("expected 'foo' but got '%s'", argv[3]);
+    like(argv[0], "/bin/cmd", "parsing args cmd 2");
+    like(argv[1], "blah", "parsing args cmd 2");
+    like(argv[2], "blub", "parsing args cmd 2");
+    like(argv[3], "foo", "parsing args cmd 2");
 
     /*****************************************
      * simple test command 1
      */
     strcpy(cmd, "/bin/true");
     rc = run_check(cmd, &result);
-    if(!ok(rc == 0, "pclose for cmd '%s' returned rc %d", cmd, rc))
-        diag("cmd: '%s' returned %d", cmd, rc);
+    cmp_ok(rc, "==", 0, "pclose for cmd '%s' returned rc %d", cmd, rc);
     rrc = real_exit_code(rc);
-    if(!ok(rrc == 0, "cmd '%s' returned rc %d", cmd, rrc))
-        diag("cmd: '%s' returned %d", cmd, rrc);
+    cmp_ok(rrc, "==", 0, "cmd '%s' returned rc %d", cmd, rrc);
 
     /*****************************************
      * simple test command 2
      */
     strcpy(cmd, "/bin/true 2>&1");
     rc = run_check(cmd, &result);
-    if(!ok(rc == 0, "pclose for cmd '%s' returned rc %d", cmd, rc))
-        diag("cmd: '%s' returned %d", cmd, rc);
+    cmp_ok(rc, "==", 0, "pclose for cmd '%s' returned rc %d", cmd, rc);
     rrc = real_exit_code(rc);
-    if(!ok(rrc == 0, "cmd '%s' returned rc %d", cmd, rrc))
-        diag("cmd: '%s' returned %d", cmd, rrc);
+    cmp_ok(rrc, "==", 0, "cmd '%s' returned rc %d", cmd, rrc);
 
     /*****************************************
      * simple test command 3
      */
     strcpy(cmd, "/usr/lib/nagios/plugins/check_icmp -H 127.0.0.1");
     rc = run_check(cmd, &result);
-    if(!ok(rc == 0, "pclose for cmd '%s' returned rc %d", cmd, rc))
-        diag("cmd: '%s' returned %d", cmd, rc);
+    cmp_ok(rc, "==", 0, "pclose for cmd '%s' returned rc %d", cmd, rc);
     rrc = real_exit_code(rc);
-    if(!ok(rrc == 0, "cmd '%s' returned rc %d", cmd, rrc))
-        diag("cmd: '%s' returned %d", cmd, rrc);
+    cmp_ok(rrc, "==", 0, "cmd '%s' returned rc %d", cmd, rrc);
 
     /*****************************************
      * simple test command 4
@@ -87,10 +76,8 @@ int main(void) {
     strcpy(cmd, "echo -n 'test'; exit 2");
     rc  = run_check(cmd, &result);
     rrc = real_exit_code(rc);
-    if(!ok(rrc == 2, "cmd '%s' returned rc %d", cmd, rrc))
-        diag("cmd: '%s' returned %d", cmd, rrc);
-    if(!ok(!strcmp(result, "test"), "returned result string"))
-        diag("expected 'test' but got '%s'", result);
+    cmp_ok(rrc, "==", 2, "cmd '%s' returned rc %d", cmd, rrc);
+    like(result, "test", "returned result string");
 
     gm_job_t * exec_job;
     exec_job = ( gm_job_t * )malloc( sizeof *exec_job );
