@@ -18,6 +18,9 @@ servicegroups.
 * You need at least one http://gearman.org[Gearman Job Server] running
 
 
+http://labs.consol.de/wp-content/uploads/2010/09/Mod-Gearman.pdf[Have a look at the slides from the Nagios Workshop 2011 in Hannover]
+
+
 
 Support & Questions
 -------------------
@@ -770,7 +773,7 @@ Hints
 Download
 --------
 
-* http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.0.5.tar.gz[version 1.0.5 - May 17 2011]
+* http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.0.6.tar.gz[version 1.0.6 - June 04 2011]
 * Mod Gearman is available for download at: http://labs.consol.de/nagios/mod-gearman
 * The source is available at GitHub: http://github.com/sni/mod_gearman
 
@@ -778,6 +781,7 @@ Download
 Archive
 ~~~~~~~
 
+* http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.0.6.tar.gz[version 1.0.6 - June 04 2011]
 * http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.0.5.tar.gz[version 1.0.5 - May 17 2011]
 * http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.0.4.tar.gz[version 1.0.4 - April 17 2011]
 * http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.0.3.tar.gz[version 1.0.3 - March 23 2011]
