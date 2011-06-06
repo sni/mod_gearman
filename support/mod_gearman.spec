@@ -34,7 +34,7 @@ be bound to host and servicegroups.
 %configure \
      --datadir="%{_datadir}" \
      --datarootdir="%{_datadir}" \
-     --localstatedir="%{_localstatedir}/mod_gearman" \
+     --localstatedir="%{_localstatedir}" \
      --sysconfdir="%{_sysconfdir}/mod_gearman" \
      --with-init-dir="%{_initrddir}"
 
@@ -75,6 +75,8 @@ mv %{buildroot}/%{_datadir}/mod_gearman/standalone_worker.conf %{buildroot}/%{_s
 
 %{_libdir}/mod_gearman/mod_gearman.o
 %{_libdir}/mod_gearman/mod_gearman.so
+
+%attr(755,nagios,root) %{_localstatedir}/mod_gearman
 
 %defattr(-,root,root)
 %docdir %{_defaultdocdir}
