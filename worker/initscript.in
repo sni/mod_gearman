@@ -20,6 +20,11 @@ PIDFILE=%PIDFILE%
 USER=%USER%
 USERID=`id -u`
 
+# load extra environment variables
+if [ -f /etc/sysconfig/mod_gearman_worker ]; then
+        . /etc/sysconfig/mod_gearman_worker
+fi
+
 # create state dir
 if [ "$USERID" -eq 0 ]; then
   mkdir -p $(dirname $PIDFILE)
