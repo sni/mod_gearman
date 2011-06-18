@@ -1174,7 +1174,7 @@ int execute_safe_command(gm_job_t * exec_job, int fork_exec, char * hostname) {
 
         /* run the plugin check command */
         pclose_result = run_check(exec_job->command_line, &plugin_output);
-        return_code = pclose_result;
+        return_code   = pclose_result;
 
         if(fork_exec == GM_ENABLED) {
             if(write(pdes[1], plugin_output, strlen(plugin_output)+1) <= 0)
@@ -1224,13 +1224,15 @@ int execute_safe_command(gm_job_t * exec_job, int fork_exec, char * hostname) {
         /* signaled */
         else if(return_code >= 128 && return_code < 144) {
             char * signame = nr2signal((int)(return_code-128));
-            snprintf( buffer, sizeof( buffer )-1, "CRITICAL: Return code of %d is out of bounds. Plugin exited by signal %s. (worker: %s)", (int)(return_code), signame, hostname);
+            snprintf( buffer, sizeof( buffer )-1, "CRITICAL: Return code of %d is out of bounds. Plugin exited by signal %s. (worker: %s)\n%s", (int)(return_code), signame, hostname, buffer);
             return_code = STATE_CRITICAL;
             free(signame);
         }
         /* other error codes > 3 */
         else if(return_code > 3) {
-            snprintf( buffer, sizeof( buffer )-1, "CRITICAL: Return code of %d is out of bounds. (worker: %s)", (int)(return_code), hostname);
+            gm_log( GM_LOG_INFO, "check exited with exit code > 3. Exit: %d\n", (int)(return_code));
+            gm_log( GM_LOG_INFO, "stdout: %s\n", buffer);
+            snprintf( buffer, sizeof( buffer )-1, "CRITICAL: Return code of %d is out of bounds. (worker: %s)\n%s\n", (int)(return_code), hostname, buffer);
             return_code = STATE_CRITICAL;
         }
 
