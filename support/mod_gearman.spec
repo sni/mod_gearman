@@ -1,11 +1,11 @@
 Name:          mod_gearman
-Version:       1.0.6
+Version:       1.0.7
 Release:       1%{?dist}
 License:       GNU Public License version 2
 Packager:      Michael Friedrich <michael.friedrich@univie.ac.at>
 Vendor:        Icinga Team
 URL:           http://labs.consol.de/nagios/mod-gearman/
-Source0:        mod_gearman-%{version}.tar.gz
+Source0:       mod_gearman-%{version}.tar.gz
 #Source1:       https://github.com/sni/mod_gearman/tarball/v%{version}
 Group:         Applications/Monitoring
 Requires:      gearmand
