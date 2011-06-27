@@ -1,0 +1,71 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/xsl" href="extinfo.xsl"?>
+<div id="check_multi_xml" style='\''display:none'\''>
+<check_multi>
+        <CHILD>
+                <no>0</no>
+                <command>none</command>
+                <critical></critical>
+                <endtime>1301601686.14919</endtime>
+                <hash>68616d582e666a616b30304336</hash>
+                <nallchecks>2</nallchecks>
+                <name></name>
+                <nchecks>2</nchecks>
+                <number>0</number>
+                <ok></ok>
+                <rc>0</rc>
+                <runtime>5.28176784515381</runtime>
+                <sleeped>0</sleeped>
+                <starttime>1301601680.86743</starttime>
+                <timeouttime>1301601815.86743</timeouttime>
+                <type>head</type>
+                <unknown></unknown>
+                <warning></warning>
+                <output>1 critical, 1 warning, 0 unknown, 30 ok</output>
+        </CHILD>
+        <CHILD>
+                <no>1</no>
+                <command>test.pl</command>
+                <critical></critical>
+                <displayed>1</displayed>
+                <endtime>1301601680.94953</endtime>
+                <error></error>
+                <name>test1</name>
+                <number>1</number>
+                <ok></ok>
+                <output>test1 output</output>
+                <plugin>test.pl</plugin>
+                <pplugin>test.pl</pplugin>
+                <process_perfdata>1</process_perfdata>
+                <rc>0</rc>
+                <runtime>0.0820419788360596</runtime>
+                <starttime>1301601680.86749</starttime>
+                <timeout>50</timeout>
+                <type>command</type>
+                <unknown></unknown>
+                <warning></warning>
+        </CHILD>
+        <CHILD>
+                <no>2</no>
+                <command>test2.pl</command>
+                <critical></critical>
+                <displayed>1</displayed>
+                <endtime>1301601681.00426</endtime>
+                <error></error>
+                <name>test2</name>
+                <number>2</number>
+                <ok></ok>
+                <output>test2</output>
+                <plugin>test2.pl</plugin>
+                <pplugin>test2.pl</pplugin>
+                <process_perfdata>1</process_perfdata>
+                <rc>0</rc>
+                <runtime>0.0538640022277832</runtime>
+                <starttime>1301601680.95039</starttime>
+                <timeout>50</timeout>
+                <type>command</type>
+                <unknown></unknown>
+                <warning></warning>
+        </CHILD>
+</check_multi>
+</div>

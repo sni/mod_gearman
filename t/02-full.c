@@ -32,9 +32,12 @@ void *start_gearmand(void*data) {
         char port[30];
         snprintf(port, 30, "--port=%d", GEARMAND_TEST_PORT);
         /* for newer gearman versions */
-        //execlp("gearmand", "gearmand", "--threads=10", "--job-retries=0", port, "--verbose=5", (char *)NULL);
-        /* for gearman 0.14 */
-        execlp("gearmand", "gearmand", "-t 10", "-j 0", port, (char *)NULL);
+        if(atof(gearman_version()) > 0.14) {
+            execlp("gearmand", "gearmand", "--threads=10", "--job-retries=0", port, "--verbose=5", (char *)NULL);
+        } else {
+            /* for gearman 0.14 */
+            execlp("gearmand", "gearmand", "-t 10", "-j 0", port, (char *)NULL);
+        }
         perror("gearmand");
         exit(1);
     }
@@ -155,7 +158,10 @@ void check_logfile() {
 /* main tests */
 int main(void) {
     int status, chld;
-    int tests = 36;
+    int tests = 40;
+    int rrc;
+    char cmd[150];
+    char * result;
     plan(tests);
 
     mod_gm_opt = malloc(sizeof(mod_gm_opt_t));
@@ -234,6 +240,23 @@ int main(void) {
         test_servicecheck(GM_ENCODE_AND_ENCRYPT);
         sleep(1);
     }
+
+    /*****************************************
+     * send_gearman
+     */
+    snprintf(cmd, 150, "./send_gearman --server=localhost:%d --key=testtest --host=test --service=test --message=test --returncode=0", GEARMAND_TEST_PORT);
+    rrc = real_exit_code(run_check(cmd, &result));
+    cmp_ok(rrc, "==", 0, "cmd '%s' returned rc %d", cmd, rrc);
+    like(result, "^\s*$", "output from ./send_gearman");
+
+    /*****************************************
+     * send_gearman
+     */
+    snprintf(cmd, 150, "./send_multi --server=localhost:%d --host=blah < t/data/send_multi.txt", GEARMAND_TEST_PORT);
+    rrc = real_exit_code(run_check(cmd, &result));
+    cmp_ok(rrc, "==", 0, "cmd '%s' returned rc %d", cmd, rrc);
+    like(result, "send_multi OK: 2 check_multi child checks submitted", "output from ./send_multi");
+
 
     /* cleanup */
     mod_gm_free_opt(mod_gm_opt);

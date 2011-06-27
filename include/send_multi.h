@@ -124,11 +124,12 @@ int read_multi_stream(FILE *stream);
  * read_child_check
  *
  * @param[in] bufstart - start of buffer
- * @param[in] bufend - end of buffer
+ * @param[in] bufend   - end of buffer
+ * @param[in] end_time - timestruct when check is over
  *
  * @return TRUE on success or FALSE if something went wrong
  */
-int read_child_check(char *bufstart, char *bufend);
+int read_child_check(char *bufstart, char *bufend, struct timeval * end_time);
 
 /**
  * read_multi_attribute

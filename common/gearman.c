@@ -209,7 +209,7 @@ int add_job_to_queue( gearman_client_st *client, char ** server_list, char * que
     if(   ret1 != GEARMAN_SUCCESS
        || ret2 != GEARMAN_SUCCESS
        || task == NULL
-       || gearman_client_error(client) != NULL
+       || ( gearman_client_error(client) != NULL && atof(gearman_version()) == 0.14 )
       ) {
 
         /* log the error */

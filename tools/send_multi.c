@@ -216,15 +216,13 @@ int send_result() {
 
     gm_log( GM_LOG_TRACE, "queue: %s\n", mod_gm_opt->result_queue );
     temp_buffer1[0]='\x0';
-    snprintf( temp_buffer1, sizeof( temp_buffer1 )-1, "type=%s\nhost_name=%s\nstart_time=%i.%i\nfinish_time=%i.%i\nlatency=%i.%i\nreturn_code=%i\n",
+    snprintf( temp_buffer1, sizeof( temp_buffer1 )-1, "type=%s\nhost_name=%s\nstart_time=%i.%i\nfinish_time=%i.%i\nreturn_code=%i\n",
               mod_gm_opt->active == GM_ENABLED ? "active" : "passive",
               mod_gm_opt->host,
               (int)mod_gm_opt->starttime.tv_sec,
               (int)mod_gm_opt->starttime.tv_usec,
               (int)mod_gm_opt->finishtime.tv_sec,
               (int)mod_gm_opt->finishtime.tv_usec,
-              (int)mod_gm_opt->latency.tv_sec,
-              (int)mod_gm_opt->latency.tv_usec,
               mod_gm_opt->return_code
             );
 
@@ -308,6 +306,9 @@ int read_multi_stream(FILE *stream) {
     char *bufstart=NULL;
     char *bufend=NULL;
     int count=0;
+    struct timeval end_time;
+
+    gettimeofday(&end_time, NULL);
 
     do {
         /* opening tag <CHILD> found? read from buffer start with maximum buffer len */
@@ -324,7 +325,7 @@ int read_multi_stream(FILE *stream) {
                 bufstart+=strlen("<CHILD>");
 
                 /* if valid check_multi chunk found, send the result*/
-                if (read_child_check(bufstart,bufend)) {
+                if (read_child_check(bufstart,bufend,&end_time)) {
                     if (send_result() == GM_ERROR) {
                         count--;
                     }
@@ -372,11 +373,13 @@ int read_multi_stream(FILE *stream) {
     return count;
 }
 
-int read_child_check(char *bufstart, char *bufend) {
+int read_child_check(char *bufstart, char *bufend, struct timeval * end_time) {
     char *attribute  = NULL;
     char *attribute2 = NULL;
     char *error      = NULL;
     char temp_buffer[GM_BUFFERSIZE];
+    double end_time_d;
+    struct timeval start_time;
 
     /* child check number */
     if ((attribute=read_multi_attribute(bufstart,bufend,"no")) == NULL) {
@@ -401,28 +404,20 @@ int read_child_check(char *bufstart, char *bufend) {
     mod_gm_opt->return_code=atoi(attribute);
     gm_log( GM_LOG_TRACE, "mod_gm_opt->return_code: %d\n", mod_gm_opt->return_code);
 
-    /* start time */
-    if ((attribute=read_multi_attribute(bufstart,bufend,"starttime")) == NULL)
+    /* runtime */
+    if ((attribute=read_multi_attribute(bufstart,bufend,"runtime")) == NULL)
         return 0;
-    if (strchr(attribute, '.') != NULL) {
-        mod_gm_opt->starttime.tv_sec=atoi(strtok(attribute, "."));
-        mod_gm_opt->starttime.tv_usec=atoi(strtok(NULL, "."));
-    } else {
-        mod_gm_opt->starttime.tv_sec=atoi(attribute);
-        mod_gm_opt->starttime.tv_usec=0;
-    }
+    end_time_d   = timeval2double(end_time);
+    double2timeval(end_time_d - atof(attribute), &start_time);
+
+    mod_gm_opt->starttime.tv_sec  = start_time.tv_sec;
+    mod_gm_opt->starttime.tv_usec = start_time.tv_usec;
     gm_log( GM_LOG_TRACE, "starttime: %d.%d\n", mod_gm_opt->starttime.tv_sec, mod_gm_opt->starttime.tv_usec);
 
-    /* end time */
-    if ((attribute=read_multi_attribute(bufstart,bufend,"endtime")) == NULL)
-        return 0;
-    if (strchr(attribute, '.') != NULL) {
-        mod_gm_opt->finishtime.tv_sec=atoi(strtok(attribute, "."));
-        mod_gm_opt->finishtime.tv_usec=atoi(strtok(NULL, "."));
-    } else {
-        mod_gm_opt->finishtime.tv_sec=atoi(attribute);
-        mod_gm_opt->finishtime.tv_usec=0;
-    }
+
+    /* end time is the execution time of send_multi itself */
+    mod_gm_opt->finishtime.tv_sec  = end_time->tv_sec;
+    mod_gm_opt->finishtime.tv_usec = end_time->tv_usec;
     gm_log( GM_LOG_TRACE, "endtime: %d.%d\n", mod_gm_opt->finishtime.tv_sec, mod_gm_opt->finishtime.tv_usec);
 
     /* message */

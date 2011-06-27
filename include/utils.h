@@ -35,6 +35,7 @@
 #include <errno.h>
 #include <stdlib.h>
 #include <ctype.h>
+#include <math.h>
 #include <syslog.h>
 #include <sys/types.h>
 #include <sys/wait.h>
@@ -255,6 +256,18 @@ char * nr2signal(int sig);
  * @return nothing
  */
 void string2timeval(char * value, struct timeval * t);
+
+/**
+ * double2timeval
+ *
+ * parse double into timeval
+ *
+ * @param[in] value - double value
+ * @param[out] t - pointer to timeval structure
+ *
+ * @return nothing
+ */
+void double2timeval(double value, struct timeval * t);
 
 /**
  * timeval2double

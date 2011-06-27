@@ -12,10 +12,10 @@ mod_gm_opt_t *mod_gm_opt;
 int main(void) {
     int rc, rrc;
     char * result;
-    char cmd[100];
+    char cmd[120];
     char hostname[GM_BUFFERSIZE];
 
-    plan(40);
+    plan(42);
 
     /* set hostname */
     gethostname(hostname, GM_BUFFERSIZE-1);
@@ -42,6 +42,22 @@ int main(void) {
     like(argv[1], "blah", "parsing args cmd 2");
     like(argv[2], "blub", "parsing args cmd 2");
     like(argv[3], "foo", "parsing args cmd 2");
+
+    /*****************************************
+     * send_gearman
+     */
+    strcpy(cmd, "./send_gearman --server=blah --key=testtest --host=test --service=test --message=test --returncode=0");
+    rrc = real_exit_code(run_check(cmd, &result));
+    diag(result);
+    cmp_ok(rrc, "==", 1, "cmd '%s' returned rc %d", cmd, rrc);
+
+    /*****************************************
+     * send_gearman
+     */
+    strcpy(cmd, "./send_multi --server=blah --host=blah < t/data/send_multi.txt");
+    rrc = real_exit_code(run_check(cmd, &result));
+    diag(result);
+    cmp_ok(rrc, "==", 1, "cmd '%s' returned rc %d", cmd, rrc);
 
     /*****************************************
      * simple test command 1
