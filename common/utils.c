@@ -971,7 +971,7 @@ void string2timeval(char * value, struct timeval *t) {
 
 /* convert to time */
 void double2timeval(double value, struct timeval *t) {
-    t->tv_sec  = (int)floor(value);
+    t->tv_sec  = (int)value;
     t->tv_usec = (int)((value - (double)t->tv_sec) * 1000000);
 }
 

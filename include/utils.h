@@ -35,7 +35,6 @@
 #include <errno.h>
 #include <stdlib.h>
 #include <ctype.h>
-#include <math.h>
 #include <syslog.h>
 #include <sys/types.h>
 #include <sys/wait.h>
