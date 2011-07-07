@@ -10,8 +10,8 @@ Source0:       mod_gearman-%{version}.tar.gz
 Group:         Applications/Monitoring
 Requires:      gearmand
 BuildRoot:     %{_tmppath}/%{name}-%{version}-root-%(%{__id_u} -n)
-BuildRequires: autoconf, automake
-BuildRequires: libtool, libevent-devel, ncurses-devel
+BuildRequires: autoconf, automake, ncurses-devel
+BuildRequires: libtool, libtool-ltdl-devel, libevent-devel
 Summary:       Gearman module for Icinga/Nagios
 Requires(pre,post): /sbin/ldconfig
 
