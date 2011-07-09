@@ -53,7 +53,7 @@ check_gearman_SOURCES      = $(common_SOURCES) \
 
 gearman_top_SOURCES        = $(common_SOURCES) \
                              tools/gearman_top.c
-gearman_top_LDFLAGS        = -lncurses
+gearman_top_LDADD          = -lncurses
 
 # tests
 check_PROGRAMS   = 01_utils 02_full 03_exec 04_log

@@ -1,5 +1,8 @@
 This file documents the revision history for mod_gearman.
 
+1.0.8  Sat Jul  9 11:43:53 CEST 2011
+          - fixed ld options (fixes debian bug #632431) thanks Ilya Barygin
+
 1.0.7  Sun Jul  3 15:18:16 CEST 2011
           - show plugin output for exit codes > 3
           - fixed send_multi timestamps when client clock is screwed
