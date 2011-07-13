@@ -1130,7 +1130,7 @@ int run_check(char *processed_command, char **ret) {
 
 
 /* execute this command with given timeout */
-int execute_safe_command(gm_job_t * exec_job, int fork_exec, char * hostname) {
+int execute_safe_command(gm_job_t * exec_job, int fork_exec, char * identifier) {
     int pdes[2];
     int return_code;
     int pclose_result;
@@ -1188,7 +1188,7 @@ int execute_safe_command(gm_job_t * exec_job, int fork_exec, char * hostname) {
 
             if(pclose_result == -1) {
                 char error[GM_BUFFERSIZE];
-                snprintf(error, sizeof(error), "error on %s: %s", hostname, strerror(errno));
+                snprintf(error, sizeof(error), "error on %s: %s", identifier, strerror(errno));
                 if(write(pdes[1], error, strlen(error)+1) <= 0)
                     perror("write");
             }
@@ -1220,17 +1220,17 @@ int execute_safe_command(gm_job_t * exec_job, int fork_exec, char * hostname) {
         /* file not executable? */
         if(return_code == 126) {
             return_code = STATE_CRITICAL;
-            snprintf( buffer, sizeof( buffer )-1, "CRITICAL: Return code of 126 is out of bounds. Make sure the plugin you're trying to run is executable. (worker: %s)", hostname);
+            snprintf( buffer, sizeof( buffer )-1, "CRITICAL: Return code of 126 is out of bounds. Make sure the plugin you're trying to run is executable. (worker: %s)", identifier);
         }
         /* file not found errors? */
         else if(return_code == 127) {
             return_code = STATE_CRITICAL;
-            snprintf( buffer, sizeof( buffer )-1, "CRITICAL: Return code of 127 is out of bounds. Make sure the plugin you're trying to run actually exists. (worker: %s)", hostname);
+            snprintf( buffer, sizeof( buffer )-1, "CRITICAL: Return code of 127 is out of bounds. Make sure the plugin you're trying to run actually exists. (worker: %s)", identifier);
         }
         /* signaled */
         else if(return_code >= 128 && return_code < 144) {
             char * signame = nr2signal((int)(return_code-128));
-            snprintf( buffer, sizeof( buffer )-1, "CRITICAL: Return code of %d is out of bounds. Plugin exited by signal %s. (worker: %s)\n%s", (int)(return_code), signame, hostname, buffer);
+            snprintf( buffer, sizeof( buffer )-1, "CRITICAL: Return code of %d is out of bounds. Plugin exited by signal %s. (worker: %s)\n%s", (int)(return_code), signame, identifier, buffer);
             return_code = STATE_CRITICAL;
             free(signame);
         }
@@ -1238,7 +1238,7 @@ int execute_safe_command(gm_job_t * exec_job, int fork_exec, char * hostname) {
         else if(return_code > 3) {
             gm_log( GM_LOG_INFO, "check exited with exit code > 3. Exit: %d\n", (int)(return_code));
             gm_log( GM_LOG_INFO, "stdout: %s\n", buffer);
-            snprintf( buffer, sizeof( buffer )-1, "CRITICAL: Return code of %d is out of bounds. (worker: %s)\n%s\n", (int)(return_code), hostname, buffer);
+            snprintf( buffer, sizeof( buffer )-1, "CRITICAL: Return code of %d is out of bounds. (worker: %s)\n%s\n", (int)(return_code), identifier, buffer);
             return_code = STATE_CRITICAL;
         }
 
@@ -1261,9 +1261,9 @@ int execute_safe_command(gm_job_t * exec_job, int fork_exec, char * hostname) {
         exec_job->return_code   = 2;
         exec_job->early_timeout = 1;
         if ( !strcmp( exec_job->type, "service" ) )
-            snprintf( buffer, sizeof( buffer ) -1, "(Service Check Timed Out On Worker: %s)", hostname);
+            snprintf( buffer, sizeof( buffer ) -1, "(Service Check Timed Out On Worker: %s)", identifier);
         if ( !strcmp( exec_job->type, "host" ) )
-            snprintf( buffer, sizeof( buffer ) -1, "(Host Check Timed Out On Worker: %s)", hostname);
+            snprintf( buffer, sizeof( buffer ) -1, "(Host Check Timed Out On Worker: %s)", identifier);
         exec_job->output = strdup( buffer );
     }
 

@@ -334,11 +334,11 @@ int run_check(char *processed_command, char **plugin_output);
  *
  * @param[in] exec_job - job structure
  * @param[in] fork_exec - fork or not before exec
- * @param[in] hostname - current worker hostname
+ * @param[in] identifier - current worker identifier
  *
  * @return true on success
  */
-int execute_safe_command(gm_job_t * exec_job, int fork_exec, char * hostname);
+int execute_safe_command(gm_job_t * exec_job, int fork_exec, char * identifier);
 
 /**
  *

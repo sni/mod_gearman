@@ -326,7 +326,7 @@ void do_exec_job( ) {
 
     /* run the command */
     gm_log( GM_LOG_TRACE, "command: %s\n", exec_job->command_line);
-    execute_safe_command(exec_job, mod_gm_opt->fork_on_exec, hostname);
+    execute_safe_command(exec_job, mod_gm_opt->fork_on_exec, mod_gm_opt->identifier );
 
     if ( !strcmp( exec_job->type, "service" ) || !strcmp( exec_job->type, "host" ) ) {
         send_result_back();
