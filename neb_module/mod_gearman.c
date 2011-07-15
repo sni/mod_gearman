@@ -159,6 +159,14 @@ int nebmodule_init( int flags, char *args, nebmodule *handle ) {
             neb_register_callback( i, gearman_module_handle, 0, handle_export );
     }
 
+    /* log at least one line into the core logfile */
+    if ( mod_gm_opt->logmode != GM_LOG_MODE_CORE ) {
+        int logmode_saved = mod_gm_opt->logmode;
+        mod_gm_opt->logmode = GM_LOG_MODE_CORE;
+        gm_log( GM_LOG_INFO,  "initialized version %s (libgearman %s)\n", GM_VERSION, gearman_version() );
+        mod_gm_opt->logmode = logmode_saved;
+    }
+
     gm_log( GM_LOG_DEBUG, "finished initializing\n" );
 
     return NEB_OK;
