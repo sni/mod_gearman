@@ -1135,6 +1135,7 @@ int execute_safe_command(gm_job_t * exec_job, int fork_exec, char * identifier) 
     int return_code;
     int pclose_result;
     char *plugin_output;
+    char *bufdup;
     char buffer[GM_BUFFERSIZE];
     sigset_t mask;
     struct timeval start_time,end_time;
@@ -1194,10 +1195,12 @@ int execute_safe_command(gm_job_t * exec_job, int fork_exec, char * identifier) 
             }
 
             return_code = real_exit_code(pclose_result);
+            free(plugin_output);
             exit(return_code);
         }
         else {
             snprintf( buffer, sizeof( buffer )-1, "%s", plugin_output );
+            free(plugin_output);
         }
     }
 
@@ -1230,15 +1233,19 @@ int execute_safe_command(gm_job_t * exec_job, int fork_exec, char * identifier) 
         /* signaled */
         else if(return_code >= 128 && return_code < 144) {
             char * signame = nr2signal((int)(return_code-128));
-            snprintf( buffer, sizeof( buffer )-1, "CRITICAL: Return code of %d is out of bounds. Plugin exited by signal %s. (worker: %s)\n%s", (int)(return_code), signame, identifier, buffer);
+            bufdup = strdup(buffer);
+            snprintf( buffer, sizeof( buffer )-1, "CRITICAL: Return code of %d is out of bounds. Plugin exited by signal %s. (worker: %s)\n%s\n", (int)(return_code), signame, identifier, bufdup);
             return_code = STATE_CRITICAL;
+            free(bufdup);
             free(signame);
         }
         /* other error codes > 3 */
         else if(return_code > 3) {
             gm_log( GM_LOG_INFO, "check exited with exit code > 3. Exit: %d\n", (int)(return_code));
             gm_log( GM_LOG_INFO, "stdout: %s\n", buffer);
-            snprintf( buffer, sizeof( buffer )-1, "CRITICAL: Return code of %d is out of bounds. (worker: %s)\n%s\n", (int)(return_code), identifier, buffer);
+            bufdup = strdup(buffer);
+            snprintf( buffer, sizeof( buffer )-1, "CRITICAL: Return code of %d is out of bounds. (worker: %s)\n%s\n", (int)(return_code), identifier, bufdup);
+            free(bufdup);
             return_code = STATE_CRITICAL;
         }
 
@@ -1261,9 +1268,10 @@ int execute_safe_command(gm_job_t * exec_job, int fork_exec, char * identifier) 
         exec_job->return_code   = 2;
         exec_job->early_timeout = 1;
         if ( !strcmp( exec_job->type, "service" ) )
-            snprintf( buffer, sizeof( buffer ) -1, "(Service Check Timed Out On Worker: %s)", identifier);
+            snprintf( buffer, sizeof( buffer ) -1, "(Service Check Timed Out On Worker: %s)\n", identifier);
         if ( !strcmp( exec_job->type, "host" ) )
-            snprintf( buffer, sizeof( buffer ) -1, "(Host Check Timed Out On Worker: %s)", identifier);
+            snprintf( buffer, sizeof( buffer ) -1, "(Host Check Timed Out On Worker: %s)\n", identifier);
+        free(exec_job->output);
         exec_job->output = strdup( buffer );
     }
 

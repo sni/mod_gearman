@@ -34,11 +34,11 @@ void *start_gearmand(void*data) {
         snprintf(port, 30, "--port=%d", GEARMAND_TEST_PORT);
         /* for newer gearman versions */
         if(atof(gearman_version()) > 0.14) {
-            diag("having gearmand > 0.14");
+            //diag("having gearmand > 0.14");
             execlp("gearmand", "gearmand", "--threads=10", "--job-retries=0", port, "--verbose=999", "--log-file=/tmp/gearmand.log" , (char *)NULL);
         } else {
             /* for gearman 0.14 */
-            diag("having gearmand <= 0.14");
+            //diag("having gearmand <= 0.14");
             execlp("gearmand", "gearmand", "-t 10", "-j 0", port, (char *)NULL);
         }
         perror("gearmand");
@@ -301,6 +301,7 @@ int main(void) {
     rrc = real_exit_code(run_check(cmd, &result));
     cmp_ok(rrc, "==", 0, "cmd '%s' returned rc %d", cmd, rrc);
     like(result, "^\\s*$", "output from ./send_gearman");
+    free(result);
 
     /*****************************************
      * send_gearman
