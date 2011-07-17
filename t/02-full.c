@@ -177,7 +177,7 @@ void wait_for_empty_queue(char *queue, int timeout) {
         tries++;
         stats = malloc(sizeof(mod_gm_server_status_t));
         stats->function_num = 0;
-        stats->worker_num = 0;
+        stats->worker_num   = 0;
         rc = get_gearman_server_data(stats, &message, &version, "localhost", GEARMAND_TEST_PORT);
         if( rc == STATE_OK ) {
             for(x=0; x<stats->function_num;x++) {
@@ -196,7 +196,7 @@ void wait_for_empty_queue(char *queue, int timeout) {
         sleep(1);
     }
 
-    ok(tries <= 10, "queue %s empty after %d seconds", queue, tries);
+    ok(tries < timeout, "queue %s empty after %d seconds", queue, tries);
     return;
 }
 

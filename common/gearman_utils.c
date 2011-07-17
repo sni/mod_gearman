@@ -128,6 +128,7 @@ int get_gearman_server_data(mod_gm_server_status_t *stats, char ** message, char
 
         /* skip the dummy queue if its empty */
         if(!strcmp( name, "dummy") && func->total == 0) {
+            free(func->queue);
             free(func);
             continue;
         }
@@ -145,7 +146,7 @@ int get_gearman_server_data(mod_gm_server_status_t *stats, char ** message, char
 
 /* free a status structure */
 void free_mod_gm_status_server(mod_gm_server_status_t *stats) {
-    int x = 0;
+    int x;
 
     for(x=0; x<stats->function_num;x++) {
         free(stats->function[x]->queue);
