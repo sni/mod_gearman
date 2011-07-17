@@ -10,6 +10,7 @@
 #include <common.h>
 #include <utils.h>
 #include <gearman.h>
+#include "gearman_utils.h"
 
 #define GEARMAND_TEST_PORT   54730
 
@@ -33,9 +34,11 @@ void *start_gearmand(void*data) {
         snprintf(port, 30, "--port=%d", GEARMAND_TEST_PORT);
         /* for newer gearman versions */
         if(atof(gearman_version()) > 0.14) {
-            execlp("gearmand", "gearmand", "--threads=10", "--job-retries=0", port, "--verbose=5", (char *)NULL);
+            diag("having gearmand > 0.14");
+            execlp("gearmand", "gearmand", "--threads=10", "--job-retries=0", port, "--verbose=999", "--log-file=/tmp/gearmand.log" , (char *)NULL);
         } else {
             /* for gearman 0.14 */
+            diag("having gearmand <= 0.14");
             execlp("gearmand", "gearmand", "-t 10", "-j 0", port, (char *)NULL);
         }
         perror("gearmand");
@@ -95,7 +98,7 @@ void test_servicecheck(int transportmode) {
     char temp_buffer[GM_BUFFERSIZE];
     temp_buffer[0]='\x0';
     snprintf( temp_buffer,sizeof( temp_buffer )-1,"type=service\nresult_queue=%s\nhost_name=%s\nservice_description=%s\nstart_time=%i.%i\ntimeout=%d\ncheck_options=%i\nscheduled_check=%i\nreschedule_check=%i\nlatency=%f\ncommand_line=%s\n\n\n",
-              "result_queue",
+              GM_DEFAULT_RESULT_QUEUE,
               "host1",
               "service1",
               ( int )start_time.tv_sec,
@@ -123,42 +126,84 @@ void create_modules() {
 }
 
 
-/* check logfile for errors */
-void check_logfile(void);
-void check_logfile() {
+/* check logfile for errors, set mode to 1 to display file by diag() */
+void check_logfile(char *logfile, int mode);
+void check_logfile(char *logfile, int mode) {
     FILE * fp;
     char *line;
     int errors = 0;
 
-    fp = fopen(worker_logfile, "r");
+    fp = fopen(logfile, "r");
     if(fp == NULL) {
-        perror(worker_logfile);
+        perror(logfile);
         return;
     }
     line = malloc(GM_BUFFERSIZE);
     while(fgets(line, GM_BUFFERSIZE, fp) != NULL) {
-        trim(line);
         if(strstr(line, "ERROR") != NULL) {
             errors++;
-            diag("logfile: %s", line);
         }
     }
     fclose(fp);
 
+    /* output complete logfile */
+    if(errors > 0 || mode == 1) {
+        fp = fopen(logfile, "r");
+        while(fgets(line, GM_BUFFERSIZE, fp) != NULL) {
+            diag("logfile: %s", line);
+        }
+        fclose(fp);
+    }
+
     ok(errors == 0, "errors in logfile: %d", errors);
 
     /* cleanup logfile */
-    ok(unlink(worker_logfile) == 0, "removed temporary logfile: %s", worker_logfile);
+    ok(unlink(logfile) == 0, "removed temporary logfile: %s", logfile);
 
     free(line);
     return;
 }
 
+void wait_for_empty_queue(char *queue, int timeout);
+void wait_for_empty_queue(char *queue, int timeout) {
+    char * message = NULL;
+    char * version = NULL;
+    int rc, x;
+    mod_gm_server_status_t *stats;
+
+    int tries = 0;
+    int found = 0;
+    while(tries <= timeout && found == 0) {
+        tries++;
+        stats = malloc(sizeof(mod_gm_server_status_t));
+        stats->function_num = 0;
+        stats->worker_num = 0;
+        rc = get_gearman_server_data(stats, &message, &version, "localhost", GEARMAND_TEST_PORT);
+        if( rc == STATE_OK ) {
+            for(x=0; x<stats->function_num;x++) {
+                //diag("%s %d %d\n", stats->function[x]->queue, stats->function[x]->waiting, stats->function[x]->running);
+                if(stats->function[x]->waiting == 0 &&
+                   stats->function[x]->running == 0 &&
+                   !strcmp( stats->function[x]->queue, queue )
+                ) {
+                    found = 1;
+                }
+            }
+        }
+        free(message);
+        free(version);
+        free_mod_gm_status_server(stats);
+        sleep(1);
+    }
+
+    ok(tries <= 10, "queue %s empty after %d seconds", queue, tries);
+    return;
+}
 
 /* main tests */
 int main(void) {
     int status, chld;
-    int tests = 40;
+    int tests = 53;
     int rrc;
     char cmd[150];
     char * result;
@@ -188,7 +233,7 @@ int main(void) {
         diag( "waitpid() %d exited with %d\n", chld, status);
     }
 
-    if(!ok(gearmand_pid > 0, "'gearmand --threads=10 --job-retries=0 --port=%d --verbose=5' started with pid: %d", GEARMAND_TEST_PORT, gearmand_pid)) {
+    if(!ok(gearmand_pid > 0, "'gearmand --threads=10 --job-retries=0 --port=%d --verbose=5 --log-file=/tmp/gearmand.log' started with pid: %d", GEARMAND_TEST_PORT, gearmand_pid)) {
         diag("make sure gearmand is in your PATH. Common locations are /usr/sbin or /usr/local/sbin");
         exit( EXIT_FAILURE );
     }
@@ -204,7 +249,6 @@ int main(void) {
     skip(gearmand_pid <= 0 || worker_pid <= 0,
                tests-3,             /* Number of tests to skip */
                "Skipping all tests, no need to go on without gearmand or worker");
-    sleep(2);
 
     /* create server / worker / clients */
     create_modules();
@@ -212,7 +256,13 @@ int main(void) {
     /* try to send some data with base64 only */
     test_eventhandler(GM_ENCODE_ONLY);
     test_servicecheck(GM_ENCODE_ONLY);
+    wait_for_empty_queue("eventhandler", 20);
+    wait_for_empty_queue("service", 5);
     sleep(1);
+    kill(worker_pid, SIGTERM);
+    waitpid(worker_pid, &status, 0);
+    ok(status == 0, "worker exited with exit code %d", real_exit_code(status));
+    check_logfile(worker_logfile, 0);
 
     char * test_keys[] = {
         "12345",
@@ -226,19 +276,22 @@ int main(void) {
 
     int i;
     for(i=0;i<4;i++) {
-        kill(worker_pid, SIGTERM);
-        waitpid(worker_pid, &status, 0);
-        ok(status == 0, "worker exited with exit code %d", real_exit_code(status));
-        check_logfile();
         start_worker((void *)test_keys[i]);
-        sleep(1);
 
         mod_gm_crypt_init( test_keys[i] );
         ok(1, "initialized with key: %s", test_keys[i]);
 
         test_eventhandler(GM_ENCODE_AND_ENCRYPT);
         test_servicecheck(GM_ENCODE_AND_ENCRYPT);
+
+        wait_for_empty_queue("eventhandler", 20);
+        wait_for_empty_queue("service", 5);
         sleep(1);
+
+        kill(worker_pid, SIGTERM);
+        waitpid(worker_pid, &status, 0);
+        ok(status == 0, "worker exited with exit code %d", real_exit_code(status));
+        check_logfile(worker_logfile, 0);
     }
 
     /*****************************************
@@ -247,7 +300,7 @@ int main(void) {
     snprintf(cmd, 150, "./send_gearman --server=localhost:%d --key=testtest --host=test --service=test --message=test --returncode=0", GEARMAND_TEST_PORT);
     rrc = real_exit_code(run_check(cmd, &result));
     cmp_ok(rrc, "==", 0, "cmd '%s' returned rc %d", cmd, rrc);
-    like(result, "^\s*$", "output from ./send_gearman");
+    like(result, "^\\s*$", "output from ./send_gearman");
 
     /*****************************************
      * send_gearman
@@ -259,6 +312,7 @@ int main(void) {
 
 
     /* cleanup */
+    free(result);
     mod_gm_free_opt(mod_gm_opt);
     free_client(&client);
     free_worker(&worker);
@@ -270,6 +324,8 @@ int main(void) {
     kill(worker_pid, SIGTERM);
     waitpid(worker_pid, &status, 0);
     ok(status == 0, "worker exited with exit code %d", real_exit_code(status));
+
+    unlink("/tmp/gearmand.log");
 
     endskip;
     return exit_status();

@@ -18,7 +18,7 @@ void printf_hex(char* text, int length) {
 }
 
 int main(void) {
-    plan(44);
+    plan(48);
 
     /* lowercase */
     char test[100];
@@ -27,6 +27,14 @@ int main(void) {
     strcpy(test, "YES"); like(lc(test), "yes", "lc(YES)");
     strcpy(test, "yeS"); like(lc(test), "yes", "lc(yeS)");
 
+
+    /* trim */
+    strcpy(test, "    text  "); like(ltrim(test), "text  ",   "ltrim()");
+    strcpy(test, "    text  "); like(rtrim(test), "    text", "rtrim()");
+    strcpy(test, "    text  "); like(trim(test),  "text",     "trim()");
+    char *test2;
+    test2 = strdup("   text   ");  like(trim(test2),  "text", "trim()");
+    free(test2);
 
     /* parse_yes_or_no */
     ok(parse_yes_or_no(NULL,    GM_ENABLED)  == GM_ENABLED, "parse_yes_or_no 1");
@@ -53,7 +61,7 @@ int main(void) {
     mod_gm_opt = malloc(sizeof(mod_gm_opt_t));
     int rc = set_default_options(mod_gm_opt);
     ok(rc == 0, "setting default options");
-    mod_gm_opt->keyfile = "t/data/test1.key";
+    mod_gm_opt->keyfile = strdup("t/data/test1.key");
     read_keyfile(mod_gm_opt);
     //printf_hex(mod_gm_opt->crypt_key, 32);
     test[0]='\x0';
@@ -66,12 +74,14 @@ int main(void) {
     }
     like(test, "3131313131313131313131313131313131313131313131313131313131310000", "read keyfile t/data/test1.key");
 
-    mod_gm_opt->keyfile = "t/data/test2.key";
+    free(mod_gm_opt->keyfile);
+    mod_gm_opt->keyfile = strdup("t/data/test2.key");
     read_keyfile(mod_gm_opt);
 
     like(mod_gm_opt->crypt_key, "abcdef", "reading keyfile t/data/test2.key");
 
-    mod_gm_opt->keyfile = "t/data/test3.key";
+    free(mod_gm_opt->keyfile);
+    mod_gm_opt->keyfile = strdup("t/data/test3.key");
     read_keyfile(mod_gm_opt);
     //printf_hex(mod_gm_opt->crypt_key, 32);
     like(mod_gm_opt->crypt_key, "11111111111111111111111111111111", "reading keyfile t/data/test3.key");
@@ -150,6 +160,8 @@ int main(void) {
     strcpy(test, "server=:4730");
     parse_args_line(mod_gm_opt, test, 0);
     like(mod_gm_opt->server_list[1], "localhost:4730", "server=:4730");
+
+    mod_gm_free_opt(mod_gm_opt);
 
     return exit_status();
 }
