@@ -1140,6 +1140,7 @@ int execute_safe_command(gm_job_t * exec_job, int fork_exec, char * identifier) 
     sigset_t mask;
     struct timeval start_time,end_time;
     pid_t pid = 0;
+    buffer[0] = '\x0';
 
     gm_log( GM_LOG_TRACE, "execute_safe_command()\n" );
 
