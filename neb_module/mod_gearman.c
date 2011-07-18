@@ -47,8 +47,7 @@ static pthread_mutex_t mod_gm_result_list_mutex = PTHREAD_MUTEX_INITIALIZER;
 void *gearman_module_handle=NULL;
 gearman_client_st client;
 
-int send_now               = FALSE;
-int result_threads_running = 0;
+int send_now, result_threads_running;
 pthread_t result_thr[GM_LISTSIZE];
 char target_queue[GM_BUFFERSIZE];
 char temp_buffer[GM_BUFFERSIZE];
@@ -72,6 +71,8 @@ static void move_results_to_core(void);
 int nebmodule_init( int flags, char *args, nebmodule *handle ) {
     int i;
     int broker_option_errors = 0;
+    send_now                 = FALSE;
+    result_threads_running   = 0;
 
     /* save our handle */
     gearman_module_handle=handle;
@@ -88,11 +89,13 @@ int nebmodule_init( int flags, char *args, nebmodule *handle ) {
     set_default_options(mod_gm_opt);
 
     /* parse arguments */
-    read_arguments( args );
     gm_log( GM_LOG_INFO,  "Version %s\n", GM_VERSION );
     gm_log( GM_LOG_TRACE, "args: %s\n", args );
     gm_log( GM_LOG_TRACE, "nebmodule_init(%i, %i)\n", flags );
     gm_log( GM_LOG_DEBUG, "running on libgearman %s\n", gearman_version() );
+
+    if( read_arguments( args ) == GM_ERROR )
+        return NEB_ERROR;
 
     /* check for minimum eventbroker options */
     if(!(event_broker_options & BROKER_PROGRAM_STATE)) {
@@ -235,13 +238,14 @@ int nebmodule_deinit( int flags, int reason ) {
     gm_log( GM_LOG_DEBUG, "deregistered callbacks\n" );
 
     /* stop result threads */
-    for(x = 0; x < mod_gm_opt->result_workers; x++) {
+    for(x = 0; x < result_threads_running; x++) {
         pthread_cancel(result_thr[x]);
         pthread_join(result_thr[x], NULL);
     }
 
-    /* cleanup client */
+    /* cleanup */
     free_client(&client);
+    mod_gm_free_opt(mod_gm_opt);
 
     return NEB_OK;
 }
@@ -835,7 +839,7 @@ static void set_target_queue( host *hst, service *svc ) {
 
 /* start our threads */
 static void start_threads(void) {
-    if ( !result_threads_running ) {
+    if ( result_threads_running < mod_gm_opt->result_workers ) {
         /* create result worker */
         int x;
         for(x = 0; x < mod_gm_opt->result_workers; x++) {

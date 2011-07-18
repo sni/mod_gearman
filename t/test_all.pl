@@ -8,18 +8,18 @@ use Test::More;
 if($? != 0) {
     plan skip_all => 'valgrind required';
 }
-plan(tests => 13);
+plan(tests => 16);
 
-`make`;
+`make clean && make`;
 is($?, 0, "build rc is $?");
 
 my $vallog  = '/tmp/valgrind.log';
 my $testlog = '/tmp/mod_gearman_test.log';
-for my $test (qw(01_utils 02_full 03_exec 04_log)) {
-    `make $test`;
+for my $test (qw(01_utils 02_full 03_exec 04_log 05_neb)) {
+    `make $test 2>/dev/null`;
     is($?, 0, "$test build rc is $?");
 
-    `valgrind --tool=memcheck --leak-check=yes --leak-check=full --show-reachable=yes --track-origins=yes --log-file=/tmp/valgrind.log ./$test >$testlog 2>&1`;
+    `valgrind --tool=memcheck --leak-check=yes --leak-check=full --show-reachable=yes --track-origins=yes --log-file=$vallog ./$test >$testlog 2>&1`;
     is($?, 0, "$test valgrind exit code is $?") or diag(`cat $testlog`);
 
     is(qx(grep "ERROR SUMMARY: " $vallog | grep -v "ERROR SUMMARY: 0 errors"), "", "valgrind Error Summary")

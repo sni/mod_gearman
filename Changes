@@ -3,7 +3,8 @@ This file documents the revision history for mod_gearman.
 1.0.8  Fri Jul 15 20:24:27 CEST 2011
           - use identifier for error messages if set
           - fixed ld options (fixes debian bug #632431) thanks Ilya Barygin
-          - removed memory leak in gearman_top
+          - fixed memory leak in gearman_top
+          - fixed memory leak when reloading neb module
 
 1.0.7  Sun Jul  3 15:18:16 CEST 2011
           - show plugin output for exit codes > 3

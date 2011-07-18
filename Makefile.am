@@ -56,11 +56,14 @@ gearman_top_SOURCES        = $(common_SOURCES) \
 gearman_top_LDADD          = -lncurses
 
 # tests
-check_PROGRAMS   = 01_utils 02_full 03_exec 04_log
+check_PROGRAMS   = 01_utils 02_full 03_exec 04_log 05_neb
 01_utils_SOURCES = $(common_SOURCES) t/tap.h t/tap.c t/01-utils.c
 02_full_SOURCES  = $(common_SOURCES) t/tap.h t/tap.c t/02-full.c
 03_exec_SOURCES  = $(common_SOURCES) t/tap.h t/tap.c t/03-exec_checks.c
 04_log_SOURCES   = $(common_SOURCES) t/tap.h t/tap.c t/04-log.c
+05_neb_SOURCES   = $(common_SOURCES) t/tap.h t/tap.c t/05-neb.c
+05_neb_LDADD     = -ldl
+05_neb_LDFLAGS   = --export-dynamic -rdynamic
 TESTS            = $(check_PROGRAMS)
 
 
