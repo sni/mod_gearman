@@ -587,6 +587,32 @@ You need at least one <a href="http://gearman.org">Gearman Job Server</a> runnin
 </ul></div>
 <div class="paragraph"><p><a href="http://labs.consol.de/wp-content/uploads/2010/09/Mod-Gearman.pdf">Have a look at the slides from the Nagios Workshop 2011 in Hannover</a></p></div>
 </div>
+<h2 id="_download">Download</h2>
+<div class="sectionbody">
+<div class="ulist"><ul>
+<li>
+<p>
+Latest stable release <a href="http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.0.8.tar.gz">version
+  1.0.8</a> from on July 22 2011
+</p>
+</li>
+<li>
+<p>
+Mod Gearman is available for download at: <a href="http://labs.consol.de/nagios/mod-gearman">http://labs.consol.de/nagios/mod-gearman</a>
+</p>
+</li>
+<li>
+<p>
+Source is available at GitHub: <a href="http://github.com/sni/mod_gearman">http://github.com/sni/mod_gearman</a>
+</p>
+</li>
+<li>
+<p>
+Older versions are available in the <a href="#_archive">download archive</a>.
+</p>
+</li>
+</ul></div>
+</div>
 <h2 id="_support_amp_questions">Support &amp; Questions</h2>
 <div class="sectionbody">
 <div class="ulist"><ul>
@@ -616,16 +642,16 @@ Debian users may be interested in the <a href="http://labs.consol.de/nagios/mod-
 </div>
 <h2 id="_how_does_it_work">How does it work</h2>
 <div class="sectionbody">
-<div class="paragraph"><p>When the broker module is loaded, it captures all servicecheck,
-hostcheck and the eventhandler events. Eventhandler are sent to a
-generic <em>eventhandler</em> queue. Checks for hosts which are in one of the
-specified hostgroups, are sent into a seperate hostgroup queue. All
-non matching hosts are sent to a generic <em>hosts</em> queue. Checks for
-services are first checked against the list of servicegroups, then
-against the hostgroups and if none matches they will be sent into a
-generic <em>service</em> queue.
-The NEB module starts a single thread, which monitors the
-<em>check_results</em> where all results come in.</p></div>
+<div class="paragraph"><p>When the Mod-Gearman broker module is loaded, it intercepts all
+servicechecks, hostchecks and the eventhandler events. Eventhandler
+are then sent to a generic <em>eventhandler</em> queue. Checks for hosts
+which are in one of the specified hostgroups, are sent into a seperate
+hostgroup queue. All non matching hosts are sent to a generic <em>hosts</em>
+queue.  Checks for services are first checked against the list of
+servicegroups, then against the hostgroups and if none matches they
+will be sent into a generic <em>service</em> queue.  The NEB module starts a
+single thread, which monitors the <em>check_results</em> where all results
+come in.</p></div>
 <a title="mod gearman architecture" rel="lightbox[mod_gm]" href="http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-e1284455350110.png"><img src="http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-e1284455350110.png" alt="mod_gearman architecture" width="480" height="300" style="float:none" /></a>
 <div class="paragraph"><p>A simple example queue would look like:</p></div>
 <div class="listingblock">
@@ -793,7 +819,7 @@ broker line to your nagios.cfg:</p></div>
 <pre><tt>broker_module=.../mod_gearman.o server=localhost:4730 eventhandler=yes services=yes hosts=yes</tt></pre>
 </div></div>
 <div class="paragraph"><p>see <a href="#_configuration">Configuration</a> for details on all parameters</p></div>
-<div class="paragraph"><p>The last step is to start one or more worker. You may use the same
+<div class="paragraph"><p>The next step is to start one or more worker. You may use the same
 configuration file as for the neb module.</p></div>
 <div class="listingblock">
 <div class="content">
@@ -825,11 +851,11 @@ use an older version.</td>
 </tr></table>
 </div>
 <div class="paragraph"><p>It is not possible to distribute eventhandler with Nagios versions
-prior 3.2.2. Just apply the patch from the patches directory to your
-Nagios sources and build Nagios again if you want to use an older
-version. You only need to replace the nagios binary. Nothing else has
-changed.  If you plan to distribute only Host/Servicechecks, no patch
-is needed.</p></div>
+prior 3.2.2. Just apply the patch from the ./extras/patches directory
+to your Nagios sources and build Nagios again if you want to use an
+older version. You only need to replace the nagios binary. Nothing
+else has changed. If you plan to distribute only Host/Servicechecks,
+no patch is needed.</p></div>
 </div>
 <h2 id="_configuration">Configuration</h2>
 <div class="sectionbody">
@@ -1178,10 +1204,7 @@ perfdata
 </dt>
 <dd>
 <p>
-defines if the module should distribute perfdata to gearman. Note: processing
-of perfdata is not part of mod_gearman. You will need additional worker for
-handling performance data. For example: <a href="http://www.pnp4nagios.org">PNP4Nagios</a>
-Performance data is just written to the gearman queue.
+Defines if the module should distribute perfdata to gearman.
 </p>
 <div class="exampleblock">
 <div class="exampleblock-content">
@@ -1191,6 +1214,19 @@ Performance data is just written to the gearman queue.
 </div></div>
 </div></div>
 </dd>
+</dl></div>
+<div class="admonitionblock">
+<table><tr>
+<td class="icon">
+<div class="title">Note</div>
+</td>
+<td class="content">processing of perfdata is not part of mod_gearman. You will need
+additional worker for handling performance data. For example:
+<a href="http://www.pnp4nagios.org">PNP4Nagios</a>. Performance data is just
+written to the gearman queue.</td>
+</tr></table>
+</div>
+<div class="dlist"><dl>
 <dt class="hdlist1">
 perfdata_mode
 </dt>
@@ -1510,6 +1546,37 @@ nagios box. The amount of worker boxes depends on your check types.</p></div>
 <a title="mod gearman performance" rel="lightbox[mod_gm]" href="http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman_performance_2.png"><img src="http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman_performance_2.png" alt="mod_gearman performance" width="473" height="122" style="float:none" /></a>
 <a title="mod gearman performance" rel="lightbox[mod_gm]" href="http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman_performance_1.png"><img src="http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman_performance_1.png" alt="mod_gearman performance" width="424" height="176" style="float:none" /></a>
 </div>
+<h2 id="_exports">Exports</h2>
+<div class="sectionbody">
+<div class="paragraph"><p>Exports export data structures from the Nagios core as JSON data. For
+each configurable event one job will be created. At the moment, the
+only useful event type is the logdata event which allows you to create
+a json data job for every logged line. This can be very useful for
+external reporting tools.</p></div>
+<div class="dlist"><dl>
+<dt class="hdlist1">
+exports
+</dt>
+<dd>
+<p>
+Set the queue name to create the jobs in. The return code will be sent
+back to the core (Not all callbacks support return codes). Callbacks
+are a list of callbacks for which you want to export json data.
+</p>
+<div class="exampleblock">
+<div class="exampleblock-content">
+<div class="literalblock">
+<div class="content">
+<pre><tt>export=&lt;queue&gt;:&lt;returncode&gt;:&lt;callback&gt;[,&lt;callback&gt;,...]</tt></pre>
+</div></div>
+<div class="literalblock">
+<div class="content">
+<pre><tt>export=log_queue:1:NEBCALLBACK_LOG_DATA</tt></pre>
+</div></div>
+</div></div>
+</dd>
+</dl></div>
+</div>
 <h2 id="_how_to">How To</h2>
 <div class="sectionbody">
 <h3 id="_how_to_monitor_job_server_and_worker">How to Monitor Job Server and Worker</h3><div style="clear:left"></div>
@@ -1616,30 +1683,12 @@ Make sure all your worker have the nagios-plugins available under
 </li>
 </ul></div>
 </div>
-<h2 id="_download">Download</h2>
+<h2 id="_archive">Archive</h2>
 <div class="sectionbody">
 <div class="ulist"><ul>
 <li>
 <p>
-<a href="http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.0.8.tar.gz">version 1.0.8 - July 09 2011</a>
-</p>
-</li>
-<li>
-<p>
-Mod Gearman is available for download at: <a href="http://labs.consol.de/nagios/mod-gearman">http://labs.consol.de/nagios/mod-gearman</a>
-</p>
-</li>
-<li>
-<p>
-The source is available at GitHub: <a href="http://github.com/sni/mod_gearman">http://github.com/sni/mod_gearman</a>
-</p>
-</li>
-</ul></div>
-<h3 id="_archive">Archive</h3><div style="clear:left"></div>
-<div class="ulist"><ul>
-<li>
-<p>
-<a href="http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.0.8.tar.gz">version 1.0.8 - July 09 2011</a>
+<a href="http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.0.8.tar.gz">version 1.0.8 - July 22 2011</a>
 </p>
 </li>
 <li>
@@ -1718,7 +1767,7 @@ The source is available at GitHub: <a href="http://github.com/sni/mod_gearman">h
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2011-07-09 11:51:10 CEST
+Last updated 2011-07-22 22:45:23 CEST
 </div>
 </div>
 </body>

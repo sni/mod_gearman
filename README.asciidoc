@@ -21,6 +21,17 @@ servicegroups.
 http://labs.consol.de/wp-content/uploads/2010/09/Mod-Gearman.pdf[Have a look at the slides from the Nagios Workshop 2011 in Hannover]
 
 
+Download
+--------
+
+* Latest stable release http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.0.8.tar.gz[version
+  1.0.8] from on July 22 2011
+* Mod Gearman is available for download at: http://labs.consol.de/nagios/mod-gearman
+* Source is available at GitHub: http://github.com/sni/mod_gearman
+* Older versions are available in the <<_archive,download archive>>.
+
+
+
 
 Support & Questions
 -------------------
@@ -34,16 +45,16 @@ Support & Questions
 
 How does it work
 ----------------
-When the broker module is loaded, it captures all servicecheck,
-hostcheck and the eventhandler events. Eventhandler are sent to a
-generic 'eventhandler' queue. Checks for hosts which are in one of the
-specified hostgroups, are sent into a seperate hostgroup queue. All
-non matching hosts are sent to a generic 'hosts' queue. Checks for
-services are first checked against the list of servicegroups, then
-against the hostgroups and if none matches they will be sent into a
-generic 'service' queue.
-The NEB module starts a single thread, which monitors the
-'check_results' where all results come in.
+When the Mod-Gearman broker module is loaded, it intercepts all
+servicechecks, hostchecks and the eventhandler events. Eventhandler
+are then sent to a generic 'eventhandler' queue. Checks for hosts
+which are in one of the specified hostgroups, are sent into a seperate
+hostgroup queue. All non matching hosts are sent to a generic 'hosts'
+queue.  Checks for services are first checked against the list of
+servicegroups, then against the hostgroups and if none matches they
+will be sent into a generic 'service' queue.  The NEB module starts a
+single thread, which monitors the 'check_results' where all results
+come in.
 
 ++++
 <a title="mod gearman architecture" rel="lightbox[mod_gm]" href="http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-e1284455350110.png"><img src="http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-e1284455350110.png" alt="mod_gearman architecture" width="480" height="300" style="float:none" /></a>
@@ -222,7 +233,7 @@ broker_module=.../mod_gearman.o server=localhost:4730 eventhandler=yes services=
 see <<_configuration,Configuration>> for details on all parameters
 
 
-The last step is to start one or more worker. You may use the same
+The next step is to start one or more worker. You may use the same
 configuration file as for the neb module.
 
 --------------------------------------
@@ -232,7 +243,7 @@ or use the supplied init script.
 
 
 NOTE: Make sure you have started your Gearmand job server. Usually
-it can be started with 
+it can be started with
 
 --------------------------------------
 /usr/sbin/gearmand -t 10 -j 0
@@ -249,11 +260,11 @@ NOTE: The needed patch is already included since Nagios 3.2.2. Use the patch if 
 use an older version.
 
 It is not possible to distribute eventhandler with Nagios versions
-prior 3.2.2. Just apply the patch from the patches directory to your
-Nagios sources and build Nagios again if you want to use an older
-version. You only need to replace the nagios binary. Nothing else has
-changed.  If you plan to distribute only Host/Servicechecks, no patch
-is needed.
+prior 3.2.2. Just apply the patch from the ./extras/patches directory
+to your Nagios sources and build Nagios again if you want to use an
+older version. You only need to replace the nagios binary. Nothing
+else has changed. If you plan to distribute only Host/Servicechecks,
+no patch is needed.
 
 
 
@@ -460,14 +471,15 @@ value if your result queue is not processed fast enough.
 
 
 perfdata::
-defines if the module should distribute perfdata to gearman. Note: processing
-of perfdata is not part of mod_gearman. You will need additional worker for
-handling performance data. For example: http://www.pnp4nagios.org[PNP4Nagios] 
-Performance data is just written to the gearman queue.
+Defines if the module should distribute perfdata to gearman.
 +
 ====
     perfdata=yes
 ====
+NOTE: processing of perfdata is not part of mod_gearman. You will need
+additional worker for handling performance data. For example:
+http://www.pnp4nagios.org[PNP4Nagios]. Performance data is just
+written to the gearman queue.
 
 
 perfdata_mode::
@@ -680,6 +692,29 @@ nagios box. The amount of worker boxes depends on your check types.
 <a title="mod gearman performance" rel="lightbox[mod_gm]" href="http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman_performance_1.png"><img src="http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman_performance_1.png" alt="mod_gearman performance" width="424" height="176" style="float:none" /></a>
 ++++
 
+
+Exports
+-------
+Exports export data structures from the Nagios core as JSON data. For
+each configurable event one job will be created. At the moment, the
+only useful event type is the logdata event which allows you to create
+a json data job for every logged line. This can be very useful for
+external reporting tools.
+
+exports::
+Set the queue name to create the jobs in. The return code will be sent
+back to the core (Not all callbacks support return codes). Callbacks
+are a list of callbacks for which you want to export json data.
++
+====
+    export=<queue>:<returncode>:<callback>[,<callback>,...]
+
+    export=log_queue:1:NEBCALLBACK_LOG_DATA
+====
+
+
+
+
 How To
 ------
 
@@ -770,18 +805,10 @@ Hints
 
 
 
-Download
---------
-
-* http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.0.8.tar.gz[version 1.0.8 - July 09 2011]
-* Mod Gearman is available for download at: http://labs.consol.de/nagios/mod-gearman
-* The source is available at GitHub: http://github.com/sni/mod_gearman
-
-
 Archive
-~~~~~~~
+-------
 
-* http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.0.8.tar.gz[version 1.0.8 - July 09 2011]
+* http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.0.8.tar.gz[version 1.0.8 - July 22 2011]
 * http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.0.7.tar.gz[version 1.0.7 - July 03 2011]
 * http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.0.6.tar.gz[version 1.0.6 - June 04 2011]
 * http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.0.5.tar.gz[version 1.0.5 - May 17 2011]
