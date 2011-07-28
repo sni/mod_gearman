@@ -286,7 +286,7 @@ int send_result() {
 void alarm_sighandler(int sig) {
     gm_log( GM_LOG_TRACE, "alarm_sighandler(%i)\n", sig );
 
-    printf("got no input! Send plugin output to stdin.\n");
+    printf("Timeout after %d seconds - got no input! Send plugin output to stdin.\n", mod_gm_opt->timeout);
 
     exit(EXIT_FAILURE);
 }
@@ -347,6 +347,19 @@ int read_multi_stream(FILE *stream) {
 
         /* neither <CHILD> nor </CHILD> found, discard buffer */
         } else {
+
+            /* no chunks found? then check for message in STDIN */
+            if (!count) {
+                unsigned long i;
+                /* check buffer for ASCII characters */
+                for (i=0; i<buflen && buffer[i] && isascii(buffer[i]); i++)
+                    ;
+                /* ASCIIZ string? then print messages */
+                if (buffer[i] == '\0' && i) {
+                    printf("send_multi WARNING: error msg in input buffer: %s\n", buffer);
+                }
+            }
+
             /* discard whole buffer but continue */
             buflen=0L;
             gm_log( GM_LOG_TRACE, "Error: no starting tag <CHILD> within buffer - discarding buffer, buflen now %ld bytes\n", buflen);
