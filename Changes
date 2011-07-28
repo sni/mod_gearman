@@ -1,5 +1,8 @@
 This file documents the revision history for mod_gearman.
 
+1.0.9  Thu Jul 28 11:38:15 CEST 2011
+          - nicer error messages for send_multi when zero results transmitted
+
 1.0.8  Fri Jul 22 22:21:34 CEST 2011
           - use identifier for error messages if set
           - fixed ld options (fixes debian bug #632431) thanks Ilya Barygin
