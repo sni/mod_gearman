@@ -49,7 +49,7 @@ int main(void) {
     strcpy(cmd, "./send_gearman --server=blah --key=testtest --host=test --service=test --message=test --returncode=0");
     rrc = real_exit_code(run_check(cmd, &result));
     diag(result);
-    cmp_ok(rrc, "==", 1, "cmd '%s' returned rc %d", cmd, rrc);
+    cmp_ok(rrc, "==", 3, "cmd '%s' returned rc %d", cmd, rrc);
     free(result);
 
     /*****************************************
@@ -58,7 +58,7 @@ int main(void) {
     strcpy(cmd, "./send_multi --server=blah --host=blah < t/data/send_multi.txt");
     rrc = real_exit_code(run_check(cmd, &result));
     diag(result);
-    cmp_ok(rrc, "==", 1, "cmd '%s' returned rc %d", cmd, rrc);
+    cmp_ok(rrc, "==", 3, "cmd '%s' returned rc %d", cmd, rrc);
     free(result);
 
     /*****************************************

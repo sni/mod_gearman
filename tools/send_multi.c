@@ -40,7 +40,7 @@ int main (int argc, char **argv) {
      */
     if(parse_arguments(argc, argv) != GM_OK) {
         print_usage();
-        exit( 3 );
+        exit( STATE_UNKNOWN );
     }
 
     /* set logging */
@@ -56,14 +56,14 @@ int main (int argc, char **argv) {
 
     /* create client */
     if ( create_client( mod_gm_opt->server_list, &client ) != GM_OK ) {
-        printf( "send_multi CRITICAL: cannot start client\n" );
-        exit(2);
+        printf( "send_multi UNKNOWN: cannot start client\n" );
+        exit( STATE_UNKNOWN );
     }
 
     /* create duplicate client */
     if ( create_client_dup( mod_gm_opt->dupserver_list, &client_dup ) != GM_OK ) {
-        gm_log( GM_LOG_ERROR, "cannot start client for duplicate server\n" );
-        exit( EXIT_FAILURE );
+        printf( "send_multi UNKNOWN: cannot start client for duplicate server\n" );
+        exit( STATE_UNKNOWN );
     }
 
     /* send result message */
@@ -72,14 +72,14 @@ int main (int argc, char **argv) {
     /* if rc > 0, it contains the number of checks being submitted,
        otherwise its an error code (-1 - WARNING, -2 - CRITICAL, -3 - UNKNOWN) */
     if (rc == 0) {
-        printf( "send_multi WARNING: %d check_multi child checks submitted\n", rc );
-        rc=1; /* WARNING */
+        printf( "send_multi UNKNOWN: %d check_multi child checks submitted\n", rc );
+        rc=STATE_UNKNOWN;
     }
     else if (rc > 0) {
         printf( "send_multi OK: %d check_multi child check%s submitted\n", rc, (rc>1)?"s":"" );
-        rc=0; /* OK */
+        rc=STATE_OK;
     } else {
-        rc*=-2;
+        rc*=-1;
     }
 
     gearman_client_free( &client );
@@ -190,7 +190,7 @@ void print_usage() {
     printf("http://my-plugin.de/wiki/projects/check_multi/feed_passive\n");
     printf("\n");
 
-    exit(3);
+    exit( STATE_UNKNOWN );
 }
 
 
@@ -288,7 +288,7 @@ void alarm_sighandler(int sig) {
 
     printf("Timeout after %d seconds - got no input! Send plugin output to stdin.\n", mod_gm_opt->timeout);
 
-    exit(EXIT_FAILURE);
+    exit( STATE_CRITICAL );
 }
 
 
@@ -340,8 +340,8 @@ int read_multi_stream(FILE *stream) {
             /* start <CHILD> tag found, but no closing tag </CHILD>, buffer too small? */
             } else {
                 buflen=0L;
-                gm_log( GM_LOG_ERROR, "Error: no closing tag </CHILD> within buffer, buffer size too small? discarding buffer, %ld bytes now\n", buflen);
-                return -1;
+                printf("send_multi UNKNOWN: no closing tag </CHILD> within buffer, buffer size too small? discarding buffer, %ld bytes now\n", buflen);
+                return -STATE_UNKNOWN;
             }
             gm_log( GM_LOG_TRACE, "\tbuflen after XML chunk parsing:%ld\n", buflen);
 
@@ -356,7 +356,8 @@ int read_multi_stream(FILE *stream) {
                     ;
                 /* ASCIIZ string? then print messages */
                 if (buffer[i] == '\0' && i) {
-                    printf("send_multi WARNING: error msg in input buffer: %s\n", buffer);
+                    printf("send_multi UNKNOWN: error msg in input buffer: %s\n", buffer);
+                    return -STATE_UNKNOWN;
                 }
             }
 
@@ -374,7 +375,7 @@ int read_multi_stream(FILE *stream) {
             /* break if zero read was caused by an error */
             if (!feof(stream)) {
                 perror("fread");
-                return -2;
+                return -STATE_CRITICAL;
             }
         } else {
 

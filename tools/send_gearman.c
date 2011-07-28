@@ -39,7 +39,7 @@ int main (int argc, char **argv) {
      */
     if(parse_arguments(argc, argv) != GM_OK) {
         print_usage();
-        exit( EXIT_FAILURE );
+        exit( STATE_UNKNOWN );
     }
 
     /* set logging */
@@ -55,14 +55,14 @@ int main (int argc, char **argv) {
 
     /* create client */
     if ( create_client( mod_gm_opt->server_list, &client ) != GM_OK ) {
-        printf( "cannot start client\n" );
-        exit( EXIT_FAILURE );
+        printf( "send_gearman UNKNOWN: cannot start client\n" );
+        exit( STATE_UNKNOWN );
     }
 
     /* create duplicate client */
     if ( create_client_dup( mod_gm_opt->dupserver_list, &client_dup ) != GM_OK ) {
-        gm_log( GM_LOG_ERROR, "cannot start client for duplicate server\n" );
-        exit( EXIT_FAILURE );
+        printf( "send_gearman UNKNOWN: cannot start client for duplicate server\n" );
+        exit( STATE_UNKNOWN );
     }
 
     /* send result message */
@@ -175,7 +175,7 @@ void print_usage() {
     printf("see README for a detailed explaination of all options.\n");
     printf("\n");
 
-    exit( EXIT_SUCCESS );
+    exit( STATE_UNKNOWN );
 }
 
 
@@ -199,11 +199,11 @@ int send_result() {
 
     if(mod_gm_opt->result_queue == NULL) {
         printf( "got no result queue, please use --result_queue=...\n" );
-        return(GM_ERROR);
+        return( STATE_UNKNOWN );
     }
     if(mod_gm_opt->host == NULL) {
         printf("got no hostname, please use --host=...\n" );
-        return(GM_ERROR);
+        return( STATE_UNKNOWN );
     }
     if(mod_gm_opt->message == NULL) {
         /* get all lines from stdin, wait maximum of 5 seconds */
@@ -290,9 +290,9 @@ int send_result() {
     }
     else {
         gm_log( GM_LOG_TRACE, "send_result_back() finished unsuccessfully\n" );
-        return(GM_ERROR);
+        return( STATE_UNKNOWN );
     }
-    return(GM_OK);
+    return( STATE_OK );
 }
 
 
@@ -302,7 +302,7 @@ void alarm_sighandler(int sig) {
 
     printf("got no input! Either send plugin output to stdin or use --message=...\n");
 
-    exit(EXIT_FAILURE);
+    exit( STATE_UNKNOWN );
 }
 
 
