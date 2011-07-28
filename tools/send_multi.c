@@ -286,7 +286,7 @@ int send_result() {
 void alarm_sighandler(int sig) {
     gm_log( GM_LOG_TRACE, "alarm_sighandler(%i)\n", sig );
 
-    printf("got no input! Send plugin output to stdin.\n");
+    printf("Timeout after %d seconds - got no input! Send plugin output to stdin.\n", mod_gm_opt->timeout);
 
     exit(EXIT_FAILURE);
 }
