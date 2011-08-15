@@ -28,7 +28,6 @@
 
 int current_number_of_workers                = 0;
 volatile sig_atomic_t current_number_of_jobs = 0;  /* must be signal safe */
-pthread_t status_thr;
 
 int     orig_argc;
 char ** orig_argv;
@@ -487,7 +486,7 @@ void setup_child_communicator() {
     shm[2] = 0;  /* running worker    */
     shm[3] = -1; /* status worker pid */
     for(x = 0; x < mod_gm_opt->max_worker; x++) {
-        shm[x+4] = -1; /* status worker   */
+        shm[x+4] = -1; /* normal worker   */
     }
 
     return;
