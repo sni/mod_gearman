@@ -17,8 +17,18 @@ void printf_hex(char* text, int length) {
     return;
 }
 
+mod_gm_opt_t * renew_opts(void);
+mod_gm_opt_t * renew_opts() {
+    mod_gm_opt_t *mod_gm_opt;
+
+    mod_gm_opt = malloc(sizeof(mod_gm_opt_t));
+    set_default_options(mod_gm_opt);
+
+    return mod_gm_opt;
+}
+
 int main(void) {
-    plan(48);
+    plan(55);
 
     /* lowercase */
     char test[100];
@@ -57,8 +67,7 @@ int main(void) {
     strcpy(test, " test "); like(trim(test), "test", "trim(' test ')");
 
     /* reading keys */
-    mod_gm_opt_t *mod_gm_opt;
-    mod_gm_opt = malloc(sizeof(mod_gm_opt_t));
+    mod_gm_opt_t *mod_gm_opt = renew_opts();
     int rc = set_default_options(mod_gm_opt);
     ok(rc == 0, "setting default options");
     mod_gm_opt->keyfile = strdup("t/data/test1.key");
@@ -153,13 +162,36 @@ int main(void) {
     ok(t.tv_usec == 0, "string2timeval 8");
 
     /* command line parsing */
+    mod_gm_free_opt(mod_gm_opt);
+    mod_gm_opt = renew_opts();
     strcpy(test, "server=host:4730");
     parse_args_line(mod_gm_opt, test, 0);
     like(mod_gm_opt->server_list[0], "host:4730", "server=host:4730");
+    ok(mod_gm_opt->server_num == 1, "server_number = %d", mod_gm_opt->server_num);
 
+    mod_gm_free_opt(mod_gm_opt);
+    mod_gm_opt = renew_opts();
     strcpy(test, "server=:4730");
     parse_args_line(mod_gm_opt, test, 0);
-    like(mod_gm_opt->server_list[1], "localhost:4730", "server=:4730");
+    like(mod_gm_opt->server_list[0], "localhost:4730", "server=:4730");
+    ok(mod_gm_opt->server_num == 1, "server_number = %d", mod_gm_opt->server_num);
+
+    mod_gm_free_opt(mod_gm_opt);
+    mod_gm_opt = renew_opts();
+    strcpy(test, "server=localhost:4730");
+    parse_args_line(mod_gm_opt, test, 0);
+    strcpy(test, "server=localhost:4730");
+    parse_args_line(mod_gm_opt, test, 0);
+    like(mod_gm_opt->server_list[0], "localhost:4730", "duplicate server");
+    ok(mod_gm_opt->server_num == 1, "server_number = %d", mod_gm_opt->server_num);
+
+    mod_gm_free_opt(mod_gm_opt);
+    mod_gm_opt = renew_opts();
+    strcpy(test, "server=localhost:4730,localhost:4730,:4730,host:4730,");
+    parse_args_line(mod_gm_opt, test, 0);
+    like(mod_gm_opt->server_list[0], "localhost:4730", "duplicate server");
+    like(mod_gm_opt->server_list[1], "host:4730", "duplicate server");
+    ok(mod_gm_opt->server_num == 2, "server_number = %d", mod_gm_opt->server_num);
 
     mod_gm_free_opt(mod_gm_opt);
 
@@ -171,3 +203,4 @@ void write_core_log(char *data) {
     printf("core logger is not available for tests: %s", data);
     return;
 }
+

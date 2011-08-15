@@ -290,7 +290,6 @@ int parse_yes_or_no(char*value, int dfl) {
 int parse_args_line(mod_gm_opt_t *opt, char * arg, int recursion_level) {
     char *key;
     char *value;
-    char temp_buffer[GM_BUFFERSIZE];
 
     gm_log( GM_LOG_TRACE, "parse_args_line(%s, %d)\n", arg, recursion_level);
 
@@ -570,16 +569,9 @@ int parse_args_line(mod_gm_opt_t *opt, char * arg, int recursion_level) {
     else if ( !strcmp( key, "server" ) ) {
         char *servername;
         while ( (servername = strsep( &value, "," )) != NULL ) {
-            servername = trim(servername);
-            if ( strcmp( servername, "" ) ) {
-                if(strcspn(servername, ":") == 0) {
-                    temp_buffer[0]='\x0';
-                    snprintf( temp_buffer,sizeof( temp_buffer )-1, "localhost%s", servername);
-                    temp_buffer[sizeof( temp_buffer )-1]='\x0';
-                    opt->server_list[opt->server_num] = strdup(temp_buffer);
-                } else {
-                    opt->server_list[opt->server_num] = strdup(servername);
-                }
+            char * new_server = get_param_server(servername, opt->server_list, opt->server_num);
+            if(new_server != NULL) {
+                opt->server_list[opt->server_num] = new_server;
                 opt->server_num++;
             }
         }
@@ -589,9 +581,9 @@ int parse_args_line(mod_gm_opt_t *opt, char * arg, int recursion_level) {
     else if ( !strcmp( key, "dupserver" ) ) {
         char *servername;
         while ( (servername = strsep( &value, "," )) != NULL ) {
-            servername = trim(servername);
-            if ( strcmp( servername, "" ) ) {
-                opt->dupserver_list[opt->dupserver_num] = strdup(servername);
+            char * new_server = get_param_server(servername, opt->dupserver_list, opt->dupserver_num);
+            if(new_server != NULL) {
+                opt->dupserver_list[opt->dupserver_num] = new_server;
                 opt->dupserver_num++;
             }
         }
@@ -1816,4 +1808,36 @@ void gm_log( int lvl, const char *text, ... ) {
     }
 
     return;
+}
+
+/* extract server from string and check for duplicates */
+char * get_param_server(char * servername, char * server_list[GM_LISTSIZE], int server_num) {
+    char temp_buffer[GM_BUFFERSIZE];
+    char * new_server;
+    int i;
+    servername = trim(servername);
+
+    if ( ! strcmp( servername, "" ) ) {
+        return NULL;
+    }
+
+    if(strcspn(servername, ":") == 0) {
+        temp_buffer[0]='\x0';
+        snprintf( temp_buffer,sizeof( temp_buffer )-1, "localhost%s", servername);
+        temp_buffer[sizeof( temp_buffer )-1]='\x0';
+        new_server = strdup(temp_buffer);
+    } else {
+        new_server = strdup(servername);
+    }
+
+    // check for duplicates
+    for(i=0;i<server_num;i++) {
+        if ( ! strcmp( new_server, server_list[i] ) ) {
+            gm_log( GM_LOG_ERROR, "duplicate definition of server: %s\n", new_server);
+            free(new_server);
+            return NULL;
+        }
+    }
+
+    return new_server;
 }

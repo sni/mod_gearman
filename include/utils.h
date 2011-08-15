@@ -468,13 +468,30 @@ char * eventtype2str(int i);
  */
 void gm_log( int lvl, const char *text, ... );
 
-/** write log line with core logger
+/**
+ * write_core_log
+ *
+ * write log line with core logger
  *
  * @param[in] data - log message
  *
  * @return nothing
  */
 void write_core_log(char *data);
+
+
+/**
+ * get_param_server
+ *
+ * return string of new server or NULL on duplicate
+ *
+ * @param[in] servername - server name to parse
+ * @param[in] server_list - list of servers to check for duplicates
+ * @param[in] server_num - number of server in this list
+ *
+ * @returns the new server name or NULL
+ */
+char * get_param_server(char * servername, char * server_list[GM_LISTSIZE], int server_num);
 
 /**
  * @}
