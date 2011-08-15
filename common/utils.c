@@ -224,6 +224,8 @@ int set_default_options(mod_gm_opt_t *opt) {
     opt->spawn_rate         = GM_DEFAULT_SPAWN_RATE;
     opt->identifier         = NULL;
 
+    opt->workaround_rc_25   = GM_DISABLED;
+
     opt->host               = NULL;
     opt->service            = NULL;
 
@@ -371,6 +373,13 @@ int parse_args_line(mod_gm_opt_t *opt, char * arg, int recursion_level) {
         opt->active = parse_yes_or_no(value, GM_ENABLED);
         return(GM_OK);
     }
+
+    /* workaround_rc_25 */
+    else if (   !strcmp( key, "workaround_rc_25" ) ) {
+        opt->workaround_rc_25 = parse_yes_or_no(value, GM_ENABLED);
+        return(GM_OK);
+    }
+
     else if ( value == NULL ) {
         gm_log( GM_LOG_ERROR, "unknown switch '%s'\n", key );
         return(GM_OK);

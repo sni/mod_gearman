@@ -200,6 +200,7 @@ typedef struct mod_gm_opt_struct {
     int            idle_timeout;                            /**< number of seconds till a idle worker exits */
     int            max_jobs;                                /**< maximum number of jobs done after a worker exits */
     int            spawn_rate;                              /**< number of spawned new worker */
+    int            workaround_rc_25;                        /**< optional workaround for plugins returning exit code 25 */
 /* send_gearman */
     int            timeout;                                 /**< timeout for waiting reading on stdin */
     int            return_code;                             /**< return code */
