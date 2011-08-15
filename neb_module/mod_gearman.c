@@ -89,8 +89,8 @@ int nebmodule_init( int flags, char *args, nebmodule *handle ) {
     set_default_options(mod_gm_opt);
 
     /* parse arguments */
-    gm_log( GM_LOG_INFO,  "Version %s\n", GM_VERSION );
-    gm_log( GM_LOG_TRACE, "args: %s\n", args );
+    gm_log( GM_LOG_DEBUG, "Version %s\n", GM_VERSION );
+    gm_log( GM_LOG_DEBUG, "args: %s\n", args );
     gm_log( GM_LOG_TRACE, "nebmodule_init(%i, %i)\n", flags );
     gm_log( GM_LOG_DEBUG, "running on libgearman %s\n", gearman_version() );
 

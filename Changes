@@ -5,6 +5,7 @@ This file documents the revision history for mod_gearman.
           - fixed sigsegv when reloading core in combination with exports options
           - added optional workaround for plugins exiting with rc 25 because
             of duplicate execution
+          - removed version output to stderr while reloading/starting the core
 
 1.0.8  Fri Jul 22 22:21:34 CEST 2011
           - use identifier for error messages if set
