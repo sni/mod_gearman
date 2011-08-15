@@ -493,6 +493,29 @@ void write_core_log(char *data);
  */
 char * get_param_server(char * servername, char * server_list[GM_LISTSIZE], int server_num);
 
+
+/**
+ * send_timeout_result
+ *
+ * send back a timeout result
+ *
+ * @param[in] exec_job - the exec job with all results
+ *
+ * @return nothing
+ */
+void send_timeout_result(gm_job_t * exec_job);
+
+/**
+ * send_result_back
+ *
+ * send back result
+ *
+ * @param[in] exec_job - the exec job with all results
+ *
+ * @return nothing
+ */
+void send_result_back(gm_job_t * exec_job);
+
 /**
  * @}
  */

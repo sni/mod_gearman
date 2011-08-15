@@ -99,6 +99,7 @@
 #define GM_DEFAULT_MAX_WORKER          20      /**< maximum number of concurrent worker  */
 #define GM_DEFAULT_JOB_MAX_AGE        600      /**< discard jobs older than that         */
 #define GM_DEFAULT_SPAWN_RATE           1      /**< number of spawned worker per seconds */
+#define GM_DEFAULT_WORKER_LOOP_SLEEP    1      /**< sleep in worker main loop */
 
 /* transport modes */
 #define GM_ENCODE_AND_ENCRYPT           1
@@ -238,6 +239,8 @@ typedef struct gm_job_struct {
 
 /** options structure */
 mod_gm_opt_t *mod_gm_opt;
+gm_job_t * current_job;
+char hostname[GM_BUFFERSIZE];
 
 /*
  * @}

@@ -49,7 +49,6 @@ void worker_loop(void);
 void *get_job( gearman_job_st *, void *, size_t *, gearman_return_t * );
 void do_exec_job(void);
 int set_worker( gearman_worker_st *worker );
-void send_result_back(void);
 void idle_sighandler(int sig);
 void set_state(int status);
 void clean_worker_exit(int sig);
@@ -62,4 +61,3 @@ void write_debug_file(char ** text);
 /**
  * @}
  */
-

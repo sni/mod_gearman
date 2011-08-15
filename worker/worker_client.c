@@ -30,13 +30,11 @@
 
 char temp_buffer1[GM_BUFFERSIZE];
 char temp_buffer2[GM_BUFFERSIZE];
-char hostname[GM_BUFFERSIZE];
 
 gearman_worker_st worker;
 gearman_client_st client;
 gearman_client_st client_dup;
 
-gm_job_t * current_job;
 pid_t current_pid;
 gm_job_t * exec_job;
 
@@ -165,6 +163,7 @@ void *get_job( gearman_job_st *job, void *context, size_t *result_size, gearman_
     sigprocmask(SIG_BLOCK, &block_mask, &old_mask);
 
     /* get the data */
+    current_gearman_job = job;
     wsize = gearman_job_workload_size(job);
     strncpy(workload, (const char*)gearman_job_workload(job), wsize);
     workload[wsize] = '\0';
@@ -263,6 +262,8 @@ void *get_job( gearman_job_st *job, void *context, size_t *result_size, gearman_
         exit( EXIT_SUCCESS );
     }
 
+    current_gearman_job = NULL;
+
     return NULL;
 }
 
@@ -316,7 +317,7 @@ void do_exec_job( ) {
 
         if ( !strcmp( exec_job->type, "service" ) || !strcmp( exec_job->type, "host" ) ) {
             exec_job->output = strdup("(Could Not Start Check In Time)");
-            send_result_back();
+            send_result_back(exec_job);
         }
 
         return;
@@ -326,119 +327,12 @@ void do_exec_job( ) {
 
     /* run the command */
     gm_log( GM_LOG_TRACE, "command: %s\n", exec_job->command_line);
+    current_job = exec_job;
     execute_safe_command(exec_job, mod_gm_opt->fork_on_exec, mod_gm_opt->identifier );
+    current_job = NULL;
 
     if ( !strcmp( exec_job->type, "service" ) || !strcmp( exec_job->type, "host" ) ) {
-        send_result_back();
-    }
-
-    return;
-}
-
-
-/* send results back */
-void send_result_back() {
-    gm_log( GM_LOG_TRACE, "send_result_back()\n" );
-
-    if(exec_job->result_queue == NULL) {
-        return;
-    }
-    if(exec_job->output == NULL) {
-        return;
-    }
-
-    /* workaround for rc 25 bug
-     * duplicate jobs from gearmand result in exit code 25 of plugins
-     * because they are executed twice and get killed because of using
-     * the same ressource.
-     * Sending results (when exit code is 25 ) will be skipped with this
-     * enabled.
-     */
-    if( exec_job->return_code == 25 && mod_gm_opt->workaround_rc_25 == GM_ENABLED ) {
-        return;
-    }
-
-    gm_log( GM_LOG_TRACE, "queue: %s\n", exec_job->result_queue );
-    temp_buffer1[0]='\x0';
-    snprintf( temp_buffer1, sizeof( temp_buffer1 )-1, "host_name=%s\ncore_start_time=%i.%i\nstart_time=%i.%i\nfinish_time=%i.%i\nlatency=%f\nreturn_code=%i\nexited_ok=%i\n",
-              exec_job->host_name,
-              ( int )exec_job->core_start_time.tv_sec,
-              ( int )exec_job->core_start_time.tv_usec,
-              ( int )exec_job->start_time.tv_sec,
-              ( int )exec_job->start_time.tv_usec,
-              ( int )exec_job->finish_time.tv_sec,
-              ( int )exec_job->finish_time.tv_usec,
-              exec_job->latency,
-              exec_job->return_code,
-              exec_job->exited_ok
-            );
-    temp_buffer1[sizeof( temp_buffer1 )-1]='\x0';
-
-    if(exec_job->service_description != NULL) {
-        temp_buffer2[0]='\x0';
-        strncat(temp_buffer2, "service_description=", (sizeof(temp_buffer2)-1));
-        strncat(temp_buffer2, exec_job->service_description, (sizeof(temp_buffer2)-1));
-        strncat(temp_buffer2, "\n", (sizeof(temp_buffer2)-1));
-
-        strncat(temp_buffer1, temp_buffer2, (sizeof(temp_buffer1)-1));
-    }
-    temp_buffer1[sizeof( temp_buffer1 )-1]='\x0';
-
-    if(exec_job->output != NULL) {
-        temp_buffer2[0]='\x0';
-        strncat(temp_buffer2, "output=", (sizeof(temp_buffer2)-1));
-        if(mod_gm_opt->debug_result) {
-            strncat(temp_buffer2, "(", (sizeof(temp_buffer2)-1));
-            strncat(temp_buffer2, hostname, (sizeof(temp_buffer2)-1));
-            strncat(temp_buffer2, ") - ", (sizeof(temp_buffer2)-1));
-        }
-        strncat(temp_buffer2, exec_job->output, (sizeof(temp_buffer2)-1));
-        strncat(temp_buffer2, "\n\n\n", (sizeof(temp_buffer2)-1));
-        strncat(temp_buffer1, temp_buffer2, (sizeof(temp_buffer1)-1));
-    }
-    strncat(temp_buffer1, "\n", (sizeof(temp_buffer1)-2));
-    temp_buffer1[sizeof( temp_buffer1 )-1]='\x0';
-
-    gm_log( GM_LOG_TRACE, "data:\n%s\n", temp_buffer1);
-
-    if(add_job_to_queue( &client,
-                         mod_gm_opt->server_list,
-                         exec_job->result_queue,
-                         NULL,
-                         temp_buffer1,
-                         GM_JOB_PRIO_NORMAL,
-                         GM_DEFAULT_JOB_RETRIES,
-                         mod_gm_opt->transportmode,
-                         TRUE
-                        ) == GM_OK) {
-        gm_log( GM_LOG_TRACE, "send_result_back() finished successfully\n" );
-    }
-    else {
-        gm_log( GM_LOG_TRACE, "send_result_back() finished unsuccessfully\n" );
-    }
-
-    if( mod_gm_opt->dupserver_num ) {
-        strncpy(temp_buffer2, "type=passive\n", (sizeof(temp_buffer1)-2));
-        strncat(temp_buffer2, temp_buffer1, (sizeof(temp_buffer2)-2));
-        temp_buffer2[sizeof( temp_buffer2 )-1]='\x0';
-        if( add_job_to_queue( &client_dup,
-                              mod_gm_opt->dupserver_list,
-                              exec_job->result_queue,
-                              NULL,
-                              temp_buffer2,
-                              GM_JOB_PRIO_NORMAL,
-                              GM_DEFAULT_JOB_RETRIES,
-                              mod_gm_opt->transportmode,
-                              TRUE
-                            ) == GM_OK) {
-            gm_log( GM_LOG_TRACE, "send_result_back() finished successfully for duplicate server.\n" );
-        }
-        else {
-            gm_log( GM_LOG_TRACE, "send_result_back() finished unsuccessfully for duplicate server\n" );
-        }
-    }
-    else {
-        gm_log( GM_LOG_TRACE, "send_result_back() has no duplicate servers to send to.\n" );
+        send_result_back(exec_job);
     }
 
     return;

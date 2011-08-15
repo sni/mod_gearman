@@ -112,6 +112,8 @@ int create_client_dup( char ** server_list, gearman_client_st *client ) {
         x++;
     }
 
+    current_client_dup = client;
+
     return GM_OK;
 }
 
@@ -149,6 +151,9 @@ int create_client( char ** server_list, gearman_client_st *client ) {
         x++;
     }
     assert(x != 0);
+
+
+    current_client = client;
 
     return GM_OK;
 }

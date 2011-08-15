@@ -7,6 +7,8 @@ This file documents the revision history for mod_gearman.
             of duplicate execution
           - removed version output to stderr while reloading/starting the core
           - check server definition for duplicates
+          - replace died workers to maintain the worker population
+          - better timeout handling when using fork_on_exec=off
 
 1.0.8  Fri Jul 22 22:21:34 CEST 2011
           - use identifier for error messages if set

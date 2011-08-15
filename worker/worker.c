@@ -152,7 +152,7 @@ void monitor_loop() {
     /* maintain the population */
     while (1) {
         /* check number of workers every second */
-        sleep(1);
+        sleep(GM_DEFAULT_WORKER_LOOP_SLEEP);
 
         /* collect finished workers */
         while(waitpid(-1, &status, WNOHANG) > 0)
@@ -165,7 +165,7 @@ void monitor_loop() {
 
 
 /* count current worker and jobs */
-void count_current_worker() {
+void count_current_worker(int restart) {
     int x;
 
     gm_log( GM_LOG_TRACE, "count_current_worker()\n");
@@ -190,11 +190,16 @@ void count_current_worker() {
     current_number_of_jobs    = 0;
     for(x=4; x < mod_gm_opt->max_worker+4; x++) {
         /* verify worker is alive */
+        gm_log( GM_LOG_TRACE, "worker slot:   shm[%d] = %d\n", x, shm[x]);
         if( shm[x] != -1 && pid_alive(shm[x]) == FALSE ) {
             gm_log( GM_LOG_TRACE, "removed stale worker %d, old pid: %d\n", x, shm[x]);
             shm[x] = -1;
+            /* immediately start new worker, otherwise the fork rate cannot be guaranteed */
+            if(restart == GM_ENABLED) {
+                make_new_child(GM_WORKER_MULTI);
+                current_number_of_workers++;
+            }
         }
-        gm_log( GM_LOG_TRACE, "worker slot:   shm[%d] = %d\n", x, shm[x]);
         if(shm[x] != -1) {
             current_number_of_workers++;
         }
@@ -218,7 +223,7 @@ void check_worker_population() {
     gm_log( GM_LOG_TRACE, "check_worker_population()\n");
 
     /* set current worker number */
-    count_current_worker();
+    count_current_worker(GM_ENABLED);
 
     /* check if status worker died */
     if( shm[3] == -1 ) {
@@ -302,7 +307,6 @@ int parse_arguments(int argc, char **argv) {
     int i;
     int errors = 0;
     int verify;
-    char hostname[GM_BUFFERSIZE];
     mod_gm_opt_t * mod_gm_new_opt;
     mod_gm_new_opt = malloc(sizeof(mod_gm_opt_t));
     set_default_options(mod_gm_new_opt);
@@ -583,7 +587,7 @@ void stop_childs(int mode) {
         if(waited > GM_CHILD_SHUTDOWN_TIMEOUT) {
             break;
         }
-        count_current_worker();
+        count_current_worker(GM_DISABLED);
         if(current_number_of_workers == 0)
             return;
         gm_log( GM_LOG_TRACE, "still waiting (%d) %d childs missing...\n", waited, current_number_of_workers);
@@ -591,7 +595,7 @@ void stop_childs(int mode) {
 
     if(mode == GM_WORKER_STOP) {
         killpg(0, SIGINT);
-        count_current_worker();
+        count_current_worker(GM_DISABLED);
         if(current_number_of_workers == 0)
             return;
 
@@ -609,7 +613,7 @@ void stop_childs(int mode) {
         }
 
         /* kill them the hard way */
-        count_current_worker();
+        count_current_worker(GM_DISABLED);
         if(current_number_of_workers == 0)
             return;
         for(x=3; x < mod_gm_opt->max_worker+4; x++) {
@@ -623,7 +627,7 @@ void stop_childs(int mode) {
         }
 
         /* count childs a last time */
-        count_current_worker();
+        count_current_worker(GM_DISABLED);
         if(current_number_of_workers == 0)
             return;
 

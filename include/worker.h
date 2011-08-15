@@ -185,9 +185,11 @@ int get_next_shm_index(void);
 /**
  * count and set the current number of worker
  *
+ * @param[in] restart - set to GM_ENABLED if stale worker should be replaced
+ *
  * @return nothing
  */
-void count_current_worker(void);
+void count_current_worker(int restart);
 
 /**
  * @}
