@@ -21,6 +21,28 @@ check_result check_result_info;
 int process_performance_data;
 
 int main(void) {
+    int i;
+
+    plan(28);
+
+    char * test_nebargs[] = {
+        "encryption=no server=localhost",
+        "key=test12345 server=localhost",
+        "encryption=no server=localhost export=log_queue:1:NEBCALLBACK_LOG_DATA",
+        "encryption=no server=localhost export=log_queue:1:NEBCALLBACK_LOG_DATA export=proc_queue:0:NEBCALLBACK_PROCESS_DATA",
+    };
+
+    int num = sizeof(test_nebargs) / sizeof(test_nebargs[0]);
+    for(i=0;i<num;i++) {
+        check_neb(test_nebargs[i]);
+    }
+
+    return exit_status();
+}
+
+
+void check_neb(char * nebargs);
+void check_neb(char * nebargs) {
     int (*initfunc)(int,char *,void *);
     int (*deinitfunc)(int,int);
     int (*callfunc)(int,void *);
@@ -29,9 +51,6 @@ int main(void) {
     lt_ptr init_func;
     lt_ptr deinit_func;
     lt_ptr call_func;
-    char * nebargs = "encryption=no server=localhost";
-
-    plan(7);
 
     /* set some external variables */
     service_check_timeout            = 30;
@@ -79,7 +98,7 @@ int main(void) {
     result=dlclose(neb_handle);
     ok(result == 0, "dlclose() -> %d", result);
 
-    return exit_status();
+    return;
 }
 
 /* core log wrapper */

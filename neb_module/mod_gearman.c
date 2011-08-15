@@ -245,6 +245,7 @@ int nebmodule_deinit( int flags, int reason ) {
 
     /* cleanup */
     free_client(&client);
+
     mod_gm_free_opt(mod_gm_opt);
 
     return NEB_OK;
