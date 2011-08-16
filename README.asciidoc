@@ -5,17 +5,18 @@ What is Mod-Gearman
 -------------------
 
 http://labs.consol.de/nagios/mod-gearman[Mod_Gearman] is an easy way
-of distributing active Nagios checks across your network and to increase
-nagios scalability. Mod-Gearman can even help to reduce the load on a
-single nagios host, because its much smaller and more efficient in
-executing checks. It consists of three parts: 
+of distributing active Nagios checks across your network and
+increasing nagios scalability. Mod-Gearman can even help to reduce the
+load on a single nagios host, because its much smaller and more
+efficient in executing checks. It consists of three parts:
 
-* There is a NEB module which resides in the Nagios core and adds servicechecks, hostchecks
-and eventhandler to a Gearman queue.
+* There is a NEB module which resides in the Nagios core and adds servicechecks,
+  hostchecks and eventhandler to a Gearman queue.
 * The counterpart is one or more worker clients executing the checks.
-Worker can be configured to only run checks for specific host- or
-servicegroups. 
-* You need at least one http://gearman.org[Gearman Job Server] running
+  Worker can be configured to only run checks for specific host- or
+  servicegroups.
+* And you need at least one http://gearman.org[Gearman Job Server]
+  running.
 
 
 http://labs.consol.de/wp-content/uploads/2010/09/Mod-Gearman.pdf[Have a look at the slides from the Nagios Workshop 2011 in Hannover]
@@ -24,8 +25,7 @@ http://labs.consol.de/wp-content/uploads/2010/09/Mod-Gearman.pdf[Have a look at 
 Download
 --------
 
-* Latest stable release http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.0.8.tar.gz[version
-  1.0.8] from on July 22 2011
+* Latest stable release http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.0.9.tar.gz[version 1.0.9] from August 16 2011
 * Mod Gearman is available for download at: http://labs.consol.de/nagios/mod-gearman
 * Source is available at GitHub: http://github.com/sni/mod_gearman
 * Older versions are available in the <<_archive,download archive>>.
@@ -35,12 +35,13 @@ Download
 
 Support & Questions
 -------------------
-* Mod-Gearman has been succesfully tested with Nagios 3.2.3 and Icinga
-  1.2.0 running on Lib-Gearman 0.14. There are no known bugs at the moment.
+* Mod-Gearman has been succesfully tested with Nagios >3.2.3 and Icinga
+  >1.2.0 running on Lib-Gearman >0.14. There are no known bugs at the moment.
   Let me know if you find one.
 * https://groups.google.com/group/mod_gearman[google groups mailinglist]
 * http://labs.consol.de/lang/de/forum/#/categories/mod-gearman[support forum]
 * Debian users may be interested in the http://labs.consol.de/nagios/mod-gearman/mod-gearman-quickstart-guide/[quickstart guide].
+* Debian users may also be interested in the official packages: http://packages.debian.org/source/wheezy/mod-gearman
 
 
 How does it work
@@ -249,15 +250,20 @@ it can be started with
 /usr/sbin/gearmand -t 10 -j 0
 --------------------------------------
 
-or a supplied init script (extras/gearmand-init).
+or a supplied init script (extras/gearmand-init). Command line
+arguments have change in recent gearman versions and you now should
+use something like:
+--------------------------------------
+/usr/sbin/gearmand --threads=10 --job-retries=0
+--------------------------------------
 
 
 
 Patch Nagios
 ^^^^^^^^^^^^
 
-NOTE: The needed patch is already included since Nagios 3.2.2. Use the patch if you
-use an older version.
+NOTE: The needed patch is already applied to Nagios 3.2.2. Use the patch if you
+have an older version.
 
 It is not possible to distribute eventhandler with Nagios versions
 prior 3.2.2. Just apply the patch from the ./extras/patches directory
@@ -600,6 +606,19 @@ results for a reporting installation or remote gui.
     dupserver=logserver:4730,logserver2:4730
 ====
 
+workaround_rc_25::
+Duplicate jobs from gearmand result sometimes in exit code 25 of
+plugins because they are executed twice and get killed because of
+using the same ressource. Sending results (when exit code is 25 )
+will be skipped with this enabled.
+Only needed if you experience problems with plugins exiting with exit
+code 25 randomly. Default is off.
++
+====
+    workaround_rc_25=off
+====
+
+
 
 
 Queue Names
@@ -809,6 +828,7 @@ Hints
 Archive
 -------
 
+* http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.0.9.tar.gz[version 1.0.9 - August 16 2011]
 * http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.0.8.tar.gz[version 1.0.8 - July 22 2011]
 * http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.0.7.tar.gz[version 1.0.7 - July 03 2011]
 * http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.0.6.tar.gz[version 1.0.6 - June 04 2011]

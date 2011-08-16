@@ -561,27 +561,28 @@ footnotes: function () {
 <h2 id="_what_is_mod_gearman">What is Mod-Gearman</h2>
 <div class="sectionbody">
 <div class="paragraph"><p><a href="http://labs.consol.de/nagios/mod-gearman">Mod_Gearman</a> is an easy way
-of distributing active Nagios checks across your network and to increase
-nagios scalability. Mod-Gearman can even help to reduce the load on a
-single nagios host, because its much smaller and more efficient in
-executing checks. It consists of three parts:</p></div>
+of distributing active Nagios checks across your network and
+increasing nagios scalability. Mod-Gearman can even help to reduce the
+load on a single nagios host, because its much smaller and more
+efficient in executing checks. It consists of three parts:</p></div>
 <div class="ulist"><ul>
 <li>
 <p>
-There is a NEB module which resides in the Nagios core and adds servicechecks, hostchecks
-and eventhandler to a Gearman queue.
+There is a NEB module which resides in the Nagios core and adds servicechecks,
+  hostchecks and eventhandler to a Gearman queue.
 </p>
 </li>
 <li>
 <p>
 The counterpart is one or more worker clients executing the checks.
-Worker can be configured to only run checks for specific host- or
-servicegroups.
+  Worker can be configured to only run checks for specific host- or
+  servicegroups.
 </p>
 </li>
 <li>
 <p>
-You need at least one <a href="http://gearman.org">Gearman Job Server</a> running
+And you need at least one <a href="http://gearman.org">Gearman Job Server</a>
+  running.
 </p>
 </li>
 </ul></div>
@@ -592,8 +593,7 @@ You need at least one <a href="http://gearman.org">Gearman Job Server</a> runnin
 <div class="ulist"><ul>
 <li>
 <p>
-Latest stable release <a href="http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.0.8.tar.gz">version
-  1.0.8</a> from on July 22 2011
+Latest stable release <a href="http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.0.9.tar.gz">version 1.0.9</a> from August 16 2011
 </p>
 </li>
 <li>
@@ -618,8 +618,8 @@ Older versions are available in the <a href="#_archive">download archive</a>.
 <div class="ulist"><ul>
 <li>
 <p>
-Mod-Gearman has been succesfully tested with Nagios 3.2.3 and Icinga
-  1.2.0 running on Lib-Gearman 0.14. There are no known bugs at the moment.
+Mod-Gearman has been succesfully tested with Nagios &gt;3.2.3 and Icinga
+  &gt;1.2.0 running on Lib-Gearman &gt;0.14. There are no known bugs at the moment.
   Let me know if you find one.
 </p>
 </li>
@@ -636,6 +636,11 @@ Mod-Gearman has been succesfully tested with Nagios 3.2.3 and Icinga
 <li>
 <p>
 Debian users may be interested in the <a href="http://labs.consol.de/nagios/mod-gearman/mod-gearman-quickstart-guide/">quickstart guide</a>.
+</p>
+</li>
+<li>
+<p>
+Debian users may also be interested in the official packages: <a href="http://packages.debian.org/source/wheezy/mod-gearman">http://packages.debian.org/source/wheezy/mod-gearman</a>
 </p>
 </li>
 </ul></div>
@@ -839,15 +844,21 @@ it can be started with</td>
 <div class="content">
 <pre><tt>/usr/sbin/gearmand -t 10 -j 0</tt></pre>
 </div></div>
-<div class="paragraph"><p>or a supplied init script (extras/gearmand-init).</p></div>
+<div class="paragraph"><p>or a supplied init script (extras/gearmand-init). Command line
+arguments have change in recent gearman versions and you now should
+use something like:</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><tt>/usr/sbin/gearmand --threads=10 --job-retries=0</tt></pre>
+</div></div>
 <h4 id="_patch_nagios">Patch Nagios</h4>
 <div class="admonitionblock">
 <table><tr>
 <td class="icon">
 <div class="title">Note</div>
 </td>
-<td class="content">The needed patch is already included since Nagios 3.2.2. Use the patch if you
-use an older version.</td>
+<td class="content">The needed patch is already applied to Nagios 3.2.2. Use the patch if you
+have an older version.</td>
 </tr></table>
 </div>
 <div class="paragraph"><p>It is not possible to distribute eventhandler with Nagios versions
@@ -1401,8 +1412,9 @@ fork_on_exec
 </dt>
 <dd>
 <p>
-Use this option to disable an extra fork for each plugin execution. This option
-will reduce the load on the worker host. Default: yes
+Use this option to disable an extra fork for each plugin execution.
+Disabling this option will reduce the load on the worker host, but may
+cause trouble with unclean plugins. Default: yes
 </p>
 <div class="exampleblock">
 <div class="exampleblock-content">
@@ -1426,6 +1438,26 @@ results for a reporting installation or remote gui.
 <div class="literalblock">
 <div class="content">
 <pre><tt>dupserver=logserver:4730,logserver2:4730</tt></pre>
+</div></div>
+</div></div>
+</dd>
+<dt class="hdlist1">
+workaround_rc_25
+</dt>
+<dd>
+<p>
+Duplicate jobs from gearmand result sometimes in exit code 25 of
+plugins because they are executed twice and get killed because of
+using the same ressource. Sending results (when exit code is 25 )
+will be skipped with this enabled.
+Only needed if you experience problems with plugins exiting with exit
+code 25 randomly. Default is off.
+</p>
+<div class="exampleblock">
+<div class="exampleblock-content">
+<div class="literalblock">
+<div class="content">
+<pre><tt>workaround_rc_25=off</tt></pre>
 </div></div>
 </div></div>
 </dd>
@@ -1688,6 +1720,11 @@ Make sure all your worker have the nagios-plugins available under
 <div class="ulist"><ul>
 <li>
 <p>
+<a href="http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.0.9.tar.gz">version 1.0.9 - August 16 2011</a>
+</p>
+</li>
+<li>
+<p>
 <a href="http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.0.8.tar.gz">version 1.0.8 - July 22 2011</a>
 </p>
 </li>
@@ -1767,7 +1804,7 @@ Make sure all your worker have the nagios-plugins available under
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2011-07-22 22:45:23 CEST
+Last updated 2011-08-16 09:46:51 CEST
 </div>
 </div>
 </body>
