@@ -1,0 +1,48 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+
+#include <common.h>
+#include <utils.h>
+
+mod_gm_opt_t *mod_gm_opt;
+
+int main(void) {
+    char *result, *error;
+    char cmd[120];
+    int x;
+
+    /* set hostname */
+    gethostname(hostname, GM_BUFFERSIZE-1);
+
+    /* create options structure and set debug level */
+    mod_gm_opt = malloc(sizeof(mod_gm_opt_t));
+    set_default_options(mod_gm_opt);
+    mod_gm_opt->debug_level = 4;
+
+    gm_job_t * exec_job;
+    exec_job = ( gm_job_t * )malloc( sizeof *exec_job );
+    set_default_job(exec_job, mod_gm_opt);
+    //strcpy(cmd, "/bin/true;");
+    strcpy(cmd, "/bin/true;");
+    //strcpy(cmd, "./t/both");
+
+    run_check(cmd, &result, &error);
+    mod_gm_opt->debug_level = 0;
+
+    for(x=0;x<100;x++) {
+        run_check(cmd, &result, &error);
+    }
+
+
+    free_job(exec_job);
+    mod_gm_free_opt(mod_gm_opt);
+    exit(0);
+}
+
+/* core log wrapper */
+void write_core_log(char *data) {
+    printf("core logger is not available for tests: %s", data);
+    return;
+}

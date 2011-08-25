@@ -171,6 +171,10 @@ spawn-rate=1
 # unclean plugin.
 fork_on_exec=yes
 
+# Use this option to show stderr output of plugins too.
+# Default: yes
+show_error_output=yes
+
 # Workarounds
 
 # workaround for rc 25 bug

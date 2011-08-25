@@ -25,6 +25,7 @@
 #include "crypt.h"
 #include "base64.h"
 #include "gearman.h"
+#include "popenRWE.h"
 
 pid_t current_child_pid = 0;
 char temp_buffer1[GM_BUFFERSIZE];
@@ -226,6 +227,7 @@ int set_default_options(mod_gm_opt_t *opt) {
     opt->max_jobs           = GM_DEFAULT_MAX_JOBS;
     opt->spawn_rate         = GM_DEFAULT_SPAWN_RATE;
     opt->identifier         = NULL;
+    opt->show_error_output  = GM_ENABLED;
 
     opt->workaround_rc_25   = GM_DISABLED;
 
@@ -371,13 +373,19 @@ int parse_args_line(mod_gm_opt_t *opt, char * arg, int recursion_level) {
     }
 
     /* active */
-    else if (   !strcmp( key, "active" ) ) {
+    else if ( !strcmp( key, "active" ) ) {
         opt->active = parse_yes_or_no(value, GM_ENABLED);
         return(GM_OK);
     }
 
+    /* show_error_output */
+    else if ( !strcmp( key, "show_error_output" ) ) {
+        opt->show_error_output = parse_yes_or_no(value, GM_ENABLED);
+        return(GM_OK);
+    }
+
     /* workaround_rc_25 */
-    else if (   !strcmp( key, "workaround_rc_25" ) ) {
+    else if ( !strcmp( key, "workaround_rc_25" ) ) {
         opt->workaround_rc_25 = parse_yes_or_no(value, GM_ENABLED);
         return(GM_OK);
     }
@@ -1061,17 +1069,27 @@ int parse_command_line(char *cmd, char *argv[MAX_CMD_ARGS]) {
 
 
 /* run a check */
-int run_check(char *processed_command, char **ret) {
+int run_check(char *processed_command, char **ret, char **err) {
     char *argv[MAX_CMD_ARGS];
     FILE *fp;
     pid_t pid;
-    int pipefds[2];
+    int pipe_stdout[2], pipe_stderr[2], pipe_rwe[3];
     int retval;
 
     /* check for check execution method (shell or execvp) */
     if(!strpbrk(processed_command,"!$^&*()~[]|{};<>?`\"'")) {
+        /* use the fast execvp when there are now shell characters */
         gm_log( GM_LOG_TRACE, "using execvp\n" );
-        if(pipe(pipefds)) {
+
+        parse_command_line(processed_command,argv);
+        if(!argv[0])
+            _exit(STATE_UNKNOWN);
+
+        if(pipe(pipe_stdout)) {
+            gm_log( GM_LOG_ERROR, "error creating pipe: %s\n", strerror(errno));
+            _exit(STATE_UNKNOWN);
+        }
+        if(pipe(pipe_stderr)) {
             gm_log( GM_LOG_ERROR, "error creating pipe: %s\n", strerror(errno));
             _exit(STATE_UNKNOWN);
         }
@@ -1080,14 +1098,17 @@ int run_check(char *processed_command, char **ret) {
             _exit(STATE_UNKNOWN);
         }
         else if(!pid){
-            if((dup2(pipefds[1],STDOUT_FILENO)<0)||(dup2(pipefds[1],STDERR_FILENO)<0)){
+            /* child process */
+            if((dup2(pipe_stdout[1],STDOUT_FILENO)<0)){
                 gm_log( GM_LOG_ERROR, "dup2 error\n");
                 _exit(STATE_UNKNOWN);
             }
-            close(pipefds[1]);
-            parse_command_line(processed_command,argv);
-            if(!argv[0])
+            if((dup2(pipe_stderr[1],STDERR_FILENO)<0)){
+                gm_log( GM_LOG_ERROR, "dup2 error\n");
                 _exit(STATE_UNKNOWN);
+            }
+            close(pipe_stdout[1]);
+            close(pipe_stderr[1]);
             current_child_pid = getpid();
             execvp(argv[0], argv);
             if(errno == 2)
@@ -1097,37 +1118,61 @@ int run_check(char *processed_command, char **ret) {
             _exit(STATE_UNKNOWN);
         }
 
-        /* prepare pipe reading */
-        close(pipefds[1]);
-        fp=fdopen(pipefds[0],"r");
+        /* parent */
+        /* prepare stdout pipe reading */
+        close(pipe_stdout[1]);
+        fp=fdopen(pipe_stdout[0],"r");
         if(!fp){
             gm_log( GM_LOG_ERROR, "fdopen error\n");
             _exit(STATE_UNKNOWN);
         }
-
-        /* extract check result */
         *ret = extract_check_result(fp);
-
-        /* close the process */
         fclose(fp);
-        close(pipefds[0]);
+
+        /* prepare stderr pipe reading */
+        close(pipe_stderr[1]);
+        fp=fdopen(pipe_stderr[0],"r");
+        if(!fp){
+            gm_log( GM_LOG_ERROR, "fdopen error\n");
+            _exit(STATE_UNKNOWN);
+        }
+        *err = extract_check_result(fp);
+        fclose(fp);
+
+        close(pipe_stdout[0]);
+        close(pipe_stderr[0]);
         if(waitpid(pid,&retval,0)!=pid)
             retval=-1;
     }
     else {
-        current_child_pid = getpid();
+        /* use the slower popen when there were shell characters */
         gm_log( GM_LOG_TRACE, "using popen\n" );
-        fp=popen(processed_command,"r");
-        if(fp==NULL)
-            _exit(STATE_UNKNOWN);
+
+        current_child_pid = getpid();
+
+        pid = popenRWE(pipe_rwe, processed_command);
 
         /* extract check result */
+        fp=fdopen(pipe_rwe[1],"r");
+        if(!fp){
+            gm_log( GM_LOG_ERROR, "fdopen error\n");
+            _exit(STATE_UNKNOWN);
+        }
         *ret = extract_check_result(fp);
+        fclose(fp);
 
+        /* extract check stderr */
+        fp=fdopen(pipe_rwe[2],"r");
+        if(!fp){
+            gm_log( GM_LOG_ERROR, "fdopen error\n");
+            _exit(STATE_UNKNOWN);
+        }
+        *err = extract_check_result(fp);
+        fclose(fp);
 
         /* close the process */
-        retval=pclose(fp);
-     }
+        retval=pcloseRWE(pid, pipe_rwe);
+    }
 
     return retval;
 }
@@ -1135,16 +1180,17 @@ int run_check(char *processed_command, char **ret) {
 
 /* execute this command with given timeout */
 int execute_safe_command(gm_job_t * exec_job, int fork_exec, char * identifier) {
-    int pdes[2];
+    int pipe_stdout[2] , pipe_stderr[2];
     int return_code;
     int pclose_result;
-    char *plugin_output;
+    char *plugin_output, *plugin_error;
     char *bufdup;
-    char buffer[GM_BUFFERSIZE];
+    char buffer[GM_BUFFERSIZE], buf_error[GM_BUFFERSIZE];
     sigset_t mask;
     struct timeval start_time,end_time;
-    pid_t pid = 0;
-    buffer[0] = '\x0';
+    pid_t pid    = 0;
+    buffer[0]    = '\x0';
+    buf_error[0] = '\x0';
 
     gm_log( GM_LOG_TRACE, "execute_safe_command()\n" );
 
@@ -1155,8 +1201,10 @@ int execute_safe_command(gm_job_t * exec_job, int fork_exec, char * identifier) 
 
     /* fork a child process */
     if(fork_exec == GM_ENABLED) {
-        if(pipe(pdes) != 0)
-            perror("pipe");
+        if(pipe(pipe_stdout) != 0)
+            perror("pipe stdout");
+        if(pipe(pipe_stderr) != 0)
+            perror("pipe stderr");
 
         pid=fork();
 
@@ -1179,33 +1227,40 @@ int execute_safe_command(gm_job_t * exec_job, int fork_exec, char * identifier) 
         sigfillset(&mask);
         sigprocmask(SIG_UNBLOCK, &mask, NULL);
 
-        if( fork_exec == GM_ENABLED )
-            close(pdes[0]);
+        if( fork_exec == GM_ENABLED ) {
+            close(pipe_stdout[0]);
+            close(pipe_stderr[0]);
+        }
         signal(SIGALRM, check_alarm_handler);
         alarm(exec_job->timeout);
 
         /* run the plugin check command */
-        pclose_result = run_check(exec_job->command_line, &plugin_output);
+        pclose_result = run_check(exec_job->command_line, &plugin_output, &plugin_error);
         return_code   = pclose_result;
 
         if(fork_exec == GM_ENABLED) {
-            if(write(pdes[1], plugin_output, strlen(plugin_output)+1) <= 0)
+            if(write(pipe_stdout[1], plugin_output, strlen(plugin_output)+1) <= 0)
+                perror("write stdout");
+            if(write(pipe_stderr[1], plugin_error, strlen(plugin_error)+1) <= 0)
                 perror("write");
 
             if(pclose_result == -1) {
                 char error[GM_BUFFERSIZE];
                 snprintf(error, sizeof(error), "error on %s: %s", identifier, strerror(errno));
-                if(write(pdes[1], error, strlen(error)+1) <= 0)
+                if(write(pipe_stdout[1], error, strlen(error)+1) <= 0)
                     perror("write");
             }
 
             return_code = real_exit_code(pclose_result);
             free(plugin_output);
+            free(plugin_error);
             exit(return_code);
         }
         else {
-            snprintf( buffer, sizeof( buffer )-1, "%s", plugin_output );
+            snprintf( buffer,    sizeof( buffer )-1,    "%s", plugin_output );
+            snprintf( buf_error, sizeof( buf_error )-1, "%s", plugin_error  );
             free(plugin_output);
+            free(plugin_error);
         }
     }
 
@@ -1215,12 +1270,15 @@ int execute_safe_command(gm_job_t * exec_job, int fork_exec, char * identifier) 
         gm_log( GM_LOG_TRACE, "started check with pid: %d\n", pid);
 
         if( fork_exec == GM_ENABLED) {
-            close(pdes[1]);
+            close(pipe_stdout[1]);
+            close(pipe_stderr[1]);
 
             waitpid(pid, &return_code, 0);
             gm_log( GM_LOG_TRACE, "finished check from pid: %d with status: %d\n", pid, return_code);
             /* get all lines of plugin output */
-            if(read(pdes[0], buffer, sizeof(buffer)-1) < 0)
+            if(read(pipe_stdout[0], buffer, sizeof(buffer)-1) < 0)
+                perror("read");
+            if(read(pipe_stderr[0], buf_error, sizeof(buf_error)-1) < 0)
                 perror("read");
         }
         return_code = real_exit_code(return_code);
@@ -1257,9 +1315,11 @@ int execute_safe_command(gm_job_t * exec_job, int fork_exec, char * identifier) 
         }
 
         exec_job->output      = strdup(buffer);
+        exec_job->error       = strdup(buf_error);
         exec_job->return_code = return_code;
         if( fork_exec == GM_ENABLED) {
-            close(pdes[0]);
+            close(pipe_stdout[0]);
+            close(pipe_stderr[0]);
         }
     }
     alarm(0);
@@ -1295,6 +1355,7 @@ int set_default_job(gm_job_t *job, mod_gm_opt_t *opt) {
     job->result_queue        = NULL;
     job->command_line        = NULL;
     job->output              = NULL;
+    job->error               = NULL;
     job->exited_ok           = TRUE;
     job->scheduled_check     = TRUE;
     job->reschedule_check    = TRUE;
@@ -1317,6 +1378,7 @@ int free_job(gm_job_t *job) {
     free(job->result_queue);
     free(job->command_line);
     free(job->output);
+    free(job->error);
     free(job);
 
     return(GM_OK);
@@ -1933,6 +1995,11 @@ void send_result_back(gm_job_t * exec_job) {
             strncat(temp_buffer2, ") - ", (sizeof(temp_buffer2)-1));
         }
         strncat(temp_buffer2, exec_job->output, (sizeof(temp_buffer2)-1));
+        if(mod_gm_opt->show_error_output) {
+            strncat(temp_buffer2, "\n[", (sizeof(temp_buffer2)-1));
+            strncat(temp_buffer2, exec_job->error, (sizeof(temp_buffer2)-1));
+            strncat(temp_buffer2, "] ", (sizeof(temp_buffer2)-1));
+        }
         strncat(temp_buffer2, "\n\n\n", (sizeof(temp_buffer2)-1));
         strncat(temp_buffer1, temp_buffer2, (sizeof(temp_buffer1)-1));
     }

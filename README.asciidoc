@@ -606,6 +606,17 @@ results for a reporting installation or remote gui.
     dupserver=logserver:4730,logserver2:4730
 ====
 
+
+show_error_output::
+Use this option to show stderr output of plugins too. When set to no,
+only stdout will be displayed.
+Default is yes.
++
+====
+    show_error_output=yes
+====
+
+
 workaround_rc_25::
 Duplicate jobs from gearmand result sometimes in exit code 25 of
 plugins because they are executed twice and get killed because of

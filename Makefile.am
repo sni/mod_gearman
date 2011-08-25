@@ -25,7 +25,8 @@ common_SOURCES             = common/base64.c \
                              common/rijndael.c \
                              common/gearman.c \
                              common/gearman_utils.c \
-                             common/utils.c
+                             common/utils.c \
+                             common/popenRWE.c
 
 pkglib_LIBRARIES           = mod_gearman.so
 mod_gearman_so_SOURCES     = $(common_SOURCES) \
@@ -56,7 +57,7 @@ gearman_top_SOURCES        = $(common_SOURCES) \
 gearman_top_LDADD          = -lncurses
 
 # tests
-check_PROGRAMS   = 01_utils 02_full 03_exec 04_log 05_neb
+check_PROGRAMS   = 01_utils 02_full 03_exec 04_log 05_neb 06_exec
 01_utils_SOURCES = $(common_SOURCES) t/tap.h t/tap.c t/01-utils.c
 02_full_SOURCES  = $(common_SOURCES) t/tap.h t/tap.c t/02-full.c
 03_exec_SOURCES  = $(common_SOURCES) t/tap.h t/tap.c t/03-exec_checks.c
@@ -64,6 +65,8 @@ check_PROGRAMS   = 01_utils 02_full 03_exec 04_log 05_neb
 05_neb_SOURCES   = $(common_SOURCES) t/tap.h t/tap.c t/05-neb.c
 05_neb_LDADD     = -ldl
 05_neb_LDFLAGS   = --export-dynamic -rdynamic
+# only used for performance tests
+06_exec_SOURCES  = $(common_SOURCES) t/06-execvp_vs_popen.c
 TESTS            = $(check_PROGRAMS)
 
 

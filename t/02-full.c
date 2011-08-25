@@ -206,7 +206,7 @@ int main(void) {
     int tests = 53;
     int rrc;
     char cmd[150];
-    char * result;
+    char *result, *error;
     plan(tests);
 
     mod_gm_opt = malloc(sizeof(mod_gm_opt_t));
@@ -298,22 +298,24 @@ int main(void) {
      * send_gearman
      */
     snprintf(cmd, 150, "./send_gearman --server=localhost:%d --key=testtest --host=test --service=test --message=test --returncode=0", GEARMAND_TEST_PORT);
-    rrc = real_exit_code(run_check(cmd, &result));
+    rrc = real_exit_code(run_check(cmd, &result, &error));
     cmp_ok(rrc, "==", 0, "cmd '%s' returned rc %d", cmd, rrc);
     like(result, "^\\s*$", "output from ./send_gearman");
     free(result);
+    free(error);
 
     /*****************************************
      * send_gearman
      */
     snprintf(cmd, 150, "./send_multi --server=localhost:%d --host=blah < t/data/send_multi.txt", GEARMAND_TEST_PORT);
-    rrc = real_exit_code(run_check(cmd, &result));
+    rrc = real_exit_code(run_check(cmd, &result, &error));
     cmp_ok(rrc, "==", 0, "cmd '%s' returned rc %d", cmd, rrc);
     like(result, "send_multi OK: 2 check_multi child checks submitted", "output from ./send_multi");
 
 
     /* cleanup */
     free(result);
+    free(error);
     mod_gm_free_opt(mod_gm_opt);
     free_client(&client);
     free_worker(&worker);

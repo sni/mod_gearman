@@ -40,6 +40,7 @@
 #include <sys/wait.h>
 #include <sys/stat.h>
 
+#include "popenRWE.h"
 #include "common.h"
 
 /**
@@ -321,10 +322,11 @@ int parse_command_line(char *cmd, char *argv[GM_LISTSIZE]);
  *
  * @param[in] processed_command - command line
  * @param[out] plugin_output - pointer to plugin output
+ * @param[out] plugin_error - pointer to plugin error output
  *
  * @return true on success
  */
-int run_check(char *processed_command, char **plugin_output);
+int run_check(char *processed_command, char **plugin_output, char **plugin_error);
 
 /**
  *
