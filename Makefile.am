@@ -229,3 +229,12 @@ deb:
 
 mrproper:
 	git clean -xfd
+
+version:
+	newversion=$$(dialog --stdout --inputbox "New Version:" 0 0 "$(VERSION)") ; \
+	if [ -n "$$newversion" ] && [ "$$newversion" != "$(VERSION)" ]; then \
+		sed -ri "s/$(VERSION)/$$newversion/" include/common.h configure.ac docs/QUICKSTART; \
+	fi ;
+	sed -i Changes -e "s/$(VERSION)/$$newversion $(shell date)\n          - ...\n\n$(VERSION)/"
+	$(MAKE) docs
+
