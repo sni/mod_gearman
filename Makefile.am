@@ -195,6 +195,14 @@ test: check
 	@echo ""
 	@echo "################################################################"
 
+fulltest:
+	./t/test_all.pl
+	@echo "################################################################"
+	@echo ""
+	@echo " Full tests completed successfully"
+	@echo ""
+	@echo "################################################################"
+
 docs:
 	@if [ -z "$(DOS2UNIX)" ]; then \
 	    printf "\n\n**** please install dos2unix or tofrodos package ****\n\n"; \
