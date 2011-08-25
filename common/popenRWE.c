@@ -49,11 +49,17 @@ int popenRWE(int *rwepipe, char *command) {
 		close(out[0]);
 		close(err[0]);
 		close(0);
-		dup(in[0]);
+		if(!dup(in[0])) {
+			;
+		}
 		close(1);
-		dup(out[1]);
+		if(!dup(out[1])) {
+			;
+		}
 		close(2);
-		dup(err[1]);
+		if(!dup(err[1])) {
+			;
+		}
 
 		execl( "/bin/sh", "sh", "-c", command, NULL );
 		exit(1);
