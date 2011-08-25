@@ -1,7 +1,7 @@
 This file documents the revision history for mod_gearman.
 
 1.0.10 Thu Aug 25 16:07:55 CEST 2011
-          - ...
+          - fixed tests
 
 1.0.9  Mon Aug 15 16:05:23 CEST 2011
           - nicer error messages for send_multi when zero results transmitted

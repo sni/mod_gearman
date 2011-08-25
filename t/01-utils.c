@@ -67,8 +67,10 @@ int main(void) {
     strcpy(test, " test "); like(trim(test), "test", "trim(' test ')");
 
     /* reading keys */
-    mod_gm_opt_t *mod_gm_opt = renew_opts();
+    mod_gm_opt_t *mod_gm_opt;
+    mod_gm_opt = malloc(sizeof(mod_gm_opt_t));
     int rc = set_default_options(mod_gm_opt);
+
     ok(rc == 0, "setting default options");
     mod_gm_opt->keyfile = strdup("t/data/test1.key");
     read_keyfile(mod_gm_opt);

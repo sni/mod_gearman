@@ -157,7 +157,7 @@ int nebmodule_init( int flags, char *args, nebmodule *handle ) {
     neb_register_callback( NEBCALLBACK_TIMED_EVENT_DATA, gearman_module_handle, 0, handle_timed_events );
 
     /* register export callbacks */
-    for(i=0;i<=GM_NEBTYPESSIZE;i++) {
+    for(i=0;i<GM_NEBTYPESSIZE;i++) {
         if(mod_gm_opt->exports[i]->elem_number > 0)
             neb_register_callback( i, gearman_module_handle, 0, handle_export );
     }
@@ -228,7 +228,7 @@ int nebmodule_deinit( int flags, int reason ) {
     }
 
     /* register export callbacks */
-    for(x=0;x<=GM_NEBTYPESSIZE;x++) {
+    for(x=0;x<GM_NEBTYPESSIZE;x++) {
         if(mod_gm_opt->exports[x]->elem_number > 0)
             neb_deregister_callback( x, gearman_module_handle );
     }

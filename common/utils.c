@@ -250,7 +250,7 @@ int set_default_options(mod_gm_opt_t *opt) {
     opt->local_servicegroups_num  = 0;
     for(i=0;i<=GM_LISTSIZE;i++)
         opt->local_servicegroups_list[i] = NULL;
-    for(i=0;i<=GM_NEBTYPESSIZE;i++) {
+    for(i=0;i<GM_NEBTYPESSIZE;i++) {
         mod_gm_exp_t *mod_gm_exp;
         mod_gm_exp              = malloc(sizeof(mod_gm_exp_t));
         mod_gm_exp->elem_number = 0;
@@ -663,7 +663,7 @@ int parse_args_line(mod_gm_opt_t *opt, char * arg, int recursion_level) {
                 callback_num = -1;
                 /* get neb callback number by name */
                 int i;
-                for(i=0;i<=GM_NEBTYPESSIZE;i++) {
+                for(i=0;i<GM_NEBTYPESSIZE;i++) {
                     char * type = nebcallback2str(i);
                     if(!strcmp(type, callback)) {
                         callback_num = i;
@@ -808,7 +808,7 @@ void dumpconfig(mod_gm_opt_t *opt, int mode) {
         for(i=0;i<opt->local_servicegroups_num;i++)
             gm_log( GM_LOG_DEBUG, "local_servicegroups:      %s\n", opt->local_servicegroups_list[i]);
         /* export queues*/
-        for(i=0;i<=GM_NEBTYPESSIZE;i++) {
+        for(i=0;i<GM_NEBTYPESSIZE;i++) {
             char * type = nebcallback2str(i);
             for(j=0;j<opt->exports[i]->elem_number;j++)
                 gm_log( GM_LOG_DEBUG, "export:              %-45s -> %s\n", type, opt->exports[i]->name[j]);

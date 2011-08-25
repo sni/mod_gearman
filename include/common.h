@@ -58,7 +58,7 @@
 #define GM_BUFFERSIZE               98304
 #define GM_MAX_OUTPUT               65536   /* must be ~30% below GM_BUFFERSIZE for base64/encryption */
 #define GM_LISTSIZE                   512
-#define GM_NEBTYPESSIZE                32   /* maximum number of neb types */
+#define GM_NEBTYPESSIZE                33   /* maximum number of neb types */
 
 #define GM_MIN_LIB_GEARMAN_VERSION   0.14
 #define GM_SERVER_DEFAULT_PORT       4730
