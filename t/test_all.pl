@@ -10,8 +10,8 @@ if($? != 0) {
 }
 plan(tests => 16);
 
-`make clean && make`;
-is($?, 0, "build rc is $?");
+my $makeout = `make clean  2>&1 && make 2>&1`;
+is($?, 0, "build rc is $?") or BAIL_OUT("no need to test without successful make!\n".$makeout);
 
 my $vallog  = '/tmp/valgrind.log';
 my $testlog = '/tmp/mod_gearman_test.log';
