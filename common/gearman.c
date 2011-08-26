@@ -167,7 +167,11 @@ int add_job_to_queue( gearman_client_st *client, char ** server_list, char * que
     int size, free_uniq;
     struct timeval now;
 
-    signal(SIGPIPE, SIG_IGN);
+    /* check too long queue names */
+    if(strlen(queue) > 63) {
+        gm_log( GM_LOG_ERROR, "queue name too long: '%s'\n", queue );
+        return GM_ERROR;
+    }
 
     /* cut off to long uniq ids */
     free_uniq = 0;
@@ -175,6 +179,8 @@ int add_job_to_queue( gearman_client_st *client, char ** server_list, char * que
         uniq = strndup(uniq, 63);
         free_uniq = 1;
     }
+
+    signal(SIGPIPE, SIG_IGN);
 
     gm_log( GM_LOG_TRACE, "add_job_to_queue(%s, %s, %d, %d, %d, %d)\n", queue, uniq, priority, retries, transport_mode, send_now );
     gm_log( GM_LOG_TRACE, "%d --->%s<---\n", strlen(data), data );

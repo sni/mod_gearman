@@ -117,8 +117,8 @@ void test_servicecheck(int transportmode) {
 }
 
 /* test */
-void send_big_job(int transportmode);
-void send_big_job(int transportmode) {
+void send_big_jobs(int transportmode);
+void send_big_jobs(int transportmode) {
     struct timeval start_time;
     gettimeofday(&start_time,NULL);
     char temp_buffer[GM_BUFFERSIZE];
@@ -136,10 +136,15 @@ void send_big_job(int transportmode) {
               0.0,
               "/bin/hostname"
             );
-    char * uniq = "something at least bigger than the 64 chars allowed by libgearman!";
     temp_buffer[sizeof( temp_buffer )-1]='\x0';
+    char * uniq = "something at least bigger than the 64 chars allowed by libgearman!";
     int rt = add_job_to_queue( &client, mod_gm_opt->server_list, "service", uniq, temp_buffer, GM_JOB_PRIO_NORMAL, 1, transportmode, TRUE );
-    ok(rt == GM_OK, "servicecheck sent successfully in mode %s", transportmode == GM_ENCODE_ONLY ? "base64" : "aes256");
+    ok(rt == GM_OK, "big uniq id sent successfully in mode %s", transportmode == GM_ENCODE_ONLY ? "base64" : "aes256");
+
+    char * queue = "something at least bigger than the 64 chars allowed by libgearman!";
+    rt = add_job_to_queue( &client, mod_gm_opt->server_list, queue, uniq, temp_buffer, GM_JOB_PRIO_NORMAL, 1, transportmode, TRUE );
+    ok(rt == GM_ERROR, "big queue sent unsuccessfully in mode %s", transportmode == GM_ENCODE_ONLY ? "base64" : "aes256");
+
     return;
 }
 
@@ -229,7 +234,7 @@ void wait_for_empty_queue(char *queue, int timeout) {
 /* main tests */
 int main(void) {
     int status, chld;
-    int tests = 54;
+    int tests = 55;
     int rrc;
     char cmd[150];
     char *result, *error;
@@ -280,7 +285,7 @@ int main(void) {
     create_modules();
 
     /* send big job */
-    send_big_job(GM_ENCODE_ONLY);
+    send_big_jobs(GM_ENCODE_ONLY);
 
     /* try to send some data with base64 only */
     test_eventhandler(GM_ENCODE_ONLY);
