@@ -164,10 +164,17 @@ int add_job_to_queue( gearman_client_st *client, char ** server_list, char * que
     gearman_task_st *task = NULL;
     gearman_return_t ret1, ret2;
     char * crypted_data;
-    int size;
+    int size, free_uniq;
     struct timeval now;
 
     signal(SIGPIPE, SIG_IGN);
+
+    /* cut off to long uniq ids */
+    free_uniq = 0;
+    if(uniq != NULL && strlen(uniq) > 63) {
+        uniq = strndup(uniq, 63);
+        free_uniq = 1;
+    }
 
     gm_log( GM_LOG_TRACE, "add_job_to_queue(%s, %s, %d, %d, %d, %d)\n", queue, uniq, priority, retries, transport_mode, send_now );
     gm_log( GM_LOG_TRACE, "%d --->%s<---\n", strlen(data), data );
@@ -252,6 +259,9 @@ int add_job_to_queue( gearman_client_st *client, char ** server_list, char * que
 
     /* reset error counter */
     mod_gm_con_errors = 0;
+
+    if(free_uniq)
+        free(uniq);
 
     gm_log( GM_LOG_TRACE, "add_job_to_queue() finished sucessfully: %d %d\n", ret1, ret2 );
     return GM_OK;

@@ -401,8 +401,7 @@ static int handle_eventhandler( int event_type, void *data ) {
     gm_log( GM_LOG_TRACE, "got eventhandler event: %s\n", ds->command_line );
 
     temp_buffer[0]='\x0';
-    snprintf( temp_buffer,sizeof( temp_buffer )-1,"type=eventhandler\ncommand_line=%s\n\n\n",ds->command_line );
-    temp_buffer[sizeof( temp_buffer )-1]='\x0';
+    snprintf( temp_buffer,GM_BUFFERSIZE-1,"type=eventhandler\ncommand_line=%s\n\n\n",ds->command_line );
 
     if(add_job_to_queue( &client,
                          mod_gm_opt->server_list,
@@ -508,14 +507,13 @@ static int handle_host_check( int event_type, void *data ) {
     gm_log( GM_LOG_TRACE, "cmd_line: %s\n", processed_command );
 
     temp_buffer[0]='\x0';
-    snprintf( temp_buffer,sizeof( temp_buffer )-1,"type=host\nresult_queue=%s\nhost_name=%s\nstart_time=%i.0\ntimeout=%d\ncommand_line=%s\n\n\n",
+    snprintf( temp_buffer,GM_BUFFERSIZE-1,"type=host\nresult_queue=%s\nhost_name=%s\nstart_time=%i.0\ntimeout=%d\ncommand_line=%s\n\n\n",
               mod_gm_opt->result_queue,
               hst->name,
               ( int )hst->next_check,
               host_check_timeout,
               processed_command
             );
-    temp_buffer[sizeof( temp_buffer )-1]='\x0';
 
     if(add_job_to_queue( &client,
                          mod_gm_opt->server_list,
@@ -634,7 +632,7 @@ static int handle_svc_check( int event_type, void *data ) {
     gm_log( GM_LOG_TRACE, "cmd_line: %s\n", processed_command );
 
     temp_buffer[0]='\x0';
-    snprintf( temp_buffer,sizeof( temp_buffer )-1,"type=service\nresult_queue=%s\nhost_name=%s\nservice_description=%s\nstart_time=%i.0\ntimeout=%d\ncommand_line=%s\n\n\n",
+    snprintf( temp_buffer,GM_BUFFERSIZE-1,"type=service\nresult_queue=%s\nhost_name=%s\nservice_description=%s\nstart_time=%i.0\ntimeout=%d\ncommand_line=%s\n\n\n",
               mod_gm_opt->result_queue,
               svcdata->host_name,
               svcdata->service_description,
@@ -642,10 +640,9 @@ static int handle_svc_check( int event_type, void *data ) {
               service_check_timeout,
               processed_command
             );
-    temp_buffer[sizeof( temp_buffer )-1]='\x0';
 
     uniq[0]='\x0';
-    snprintf( uniq,sizeof( temp_buffer )-1,"%s-%s", svcdata->host_name, svcdata->service_description);
+    snprintf( uniq,GM_BUFFERSIZE-1,"%s-%s", svcdata->host_name, svcdata->service_description);
 
     /* execute forced checks with high prio as they are propably user requested */
     if(check_result_info.check_options & CHECK_OPTION_FORCE_EXECUTION)
@@ -796,8 +793,7 @@ static void set_target_queue( host *hst, service *svc ) {
             servicegroup * temp_servicegroup = find_servicegroup( mod_gm_opt->servicegroups_list[x] );
             if ( is_service_member_of_servicegroup( temp_servicegroup,svc )==TRUE ) {
                 gm_log( GM_LOG_TRACE, "service is member of servicegroup: %s\n", mod_gm_opt->servicegroups_list[x] );
-                snprintf( target_queue, sizeof(target_queue)-1, "servicegroup_%s", mod_gm_opt->servicegroups_list[x] );
-                target_queue[sizeof( target_queue )-1]='\x0';
+                snprintf( target_queue, GM_BUFFERSIZE-1, "servicegroup_%s", mod_gm_opt->servicegroups_list[x] );
                 return;
             }
             x++;
@@ -810,8 +806,7 @@ static void set_target_queue( host *hst, service *svc ) {
         hostgroup * temp_hostgroup = find_hostgroup( mod_gm_opt->hostgroups_list[x] );
         if ( is_host_member_of_hostgroup( temp_hostgroup,hst )==TRUE ) {
             gm_log( GM_LOG_TRACE, "server is member of hostgroup: %s\n", mod_gm_opt->hostgroups_list[x] );
-            snprintf( target_queue, sizeof(target_queue)-1, "hostgroup_%s", mod_gm_opt->hostgroups_list[x] );
-            target_queue[sizeof( target_queue )-1]='\x0';
+            snprintf( target_queue, GM_BUFFERSIZE-1, "hostgroup_%s", mod_gm_opt->hostgroups_list[x] );
             return;
         }
         x++;
@@ -820,16 +815,14 @@ static void set_target_queue( host *hst, service *svc ) {
     if ( svc ) {
         /* pass into the general service queue */
         if ( mod_gm_opt->services == GM_ENABLED && svc ) {
-            snprintf( target_queue, sizeof(target_queue)-1, "service" );
-            target_queue[sizeof( target_queue )-1]='\x0';
+            snprintf( target_queue, GM_BUFFERSIZE-1, "service" );
             return;
         }
     }
     else {
         /* pass into the general host queue */
         if ( mod_gm_opt->hosts == GM_ENABLED ) {
-            snprintf( target_queue, sizeof(target_queue)-1, "host" );
-            target_queue[sizeof( target_queue )-1]='\x0';
+            snprintf( target_queue, GM_BUFFERSIZE-1, "host" );
             return;
         }
     }
@@ -883,10 +876,10 @@ int handle_perfdata(int event_type, void *data) {
                 }
 
                 uniq[0]='\x0';
-                snprintf( uniq,sizeof( temp_buffer )-1,"%s", hostchkdata->host_name);
+                snprintf( uniq,GM_BUFFERSIZE-1,"%s", hostchkdata->host_name);
 
                 temp_buffer[0]='\x0';
-                snprintf( temp_buffer,sizeof( temp_buffer )-1,
+                snprintf( temp_buffer,GM_BUFFERSIZE-1,
                             "DATATYPE::HOSTPERFDATA\t"
                             "TIMET::%d\t"
                             "HOSTNAME::%s\t"
@@ -898,7 +891,6 @@ int handle_perfdata(int event_type, void *data) {
                             hostchkdata->host_name, hostchkdata->perf_data,
                             hostchkdata->command_name, hostchkdata->command_args,
                             hostchkdata->state, hostchkdata->state_type);
-                temp_buffer[sizeof( temp_buffer )-1]='\x0';
                 has_perfdata = TRUE;
             }
             break;
@@ -919,10 +911,10 @@ int handle_perfdata(int event_type, void *data) {
                 }
 
                 uniq[0]='\x0';
-                snprintf( uniq,sizeof( temp_buffer )-1,"%s-%s", srvchkdata->host_name, srvchkdata->service_description);
+                snprintf( uniq,GM_BUFFERSIZE-1,"%s-%s", srvchkdata->host_name, srvchkdata->service_description);
 
                 temp_buffer[0]='\x0';
-                snprintf( temp_buffer,sizeof( temp_buffer )-1,
+                snprintf( temp_buffer,GM_BUFFERSIZE-1,
                             "DATATYPE::SERVICEPERFDATA\t"
                             "TIMET::%d\t"
                             "HOSTNAME::%s\t"
@@ -935,7 +927,7 @@ int handle_perfdata(int event_type, void *data) {
                             srvchkdata->host_name, srvchkdata->service_description,
                             srvchkdata->perf_data, svc->service_check_command,
                             srvchkdata->state, srvchkdata->state_type);
-                temp_buffer[sizeof( temp_buffer )-1]='\x0';
+                temp_buffer[GM_BUFFERSIZE-1]='\x0';
                 has_perfdata = TRUE;
             }
             break;
@@ -1000,7 +992,7 @@ int handle_export(int callback_type, void *data) {
         case NEBCALLBACK_PROCESS_DATA:                      /*  7 */
             npd    = (nebstruct_process_data *)data;
             type   = nebtype2str(npd->type);
-            snprintf( temp_buffer,sizeof( temp_buffer )-1, "{\"callback_type\":\"%s\",\"type\":\"%s\",\"flags\":%d,\"attr\":%d,\"timestamp\":%d.%d}",
+            snprintf( temp_buffer,GM_BUFFERSIZE-1, "{\"callback_type\":\"%s\",\"type\":\"%s\",\"flags\":%d,\"attr\":%d,\"timestamp\":%d.%d}",
                     "NEBCALLBACK_PROCESS_DATA",
                     type,
                     npd->flags,
@@ -1013,7 +1005,7 @@ int handle_export(int callback_type, void *data) {
             nted       = (nebstruct_timed_event_data *)data;
             event_type = eventtype2str(nted->event_type);
             type       = nebtype2str(nted->type);
-            snprintf( temp_buffer,sizeof( temp_buffer )-1, "{\"callback_type\":\"%s\",\"event_type\":\"%s\",\"type\":\"%s\",\"flags\":%d,\"attr\":%d,\"timestamp\":%d.%d,\"recurring\":%d,\"run_time\":%d}",
+            snprintf( temp_buffer,GM_BUFFERSIZE-1, "{\"callback_type\":\"%s\",\"event_type\":\"%s\",\"type\":\"%s\",\"flags\":%d,\"attr\":%d,\"timestamp\":%d.%d,\"recurring\":%d,\"run_time\":%d}",
                     "NEBCALLBACK_TIMED_EVENT_DATA",
                     event_type,
                     type,
@@ -1030,7 +1022,7 @@ int handle_export(int callback_type, void *data) {
             nld    = (nebstruct_log_data *)data;
             buffer = escapestring(nld->data);
             type   = nebtype2str(nld->type);
-            snprintf( temp_buffer,sizeof( temp_buffer )-1, "{\"callback_type\":\"%s\",\"type\":\"%s\",\"flags\":%d,\"attr\":%d,\"timestamp\":%d.%d,\"entry_time\":%d,\"data_type\":%d,\"data\":\"%s\"}",
+            snprintf( temp_buffer,GM_BUFFERSIZE-1, "{\"callback_type\":\"%s\",\"type\":\"%s\",\"flags\":%d,\"attr\":%d,\"timestamp\":%d.%d,\"entry_time\":%d,\"data_type\":%d,\"data\":\"%s\"}",
                     "NEBCALLBACK_LOG_DATA",
                     type,
                     nld->flags,
@@ -1094,7 +1086,6 @@ int handle_export(int callback_type, void *data) {
             return 0;
     }
 
-    temp_buffer[sizeof( temp_buffer )-1]='\x0';
     if(temp_buffer[0] != '\x0') {
 
         for(i=0;i<mod_gm_opt->exports[callback_type]->elem_number;i++) {

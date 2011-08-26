@@ -116,6 +116,32 @@ void test_servicecheck(int transportmode) {
     return;
 }
 
+/* test */
+void send_big_job(int transportmode);
+void send_big_job(int transportmode) {
+    struct timeval start_time;
+    gettimeofday(&start_time,NULL);
+    char temp_buffer[GM_BUFFERSIZE];
+    temp_buffer[0]='\x0';
+    snprintf( temp_buffer,sizeof( temp_buffer )-1,"type=service\nresult_queue=%s\nhost_name=%s\nservice_description=%s\nstart_time=%i.%i\ntimeout=%d\ncheck_options=%i\nscheduled_check=%i\nreschedule_check=%i\nlatency=%f\ncommand_line=%s\n\n\n",
+              GM_DEFAULT_RESULT_QUEUE,
+              "host1",
+              "service1",
+              ( int )start_time.tv_sec,
+              ( int )start_time.tv_usec,
+              60,
+              0,
+              1,
+              1,
+              0.0,
+              "/bin/hostname"
+            );
+    char * uniq = "something at least bigger than the 64 chars allowed by libgearman!";
+    temp_buffer[sizeof( temp_buffer )-1]='\x0';
+    int rt = add_job_to_queue( &client, mod_gm_opt->server_list, "service", uniq, temp_buffer, GM_JOB_PRIO_NORMAL, 1, transportmode, TRUE );
+    ok(rt == GM_OK, "servicecheck sent successfully in mode %s", transportmode == GM_ENCODE_ONLY ? "base64" : "aes256");
+    return;
+}
 
 /* create server / worker / clients */
 void create_modules(void);
@@ -203,7 +229,7 @@ void wait_for_empty_queue(char *queue, int timeout) {
 /* main tests */
 int main(void) {
     int status, chld;
-    int tests = 53;
+    int tests = 54;
     int rrc;
     char cmd[150];
     char *result, *error;
@@ -252,6 +278,9 @@ int main(void) {
 
     /* create server / worker / clients */
     create_modules();
+
+    /* send big job */
+    send_big_job(GM_ENCODE_ONLY);
 
     /* try to send some data with base64 only */
     test_eventhandler(GM_ENCODE_ONLY);

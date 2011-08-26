@@ -608,9 +608,13 @@ int parse_args_line(mod_gm_opt_t *opt, char * arg, int recursion_level) {
         while ( (groupname = strsep( &value, "," )) != NULL ) {
             groupname = trim(groupname);
             if ( strcmp( groupname, "" ) ) {
-                opt->servicegroups_list[opt->servicegroups_num] = strdup(groupname);
-                opt->servicegroups_num++;
-                opt->set_queues_by_hand++;
+                if(strlen(groupname) > 50) {
+                    gm_log( GM_LOG_ERROR, "servicegroup name '%s' is too long, please use a maximum of 50 characters\n", groupname );
+                } else {
+                    opt->servicegroups_list[opt->servicegroups_num] = strdup(groupname);
+                    opt->servicegroups_num++;
+                    opt->set_queues_by_hand++;
+                }
             }
         }
     }
@@ -622,9 +626,13 @@ int parse_args_line(mod_gm_opt_t *opt, char * arg, int recursion_level) {
         while ( (groupname = strsep( &value, "," )) != NULL ) {
             groupname = trim(groupname);
             if ( strcmp( groupname, "" ) ) {
-                opt->hostgroups_list[opt->hostgroups_num] = strdup(groupname);
-                opt->hostgroups_num++;
-                opt->set_queues_by_hand++;
+                if(strlen(groupname) > 50) {
+                    gm_log( GM_LOG_ERROR, "hostgroup name '%s' is too long, please use a maximum of 50 characters\n", groupname );
+                } else {
+                    opt->hostgroups_list[opt->hostgroups_num] = strdup(groupname);
+                    opt->hostgroups_num++;
+                    opt->set_queues_by_hand++;
+                }
             }
         }
     }
@@ -665,31 +673,35 @@ int parse_args_line(mod_gm_opt_t *opt, char * arg, int recursion_level) {
         char *return_code   = strsep( &value, ":" );
         int return_code_num = atoi(return_code);
         char *callbacks     = strsep( &value, ":" );
-        while ( (callback = strsep( &callbacks, "," )) != NULL ) {
-            int callback_num = atoi(trim(callback));
-            if(index(callback, 'N') != NULL) {
-                callback_num = -1;
-                /* get neb callback number by name */
-                int i;
-                for(i=0;i<GM_NEBTYPESSIZE;i++) {
-                    char * type = nebcallback2str(i);
-                    if(!strcmp(type, callback)) {
-                        callback_num = i;
+        if(strlen(export_queue) > 50) {
+            gm_log( GM_LOG_ERROR, "export queue name '%s' is too long, please use a maximum of 50 characters\n", export_queue );
+        } else {
+            while ( (callback = strsep( &callbacks, "," )) != NULL ) {
+                int callback_num = atoi(trim(callback));
+                if(index(callback, 'N') != NULL) {
+                    callback_num = -1;
+                    /* get neb callback number by name */
+                    int i;
+                    for(i=0;i<GM_NEBTYPESSIZE;i++) {
+                        char * type = nebcallback2str(i);
+                        if(!strcmp(type, callback)) {
+                            callback_num = i;
+                        }
+                        free(type);
                     }
-                    free(type);
+                    if(callback_num == -1) {
+                        gm_log( GM_LOG_ERROR, "unknown nebcallback : %s\n", callback);
+                        continue;
+                    }
                 }
-                if(callback_num == -1) {
-                    gm_log( GM_LOG_ERROR, "unknown nebcallback : %s\n", callback);
-                    continue;
-                }
-            }
 
-            int number = opt->exports[callback_num]->elem_number;
-            opt->exports[callback_num]->name[number]        = strdup(export_queue);
-            opt->exports[callback_num]->return_code[number] = return_code_num;
-            opt->exports[callback_num]->elem_number++;
+                int number = opt->exports[callback_num]->elem_number;
+                opt->exports[callback_num]->name[number]        = strdup(export_queue);
+                opt->exports[callback_num]->return_code[number] = return_code_num;
+                opt->exports[callback_num]->elem_number++;
+            }
+            opt->exports_count++;
         }
-        opt->exports_count++;
     }
 
     else {
