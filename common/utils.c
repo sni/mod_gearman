@@ -480,9 +480,10 @@ int parse_args_line(mod_gm_opt_t *opt, char * arg, int recursion_level) {
         string2timeval(value, &opt->finishtime);
     }
 
-    /* configfile */
+    /* configfile / includes */
     else if (   !strcmp( key, "config" )
              || !strcmp( key, "configfile" )
+             || !strcmp( key, "include" )
             ) {
         if(read_config_file(opt, value, ++recursion_level) != GM_OK) {
             recursion_level--;

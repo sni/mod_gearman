@@ -887,6 +887,7 @@ config
 <dd>
 <p>
     include config from this file. Options are the same as described here.
+    <em>include</em> is an alias for <em>config</em>.
 </p>
 <div class="exampleblock">
 <div class="exampleblock-content">
@@ -1442,6 +1443,23 @@ results for a reporting installation or remote gui.
 </div></div>
 </dd>
 <dt class="hdlist1">
+show_error_output
+</dt>
+<dd>
+<p>
+Use this option to show stderr output of plugins too. When set to no,
+only stdout will be displayed.
+Default is yes.
+</p>
+<div class="exampleblock">
+<div class="exampleblock-content">
+<div class="literalblock">
+<div class="content">
+<pre><tt>show_error_output=yes</tt></pre>
+</div></div>
+</div></div>
+</dd>
+<dt class="hdlist1">
 workaround_rc_25
 </dt>
 <dd>
@@ -1804,7 +1822,7 @@ Make sure all your worker have the nagios-plugins available under
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2011-08-16 09:46:51 CEST
+Last updated 2011-08-26 23:10:12 CEST
 </div>
 </div>
 </body>

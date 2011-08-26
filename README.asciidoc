@@ -297,6 +297,7 @@ Shared options for worker and the NEB module:
 
 config::
     include config from this file. Options are the same as described here.
+    'include' is an alias for 'config'.
 +
 =====
     config=/etc/nagios3/mod_gm_worker.conf
