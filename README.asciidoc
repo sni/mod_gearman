@@ -209,7 +209,7 @@ NOTE: Mod-Gearman is included in http://omdistro.org[OMD] since version 0.48.
 From Source
 ~~~~~~~~~~~
 
-Pre Requirements: 
+Pre Requirements:
 
  - gcc / g++
  - autoconf / automake / autoheader
@@ -309,9 +309,9 @@ debug::
     Possible values are:
 +
 --
-    * `0` - only errors
-    * `1` - debug messages
-    * `2` - trace messages
+    * `0`   - only errors
+    * `1-4` - debug verbosity
+    * `5`   - trace and all gearman related logs are going to stdout
 --
 +
 Default is 0.
@@ -505,7 +505,7 @@ perfdata_mode::
 +
 Default is 1.
 +
-==== 
+====
     perfdata_mode=1
 ====
 
@@ -789,12 +789,12 @@ check would do.
 How to Submit check_multi Results
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-check_multi is a plugin which executes multiple child checks. 
-See more details about the feed_passive mode at: 
+check_multi is a plugin which executes multiple child checks.
+See more details about the feed_passive mode at:
 http://www.my-plugin.de/wiki/projects/check_multi/feed_passive[www.my-plugin.de]
 
 You can pass such child checks to Nagios via the mod_gearman
-neb module: 
+neb module:
 
 --------------------------------------
 %> check_multi -f multi.cmd -r 256 | ./send_multi --server=<job server> --encryption=no --host="<hostname>" --service="<service>"
@@ -856,4 +856,3 @@ Archive
 * http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-0.6.tar.gz[version 0.6 - October 13 2010]
 * http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-0.5.tar.gz[version 0.5 - October 01 2010]
 * http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-0.4.tar.gz[version 0.4 - September 25 2010]
-

@@ -32,12 +32,15 @@ char temp_buffer1[GM_BUFFERSIZE];
 char temp_buffer2[GM_BUFFERSIZE];
 
 /* escapes newlines in a string */
-char *escape_newlines(char *rawbuf) {
+char *gm_escape_newlines(char *rawbuf, int trimmed) {
     char *newbuf=NULL;
     register int x,y;
 
     if(rawbuf==NULL)
         return NULL;
+
+    if ( trimmed == GM_ENABLED )
+        rawbuf = trim(rawbuf);
 
     /* allocate enough memory to escape all chars if necessary */
     if((newbuf=malloc((strlen(rawbuf)*2)+1))==NULL)
@@ -60,6 +63,7 @@ char *escape_newlines(char *rawbuf) {
         else
             newbuf[y++]=rawbuf[x];
     }
+
     newbuf[y]='\x0';
 
     return newbuf;
@@ -1019,7 +1023,7 @@ long mod_gm_time_compare(struct timeval * tv1, struct timeval * tv2) {
 
 
 /* extract check result */
-char *extract_check_result(FILE *fp) {
+char *extract_check_result(FILE *fp, int trimmed) {
     int size;
     char buffer[GM_BUFFERSIZE] = "";
     char output[GM_BUFFERSIZE] = "";
@@ -1032,7 +1036,8 @@ char *extract_check_result(FILE *fp) {
         strncat(output, buffer, size);
         size -= strlen(buffer);
     }
-    return(escape_newlines(output));
+
+    return(gm_escape_newlines(output, trimmed));
 }
 
 
@@ -1139,7 +1144,7 @@ int run_check(char *processed_command, char **ret, char **err) {
             gm_log( GM_LOG_ERROR, "fdopen error\n");
             _exit(STATE_UNKNOWN);
         }
-        *ret = extract_check_result(fp);
+        *ret = extract_check_result(fp, GM_DISABLED);
         fclose(fp);
 
         /* prepare stderr pipe reading */
@@ -1149,7 +1154,7 @@ int run_check(char *processed_command, char **ret, char **err) {
             gm_log( GM_LOG_ERROR, "fdopen error\n");
             _exit(STATE_UNKNOWN);
         }
-        *err = extract_check_result(fp);
+        *err = extract_check_result(fp, GM_ENABLED);
         fclose(fp);
 
         close(pipe_stdout[0]);
@@ -1160,9 +1165,7 @@ int run_check(char *processed_command, char **ret, char **err) {
     else {
         /* use the slower popen when there were shell characters */
         gm_log( GM_LOG_TRACE, "using popen\n" );
-
         current_child_pid = getpid();
-
         pid = popenRWE(pipe_rwe, processed_command);
 
         /* extract check result */
@@ -1171,7 +1174,7 @@ int run_check(char *processed_command, char **ret, char **err) {
             gm_log( GM_LOG_ERROR, "fdopen error\n");
             _exit(STATE_UNKNOWN);
         }
-        *ret = extract_check_result(fp);
+        *ret = extract_check_result(fp, GM_DISABLED);
         fclose(fp);
 
         /* extract check stderr */
@@ -1180,7 +1183,7 @@ int run_check(char *processed_command, char **ret, char **err) {
             gm_log( GM_LOG_ERROR, "fdopen error\n");
             _exit(STATE_UNKNOWN);
         }
-        *err = extract_check_result(fp);
+        *err = extract_check_result(fp, GM_ENABLED);
         fclose(fp);
 
         /* close the process */
@@ -1310,7 +1313,7 @@ int execute_safe_command(gm_job_t * exec_job, int fork_exec, char * identifier) 
         else if(return_code >= 128 && return_code < 144) {
             char * signame = nr2signal((int)(return_code-128));
             bufdup = strdup(buffer);
-            snprintf( buffer, sizeof( buffer )-1, "CRITICAL: Return code of %d is out of bounds. Plugin exited by signal %s. (worker: %s)\n%s\n", (int)(return_code), signame, identifier, bufdup);
+            snprintf( buffer, sizeof( buffer )-1, "CRITICAL: Return code of %d is out of bounds. Plugin exited by signal %s. (worker: %s)\\n%s", (int)(return_code), signame, identifier, bufdup);
             return_code = STATE_CRITICAL;
             free(bufdup);
             free(signame);
@@ -1320,7 +1323,7 @@ int execute_safe_command(gm_job_t * exec_job, int fork_exec, char * identifier) 
             gm_log( GM_LOG_INFO, "check exited with exit code > 3. Exit: %d\n", (int)(return_code));
             gm_log( GM_LOG_INFO, "stdout: %s\n", buffer);
             bufdup = strdup(buffer);
-            snprintf( buffer, sizeof( buffer )-1, "CRITICAL: Return code of %d is out of bounds. (worker: %s)\n%s\n", (int)(return_code), identifier, bufdup);
+            snprintf( buffer, sizeof( buffer )-1, "CRITICAL: Return code of %d is out of bounds. (worker: %s)\\n%s", (int)(return_code), identifier, bufdup);
             free(bufdup);
             if(return_code != 25 && mod_gm_opt->workaround_rc_25 == GM_DISABLED) {
                 return_code = STATE_CRITICAL;
@@ -1348,9 +1351,9 @@ int execute_safe_command(gm_job_t * exec_job, int fork_exec, char * identifier) 
         exec_job->return_code   = 2;
         exec_job->early_timeout = 1;
         if ( !strcmp( exec_job->type, "service" ) )
-            snprintf( buffer, sizeof( buffer ) -1, "(Service Check Timed Out On Worker: %s)\n", identifier);
+            snprintf( buffer, sizeof( buffer ) -1, "(Service Check Timed Out On Worker: %s)", identifier);
         if ( !strcmp( exec_job->type, "host" ) )
-            snprintf( buffer, sizeof( buffer ) -1, "(Host Check Timed Out On Worker: %s)\n", identifier);
+            snprintf( buffer, sizeof( buffer ) -1, "(Host Check Timed Out On Worker: %s)", identifier);
         free(exec_job->output);
         exec_job->output = strdup( buffer );
     }
@@ -2008,8 +2011,10 @@ void send_result_back(gm_job_t * exec_job) {
             strncat(temp_buffer2, ") - ", (sizeof(temp_buffer2)-1));
         }
         strncat(temp_buffer2, exec_job->output, (sizeof(temp_buffer2)-1));
-        if(mod_gm_opt->show_error_output) {
-            strncat(temp_buffer2, "\n[", (sizeof(temp_buffer2)-1));
+        if(mod_gm_opt->show_error_output && strlen(exec_job->error) > 0) {
+            if(strlen(exec_job->output) > 0)
+                strncat(temp_buffer2, "\\n", (sizeof(temp_buffer2)-1));
+            strncat(temp_buffer2, "[", (sizeof(temp_buffer2)-1));
             strncat(temp_buffer2, exec_job->error, (sizeof(temp_buffer2)-1));
             strncat(temp_buffer2, "] ", (sizeof(temp_buffer2)-1));
         }

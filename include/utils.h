@@ -46,11 +46,12 @@
 /**
  * escpae newlines
  *
- * @param[in] rawbuf - text to escape
+ * @param[in] rawbuf  - text to escape
+ * @param[in] trimmed - trim string before escaping
  *
  * @return a text with all newlines escaped
  */
-char *escape_newlines(char *rawbuf);
+char *gm_escape_newlines(char *rawbuf, int trimmed);
 
 /**
  * real_exit_code
@@ -297,11 +298,12 @@ long mod_gm_time_compare(struct timeval * tv1, struct timeval * tv2);
  *
  * get result from a file pointer
  *
- * @param[in] fp - file pointer to executed command
+ * @param[in] fp      - file pointer to executed command
+ * @param[in] trimmed - trim result
  *
  * @return check result
  */
-char *extract_check_result(FILE *fp);
+char *extract_check_result(FILE *fp, int trimmed);
 
 /**
  * parse_command_line

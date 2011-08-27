@@ -168,8 +168,8 @@ void monitor_loop() {
 void count_current_worker(int restart) {
     int x;
 
-    gm_log( GM_LOG_TRACE, "count_current_worker()\n");
-    gm_log( GM_LOG_TRACE, "done jobs:     shm[0] = %d\n", shm[0]);
+    gm_log( GM_LOG_TRACE3, "count_current_worker()\n");
+    gm_log( GM_LOG_TRACE3, "done jobs:     shm[0] = %d\n", shm[0]);
 
     /* shm states:
      *   0 -> undefined
@@ -183,14 +183,14 @@ void count_current_worker(int restart) {
         gm_log( GM_LOG_TRACE, "removed stale status worker, old pid: %d\n", shm[3] );
         shm[3] = -1;
     }
-    gm_log( GM_LOG_TRACE, "status worker: shm[3] = %d\n", shm[3]);
+    gm_log( GM_LOG_TRACE3, "status worker: shm[3] = %d\n", shm[3]);
 
     /* check all known worker */
     current_number_of_workers = 0;
     current_number_of_jobs    = 0;
     for(x=4; x < mod_gm_opt->max_worker+4; x++) {
         /* verify worker is alive */
-        gm_log( GM_LOG_TRACE, "worker slot:   shm[%d] = %d\n", x, shm[x]);
+        gm_log( GM_LOG_TRACE3, "worker slot:   shm[%d] = %d\n", x, shm[x]);
         if( shm[x] != -1 && pid_alive(shm[x]) == FALSE ) {
             gm_log( GM_LOG_TRACE, "removed stale worker %d, old pid: %d\n", x, shm[x]);
             shm[x] = -1;
@@ -211,7 +211,7 @@ void count_current_worker(int restart) {
     shm[1] = current_number_of_workers; /* total worker   */
     shm[2] = current_number_of_jobs;    /* running worker */
 
-    gm_log( GM_LOG_TRACE, "worker: %d  -  running: %d\n", current_number_of_workers, current_number_of_jobs);
+    gm_log( GM_LOG_TRACE3, "worker: %d  -  running: %d\n", current_number_of_workers, current_number_of_jobs);
 
     return;
 }
@@ -220,7 +220,7 @@ void count_current_worker(int restart) {
 void check_worker_population() {
     int x, now, target_number_of_workers;
 
-    gm_log( GM_LOG_TRACE, "check_worker_population()\n");
+    gm_log( GM_LOG_TRACE3, "check_worker_population()\n");
 
     /* set current worker number */
     count_current_worker(GM_ENABLED);
@@ -504,14 +504,14 @@ int adjust_number_of_worker(int min, int max, int cur_workers, int cur_jobs) {
     int target = min;
 
     if(cur_workers == 0) {
-        gm_log( GM_LOG_TRACE, "adjust_number_of_worker(min %d, max %d, worker %d, jobs %d) -> %d\n", min, max, cur_workers, cur_jobs, mod_gm_opt->min_worker);
+        gm_log( GM_LOG_TRACE3, "adjust_number_of_worker(min %d, max %d, worker %d, jobs %d) -> %d\n", min, max, cur_workers, cur_jobs, mod_gm_opt->min_worker);
         return mod_gm_opt->min_worker;
     }
 
     perc_running = (int)cur_jobs*100/cur_workers;
     idle         = (int)cur_workers - cur_jobs;
 
-    gm_log( GM_LOG_TRACE, "adjust_number_of_worker(min %d, max %d, worker %d, jobs %d) = %d%% running\n", min, max, cur_workers, cur_jobs, perc_running);
+    gm_log( GM_LOG_TRACE3, "adjust_number_of_worker(min %d, max %d, worker %d, jobs %d) = %d%% running\n", min, max, cur_workers, cur_jobs, perc_running);
 
     if(cur_workers == max)
         return max;
@@ -527,7 +527,7 @@ int adjust_number_of_worker(int min, int max, int cur_workers, int cur_jobs) {
     if(target > max) { target = max; }
 
     if(target != cur_workers)
-        gm_log( GM_LOG_DEBUG, "adjust_number_of_worker(min %d, max %d, worker %d, jobs %d) = %d%% running -> %d\n", min, max, cur_workers, cur_jobs, perc_running, target);
+        gm_log( GM_LOG_TRACE3, "adjust_number_of_worker(min %d, max %d, worker %d, jobs %d) = %d%% running -> %d\n", min, max, cur_workers, cur_jobs, perc_running, target);
 
     return target;
 }

@@ -208,7 +208,7 @@ int send_result() {
     }
 
     /* escape newline */
-    buf = escape_newlines(mod_gm_opt->message);
+    buf = gm_escape_newlines(mod_gm_opt->message, GM_DISABLED);
     free(mod_gm_opt->message);
     mod_gm_opt->message = malloc(GM_BUFFERSIZE);
     snprintf(mod_gm_opt->message, GM_BUFFERSIZE, "%s", buf);

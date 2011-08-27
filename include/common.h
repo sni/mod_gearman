@@ -71,7 +71,9 @@
 #define GM_LOG_INFO                     0
 #define GM_LOG_DEBUG                    1
 #define GM_LOG_TRACE                    2
-#define GM_LOG_STDOUT                   3
+#define GM_LOG_TRACE2                   3
+#define GM_LOG_TRACE3                   4
+#define GM_LOG_STDOUT                   5
 
 /* log modes */
 #define GM_LOG_MODE_AUTO                0

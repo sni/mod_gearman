@@ -28,7 +28,7 @@ mod_gm_opt_t * renew_opts() {
 }
 
 int main(void) {
-    plan(55);
+    plan(56);
 
     /* lowercase */
     char test[100];
@@ -64,7 +64,8 @@ int main(void) {
 
     /* trim */
     ok(trim(NULL) == NULL, "trim(NULL)");
-    strcpy(test, " test "); like(trim(test), "test", "trim(' test ')");
+    strcpy(test, " test "); like(trim(test), "^test$", "trim(' test ')");
+    strcpy(test, "\ntest\n"); like(trim(test), "^test$", "trim('\\ntest\\n')");
 
     /* reading keys */
     mod_gm_opt_t *mod_gm_opt;
@@ -205,4 +206,3 @@ void write_core_log(char *data) {
     printf("core logger is not available for tests: %s", data);
     return;
 }
-
