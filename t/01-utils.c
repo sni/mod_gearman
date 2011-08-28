@@ -28,7 +28,7 @@ mod_gm_opt_t * renew_opts() {
 }
 
 int main(void) {
-    plan(56);
+    plan(58);
 
     /* lowercase */
     char test[100];
@@ -195,6 +195,14 @@ int main(void) {
     like(mod_gm_opt->server_list[0], "localhost:4730", "duplicate server");
     like(mod_gm_opt->server_list[1], "host:4730", "duplicate server");
     ok(mod_gm_opt->server_num == 2, "server_number = %d", mod_gm_opt->server_num);
+
+    /* escape newlines */
+    char * escaped = gm_escape_newlines(" test\n", GM_DISABLED);
+    is(escaped, " test\\n", "untrimmed escape string");
+    free(escaped);
+    escaped = gm_escape_newlines(" test\n", GM_ENABLED);
+    is(escaped, "test", "trimmed escape string");
+    free(escaped);
 
     mod_gm_free_opt(mod_gm_opt);
 

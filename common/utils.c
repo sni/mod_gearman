@@ -33,38 +33,45 @@ char temp_buffer2[GM_BUFFERSIZE];
 
 /* escapes newlines in a string */
 char *gm_escape_newlines(char *rawbuf, int trimmed) {
+    char *tmpbuf=NULL;
+    char *tmpbuf_dup=NULL;
     char *newbuf=NULL;
     register int x,y;
 
     if(rawbuf==NULL)
         return NULL;
 
-    if ( trimmed == GM_ENABLED )
-        rawbuf = trim(rawbuf);
+    tmpbuf     = strdup(rawbuf);
+    tmpbuf_dup = tmpbuf;
+    if ( trimmed == GM_ENABLED ) {
+        tmpbuf = trim(tmpbuf);
+    }
 
     /* allocate enough memory to escape all chars if necessary */
-    if((newbuf=malloc((strlen(rawbuf)*2)+1))==NULL)
+    if((newbuf=malloc((strlen(tmpbuf)*2)+1))==NULL)
         return NULL;
 
-    for(x=0,y=0;rawbuf[x]!=(char)'\x0';x++){
+    for(x=0,y=0;tmpbuf[x]!=(char)'\x0';x++){
 
         /* escape backslashes */
-        if(rawbuf[x]=='\\'){
+        if(tmpbuf[x]=='\\'){
             newbuf[y++]='\\';
             newbuf[y++]='\\';
         }
 
         /* escape newlines */
-        else if(rawbuf[x]=='\n'){
+        else if(tmpbuf[x]=='\n'){
             newbuf[y++]='\\';
             newbuf[y++]='n';
         }
 
         else
-            newbuf[y++]=rawbuf[x];
+            newbuf[y++]=tmpbuf[x];
     }
 
     newbuf[y]='\x0';
+
+    free(tmpbuf_dup);
 
     return newbuf;
 }
@@ -169,6 +176,8 @@ char *rtrim(char *s) {
     char *back;
     if(s == NULL)
         return NULL;
+    if(strlen(s) == 0)
+        return s;
     back = s + strlen(s);
     while(isspace(*--back));
     *(back+1) = '\0';
@@ -1313,7 +1322,11 @@ int execute_safe_command(gm_job_t * exec_job, int fork_exec, char * identifier) 
         else if(return_code >= 128 && return_code < 144) {
             char * signame = nr2signal((int)(return_code-128));
             bufdup = strdup(buffer);
-            snprintf( buffer, sizeof( buffer )-1, "CRITICAL: Return code of %d is out of bounds. Plugin exited by signal %s. (worker: %s)\\n%s", (int)(return_code), signame, identifier, bufdup);
+            snprintf( buffer, sizeof( buffer )-1, "CRITICAL: Return code of %d is out of bounds. Plugin exited by signal %s. (worker: %s)", (int)(return_code), signame, identifier);
+            if(strlen(bufdup) > 0) {
+                strncat(buffer, "\\n", (sizeof(buffer)-1));
+                strncat(buffer, bufdup, (sizeof(buffer)-1));
+            }
             return_code = STATE_CRITICAL;
             free(bufdup);
             free(signame);
