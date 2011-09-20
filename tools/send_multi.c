@@ -390,6 +390,7 @@ int read_multi_stream(FILE *stream) {
 int read_child_check(char *bufstart, char *bufend, struct timeval * end_time) {
     char *attribute  = NULL;
     char *attribute2 = NULL;
+    char *attribute3 = NULL;
     char *error      = NULL;
     char temp_buffer[GM_BUFFERSIZE];
     double end_time_d;
@@ -448,11 +449,13 @@ int read_child_check(char *bufstart, char *bufend, struct timeval * end_time) {
         strcat(error,"]");
     }
 
-    /* performance data */
+    /* performance data with multi headers */
     if ((attribute2=read_multi_attribute(bufstart,bufend,"performance")) == NULL) {
         snprintf( temp_buffer, sizeof( temp_buffer )-1, "%s%s", decode_xml(attribute), decode_xml(error));
+    } else if ((attribute3=read_multi_attribute(bufstart,bufend,"plugin")) == NULL) {
+        return 0;
     } else {
-        snprintf( temp_buffer, sizeof( temp_buffer )-1, "%s%s|%s", decode_xml(attribute), decode_xml(error), decode_xml(attribute2));
+        snprintf( temp_buffer, sizeof( temp_buffer )-1, "%s%s|%s::%s::%s", decode_xml(attribute), decode_xml(error), mod_gm_opt->service, decode_xml(attribute3), decode_xml(attribute2));
     }
     mod_gm_opt->message=strdup(temp_buffer);
     gm_log( GM_LOG_TRACE, "mod_gm_opt->message: %s\n", mod_gm_opt->message);
