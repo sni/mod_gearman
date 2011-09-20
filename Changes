@@ -1,5 +1,7 @@
 This file documents the revision history for mod_gearman.
 
+          - fixed send_multi performance data headers
+
 1.0.10 Thu Aug 25 16:07:55 CEST 2011
           - new option 'show_error_output' for worker
           - fixed failed job when host+service > 64 chars
