@@ -452,7 +452,7 @@ int read_child_check(char *bufstart, char *bufend, struct timeval * end_time) {
     /* performance data with multi headers */
     if ((attribute2=read_multi_attribute(bufstart,bufend,"performance")) == NULL) {
         snprintf( temp_buffer, sizeof( temp_buffer )-1, "%s%s", decode_xml(attribute), decode_xml(error));
-    } else if ((attribute3=read_multi_attribute(bufstart,bufend,"plugin")) == NULL) {
+    } else if ((attribute3=read_multi_attribute(bufstart,bufend,"pplugin")) == NULL) {
         return 0;
     } else {
         snprintf( temp_buffer, sizeof( temp_buffer )-1, "%s%s|%s::%s::%s", decode_xml(attribute), decode_xml(error), mod_gm_opt->service, decode_xml(attribute3), decode_xml(attribute2));
