@@ -1,5 +1,5 @@
 Name:          mod_gearman
-Version:       1.0.7
+Version:       1.1.0
 Release:       1%{?dist}
 License:       GNU Public License version 2
 Packager:      Michael Friedrich <michael.friedrich@univie.ac.at>
@@ -12,6 +12,7 @@ Requires:      gearmand
 BuildRoot:     %{_tmppath}/%{name}-%{version}-root-%(%{__id_u} -n)
 BuildRequires: autoconf, automake, ncurses-devel
 BuildRequires: libtool, libtool-ltdl-devel, libevent-devel
+BuildRequires: libgearman
 Summary:       Gearman module for Icinga/Nagios
 Requires(pre,post): /sbin/ldconfig
 
