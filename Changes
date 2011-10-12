@@ -1,6 +1,6 @@
 This file documents the revision history for mod_gearman.
 
-1.1.0  Fri Sep 23 12:20:40 CEST 2011
+1.1.0  Wed Oct 12 18:36:10 CEST 2011
           - fixed send_multi performance data headers
           - fixed segfault when worker runs into timeout
 
