@@ -1407,7 +1407,8 @@ int free_job(gm_job_t *job) {
     free(job->result_queue);
     free(job->command_line);
     free(job->output);
-    free(job->error);
+    if(job->error != NULL)
+        free(job->error);
     free(job);
 
     return(GM_OK);
@@ -2024,7 +2025,7 @@ void send_result_back(gm_job_t * exec_job) {
             strncat(temp_buffer2, ") - ", (sizeof(temp_buffer2)-1));
         }
         strncat(temp_buffer2, exec_job->output, (sizeof(temp_buffer2)-1));
-        if(mod_gm_opt->show_error_output && strlen(exec_job->error) > 0) {
+        if(mod_gm_opt->show_error_output && exec_job->error != NULL && strlen(exec_job->error) > 0) {
             if(strlen(exec_job->output) > 0)
                 strncat(temp_buffer2, "\\n", (sizeof(temp_buffer2)-1));
             strncat(temp_buffer2, "[", (sizeof(temp_buffer2)-1));
