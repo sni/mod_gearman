@@ -34,7 +34,7 @@
 #include <string.h>
 #include <netdb.h>
 #include <unistd.h>
-
+#include <netinet/in.h>
 
 /** function status structure */
 typedef struct mod_gm_status_function {
