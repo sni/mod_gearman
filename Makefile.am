@@ -131,10 +131,10 @@ all-local: mod_gearman.o initscript-local mod_gearman.conf-local gearmand-init-l
 	@echo "################################################################"
 
 distclean-local: clean
-	$(RM) -rf .deps/ Makefile.in aclocal.m4 autom4te.cache config.* configure depcomp install-sh missing *.gz
+	$(RM) -f .deps/ Makefile.in aclocal.m4 autom4te.cache config.* configure depcomp install-sh missing *.gz
 
 clean-local:
-	$(RM) -rf worker.static worker/initscript etc/mod_gearman.conf rpm.topdir *.o */*.o
+	$(RM) -f worker.static worker/initscript etc/mod_gearman.conf rpm.topdir *.o */*.o
 
 worker.static: worker
 	@echo "################################################################"
@@ -221,7 +221,7 @@ docs:
 	cp -p README.asciidoc docs/README && cd docs && asciidoc --unsafe -a toc -a toclevels=2 -a max-width=800 README
 	chmod 644 docs/README.html
 	$(DOS2UNIX) docs/README.html
-	rm -f docs/README
+	$(RM) -f docs/README
 	cd docs && asciidoc --unsafe -a toc -a toclevels=2 -a max-width=800 QUICKSTART
 	chmod 644 docs/QUICKSTART.html
 	$(DOS2UNIX) docs/QUICKSTART.html
@@ -233,7 +233,7 @@ rpm: dist
 	    --buildroot=$$(pwd)/rpm.buildroot support/mod_gearman.spec
 	mv -v $(RPM_TOPDIR)/RPMS/*/*.rpm .
 	mv -v $(RPM_TOPDIR)/SRPMS/*.src.rpm .
-	rm -rf $(RPM_TOPDIR) rpm.buildroot
+	$(RM) -f $(RPM_TOPDIR) rpm.buildroot
 
 deb:
 	dpkg-buildpackage -us -uc
