@@ -299,12 +299,12 @@ void do_exec_job( ) {
         exec_job->timeout = mod_gm_opt->job_timeout;
     }
 
-    gm_log( GM_LOG_TRACE, "timeout %i\n", exec_job->timeout);
-
     /* get the check start time */
     gettimeofday(&start_time,NULL);
     exec_job->start_time = start_time;
-    latency = exec_job->core_start_time.tv_sec - start_time.tv_sec;
+    latency = start_time.tv_sec - exec_job->core_start_time.tv_sec;
+
+    gm_log( GM_LOG_TRACE, "timeout: %i, core latency: %i\n", exec_job->timeout, latency);
 
     /* job is too old */
     if(latency > mod_gm_opt->max_age) {

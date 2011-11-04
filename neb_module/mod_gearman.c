@@ -498,6 +498,16 @@ static int handle_host_check( int event_type, void *data ) {
         return NEBERROR_CALLBACKCANCEL;
     }
 
+    /* log latency */
+    if(mod_gm_opt->debug_level >= GM_LOG_DEBUG) {
+        time_t t = time(NULL);
+        struct tm next_check;
+        localtime_r(&hst->next_check, &next_check);
+        char buffer1[GM_BUFFERSIZE];
+        strftime(buffer1, sizeof(buffer1), "%Y-%m-%d %H:%M:%S", &next_check );
+        gm_log( GM_LOG_DEBUG, "host: '%s', next_check is at %s, latency: %i\n", hst->name, buffer1, ((int) t - (int)hst->next_check));
+    }
+
     /* increment number of host checks that are currently running */
     currently_running_host_checks++;
 
@@ -620,6 +630,16 @@ static int handle_svc_check( int event_type, void *data ) {
         gm_log( GM_LOG_ERROR, "Processed check command for service '%s' on host '%s' was NULL - aborting.\n", svc->description, svc->host_name);
         my_free(raw_command);
         return NEBERROR_CALLBACKCANCEL;
+    }
+
+    /* log latency */
+    if(mod_gm_opt->debug_level >= GM_LOG_DEBUG) {
+        time_t t = time(NULL);
+        struct tm next_check;
+        localtime_r(&svc->next_check, &next_check);
+        char buffer1[GM_BUFFERSIZE];
+        strftime(buffer1, sizeof(buffer1), "%Y-%m-%d %H:%M:%S", &next_check );
+        gm_log( GM_LOG_DEBUG, "service: '%s' - '%s', next_check is at %s, latency: %i\n", svcdata->host_name, svcdata->service_description, buffer1, ((int) t - (int)svc->next_check));
     }
 
     /* increment number of service checks that are currently running... */
