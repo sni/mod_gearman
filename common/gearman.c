@@ -176,7 +176,7 @@ int add_job_to_queue( gearman_client_st *client, char ** server_list, char * que
     /* cut off to long uniq ids */
     free_uniq = 0;
     if(uniq != NULL && strlen(uniq) > 63) {
-        uniq = strndup(uniq, 63);
+        uniq = md5sum(uniq);
         free_uniq = 1;
     }
 

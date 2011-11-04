@@ -19,3 +19,7 @@ for the libtap code.
 Thanks to
 www.jukie.net/bart/blog/popenRWE
 for the popenRWE code.
+
+Thanks to
+http://polarssl.org
+for the MD5 implementation

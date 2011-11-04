@@ -52,9 +52,9 @@ Half way done, the next step installs Mod-Gearman.
 
 --------------------------------------
 #> cd /tmp
-#> wget "http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.1.0.tar.gz"
-#> tar zxf mod_gearman-1.1.0.tar.gz
-#> cd mod_gearman-1.1.0
+#> wget "http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.1.1.tar.gz"
+#> tar zxf mod_gearman-1.1.1.tar.gz
+#> cd mod_gearman-1.1.1
 #> ./configure --prefix=/opt --with-gearman=/opt --with-user=nagios --with-init-dir=/etc/init.d
 #> make
 #> make install
@@ -118,7 +118,7 @@ Your nagios.log should contain a line:
 
 --------------------------------------
 #> grep mod_gearman /var/log/nagios3/nagios.log
-[1295003042] mod_gearman: Version 1.1.0
+[1295003042] mod_gearman: Version 1.1.1
 [1295003042] Event broker module '/opt/lib/mod_gearman/mod_gearman.o' initialized successfully.
 --------------------------------------
 
@@ -152,7 +152,7 @@ Then we have a look at the shiped check plugin:
 
 --------------------------------------
 #> /opt/bin/check_gearman -H localhost -q worker_`hostname` -t 10 -s check
-check_gearman OK - debian64 has 1 worker and is working on 0 jobs. Version: 1.1.0|worker=1 jobs=2c
+check_gearman OK - debian64 has 1 worker and is working on 0 jobs. Version: 1.1.1|worker=1 jobs=2c
 --------------------------------------
 
 The interesting number is the last one, '2c' in our case, which means there

@@ -28,7 +28,7 @@ mod_gm_opt_t * renew_opts() {
 }
 
 int main(void) {
-    plan(58);
+    plan(60);
 
     /* lowercase */
     char test[100];
@@ -203,6 +203,18 @@ int main(void) {
     escaped = gm_escape_newlines(" test\n", GM_ENABLED);
     is(escaped, "test", "trimmed escape string");
     free(escaped);
+
+    /* md5 sum */
+    char * sum = NULL;
+    strcpy(test, "");
+    sum = md5sum(test);
+    like(sum, "d41d8cd98f00b204e9800998ecf8427e", "md5sum()");
+    free(sum);
+
+    strcpy(test, "The quick brown fox jumps over the lazy dog.");
+    sum = md5sum(test);
+    like(sum, "e4d909c290d0fb1ca068ffaddf22cbd0", "md5sum()");
+    free(sum);
 
     mod_gm_free_opt(mod_gm_opt);
 

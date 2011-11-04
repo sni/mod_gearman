@@ -1,5 +1,5 @@
 Name:          mod_gearman
-Version:       1.1.0
+Version:       1.1.1
 Release:       1%{?dist}
 License:       GNU Public License version 2
 Packager:      Michael Friedrich <michael.friedrich@univie.ac.at>

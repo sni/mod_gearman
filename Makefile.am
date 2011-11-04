@@ -13,7 +13,7 @@ DOS2UNIX=$(shell which dos2unix || which fromdos)
 .PHONY: docs
 
 # -g adds debug symbols, -s strips
-CFLAGS=-Wall -W -Wstrict-prototypes -Wmissing-prototypes -Wnested-externs -s -O -fPIC
+CFLAGS=-Wall -W -Wstrict-prototypes -Wmissing-prototypes -Wnested-externs -g -O -fPIC
 # for debugging
 #CFLAGS=-pedantic -Wfatal-errors -Wall -W -Wstrict-prototypes -Wshadow -Wpointer-arith -Wcast-qual -Wcast-align -Wstrict-prototypes -Wmissing-prototypes -Wnested-externs -g3 -O -fPIC
 AM_CPPFLAGS=-Iinclude
@@ -26,6 +26,7 @@ common_SOURCES             = common/base64.c \
                              common/gearman.c \
                              common/gearman_utils.c \
                              common/utils.c \
+                             common/md5.c \
                              common/popenRWE.c
 
 pkglib_LIBRARIES           = mod_gearman.so

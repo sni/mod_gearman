@@ -41,6 +41,7 @@
 #include <sys/stat.h>
 
 #include "popenRWE.h"
+#include "polarssl/md5.h"
 #include "common.h"
 
 /**
@@ -519,6 +520,17 @@ void send_timeout_result(gm_job_t * exec_job);
  * @return nothing
  */
 void send_result_back(gm_job_t * exec_job);
+
+/**
+ * md5sum
+ *
+ * create md5 sum
+ *
+ * @param[in] text - char array to get md5 from
+ *
+ * @return md5sum (hex)
+ */
+char *md5sum(char *text);
 
 /**
  * @}

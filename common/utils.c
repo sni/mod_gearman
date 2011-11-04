@@ -26,6 +26,7 @@
 #include "base64.h"
 #include "gearman.h"
 #include "popenRWE.h"
+#include "polarssl/md5.h"
 
 pid_t current_child_pid = 0;
 char temp_buffer1[GM_BUFFERSIZE];
@@ -2081,4 +2082,21 @@ void send_result_back(gm_job_t * exec_job) {
     }
 
     return;
+}
+
+
+/* create md5 sum for char[] */
+char *md5sum(char *text) {
+    unsigned char sum[16];
+    char *result=NULL;
+
+    /* allocate enough memory to escape all chars if necessary */
+    if((result=malloc(33))==NULL)
+        return NULL;
+
+    md5((unsigned char *)text, strlen(text), sum);
+    snprintf(result, 33, "%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x",
+           sum[0],sum[1],sum[2],sum[3],sum[4],sum[5],sum[6],sum[7],sum[8],sum[9],sum[10],sum[11],sum[12],sum[13],sum[14],sum[15]);
+
+    return result;
 }

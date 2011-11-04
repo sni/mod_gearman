@@ -1,5 +1,13 @@
 This file documents the revision history for mod_gearman.
 
+1.1.1  Fri Nov  4 13:14:26 CET 2011
+          - use md5sum a uniq key for long host/servicesnames
+            this fixes a possible lost jobs when 2 very long host/servicesnames
+            are scheduled at the same time
+
+ Fri Nov  4 13:15:51 CET 2011
+          - ...
+
 1.1.0  Wed Oct 12 18:36:10 CEST 2011
           - fixed send_multi performance data headers
           - fixed segfault when worker runs into timeout
