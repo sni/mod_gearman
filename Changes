@@ -7,9 +7,6 @@ This file documents the revision history for mod_gearman.
             this fixes a possible lost jobs when 2 very long host/servicesnames
             are scheduled at the same time
 
- Fri Nov  4 13:15:51 CET 2011
-          - ...
-
 1.1.0  Wed Oct 12 18:36:10 CEST 2011
           - fixed send_multi performance data headers
           - fixed segfault when worker runs into timeout
