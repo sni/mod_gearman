@@ -4,7 +4,7 @@ This file documents the revision history for mod_gearman.
           - check_gearman can now send background jobs (Justin Kerr Sheckler)
           - fixed problem which skipped some checks when they were rescheduled
             by the core smart scheduler
-          - use md5sum a uniq key for long host/servicesnames
+          - use md5sum as uniq key for long host/servicesnames
             this fixes a possible lost jobs when 2 very long host/servicesnames
             are scheduled at the same time
 
