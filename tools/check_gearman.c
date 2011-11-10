@@ -318,7 +318,7 @@ int check_worker(char * queue, char * to_send, char * expect) {
 
     while (1) {
         if (send_async) {
-            result = "";
+            result = "sending background job succeded";
             job_handle = malloc(GEARMAN_JOB_HANDLE_SIZE * sizeof(char));
             ret= gearman_client_do_high_background( &client,
                                                     queue,

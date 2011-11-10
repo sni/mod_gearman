@@ -234,7 +234,7 @@ void wait_for_empty_queue(char *queue, int timeout) {
 /* main tests */
 int main(void) {
     int status, chld;
-    int tests = 55;
+    int tests = 57;
     int rrc;
     char cmd[150];
     char *result, *error;
@@ -345,6 +345,16 @@ int main(void) {
     rrc = real_exit_code(run_check(cmd, &result, &error));
     cmp_ok(rrc, "==", 0, "cmd '%s' returned rc %d", cmd, rrc);
     like(result, "send_multi OK: 2 check_multi child checks submitted", "output from ./send_multi");
+    free(result);
+    free(error);
+
+    /*****************************************
+     * check_gearman
+     */
+    snprintf(cmd, 150, "./check_gearman -H localhost:%d -s check -a -q worker_test", GEARMAND_TEST_PORT);
+    rrc = real_exit_code(run_check(cmd, &result, &error));
+    cmp_ok(rrc, "==", 0, "cmd '%s' returned rc %d", cmd, rrc);
+    like(result, "check_gearman OK - sending background job succeded", "output from ./check_gearman");
 
 
     /* cleanup */
