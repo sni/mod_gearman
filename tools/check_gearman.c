@@ -37,6 +37,7 @@ char * opt_server       = NULL;
 char * opt_queue        = NULL;
 char * opt_send         = NULL;
 char * opt_expect       = NULL;
+int send_async          = 0;
 
 char * server_list[GM_LISTSIZE];
 int server_list_num = 0;
@@ -55,7 +56,7 @@ int main (int argc, char **argv) {
     /*
      * and parse command line
      */
-    while((opt = getopt(argc, argv, "vVhH:t:w:c:W:C:q:s:e:p:")) != -1) {
+    while((opt = getopt(argc, argv, "vVhaH:t:w:c:W:C:q:s:e:p:")) != -1) {
         switch(opt) {
             case 'h':   print_usage();
                         break;
@@ -77,6 +78,8 @@ int main (int argc, char **argv) {
                         server_list[server_list_num++] = optarg;
                         break;
             case 's':   opt_send = optarg;
+                        break;
+            case 'a':   send_async = 1;
                         break;
             case 'e':   opt_expect = optarg;
                         break;
@@ -143,6 +146,7 @@ void print_usage() {
     printf("to send a test job:\n");
     printf("              [ -s=<send text>               ]\n");
     printf("              [ -e=<expect text>             ]\n");
+    printf("              [ -a           send async      ]  will ignore -e\n");
     printf("\n");
     printf("              [ -h           print help      ]\n");
     printf("              [ -v           verbose output  ]\n");
@@ -303,6 +307,7 @@ int check_worker(char * queue, char * to_send, char * expect) {
     gearman_return_t ret;
     char * result;
     size_t result_size;
+    char * job_handle;
 
     /* create client */
     if ( create_client( server_list, &client ) != GM_OK ) {
@@ -312,13 +317,27 @@ int check_worker(char * queue, char * to_send, char * expect) {
     gearman_client_set_timeout(&client, (opt_timeout-1)*1000/server_list_num);
 
     while (1) {
-        result= (char *)gearman_client_do_high( &client,
-                                                queue,
-                                                "check",
-                                                (void *)to_send,
-                                                (size_t)strlen(to_send),
-                                                &result_size,
-                                                &ret);
+        if (send_async) {
+            result = "";
+            job_handle = malloc(GEARMAN_JOB_HANDLE_SIZE * sizeof(char));
+            ret= gearman_client_do_high_background( &client,
+                                                    queue,
+                                                    "check",
+                                                    (void *)to_send,
+                                                    (size_t)strlen(to_send),
+                                                    job_handle);
+            free(job_handle);
+        }
+        else {
+            result= (char *)gearman_client_do_high( &client,
+                                                    queue,
+                                                    "check",
+                                                    (void *)to_send,
+                                                    (size_t)strlen(to_send),
+                                                    &result_size,
+                                                    &ret);
+        }
+
         if (ret == GEARMAN_WORK_DATA) {
             free(result);
             continue;
@@ -342,7 +361,7 @@ int check_worker(char * queue, char * to_send, char * expect) {
         break;
     }
 
-    if( expect != NULL ) {
+    if( !send_async && expect != NULL && result != NULL ) {
         if( strstr(result, expect) != NULL) {
             printf("%s OK - send worker '%s' response: '%s'\n", PLUGIN_NAME, to_send, result);
             return( STATE_OK );
