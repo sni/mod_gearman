@@ -618,6 +618,17 @@ Default is yes.
 ====
 
 
+debug-result::
+When enabled, the hostname of the executing worker will be put in
+front of the plugin output. This may help with debugging your plugin
+results.
+Default is off.
++
+====
+    debug-result=yes
+====
+
+
 workaround_rc_25::
 Duplicate jobs from gearmand result sometimes in exit code 25 of
 plugins because they are executed twice and get killed because of
