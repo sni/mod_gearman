@@ -37,6 +37,7 @@ char * opt_server       = NULL;
 char * opt_queue        = NULL;
 char * opt_send         = NULL;
 char * opt_expect       = NULL;
+char * opt_unique_id    = NULL;
 int send_async          = 0;
 
 char * server_list[GM_LISTSIZE];
@@ -56,7 +57,7 @@ int main (int argc, char **argv) {
     /*
      * and parse command line
      */
-    while((opt = getopt(argc, argv, "vVhaH:t:w:c:W:C:q:s:e:p:")) != -1) {
+    while((opt = getopt(argc, argv, "vVhaH:t:w:c:W:C:q:s:e:p:u:")) != -1) {
         switch(opt) {
             case 'h':   print_usage();
                         break;
@@ -84,6 +85,8 @@ int main (int argc, char **argv) {
             case 'e':   opt_expect = optarg;
                         break;
             case 'q':   opt_queue = optarg;
+                        break;
+            case 'u':   opt_unique_id = optarg;
                         break;
             case '?':   printf("Error - No such option: `%c'\n\n", optopt);
                         print_usage();
@@ -144,6 +147,7 @@ void print_usage() {
     printf("\n");
     printf("\n");
     printf("to send a test job:\n");
+    printf("              [ -u=<unique job id>           ]  default: check\n");
     printf("              [ -s=<send text>               ]\n");
     printf("              [ -e=<expect text>             ]\n");
     printf("              [ -a           send async      ]  will ignore -e\n");
@@ -308,6 +312,13 @@ int check_worker(char * queue, char * to_send, char * expect) {
     char * result;
     size_t result_size;
     char * job_handle;
+    const char * unique_job_id;
+    if (opt_unique_id == NULL) {
+        unique_job_id = "check";
+    }
+    else {
+        unique_job_id = opt_unique_id;
+    }
 
     /* create client */
     if ( create_client( server_list, &client ) != GM_OK ) {
@@ -322,7 +333,7 @@ int check_worker(char * queue, char * to_send, char * expect) {
             job_handle = malloc(GEARMAN_JOB_HANDLE_SIZE * sizeof(char));
             ret= gearman_client_do_high_background( &client,
                                                     queue,
-                                                    "check",
+                                                    unique_job_id,
                                                     (void *)to_send,
                                                     (size_t)strlen(to_send),
                                                     job_handle);
@@ -331,7 +342,7 @@ int check_worker(char * queue, char * to_send, char * expect) {
         else {
             result= (char *)gearman_client_do_high( &client,
                                                     queue,
-                                                    "check",
+                                                    unique_job_id,
                                                     (void *)to_send,
                                                     (size_t)strlen(to_send),
                                                     &result_size,
