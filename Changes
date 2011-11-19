@@ -1,5 +1,8 @@
 This file documents the revision history for mod_gearman.
 
+1.1.2  ...
+          - added uniq key option for check_gearman (kgovande)
+
 1.1.1  Thu Nov 10 11:15:48 CET 2011
           - check_gearman can now send background jobs (Justin Kerr Sheckler)
           - fixed problem which skipped some checks when they were rescheduled

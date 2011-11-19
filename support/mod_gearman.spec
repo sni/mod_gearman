@@ -1,12 +1,11 @@
 Name:          mod_gearman
-Version:       1.1.1
+Version:       1.1.2
 Release:       1%{?dist}
 License:       GNU Public License version 2
-Packager:      Michael Friedrich <michael.friedrich@univie.ac.at>
-Vendor:        Icinga Team
+Packager:      Sven Nierlein <sven.nierlein@consol.de>
+Vendor:        Labs Consol
 URL:           http://labs.consol.de/nagios/mod-gearman/
 Source0:       mod_gearman-%{version}.tar.gz
-#Source1:       https://github.com/sni/mod_gearman/tarball/v%{version}
 Group:         Applications/Monitoring
 Requires:      gearmand
 BuildRoot:     %{_tmppath}/%{name}-%{version}-root-%(%{__id_u} -n)
@@ -19,9 +18,9 @@ Requires(pre,post): /sbin/ldconfig
 Provides:      mod_gearman
 
 %description
-Mod Gearman is a new way of distributing active Icinga/Nagios
+Mod Gearman is a new way of distributing active Nagios/Icinga
 checks across your network. It consists of two parts: There is
-a NEB module which resides in the Icinga/Nagios core and adds
+a NEB module which resides in the Nagios/Icinga core and adds
 servicechecks, hostchecks and eventhandler to a Gearman queue.
 There can be multiple equal gearman servers. The counterpart
 is one or more worker clients for the checks itself. They can
