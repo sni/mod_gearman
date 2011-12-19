@@ -1,5 +1,8 @@
 #!/bin/sh
 
+# chkconfig: - 85 15
+# description: Mod-Gearman Worker Daemon
+
 ### BEGIN INIT INFO
 # Provides:          mod_gearman_worker
 # Required-Start:    $local_fs
@@ -9,7 +12,6 @@
 # Default-Start:     2 3 4 5
 # Default-Stop:      0 1 6
 # Short-Description: Start/Stop the Mod-Gearman Worker Daemon
-# Description:       Mod-Gearman Worker Daemon
 ### END INIT INFO
 
 
