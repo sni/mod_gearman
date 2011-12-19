@@ -8,7 +8,8 @@
 # Should-Stop:
 # Default-Start:     2 3 4 5
 # Default-Stop:      0 1 6
-# Short-Description: Start/Stop the mod_gearman worker daemon
+# Short-Description: Start/Stop the Mod-Gearman Worker Daemon
+# Description:       Mod-Gearman Worker Daemon
 ### END INIT INFO
 
 
