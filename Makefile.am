@@ -83,7 +83,8 @@ replace_vars = sed -e 's:%CONFIG%:$(sysconfdir)/mod_gearman.conf:g' \
 EXTRA_DIST = COPYING etc extras include \
              THANKS README docs/README.html Changes worker/initscript.in \
              docs/QUICKSTART docs/QUICKSTART.html support/mod_gearman.spec \
-             t/data/test1.key t/data/test2.key t/data/test3.key send_multi.txt
+             t/data/test1.key t/data/test2.key t/data/test3.key send_multi.txt \
+             t/rc t/both t/killer t/sleep
 
 # other targets
 mod_gearman.o: $(mod_gearman_so_OBJECTS) $(mod_gearman_so_DEPENDENCIES)
