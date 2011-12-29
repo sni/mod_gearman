@@ -383,11 +383,13 @@ int main (int argc, char **argv, char **env) {
     kill(worker_pid, SIGTERM);
     waitpid(worker_pid, &status, 0);
     ok(status == 0, "worker exited with exit code %d", real_exit_code(status));
+    todo();
     if(status != 0) {
         check_logfile("/tmp/gearmand.log", 1);
     } else {
         check_logfile("/tmp/gearmand.log", 0);
     }
+    endtodo;
 
 #ifdef EMBEDDEDPERL
     deinit_embedded_perl();

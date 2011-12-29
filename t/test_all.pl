@@ -11,7 +11,7 @@ use Test::More;
 if($? != 0) {
     plan skip_all => 'valgrind required';
 }
-plan(tests => 16);
+plan(tests => 19);
 
 my $makeout = `make clean  2>&1 && make 2>&1`;
 is($?, 0, "build rc is $?") or BAIL_OUT("no need to test without successful make!\n".$makeout);
