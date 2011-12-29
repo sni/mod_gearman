@@ -1,12 +1,15 @@
 ###############################################################################
 #
-#  mod_gearman - distribute checks with gearman
+#  Mod-Gearman - distribute checks with gearman
 #
 #  Copyright (c) 2010 Sven Nierlein
 #
-#  Sample Worker / NEB Module Config
+#  Worker Module Config
 #
 ###############################################################################
+
+# Identifier, hostname will be used if undefined
+#identifier=hostname
 
 # use debug to increase the verbosity of the module.
 # Possible values are:
@@ -103,14 +106,14 @@ key=should_be_changed
 
 # Minimum number of worker processes which should
 # run at any time.
-min-worker=1
+min-worker=5
 
 # Maximum number of worker processes which should
 # run at any time. You may set this equal to
 # min-worker setting to disable dynamic starting of
 # workers. When setting this to 1, all services from
 # this worker will be executed one after another.
-max-worker=20
+max-worker=50
 
 # Time after which an idling worker exists
 # This parameter controls how fast your waiting workers will
@@ -120,7 +123,7 @@ idle-timeout=30
 # Controls the amount of jobs a worker will do before he exits
 # Use this to control how fast the amount of workers will go down
 # after high load times
-max-jobs=50
+max-jobs=1000
 
 # defined the rate of spawed worker per second as long
 # as there are jobs waiting
@@ -129,7 +132,7 @@ spawn-rate=1
 # Use this option to disable an extra fork for each plugin execution. Disabling
 # this option will reduce the load on the worker host but can lead to problems with
 # unclean plugin. Default: yes
-fork_on_exec=yes
+fork_on_exec=no
 
 # Use this option to show stderr output of plugins too.
 # Default: yes

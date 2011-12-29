@@ -103,7 +103,7 @@ replace_vars = sed -e 's:%CONFIG%:$(sysconfdir)/mod_gearman.conf:g' \
                -e 's:%WORKERBIN%:$(bindir)/mod_gearman_worker:g' \
                -e 's:%USER%:$(user):g'
 
-EXTRA_DIST = COPYING etc extras include \
+EXTRA_DIST = COPYING etc/*.in extras include \
              THANKS README docs/README.html Changes worker/initscript.in \
              docs/QUICKSTART docs/QUICKSTART.html support/mod_gearman.spec \
              t/data/test1.key t/data/test2.key t/data/test3.key t/data/send_multi.txt \
@@ -173,7 +173,7 @@ distclean-local: clean
 	$(RM) -rf .deps/ Makefile.in aclocal.m4 autom4te.cache config.* configure depcomp install-sh missing *.gz
 
 clean-local:
-	$(RM) -f worker.static worker/initscript etc/mod_gearman.conf rpm.topdir *.o */*.o extras/gearmand-init
+	$(RM) -f worker.static worker/initscript etc/mod_gearman.conf rpm.topdir *.o */*.o extras/gearmand-init etc/mod_gearman_neb.conf etc/mod_gearman_worker.conf
 
 worker.static: worker
 	@echo "################################################################"

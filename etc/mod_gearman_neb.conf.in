@@ -1,10 +1,10 @@
 ###############################################################################
 #
-#  mod_gearman - distribute checks with gearman
+#  Mod-Gearman - distribute checks with gearman
 #
 #  Copyright (c) 2010 Sven Nierlein
 #
-#  Sample NEB Module Config
+#  Mod-Gearman NEB Module Config
 #
 ###############################################################################
 
