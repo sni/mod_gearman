@@ -9,10 +9,11 @@ AC_CONFIG_SRCDIR([neb_module/mod_gearman.c],[worker/worker.c],[tools/send_gearma
 AC_CONFIG_HEADER([config.h])
 
 ##############################################
-# -g adds debug symbols, -s strips
-CFLAGS="-Wall -W -Wstrict-prototypes -Wmissing-prototypes -Wnested-externs -s -O -fPIC"
-# for debugging
-#CFLAGS=-pedantic -Wfatal-errors -Wall -W -Wstrict-prototypes -Wshadow -Wpointer-arith -Wcast-qual -Wcast-align -Wstrict-prototypes -Wmissing-prototypes -Wnested-externs -g3 -O -fPIC
+AC_ARG_ENABLE(debug,--enable-debug will enable debugging symbols,[
+    CFLAGS="-pedantic -Wfatal-errors -Wall -W -Wstrict-prototypes -Wshadow -Wpointer-arith -Wcast-qual -Wcast-align -Wstrict-prototypes -Wmissing-prototypes -Wnested-externs -g3 -O -fPIC"
+    ],
+    CFLAGS="-Wall -W -Wstrict-prototypes -Wmissing-prototypes -Wnested-externs -s -O -fPIC"
+)
 
 ##############################################
 # Checks for programs.
@@ -73,7 +74,6 @@ dnl Is embedded Perl being compiled in?
 AM_CONDITIONAL(USEPERL, test "$USEPERL" = "yes")
 if test "$USEPERL" == "yes"; then
     AC_DEFINE_UNQUOTED(EMBEDDEDPERL,,[Is embedded Perl being compiled in?])
-    CFLAGS="${CFLAGS} `perl -MExtUtils::Embed -e ccopts` -lperl"
     echo "creating common/perlxsi.c"
     perl -MExtUtils::Embed -e xsinit -- -o common/perlxsi.c
     echo "Embedded Perl interpreter will be compiled in..."

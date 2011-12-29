@@ -4,6 +4,7 @@
 #include <unistd.h>
 
 #include <t/tap.h>
+#include <config.h>
 #include <common.h>
 #include <utils.h>
 #include <epn_utils.h>
@@ -31,9 +32,9 @@ int main (int argc, char **argv, char **env) {
     mod_gm_opt = malloc(sizeof(mod_gm_opt_t));
     set_default_options(mod_gm_opt);
     //mod_gm_opt->debug_level=4;
-    //parse_args_line(mod_gm_opt, strdup("debug=4"), 0);
     parse_args_line(mod_gm_opt, strdup("p1_file=worker/mod_gearman_p1.pl"), 0);
     parse_args_line(mod_gm_opt, strdup("enable_embedded_perl=on"), 0);
+    parse_args_line(mod_gm_opt, strdup("use_embedded_perl_implicitly=on"), 0);
     //dumpconfig(mod_gm_opt, GM_WORKER_MODE);
     ok(p1_file != NULL, "p1_file: %s", p1_file);
 
@@ -76,6 +77,8 @@ int main (int argc, char **argv, char **env) {
      * clean up
      */
     mod_gm_free_opt(mod_gm_opt);
+    deinit_embedded_perl();
+
     return exit_status();
 #endif
 }

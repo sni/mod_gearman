@@ -5,10 +5,11 @@
 
 #include <common.h>
 #include <utils.h>
+#include <check_utils.h>
 
 mod_gm_opt_t *mod_gm_opt;
 
-int main(void) {
+int main (int argc, char **argv, char **env) {
     char *result, *error;
     char cmd[120];
     int x;
@@ -20,6 +21,11 @@ int main(void) {
     mod_gm_opt = malloc(sizeof(mod_gm_opt_t));
     set_default_options(mod_gm_opt);
     mod_gm_opt->debug_level = 4;
+
+#ifdef EMBEDDEDPERL
+    parse_args_line(mod_gm_opt, strdup("p1_file=worker/mod_gearman_p1.pl"), 0);
+    init_embedded_perl(env);
+#endif
 
     gm_job_t * exec_job;
     exec_job = ( gm_job_t * )malloc( sizeof *exec_job );
@@ -38,6 +44,9 @@ int main(void) {
 
     free_job(exec_job);
     mod_gm_free_opt(mod_gm_opt);
+#ifdef EMBEDDEDPERL
+    deinit_embedded_perl();
+#endif
     exit(0);
 }
 

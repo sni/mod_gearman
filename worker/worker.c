@@ -35,11 +35,13 @@ char ** orig_argv;
 int     last_time_increased;
 volatile sig_atomic_t shmid;
 int   * shm;
+char **start_env;
 
 
 /* work starts here */
 int main (int argc, char **argv, char **env) {
     int sid, x;
+    start_env = env;
 
     last_time_increased = 0;
 
@@ -55,6 +57,12 @@ int main (int argc, char **argv, char **env) {
     if(parse_arguments(argc, argv) != GM_OK) {
         exit( EXIT_FAILURE );
     }
+
+#ifdef EMBEDDEDPERL
+    if(init_embedded_perl(env) == GM_ERROR) {
+        exit( EXIT_FAILURE );
+    }
+#endif
 
     /* fork into daemon mode? */
     if(mod_gm_opt->daemon_mode == GM_ENABLED) {
@@ -130,10 +138,6 @@ int main (int argc, char **argv, char **env) {
 
     /* setup shared memory */
     setup_child_communicator();
-
-#ifdef EMBEDDEDPERL
-    init_embedded_perl(env);
-#endif
 
     /* start status worker */
     make_new_child(GM_WORKER_STATUS);
@@ -543,6 +547,10 @@ int adjust_number_of_worker(int min, int max, int cur_workers, int cur_jobs) {
 void clean_exit(int sig) {
     gm_log( GM_LOG_TRACE, "clean_exit(%d)\n", sig);
 
+#ifdef EMBEDDEDPERL
+    deinit_embedded_perl();
+#endif
+
     if(mod_gm_opt->pidfile != NULL)
         unlink(mod_gm_opt->pidfile);
 
@@ -731,8 +739,19 @@ void reload_config(int sig) {
      */
     stop_childs(GM_WORKER_RESTART);
 
+#ifdef EMBEDDEDPERL
+    deinit_embedded_perl();
+#endif
+
     /* start status worker */
     make_new_child(GM_WORKER_STATUS);
+
+#ifdef EMBEDDEDPERL
+    if(init_embedded_perl(start_env) == GM_ERROR) {
+        gm_log( GM_LOG_ERROR, "reload config failed, check your config\n");
+        return;
+    }
+#endif
 
     gm_log( GM_LOG_INFO, "reloading config was successful\n");
 

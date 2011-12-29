@@ -16,11 +16,22 @@ AM_CPPFLAGS=-Iinclude
 OS=`uname`
 
 if USEPERL
-PERLSRC = common/perlxsi.c common/epn_utils.c
 P1FILE  = worker/mod_gearman_p1.pl
 install_p1file = install_p1file
+mod_gearman_worker_LDADD = -lperl common/perlxsi.o common/epn_utils.o
+mod_gearman_worker_LDFLAGS = `perl -MExtUtils::Embed -e ccopts`
+EXTRA_mod_gearman_worker_SOURCES=common/perlxsi.c common/epn_utils.c
+01_utils_LDADD = -lperl common/perlxsi.o common/epn_utils.o
+01_utils_LDFLAGS = `perl -MExtUtils::Embed -e ccopts`
+02_full_LDADD = -lperl common/perlxsi.o common/epn_utils.o
+02_full_LDFLAGS = `perl -MExtUtils::Embed -e ccopts`
+03_exec_LDADD = -lperl common/perlxsi.o common/epn_utils.o
+03_exec_LDFLAGS = `perl -MExtUtils::Embed -e ccopts`
+06_exec_LDADD = -lperl common/perlxsi.o common/epn_utils.o
+06_exec_LDFLAGS = `perl -MExtUtils::Embed -e ccopts`
+07_epn_LDADD = -lperl common/perlxsi.o common/epn_utils.o
+07_epn_LDFLAGS = `perl -MExtUtils::Embed -e ccopts`
 else
-PERLSRC =
 P1FILE  =
 install_p1file =
 endif
@@ -32,9 +43,11 @@ common_SOURCES             = common/base64.c \
                              common/gearman.c \
                              common/gearman_utils.c \
                              common/utils.c \
-                             common/md5.c \
+                             common/md5.c
+
+common_check_SOURCES       = common/check_utils.c \
                              common/popenRWE.c \
-                             $(PERLSRC)
+                             worker/worker_client.c
 
 pkglib_LIBRARIES           = mod_gearman.so
 mod_gearman_so_SOURCES     = $(common_SOURCES) \
@@ -48,7 +61,7 @@ bin_PROGRAMS               = mod_gearman_worker \
                              gearman_top
 
 mod_gearman_worker_SOURCES = $(common_SOURCES) \
-                             worker/worker_client.c   \
+                             $(common_check_SOURCES) \
                              worker/worker.c
 
 send_gearman_SOURCES       = $(common_SOURCES) \
@@ -66,16 +79,16 @@ gearman_top_LDADD          = -lncurses
 
 # tests
 check_PROGRAMS   = 01_utils 02_full 03_exec 04_log 05_neb 06_exec 07_epn
-01_utils_SOURCES = $(common_SOURCES) t/tap.h t/tap.c t/01-utils.c
-02_full_SOURCES  = $(common_SOURCES) t/tap.h t/tap.c t/02-full.c
-03_exec_SOURCES  = $(common_SOURCES) t/tap.h t/tap.c t/03-exec_checks.c
+01_utils_SOURCES = $(common_SOURCES) t/tap.h t/tap.c t/01-utils.c $(common_check_SOURCES)
+02_full_SOURCES  = $(common_SOURCES) t/tap.h t/tap.c t/02-full.c $(common_check_SOURCES)
+03_exec_SOURCES  = $(common_SOURCES) t/tap.h t/tap.c t/03-exec_checks.c $(common_check_SOURCES)
 04_log_SOURCES   = $(common_SOURCES) t/tap.h t/tap.c t/04-log.c
 05_neb_SOURCES   = $(common_SOURCES) t/tap.h t/tap.c t/05-neb.c
 05_neb_LDADD     = -ldl
 05_neb_LDFLAGS   = --export-dynamic -rdynamic
+07_epn_SOURCES   = $(common_SOURCES) t/tap.h t/tap.c t/07-epn.c $(common_check_SOURCES)
 # only used for performance tests
-06_exec_SOURCES  = $(common_SOURCES) t/06-execvp_vs_popen.c
-07_epn_SOURCES   = $(common_SOURCES) t/tap.h t/tap.c t/07-epn.c
+06_exec_SOURCES  = $(common_SOURCES) t/06-execvp_vs_popen.c $(common_check_SOURCES)
 TESTS            = $(check_PROGRAMS)
 
 
@@ -105,6 +118,16 @@ mod_gearman.o: $(mod_gearman_so_OBJECTS) $(mod_gearman_so_DEPENDENCIES)
 	    $(CXX) $(LDFLAGS) -fPIC -shared $(mod_gearman_so_OBJECTS) -o $@ -lpthread -lgearman; \
 	fi
 	$(RM) mod_gearman.so
+
+common/perlxsi.o:
+	depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.o$$||'`;\
+	$(COMPILE) `perl -MExtUtils::Embed -e ccopts` -MT $@ -MD -MP -MF $$depbase.Tpo -c -o $@ common/perlxsi.c &&\
+	$(am__mv) $$depbase.Tpo $$depbase.Po
+
+common/epn_utils.o:
+	depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.o$$||'`;\
+	$(COMPILE) `perl -MExtUtils::Embed -e ccopts` -MT $@ -MD -MP -MF $$depbase.Tpo -c -o $@ common/epn_utils.c &&\
+	$(am__mv) $$depbase.Tpo $$depbase.Po
 
 mod_gearman_neb.conf-local:
 	$(replace_vars) etc/mod_gearman_neb.conf.in > etc/mod_gearman_neb.conf

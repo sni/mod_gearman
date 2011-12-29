@@ -23,7 +23,9 @@
 
 #include "config.h"
 #include "utils.h"
+#include "check_utils.h"
 #include "epn_utils.h"
+#include "worker_client.h"
 #include "gearman.h"
 
 #ifdef EMBEDDEDPERL
@@ -49,6 +51,10 @@ int run_epn_check(char *processed_command, char **ret, char **err) {
     FILE *fp;
     pid_t pid;
     int use_epn=FALSE;
+    if(my_perl == NULL) {
+        gm_log(GM_LOG_ERROR, "Embedded Perl has to be initialized before running the first check\n");
+        _exit(STATE_UNKNOWN);
+    }
 #ifdef aTHX
     dTHX;
 #endif
@@ -63,7 +69,7 @@ int run_epn_check(char *processed_command, char **ret, char **err) {
     if(use_epn == FALSE)
         return GM_NO_EPN;
 
-    gm_log(GM_LOG_TRACE, "Using Embedded Perl interpreter to run check...\n");
+    gm_log(GM_LOG_DEBUG, "Using Embedded Perl interpreter for: %s\n", fname);
 
     args[0]=fname;
     args[2]="";
@@ -201,7 +207,7 @@ int file_uses_embedded_perl(char *fname) {
     #ifndef EMBEDDEDPERL
     return FALSE;
     #else
-    int line, use_epn = FALSE;
+    int line;
     FILE *fp = NULL;
     char buf[256] = "";
 
@@ -280,9 +286,8 @@ int init_embedded_perl(char **env){
 
     /* a fatal error occurred... */
     if(use_embedded_perl==FALSE){
-        gm_log(GM_LOG_ERROR,"Bailing out due to errors encountered while initializing the embedded Perl interpreter. (PID=%d)\n",(int)getpid());
-        //cleanup();
-        exit(EXIT_FAILURE);
+        gm_log(GM_LOG_ERROR,"Bailing out due to errors encountered while initializing the embedded Perl interpreter.\n");
+        return GM_ERROR;
     }
 
     perl_construct(my_perl);

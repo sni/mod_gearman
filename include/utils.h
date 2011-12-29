@@ -40,7 +40,6 @@
 #include <sys/wait.h>
 #include <sys/stat.h>
 
-#include "popenRWE.h"
 #include "polarssl/md5.h"
 #include "common.h"
 
@@ -237,17 +236,6 @@ void mod_gm_free_opt(mod_gm_opt_t *opt);
 int read_keyfile(mod_gm_opt_t *opt);
 
 /**
- * nr2signal
- *
- * get name for a signal number
- *
- * @param[in] sig - signal number
- *
- * @return name for this signal
- */
-char * nr2signal(int sig);
-
-/**
  * string2timeval
  *
  * parse string into timeval
@@ -293,69 +281,6 @@ double timeval2double(struct timeval * t);
  * @return difference in seconds
  */
 long mod_gm_time_compare(struct timeval * tv1, struct timeval * tv2);
-
-/**
- * extract_check_result
- *
- * get result from a file pointer
- *
- * @param[in] fp      - file pointer to executed command
- * @param[in] trimmed - trim result
- *
- * @return check result
- */
-char *extract_check_result(FILE *fp, int trimmed);
-
-/**
- * parse_command_line
- *
- * parse command line into argv array
- *
- * @param[in] cmd - command line
- * @param[out] argv - argv array
- *
- * @return true on success
- */
-int parse_command_line(char *cmd, char *argv[GM_LISTSIZE]);
-
-/**
- * run_check
- *
- * run a command
- *
- * @param[in] processed_command - command line
- * @param[out] plugin_output - pointer to plugin output
- * @param[out] plugin_error - pointer to plugin error output
- *
- * @return true on success
- */
-int run_check(char *processed_command, char **plugin_output, char **plugin_error);
-
-/**
- *
- * execute_safe_command
- *
- * execute command and fill the exec job structure
- *
- * @param[in] exec_job - job structure
- * @param[in] fork_exec - fork or not before exec
- * @param[in] identifier - current worker identifier
- *
- * @return true on success
- */
-int execute_safe_command(gm_job_t * exec_job, int fork_exec, char * identifier);
-
-/**
- *
- * check_alarm_handler
- *
- * called when a check runs into the timeout
- *
- * @param[in] sig - signal number
- *
- * @return nothing
- */
-void check_alarm_handler(int sig);
 
 /**
  *
@@ -428,7 +353,7 @@ int escaped(int ch);
 void escape(char *out, int ch);
 
 /**
- * callback_type2str
+ * nebtype2str
  *
  * get human readable name for neb type
  *
@@ -484,7 +409,6 @@ void gm_log( int lvl, const char *text, ... );
  */
 void write_core_log(char *data);
 
-
 /**
  * get_param_server
  *
@@ -497,18 +421,6 @@ void write_core_log(char *data);
  * @returns the new server name or NULL
  */
 char * get_param_server(char * servername, char * server_list[GM_LISTSIZE], int server_num);
-
-
-/**
- * send_timeout_result
- *
- * send back a timeout result
- *
- * @param[in] exec_job - the exec job with all results
- *
- * @return nothing
- */
-void send_timeout_result(gm_job_t * exec_job);
 
 /**
  * send_result_back

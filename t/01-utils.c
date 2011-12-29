@@ -6,6 +6,7 @@
 #include <t/tap.h>
 #include <common.h>
 #include <utils.h>
+#include <check_utils.h>
 
 
 void printf_hex(char*, int);

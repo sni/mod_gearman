@@ -4,12 +4,14 @@
 #include <unistd.h>
 
 #include <t/tap.h>
+#include <config.h>
 #include <common.h>
 #include <utils.h>
+#include <check_utils.h>
 
 mod_gm_opt_t *mod_gm_opt;
 
-int main(void) {
+int main (int argc, char **argv, char **env) {
     int rc, rrc;
     char *result, *error;
     char cmd[120];
@@ -25,23 +27,28 @@ int main(void) {
     set_default_options(mod_gm_opt);
     mod_gm_opt->debug_level = 0;
 
+#ifdef EMBEDDEDPERL
+    parse_args_line(mod_gm_opt, strdup("p1_file=worker/mod_gearman_p1.pl"), 0);
+    init_embedded_perl(env);
+#endif
+
     /*****************************************
      * arg parsing test 1
      */
-    char *argv[MAX_CMD_ARGS];
+    char *args[MAX_CMD_ARGS];
     strcpy(cmd, "/bin/true");
-    parse_command_line(cmd, argv);
-    like(argv[0], cmd, "parsing args cmd 1");
+    parse_command_line(cmd, args);
+    like(args[0], cmd, "parsing args cmd 1");
 
     /*****************************************
      * arg parsing test 2
      */
     strcpy(cmd, "/bin/cmd blah blub   foo");
-    parse_command_line(cmd,argv);
-    like(argv[0], "/bin/cmd", "parsing args cmd 2");
-    like(argv[1], "blah", "parsing args cmd 2");
-    like(argv[2], "blub", "parsing args cmd 2");
-    like(argv[3], "foo", "parsing args cmd 2");
+    parse_command_line(cmd,args);
+    like(args[0], "/bin/cmd", "parsing args cmd 2");
+    like(args[1], "blah", "parsing args cmd 2");
+    like(args[2], "blub", "parsing args cmd 2");
+    like(args[3], "foo", "parsing args cmd 2");
 
     /*****************************************
      * send_gearman
@@ -317,6 +324,9 @@ int main(void) {
      */
     free_job(exec_job);
     mod_gm_free_opt(mod_gm_opt);
+#ifdef EMBEDDEDPERL
+    deinit_embedded_perl();
+#endif
     return exit_status();
 }
 

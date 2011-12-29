@@ -6,9 +6,14 @@
 #include <sys/wait.h>
 #include <sys/time.h>
 
+#include <config.h>
 #include <t/tap.h>
 #include <common.h>
 #include <utils.h>
+#include <check_utils.h>
+#ifdef EMBEDDEDPERL
+#include <epn_utils.h>
+#endif
 #include <gearman.h>
 #include "gearman_utils.h"
 
@@ -66,9 +71,9 @@ void *start_worker(void*data) {
         if(key != NULL) {
             char encryption[150];
             snprintf(encryption, 150, "key=%s", key);
-            execl("./mod_gearman_worker", "./mod_gearman_worker", "debug=2", encryption,      logf, "max-worker=1", options, (char *)NULL);
+            execl("./mod_gearman_worker", "./mod_gearman_worker", "debug=2", encryption,      logf, "max-worker=1", "p1_file=./worker/mod_gearman_p1.pl", options, (char *)NULL);
         } else {
-            execl("./mod_gearman_worker", "./mod_gearman_worker", "debug=2", "encryption=no", logf, "max-worker=1", options, (char *)NULL);
+            execl("./mod_gearman_worker", "./mod_gearman_worker", "debug=2", "encryption=no", logf, "max-worker=1", "p1_file=./worker/mod_gearman_p1.pl", options, (char *)NULL);
         }
         perror("mod_gearman_worker");
         exit(1);
@@ -232,9 +237,9 @@ void wait_for_empty_queue(char *queue, int timeout) {
 }
 
 /* main tests */
-int main(void) {
+int main (int argc, char **argv, char **env) {
     int status, chld;
-    int tests = 57;
+    int tests = 59;
     int rrc;
     char cmd[150];
     char *result, *error;
@@ -242,6 +247,11 @@ int main(void) {
 
     mod_gm_opt = malloc(sizeof(mod_gm_opt_t));
     set_default_options(mod_gm_opt);
+
+#ifdef EMBEDDEDPERL
+    parse_args_line(mod_gm_opt, strdup("p1_file=worker/mod_gearman_p1.pl"), 0);
+    init_embedded_perl(env);
+#endif
 
     char options[150];
     snprintf(options, 150, "--server=localhost:%d", GEARMAND_TEST_PORT);
@@ -373,8 +383,15 @@ int main(void) {
     kill(worker_pid, SIGTERM);
     waitpid(worker_pid, &status, 0);
     ok(status == 0, "worker exited with exit code %d", real_exit_code(status));
+    if(status != 0) {
+        check_logfile("/tmp/gearmand.log", 1);
+    } else {
+        check_logfile("/tmp/gearmand.log", 0);
+    }
 
-    unlink("/tmp/gearmand.log");
+#ifdef EMBEDDEDPERL
+    deinit_embedded_perl();
+#endif
 
     endskip;
     return exit_status();
