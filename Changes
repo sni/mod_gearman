@@ -1,9 +1,11 @@
 This file documents the revision history for mod_gearman.
 
 1.1.2  ...
+          - added embedded perl support (see README for details)
           - added uniq key option for check_gearman (kgovande)
           - added contrib folder
             - added Gearman-Proxy to syncronize jobserver
+          - splitted default config in neb module and worker
 
 1.1.1  Thu Nov 10 11:15:48 CET 2011
           - check_gearman can now send background jobs (Justin Kerr Sheckler)

@@ -12,12 +12,18 @@ DOS2UNIX=$(shell which dos2unix || which fromdos)
 
 .PHONY: docs
 
-# -g adds debug symbols, -s strips
-CFLAGS=-Wall -W -Wstrict-prototypes -Wmissing-prototypes -Wnested-externs -s -O -fPIC
-# for debugging
-#CFLAGS=-pedantic -Wfatal-errors -Wall -W -Wstrict-prototypes -Wshadow -Wpointer-arith -Wcast-qual -Wcast-align -Wstrict-prototypes -Wmissing-prototypes -Wnested-externs -g3 -O -fPIC
 AM_CPPFLAGS=-Iinclude
 OS=`uname`
+
+if USEPERL
+PERLSRC = common/perlxsi.c common/epn_utils.c
+P1FILE  = worker/mod_gearman_p1.pl
+install_p1file = install_p1file
+else
+PERLSRC =
+P1FILE  =
+install_p1file =
+endif
 
 # source definitions
 common_SOURCES             = common/base64.c \
@@ -27,7 +33,8 @@ common_SOURCES             = common/base64.c \
                              common/gearman_utils.c \
                              common/utils.c \
                              common/md5.c \
-                             common/popenRWE.c
+                             common/popenRWE.c \
+                             $(PERLSRC)
 
 pkglib_LIBRARIES           = mod_gearman.so
 mod_gearman_so_SOURCES     = $(common_SOURCES) \
@@ -58,7 +65,7 @@ gearman_top_SOURCES        = $(common_SOURCES) \
 gearman_top_LDADD          = -lncurses
 
 # tests
-check_PROGRAMS   = 01_utils 02_full 03_exec 04_log 05_neb 06_exec
+check_PROGRAMS   = 01_utils 02_full 03_exec 04_log 05_neb 06_exec 07_epn
 01_utils_SOURCES = $(common_SOURCES) t/tap.h t/tap.c t/01-utils.c
 02_full_SOURCES  = $(common_SOURCES) t/tap.h t/tap.c t/02-full.c
 03_exec_SOURCES  = $(common_SOURCES) t/tap.h t/tap.c t/03-exec_checks.c
@@ -68,13 +75,16 @@ check_PROGRAMS   = 01_utils 02_full 03_exec 04_log 05_neb 06_exec
 05_neb_LDFLAGS   = --export-dynamic -rdynamic
 # only used for performance tests
 06_exec_SOURCES  = $(common_SOURCES) t/06-execvp_vs_popen.c
+07_epn_SOURCES   = $(common_SOURCES) t/tap.h t/tap.c t/07-epn.c
 TESTS            = $(check_PROGRAMS)
 
 
 GEARMANDS=/usr/sbin/gearmand /opt/sbin/gearmand
 replace_vars = sed -e 's:%CONFIG%:$(sysconfdir)/mod_gearman.conf:g' \
                -e 's:%PIDFILE%:$(localstatedir)/mod_gearman/mod_gearman_worker.pid:g' \
-               -e 's:%LOGFILE%:$(localstatedir)/mod_gearman/mod_gearman_worker.log:g' \
+               -e 's:%LOGFILE_NEB%:$(localstatedir)/mod_gearman/mod_gearman_neb.log:g' \
+               -e 's:%LOGFILE_WORKER%:$(localstatedir)/mod_gearman/mod_gearman_worker.log:g' \
+               -e 's:%P1FILE%:$(bindir)/mod_gearman/mod_gearman_p1.pl:g' \
                -e 's:%GPIDFILE%:$(localstatedir)/mod_gearman/gearmand.pid:g' \
                -e 's:%GLOGFILE%:$(localstatedir)/mod_gearman/gearmand.log:g' \
                -e 's:%WORKERBIN%:$(bindir)/mod_gearman_worker:g' \
@@ -83,8 +93,9 @@ replace_vars = sed -e 's:%CONFIG%:$(sysconfdir)/mod_gearman.conf:g' \
 EXTRA_DIST = COPYING etc extras include \
              THANKS README docs/README.html Changes worker/initscript.in \
              docs/QUICKSTART docs/QUICKSTART.html support/mod_gearman.spec \
-             t/data/test1.key t/data/test2.key t/data/test3.key send_multi.txt \
-             t/rc t/both t/killer t/sleep
+             t/data/test1.key t/data/test2.key t/data/test3.key t/data/send_multi.txt \
+             t/rc t/both t/killer t/sleep t/crit.pl t/ok.pl t/noepn.pl \
+             worker/mod_gearman_p1.pl
 
 # other targets
 mod_gearman.o: $(mod_gearman_so_OBJECTS) $(mod_gearman_so_DEPENDENCIES)
@@ -95,8 +106,11 @@ mod_gearman.o: $(mod_gearman_so_OBJECTS) $(mod_gearman_so_DEPENDENCIES)
 	fi
 	$(RM) mod_gearman.so
 
-mod_gearman.conf-local:
-	$(replace_vars) etc/mod_gearman.conf.in > etc/mod_gearman.conf
+mod_gearman_neb.conf-local:
+	$(replace_vars) etc/mod_gearman_neb.conf.in > etc/mod_gearman_neb.conf
+
+mod_gearman_worker.conf-local:
+	$(replace_vars) etc/mod_gearman_worker.conf.in > etc/mod_gearman_worker.conf
 
 initscript-local:
 	$(replace_vars) worker/initscript.in > worker/initscript
@@ -112,7 +126,7 @@ gearmand-init-local:
 	sed -i -e 's:%GEARMAND%:/usr/sbin/gearmand:g' extras/gearmand-init
 	chmod 755 extras/gearmand-init
 
-all-local: mod_gearman.o initscript-local mod_gearman.conf-local gearmand-init-local
+all-local: mod_gearman.o initscript-local mod_gearman_neb.conf-local mod_gearman_worker.conf-local gearmand-init-local
 	@echo ""
 	@echo "################################################################"
 	@echo ""
@@ -120,8 +134,10 @@ all-local: mod_gearman.o initscript-local mod_gearman.conf-local gearmand-init-l
 	@echo ""
 	@echo "  mod_gearman.o"
 	@echo "  mod_gearman_worker"
-	@echo "  etc/mod_gearman.conf"
 	@echo "  worker/initscript"
+	@echo "  etc/mod_gearman_neb.conf"
+	@echo "  etc/mod_gearman_worker.conf"
+	@echo "  $(P1FILE)"
 	@echo ""
 	@echo "  read the README for configuration details"
 	@echo ""
@@ -157,7 +173,14 @@ install-local-state-dir:
 	$(RM) $(DESTDIR)$(pkglibdir)/mod_gearman.so
 	$(install_sh_PROGRAM) -d $(DESTDIR)$(localstatedir)/mod_gearman/
 
-install-data-local: install-local-state-dir
+install_p1file:
+	$(install_sh_PROGRAM) -m 755 $(P1FILE)  $(DESTDIR)$(datadir)/mod_gearman/mod_gearman_p1.pl
+	@echo "################################################################"
+	@echo " Installation completed:"
+	@echo " p1file:         $(DESTDIR)$(bindir)/mod_gearman/mod_gearman_p1.pl"
+	@echo "################################################################"
+
+install-data-local: install-local-state-dir $(install_p1file)
 	$(install_sh_PROGRAM) -m 644 extras/shared.conf            $(DESTDIR)$(datadir)/mod_gearman/shared.conf
 	$(install_sh_PROGRAM) -m 644 extras/standalone_worker.conf $(DESTDIR)$(datadir)/mod_gearman/standalone_worker.conf
 	@echo ""
@@ -174,20 +197,32 @@ install-data-local: install-local-state-dir
 	@echo " send multi bin: $(DESTDIR)$(bindir)/send_multi"
 	@echo ""
 	@echo "just add the broker line to your nagios.cfg:"
-	@echo "broker_module=$(DESTDIR)$(pkglibdir)/mod_gearman.o config=$(DESTDIR)$(sysconfdir)/mod_gearman.conf"
+	@echo "broker_module=$(DESTDIR)$(pkglibdir)/mod_gearman.o config=$(DESTDIR)$(sysconfdir)/mod_gearman_neb.conf"
 	@echo ""
-	@echo " install default config with"
-	@echo ""
-	@echo " make install-config"
+	@if [ -e $(DESTDIR)$(sysconfdir)/mod_gearman_neb.conf -o -e $(DESTDIR)$(sysconfdir)/mod_gearman_worker.conf ]; then \
+	    echo " install default config with"; \
+	    echo ""; \
+	    echo " make install-config"; \
+	    echo ""; \
+	else \
+	    $(install_sh_PROGRAM) etc/mod_gearman_neb.conf $(DESTDIR)$(sysconfdir)/mod_gearman_neb.conf; \
+	    $(install_sh_PROGRAM) etc/mod_gearman_worker.conf $(DESTDIR)$(sysconfdir)/mod_gearman_worker.conf; \
+	fi
+	@echo " configuration:"
+	@echo "         neb module: $(DESTDIR)$(sysconfdir)/mod_gearman_neb.conf"
+	@echo "         worker:     $(DESTDIR)$(sysconfdir)/mod_gearman_worker.conf"
 	@echo ""
 	@echo "################################################################"
 
 
 install-config:
-	$(install_sh_PROGRAM) etc/mod_gearman.conf $(DESTDIR)$(sysconfdir)/mod_gearman.conf
+	$(install_sh_PROGRAM) etc/mod_gearman_neb.conf $(DESTDIR)$(sysconfdir)/mod_gearman_neb.conf
+	$(install_sh_PROGRAM) etc/mod_gearman_worker.conf $(DESTDIR)$(sysconfdir)/mod_gearman_worker.conf
 	@echo "################################################################"
 	@echo ""
-	@echo " configuration: $(DESTDIR)$(sysconfdir)/mod_gearman.conf"
+	@echo " configuration:"
+	@echo "         neb module: $(DESTDIR)$(sysconfdir)/mod_gearman_neb.conf"
+	@echo "         worker:     $(DESTDIR)$(sysconfdir)/mod_gearman_worker.conf"
 	@echo ""
 	@echo "################################################################"
 
@@ -248,4 +283,3 @@ version:
 	fi ;
 	sed -i Changes -e "s/$(VERSION)/$$newversion $(shell date)\n          - ...\n\n$(VERSION)/"
 	$(MAKE) docs
-

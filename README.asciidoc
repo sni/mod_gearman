@@ -629,6 +629,38 @@ Default is off.
 ====
 
 
+enable_embedded_perl::
+When embedded perl has been compiled in, you can use this
+switch to enable or disable the embedded perl interpreter.
+See <<_embedded_perl,Embedded Perl>> for details on EPN.
++
+====
+    enable_embedded_perl=on
+====
+
+
+use_embedded_perl_implicitly::
+Default value used when the perl script does not have a
+"nagios: +epn" or "nagios: -epn" set.
+Perl scripts not written for epn support usually fail with epn,
+so its better to set the default to off.
++
+====
+    use_embedded_perl_implicitly=off
+====
+
+
+use_perl_cache::
+Cache compiled perl scripts. This makes the worker process a little
+bit bigger but makes exection of perl scripts even faster.
+When turned off, Mod-Gearman will still use the embedded perl
+interpreter, but will not cache the compiled script.
++
+====
+    use_perl_cache=on
+====
+
+
 workaround_rc_25::
 Duplicate jobs from gearmand result sometimes in exit code 25 of
 plugins because they are executed twice and get killed because of
@@ -756,6 +788,30 @@ are a list of callbacks for which you want to export json data.
 ====
 
 
+Embedded Perl
+-------------
+Since 1.1.2 Mod-Gearman has builtin embedded Perl support which means
+generally a big performance boost when you have lots of perl plugins.
+
+To enable embedded Perl you need to run configure with
+--enable-embedded-perl
+
+--------------------------------------
+  ./configure --enable-embedded-perl otheroptions...
+--------------------------------------
+
+The --with-perlcache configure option has been replace by a runtime
+configure option 'use_perl_cache'.
+
+NOTE: Not all perl plugins support EPN. You can fix them, add '#
+nagios: -epn' in the first 10 lines of the script or set
+'use_embedded_perl_implicitly=off' so all scripts without the explicit
+tag are run without embedded Perl.
+
+General EPN documentation is valid for Mod-Gearman as well:
+
+ * http://nagios.sourceforge.net/docs/3_0/embeddedperl.html[Embedded Perl]
+ * http://nagios.sourceforge.net/docs/3_0/epnplugins.html[Plugin Guidelines]
 
 
 How To

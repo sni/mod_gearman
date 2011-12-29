@@ -1478,6 +1478,59 @@ Default is off.
 </div></div>
 </dd>
 <dt class="hdlist1">
+enable_embedded_perl
+</dt>
+<dd>
+<p>
+When embedded perl has been compiled in, you can use this
+switch to enable or disable the embedded perl interpreter.
+See <a href="#_embedded_perl">Embedded Perl</a> for details on EPN.
+</p>
+<div class="exampleblock">
+<div class="exampleblock-content">
+<div class="literalblock">
+<div class="content">
+<pre><tt>enable_embedded_perl=on</tt></pre>
+</div></div>
+</div></div>
+</dd>
+<dt class="hdlist1">
+use_embedded_perl_implicitly
+</dt>
+<dd>
+<p>
+Default value used when the perl script does not have a
+"nagios: +epn" or "nagios: -epn" set.
+Perl scripts not written for epn support usually fail with epn,
+so its better to set the default to off.
+</p>
+<div class="exampleblock">
+<div class="exampleblock-content">
+<div class="literalblock">
+<div class="content">
+<pre><tt>use_embedded_perl_implicitly=off</tt></pre>
+</div></div>
+</div></div>
+</dd>
+<dt class="hdlist1">
+use_perl_cache
+</dt>
+<dd>
+<p>
+Cache compiled perl scripts. This makes the worker process a little
+bit bigger but makes exection of perl scripts even faster.
+When turned off, Mod-Gearman will still use the embedded perl
+interpreter, but will not cache the compiled script.
+</p>
+<div class="exampleblock">
+<div class="exampleblock-content">
+<div class="literalblock">
+<div class="content">
+<pre><tt>use_perl_cache=on</tt></pre>
+</div></div>
+</div></div>
+</dd>
+<dt class="hdlist1">
 workaround_rc_25
 </dt>
 <dd>
@@ -1644,6 +1697,43 @@ are a list of callbacks for which you want to export json data.
 </div></div>
 </dd>
 </dl></div>
+</div>
+<h2 id="_embedded_perl">Embedded Perl</h2>
+<div class="sectionbody">
+<div class="paragraph"><p>Since 1.1.2 Mod-Gearman has builtin embedded Perl support which means
+generally a big performance boost when you have lots of perl plugins.</p></div>
+<div class="paragraph"><p>To enable embedded Perl you need to run configure with
+--enable-embedded-perl</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><tt>  ./configure --enable-embedded-perl otheroptions...</tt></pre>
+</div></div>
+<div class="paragraph"><p>The --with-perlcache configure option has been replace by a runtime
+configure option <em>use_perl_cache</em>.</p></div>
+<div class="admonitionblock">
+<table><tr>
+<td class="icon">
+<div class="title">Note</div>
+</td>
+<td class="content">Not all perl plugins support EPN. You can fix them, add <em>#
+nagios: -epn</em> in the first 10 lines of the script or set
+<em>use_embedded_perl_implicitly=off</em> so all scripts without the explicit
+tag are run without embedded Perl.</td>
+</tr></table>
+</div>
+<div class="paragraph"><p>General EPN documentation is valid for Mod-Gearman as well:</p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+<a href="http://nagios.sourceforge.net/docs/3_0/embeddedperl.html">Embedded Perl</a>
+</p>
+</li>
+<li>
+<p>
+<a href="http://nagios.sourceforge.net/docs/3_0/epnplugins.html">Plugin Guidelines</a>
+</p>
+</li>
+</ul></div>
 </div>
 <h2 id="_how_to">How To</h2>
 <div class="sectionbody">
@@ -1855,7 +1945,7 @@ Make sure all your worker have the nagios-plugins available under
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2011-11-17 19:36:30 CEST
+Last updated 2011-12-29 13:50:33 CEST
 </div>
 </div>
 </body>

@@ -24,6 +24,7 @@
 /* include header */
 #include "worker.h"
 #include "utils.h"
+#include "epn_utils.h"
 #include "worker_client.h"
 
 int current_number_of_workers                = 0;
@@ -35,8 +36,9 @@ int     last_time_increased;
 volatile sig_atomic_t shmid;
 int   * shm;
 
+
 /* work starts here */
-int main (int argc, char **argv) {
+int main (int argc, char **argv, char **env) {
     int sid, x;
 
     last_time_increased = 0;
@@ -128,6 +130,10 @@ int main (int argc, char **argv) {
 
     /* setup shared memory */
     setup_child_communicator();
+
+#ifdef EMBEDDEDPERL
+    init_embedded_perl(env);
+#endif
 
     /* start status worker */
     make_new_child(GM_WORKER_STATUS);

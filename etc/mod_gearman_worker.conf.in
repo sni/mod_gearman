@@ -17,6 +17,8 @@
 # Default is 0.
 debug=0
 
+# Path to the logfile.
+logfile=%LOGFILE_WORKER%
 
 # sets the addess of your gearman job server. Can be specified
 # more than once to add more server.
@@ -89,45 +91,6 @@ key=should_be_changed
 
 ###############################################################################
 #
-# NEB Module Config
-#
-# the following settings are for the neb module only and
-# will be ignored by the worker.
-#
-###############################################################################
-
-# sets a list of hostgroups which will not be executed
-# by gearman. They are just passed through.
-# Default is none
-localhostgroups=
-
-
-# sets a list of servicegroups which will not be executed
-# by gearman. They are just passed through.
-# Default is none
-localservicegroups=
-
-
-# Number of result worker threads. Usually one is
-# enough. You may increase the value if your
-# result queue is not processed fast enough.
-# Default: 1
-result_workers=1
-
-
-# defines if the module should distribute perfdata
-# to gearman.
-# Note: processing of perfdata is not part of
-# mod_gearman. You will need additional worker for
-# handling performance data. For example: pnp4nagios
-# Performance data is just written to the gearman
-# queue.
-# Default no
-perfdata=no
-
-
-###############################################################################
-#
 # Worker Config
 #
 # the following settings are for the worker only and
@@ -137,9 +100,6 @@ perfdata=no
 
 # Path to the pidfile. Usually set by the init script
 #pidfile=%PIDFILE%
-
-# Path to the logfile.
-logfile=%LOGFILE%
 
 # Minimum number of worker processes which should
 # run at any time.
@@ -174,6 +134,27 @@ fork_on_exec=yes
 # Use this option to show stderr output of plugins too.
 # Default: yes
 show_error_output=yes
+
+# When embedded perl has been compiled in, you can use this
+# switch to enable or disable the embedded perl interpreter.
+enable_embedded_perl=on
+
+# Default value used when the perl script does not have a
+# "nagios: +epn" or "nagios: -epn" set.
+# Perl scripts not written for epn support usually fail with epn,
+# so its better to set the default to off.
+use_embedded_perl_implicitly=off
+
+# Cache compiled perl scripts. This makes the worker process a little
+# bit bigger but makes exection of perl scripts even faster.
+# When turned off, Mod-Gearman will still use the embedded perl
+# interpreter, but will not cache the compiled script.
+use_perl_cache=on
+
+# path to p1 file which is used to execute and cache the
+# perl scripts run by the embedded perl interpreter
+p1_file=%P1FILE%
+
 
 # Workarounds
 

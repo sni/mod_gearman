@@ -21,7 +21,9 @@
  *
  *****************************************************************************/
 
+#include "config.h"
 #include "utils.h"
+#include "epn_utils.h"
 #include "crypt.h"
 #include "base64.h"
 #include "gearman.h"
@@ -31,6 +33,13 @@
 pid_t current_child_pid = 0;
 char temp_buffer1[GM_BUFFERSIZE];
 char temp_buffer2[GM_BUFFERSIZE];
+
+#ifdef EMBEDDEDPERL
+int enable_embedded_perl         = GM_ENABLED;
+int use_embedded_perl_implicitly = GM_DISABLED;
+int use_perl_cache               = GM_ENABLED;
+char *p1_file                    = NULL;
+#endif
 
 /* escapes newlines in a string */
 char *gm_escape_newlines(char *rawbuf, int trimmed) {
@@ -248,6 +257,13 @@ int set_default_options(mod_gm_opt_t *opt) {
     opt->host               = NULL;
     opt->service            = NULL;
 
+#ifdef EMBEDDEDPERL
+    opt->enable_embedded_perl         = GM_ENABLED;
+    opt->use_embedded_perl_implicitly = GM_DISABLED;
+    opt->use_perl_cache               = GM_ENABLED;
+    opt->p1_file                      = NULL;
+#endif
+
     opt->server_num         = 0;
     for(i=0;i<=GM_LISTSIZE;i++)
         opt->server_list[i] = NULL;
@@ -406,6 +422,31 @@ int parse_args_line(mod_gm_opt_t *opt, char * arg, int recursion_level) {
 
     else if ( value == NULL ) {
         gm_log( GM_LOG_ERROR, "unknown switch '%s'\n", key );
+        return(GM_OK);
+    }
+
+    /* enable_embedded_perl */
+    else if ( !strcmp( key, "enable_embedded_perl" ) ) {
+#ifdef EMBEDDEDPERL
+        opt->enable_embedded_perl = parse_yes_or_no(value, GM_ENABLED);
+        enable_embedded_perl = opt->enable_embedded_perl;
+#endif
+        return(GM_OK);
+    }
+    /* use_embedded_perl_implicitly */
+    else if ( !strcmp( key, "use_embedded_perl_implicitly" ) ) {
+#ifdef EMBEDDEDPERL
+        opt->use_embedded_perl_implicitly = parse_yes_or_no(value, GM_ENABLED);
+        use_embedded_perl_implicitly = opt->use_embedded_perl_implicitly;
+#endif
+        return(GM_OK);
+    }
+    /* use_perl_cache */
+    else if ( !strcmp( key, "use_perl_cache" ) ) {
+#ifdef EMBEDDEDPERL
+        opt->use_perl_cache = parse_yes_or_no(value, GM_ENABLED);
+        use_perl_cache = opt->use_perl_cache;
+#endif
         return(GM_OK);
     }
 
@@ -719,6 +760,15 @@ int parse_args_line(mod_gm_opt_t *opt, char * arg, int recursion_level) {
         }
     }
 
+    /* p1_file */
+    else if ( !strcmp( key, "p1_file" ) ) {
+#ifdef EMBEDDEDPERL
+        opt->p1_file = strdup( value );
+        free(p1_file);
+        p1_file = strdup(opt->p1_file);
+#endif
+    }
+
     else {
         gm_log( GM_LOG_ERROR, "unknown option '%s'\n", key );
     }
@@ -805,6 +855,15 @@ void dumpconfig(mod_gm_opt_t *opt, int mode) {
         gm_log( GM_LOG_DEBUG, "max worker:          %d\n", opt->max_worker);
         gm_log( GM_LOG_DEBUG, "spawn rate:          %d\n", opt->spawn_rate);
         gm_log( GM_LOG_DEBUG, "fork on exec:        %s\n", opt->fork_on_exec == GM_ENABLED ? "yes" : "no");
+#ifndef EMBEDDEDPERL
+        gm_log( GM_LOG_DEBUG, "embedded perl:       not compiled\n");
+#endif
+#ifdef EMBEDDEDPERL
+        gm_log( GM_LOG_DEBUG, "\n" );
+        gm_log( GM_LOG_DEBUG, "embedded perl:       %s\n", opt->enable_embedded_perl == GM_ENABLED ? "yes" : "no");
+        gm_log( GM_LOG_DEBUG, "use_epn_implicitly:  %s\n", opt->use_embedded_perl_implicitly == GM_ENABLED ? "yes" : "no");
+        gm_log( GM_LOG_DEBUG, "p1_file:             %s\n", opt->p1_file == NULL ? "not set" : opt->p1_file );
+#endif
     }
     if(mode == GM_NEB_MODE) {
         gm_log( GM_LOG_DEBUG, "debug result:        %s\n", opt->debug_result == GM_ENABLED ? "yes" : "no");
@@ -899,6 +958,9 @@ void mod_gm_free_opt(mod_gm_opt_t *opt) {
     free(opt->service);
     free(opt->identifier);
     free(opt);
+#ifdef EMBEDDEDPERL
+    free(opt->p1_file);
+#endif
 }
 
 
@@ -1104,10 +1166,17 @@ int run_check(char *processed_command, char **ret, char **err) {
     int pipe_stdout[2], pipe_stderr[2], pipe_rwe[3];
     int retval;
 
+#ifdef EMBEDDEDPERL
+    retval = run_epn_check(processed_command, ret, err);
+    if(retval != GM_NO_EPN) {
+        return retval;
+    }
+#endif
+
     /* check for check execution method (shell or execvp) */
     if(!strpbrk(processed_command,"!$^&*()~[]|{};<>?`\"'")) {
         /* use the fast execvp when there are now shell characters */
-        gm_log( GM_LOG_TRACE, "using execvp\n" );
+        gm_log( GM_LOG_TRACE, "using execvp, no shell characters found\n" );
 
         parse_command_line(processed_command,argv);
         if(!argv[0])
@@ -1174,7 +1243,7 @@ int run_check(char *processed_command, char **ret, char **err) {
     }
     else {
         /* use the slower popen when there were shell characters */
-        gm_log( GM_LOG_TRACE, "using popen\n" );
+        gm_log( GM_LOG_TRACE, "using popen, found shell characters\n" );
         current_child_pid = getpid();
         pid = popenRWE(pipe_rwe, processed_command);
 

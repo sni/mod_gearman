@@ -271,9 +271,11 @@ int main(void) {
     if(!ok(pid_alive(gearmand_pid) == TRUE, "gearmand alive")) {
         exit( EXIT_FAILURE );
     }
-    if(!ok(worker_pid > 0, "worker running with pid: %d", worker_pid))
+    if(!ok(worker_pid > 0, "worker started with pid: %d", worker_pid))
         diag("could not start worker");
     if(!ok(pid_alive(worker_pid) == TRUE, "worker alive")) {
+        check_logfile(worker_logfile, 1);
+        kill(gearmand_pid, SIGTERM);
         exit( EXIT_FAILURE );
     }
 

@@ -21,6 +21,7 @@ mod_gearman_worker
 04_log
 05_neb
 06_exec
+07_epn
 images
 send_gearman
 send_multi
@@ -28,3 +29,6 @@ check_gearman
 gearman_top
 *.gz
 *.rpm
+common/perlxsi.c
+etc/mod_gearman_neb.conf
+etc/mod_gearman_worker.conf

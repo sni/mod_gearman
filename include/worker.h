@@ -54,7 +54,7 @@ int mod_gm_shm_key;        /**< key for the shared memory segment */
  *
  * @return when worker exits, returns exit code of worker
  */
-int main (int argc, char **argv);
+int main (int argc, char **argv, char **env);
 
 /**
  * store the commandline to parse it again on reloading the worker

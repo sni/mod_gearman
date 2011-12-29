@@ -9,6 +9,12 @@ AC_CONFIG_SRCDIR([neb_module/mod_gearman.c],[worker/worker.c],[tools/send_gearma
 AC_CONFIG_HEADER([config.h])
 
 ##############################################
+# -g adds debug symbols, -s strips
+CFLAGS="-Wall -W -Wstrict-prototypes -Wmissing-prototypes -Wnested-externs -s -O -fPIC"
+# for debugging
+#CFLAGS=-pedantic -Wfatal-errors -Wall -W -Wstrict-prototypes -Wshadow -Wpointer-arith -Wcast-qual -Wcast-align -Wstrict-prototypes -Wmissing-prototypes -Wnested-externs -g3 -O -fPIC
+
+##############################################
 # Checks for programs.
 AC_PROG_CXX
 AC_PROG_CC
@@ -34,8 +40,8 @@ AC_CHECK_HEADERS([curses.h],,AC_MSG_ERROR([Compiling mod_gearman requires curses
 
 AC_ARG_WITH(gearman,
  [  --with-gearman=DIR Specify the path to your gearman library],
- [  LDFLAGS="$LDFLAGS -L$withval/lib"
-    CFLAGS="$CFLAGS -I$withval/include"
+ [  LDFLAGS="${LDFLAGS} -L$withval/lib"
+    CFLAGS="${CFLAGS} -I$withval/include"
  ])
 
 ##############################################
@@ -55,6 +61,23 @@ AC_ARG_WITH([user],
 [], [with_user="nagios"])
 user="$with_user"
 AC_SUBST(user)
+
+##############################################
+USEPERL=no;
+AC_ARG_ENABLE(embedded-perl,--enable-embedded-perl will enable embedded Perl interpreter,[
+    USEPERL=$enableval
+    ]
+    ,USEPERL=no)
+
+dnl Is embedded Perl being compiled in?
+AM_CONDITIONAL(USEPERL, test "$USEPERL" = "yes")
+if test "$USEPERL" == "yes"; then
+    AC_DEFINE_UNQUOTED(EMBEDDEDPERL,,[Is embedded Perl being compiled in?])
+    CFLAGS="${CFLAGS} `perl -MExtUtils::Embed -e ccopts` -lperl"
+    echo "creating common/perlxsi.c"
+    perl -MExtUtils::Embed -e xsinit -- -o common/perlxsi.c
+    echo "Embedded Perl interpreter will be compiled in..."
+fi
 
 ##############################################
 # Check some functions

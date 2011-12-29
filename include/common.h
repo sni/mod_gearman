@@ -45,6 +45,7 @@
  *  @{
  */
 
+#include <config.h>
 #include <stdio.h>
 #include <sys/time.h>
 
@@ -65,6 +66,7 @@
 
 #define GM_OK                           0
 #define GM_ERROR                        1
+#define GM_NO_EPN                      -1
 
 /* log modes */
 #define GM_LOG_ERROR                   -1
@@ -204,6 +206,12 @@ typedef struct mod_gm_opt_struct {
     int            max_jobs;                                /**< maximum number of jobs done after a worker exits */
     int            spawn_rate;                              /**< number of spawned new worker */
     int            show_error_output;                       /**< optional display the stderr output of plugins */
+#ifdef EMBEDDEDPERL
+    int            enable_embedded_perl;                    /**< enabled embedded perl */
+    int            use_embedded_perl_implicitly;            /**< use embedded perl implicitly */
+    int            use_perl_cache;                          /**< cache embedded perl scripts */
+    char         * p1_file;                                 /**< path to p1 file, needed for embedded perl */
+#endif
     int            workaround_rc_25;                        /**< optional workaround for plugins returning exit code 25 */
 /* send_gearman */
     int            timeout;                                 /**< timeout for waiting reading on stdin */
