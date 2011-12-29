@@ -97,7 +97,7 @@ replace_vars = sed -e 's:%CONFIG%:$(sysconfdir)/mod_gearman.conf:g' \
                -e 's:%PIDFILE%:$(localstatedir)/mod_gearman/mod_gearman_worker.pid:g' \
                -e 's:%LOGFILE_NEB%:$(localstatedir)/mod_gearman/mod_gearman_neb.log:g' \
                -e 's:%LOGFILE_WORKER%:$(localstatedir)/mod_gearman/mod_gearman_worker.log:g' \
-               -e 's:%P1FILE%:$(bindir)/mod_gearman/mod_gearman_p1.pl:g' \
+               -e 's:%P1FILE%:$(datadir)/mod_gearman/mod_gearman_p1.pl:g' \
                -e 's:%GPIDFILE%:$(localstatedir)/mod_gearman/gearmand.pid:g' \
                -e 's:%GLOGFILE%:$(localstatedir)/mod_gearman/gearmand.log:g' \
                -e 's:%WORKERBIN%:$(bindir)/mod_gearman_worker:g' \
@@ -200,7 +200,7 @@ install_p1file:
 	$(install_sh_PROGRAM) -m 755 $(P1FILE)  $(DESTDIR)$(datadir)/mod_gearman/mod_gearman_p1.pl
 	@echo "################################################################"
 	@echo " Installation completed:"
-	@echo " p1file:         $(DESTDIR)$(bindir)/mod_gearman/mod_gearman_p1.pl"
+	@echo " p1file:         $(DESTDIR)$(datadir)/mod_gearman/mod_gearman_p1.pl"
 	@echo "################################################################"
 
 install-data-local: install-local-state-dir $(install_p1file)
