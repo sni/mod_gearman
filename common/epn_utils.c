@@ -44,7 +44,7 @@ int run_epn_check(char *processed_command, char **ret, char **err) {
     int retval;
     int pipe_stdout[2], pipe_stderr[2];
     char fname[512]="";
-    char *args[5]={"",use_perl_cache==GM_ENABLED ? 0 : 1, "", "", NULL };
+    char *args[5]={"",use_perl_cache==GM_ENABLED ? "0" : "1", "", "", NULL };
     char *perl_plugin_output=NULL;
     SV *plugin_hndlr_cr;
     int count;

@@ -16,8 +16,7 @@ use constant	DEBUG_LEVEL		=> 0 ;
 # use constant	DEBUG_LEVEL		=> LEAVE_MSG | CACHE_DUMP ;
 # use constant	DEBUG_LEVEL		=> LEAVE_MSG | CACHE_DUMP | PLUGIN_DUMP ;
 
-use constant	DEBUG_LOG_PATH		=> '/usr/local/nagios/var/' ;
-# use constant	DEBUG_LOG_PATH		=> './' ;
+use constant	DEBUG_LOG_PATH		=> './' ;
 use constant	LEAVE_MSG_STREAM	=> DEBUG_LOG_PATH . 'epn_leave-msgs.log' ;
 use constant	CACHE_DUMP_STREAM	=> DEBUG_LOG_PATH . 'epn_cache-dump.log' ;
 use constant	PLUGIN_DUMP_STREAM	=> DEBUG_LOG_PATH . 'epn_plugin-dump.log' ;
