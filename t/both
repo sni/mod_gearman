@@ -1,5 +1,5 @@
 #!/bin/bash
 
-echo "out"
-echo "err" >&2
+echo "stdout output"
+echo "stderr output" >&2
 

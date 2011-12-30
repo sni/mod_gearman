@@ -25,6 +25,7 @@ int worker_pid;
 gearman_worker_st worker;
 gearman_client_st client;
 mod_gm_opt_t *mod_gm_opt;
+char * last_result;
 
 
 /* start the gearmand server */
@@ -96,8 +97,8 @@ void test_eventhandler(int transportmode) {
 
 
 /* test service check handler over gearmand */
-void test_servicecheck(int transportmode);
-void test_servicecheck(int transportmode) {
+void test_servicecheck(int transportmode, char*cmd);
+void test_servicecheck(int transportmode, char*cmd) {
     struct timeval start_time;
     gettimeofday(&start_time,NULL);
     char temp_buffer[GM_BUFFERSIZE];
@@ -113,7 +114,7 @@ void test_servicecheck(int transportmode) {
               1,
               1,
               0.0,
-              "/bin/hostname"
+              cmd==NULL ? "/bin/hostname" : cmd
             );
     temp_buffer[sizeof( temp_buffer )-1]='\x0';
     int rt = add_job_to_queue( &client, mod_gm_opt->server_list, "service", NULL, temp_buffer, GM_JOB_PRIO_NORMAL, 1, transportmode, TRUE );
@@ -153,11 +154,70 @@ void send_big_jobs(int transportmode) {
     return;
 }
 
-/* create server / worker / clients */
+/* put back the result into the core */
+void *get_results( gearman_job_st *job, void *context, size_t *result_size, gearman_return_t *ret_ptr );
+void *get_results( gearman_job_st *job, void *context, size_t *result_size, gearman_return_t *ret_ptr ) {
+    int wsize;
+    char workload[GM_BUFFERSIZE];
+    char *decrypted_data;
+
+    /* contect is unused */
+    context = context;
+
+    /* set size of result */
+    *result_size = 0;
+
+    /* set result pointer to success */
+    *ret_ptr = GEARMAN_SUCCESS;
+
+    /* get the data */
+    wsize = gearman_job_workload_size(job);
+    strncpy(workload, (const char*)gearman_job_workload(job), wsize);
+    workload[wsize] = '\x0';
+
+    /* decrypt data */
+    decrypted_data   = malloc(GM_BUFFERSIZE);
+    mod_gm_decrypt(&decrypted_data, workload, mod_gm_opt->transportmode);
+
+    if(decrypted_data == NULL) {
+        *ret_ptr = GEARMAN_WORK_FAIL;
+        return NULL;
+    }
+    //diag("got result %s\n", gearman_job_handle( job ));
+    //diag("%d --->\n%s\n<---\n", strlen(decrypted_data), decrypted_data );
+
+    like(decrypted_data, "host_name=host1", "output contains host_name");
+    like(decrypted_data, "output=", "output contains output");
+
+    if(last_result != NULL)
+        free(last_result);
+    last_result = strdup(decrypted_data);
+
+    return NULL;
+}
+
+/* create server / clients / worker */
 void create_modules(void);
 void create_modules() {
     ok(create_client( mod_gm_opt->server_list, &client ) == GM_OK, "created test client");
+
     ok(create_worker( mod_gm_opt->server_list, &worker ) == GM_OK, "created test worker");
+    //gearman_worker_add_options(&worker, GEARMAN_WORKER_NON_BLOCKING);
+    gearman_worker_set_timeout(&worker, 5000);
+    ok(worker_add_function( &worker, GM_DEFAULT_RESULT_QUEUE, get_results ) == GM_OK, "added result worker");
+    ok(worker_add_function( &worker, "dummy", dummy ) == GM_OK, "added dummy worker");
+    return;
+}
+
+/* grab one job from result queue */
+void do_result_work(int);
+void do_result_work(int nr) {
+    gearman_return_t ret;
+    int x = 0;
+    for(x=0;x<nr;x++) {
+        ret = gearman_worker_work( &worker );
+        //ok(ret == GEARMAN_SUCCESS, 'got valid job' );
+    }
     return;
 }
 
@@ -200,6 +260,7 @@ void check_logfile(char *logfile, int mode) {
     return;
 }
 
+/* wait till the given queue is empty */
 void wait_for_empty_queue(char *queue, int timeout);
 void wait_for_empty_queue(char *queue, int timeout) {
     char * message = NULL;
@@ -239,7 +300,7 @@ void wait_for_empty_queue(char *queue, int timeout) {
 /* main tests */
 int main (int argc, char **argv, char **env) {
     int status, chld;
-    int tests = 59;
+    int tests = 88;
     int rrc;
     char cmd[150];
     char *result, *error;
@@ -293,17 +354,37 @@ int main (int argc, char **argv, char **env) {
                tests-3,             /* Number of tests to skip */
                "Skipping all tests, no need to go on without gearmand or worker");
 
-    /* create server / worker / clients */
+    /* create server / clients */
+    mod_gm_opt->transportmode = GM_ENCODE_ONLY;
     create_modules();
 
     /* send big job */
     send_big_jobs(GM_ENCODE_ONLY);
+    do_result_work(1);
+
+    /*****************************************
+     * test check
+     */
+    test_servicecheck(GM_ENCODE_ONLY, "./t/crit.pl");
+    do_result_work(1);
+    like(last_result, "test plugin CRITICAL", "stdout output from ./t/crit.pl");
+    like(last_result, "some errors on stderr", "stderr output from ./t/crit.pl");
+
+    /*****************************************
+     * test check2
+     */
+    test_servicecheck(GM_ENCODE_ONLY, "./t/both");
+    do_result_work(1);
+    like(last_result, "stdout output", "stdout output from ./t/both");
+    like(last_result, "stderr output", "stderr output from ./t/both");
 
     /* try to send some data with base64 only */
     test_eventhandler(GM_ENCODE_ONLY);
-    test_servicecheck(GM_ENCODE_ONLY);
+    test_servicecheck(GM_ENCODE_ONLY, NULL);
+    do_result_work(1);
     wait_for_empty_queue("eventhandler", 20);
     wait_for_empty_queue("service", 5);
+    wait_for_empty_queue(GM_DEFAULT_RESULT_QUEUE, 5);
     sleep(1);
     kill(worker_pid, SIGTERM);
     waitpid(worker_pid, &status, 0);
@@ -322,16 +403,19 @@ int main (int argc, char **argv, char **env) {
 
     int i;
     for(i=0;i<4;i++) {
+        mod_gm_opt->transportmode = GM_ENCODE_AND_ENCRYPT;
         start_worker((void *)test_keys[i]);
 
         mod_gm_crypt_init( test_keys[i] );
         ok(1, "initialized with key: %s", test_keys[i]);
 
         test_eventhandler(GM_ENCODE_AND_ENCRYPT);
-        test_servicecheck(GM_ENCODE_AND_ENCRYPT);
+        test_servicecheck(GM_ENCODE_AND_ENCRYPT, NULL);
+        do_result_work(1);
 
         wait_for_empty_queue("eventhandler", 20);
         wait_for_empty_queue("service", 5);
+        wait_for_empty_queue(GM_DEFAULT_RESULT_QUEUE, 5);
         sleep(1);
 
         kill(worker_pid, SIGTERM);
@@ -368,7 +452,6 @@ int main (int argc, char **argv, char **env) {
     cmp_ok(rrc, "==", 0, "cmd '%s' returned rc %d", cmd, rrc);
     like(result, "check_gearman OK - sending background job succeded", "output from ./check_gearman");
 
-
     /* cleanup */
     free(result);
     free(error);
@@ -395,6 +478,7 @@ int main (int argc, char **argv, char **env) {
     deinit_embedded_perl();
 #endif
 
+    free(last_result);
     endskip;
     return exit_status();
 }

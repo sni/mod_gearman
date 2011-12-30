@@ -321,4 +321,3 @@ void write_debug_file(char ** text) {
     fclose( fd );
 }
 #endif
-
