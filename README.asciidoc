@@ -40,8 +40,20 @@ Support & Questions
   Let me know if you find one.
 * https://groups.google.com/group/mod_gearman[google groups mailinglist]
 * http://labs.consol.de/lang/de/forum/#/categories/mod-gearman[support forum]
+* http://www.nagios-portal.org[german nagios portal]
 * Debian users may be interested in the http://labs.consol.de/nagios/mod-gearman/mod-gearman-quickstart-guide/[quickstart guide].
 * Debian users may also be interested in the official packages: http://packages.debian.org/source/wheezy/mod-gearman
+
+
+Supported Gearman Versions
+--------------------------
+Mod-Gearman has successfully been tested on the following Gearmand
+Versions. It is recommended to always use the latest listed version of
+Gearman.
+
+ * https://launchpad.net/gearmand/trunk/0.25[0.25]
+ * https://launchpad.net/gearmand/trunk/0.23[0.23]
+ * https://launchpad.net/gearmand/trunk/0.14[0.14]
 
 
 How does it work
