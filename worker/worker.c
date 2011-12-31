@@ -24,7 +24,6 @@
 /* include header */
 #include "worker.h"
 #include "utils.h"
-#include "epn_utils.h"
 #include "worker_client.h"
 
 int current_number_of_workers                = 0;
@@ -57,12 +56,6 @@ int main (int argc, char **argv, char **env) {
     if(parse_arguments(argc, argv) != GM_OK) {
         exit( EXIT_FAILURE );
     }
-
-#ifdef EMBEDDEDPERL
-    if(init_embedded_perl(env) == GM_ERROR) {
-        exit( EXIT_FAILURE );
-    }
-#endif
 
     /* fork into daemon mode? */
     if(mod_gm_opt->daemon_mode == GM_ENABLED) {
@@ -132,7 +125,7 @@ int main (int argc, char **argv, char **env) {
     /* start a single non forked standalone worker */
     if(mod_gm_opt->debug_level >= 10) {
         gm_log( GM_LOG_TRACE, "starting standalone worker\n");
-        worker_client(GM_WORKER_STANDALONE, 1, shmid);
+        worker_client(GM_WORKER_STANDALONE, 1, shmid, start_env);
         exit(EXIT_SUCCESS);
     }
 
@@ -296,7 +289,7 @@ int make_new_child(int mode) {
         shm[next_shm_index] = -getpid();
 
         /* do the real work */
-        worker_client(mode, next_shm_index, shmid);
+        worker_client(mode, next_shm_index, shmid, start_env);
 
         exit(EXIT_SUCCESS);
     }
@@ -563,10 +556,6 @@ int adjust_number_of_worker(int min, int max, int cur_workers, int cur_jobs) {
 void clean_exit(int sig) {
     gm_log( GM_LOG_TRACE, "clean_exit(%d)\n", sig);
 
-#ifdef EMBEDDEDPERL
-    deinit_embedded_perl();
-#endif
-
     if(mod_gm_opt->pidfile != NULL)
         unlink(mod_gm_opt->pidfile);
 
@@ -755,19 +744,8 @@ void reload_config(int sig) {
      */
     stop_childs(GM_WORKER_RESTART);
 
-#ifdef EMBEDDEDPERL
-    deinit_embedded_perl();
-#endif
-
     /* start status worker */
     make_new_child(GM_WORKER_STATUS);
-
-#ifdef EMBEDDEDPERL
-    if(init_embedded_perl(start_env) == GM_ERROR) {
-        gm_log( GM_LOG_ERROR, "reload config failed, check your config\n");
-        return;
-    }
-#endif
 
     gm_log( GM_LOG_INFO, "reloading config was successful\n");
 

@@ -116,5 +116,17 @@ void check_alarm_handler(int sig);
 void send_timeout_result(gm_job_t * exec_job);
 
 /**
+ * send_failed_result
+ *
+ * send back a fail result
+ *
+ * @param[in] exec_job - the exec job with all results
+ * @param[in] signal - signal number why the job failed
+ *
+ * @return nothing
+ */
+void send_failed_result(gm_job_t * exec_job, int sig);
+
+/**
  * @}
  */

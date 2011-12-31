@@ -1506,7 +1506,7 @@ void gm_log( int lvl, const char *text, ... ) {
         level  = "DEBUG";
         slevel = LOG_DEBUG;
     }
-    else if ( lvl == GM_LOG_TRACE ) {
+    else if ( lvl >= GM_LOG_TRACE ) {
         level  = "TRACE";
         slevel = LOG_DEBUG;
     }

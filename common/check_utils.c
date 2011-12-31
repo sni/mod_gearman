@@ -442,6 +442,30 @@ void send_timeout_result(gm_job_t * exec_job) {
 }
 
 
+/* send failed result */
+void send_failed_result(gm_job_t * exec_job, int sig) {
+    struct timeval end_time;
+    char buffer[GM_BUFFERSIZE];
+    buffer[0] = '\x0';
+
+    gm_log( GM_LOG_TRACE, "send_failed_result()\n");
+
+    gettimeofday(&end_time, NULL);
+    exec_job->finish_time = end_time;
+    exec_job->return_code = STATE_CRITICAL;
+
+    char * signame = nr2signal(sig);
+    snprintf( buffer, sizeof( buffer )-1, "(Return code of %d is out of bounds. Worker exited by signal %s on worker: %s)", sig, signame, mod_gm_opt->identifier);
+    free(exec_job->output);
+    exec_job->output = strdup( buffer );
+    free(signame);
+
+    send_result_back(exec_job);
+
+    return;
+}
+
+
 /* convert a command line to an array of arguments, suitable for exec* functions */
 int parse_command_line(char *cmd, char *argv[MAX_CMD_ARGS]) {
     unsigned int argc=0;

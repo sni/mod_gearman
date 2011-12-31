@@ -44,7 +44,7 @@
 #define GM_WORKER_STANDALONE    1
 #define GM_WORKER_STATUS        2
 
-void worker_client(int worker_mode, int indx, int shid);
+void worker_client(int worker_mode, int indx, int shid, char**env);
 void worker_loop(void);
 void *get_job( gearman_job_st *, void *, size_t *, gearman_return_t * );
 void do_exec_job(void);

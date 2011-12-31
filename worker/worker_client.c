@@ -28,6 +28,9 @@
 #include "utils.h"
 #include "check_utils.h"
 #include "gearman.h"
+#ifdef EMBEDDEDPERL
+#include "epn_utils.h"
+#endif
 
 char temp_buffer1[GM_BUFFERSIZE];
 char temp_buffer2[GM_BUFFERSIZE];
@@ -46,7 +49,8 @@ int shm_index = 0;
 volatile sig_atomic_t shmid;
 
 /* callback for task completed */
-void worker_client(int worker_mode, int indx, int shid) {
+void worker_client(int worker_mode, int indx, int shid, char **env) {
+    env=env;
 
     gm_log( GM_LOG_TRACE, "%s worker client started\n", (worker_mode == GM_WORKER_STATUS ? "status" : "job" ));
 
@@ -80,6 +84,12 @@ void worker_client(int worker_mode, int indx, int shid) {
         gm_log( GM_LOG_ERROR, "cannot start client for duplicate server\n" );
         exit( EXIT_FAILURE );
     }
+
+#ifdef EMBEDDEDPERL
+    if(init_embedded_perl(env) == GM_ERROR) {
+        exit( EXIT_FAILURE );
+    }
+#endif
 
     worker_loop();
 
@@ -250,6 +260,8 @@ void *get_job( gearman_job_st *job, void *context, size_t *result_size, gearman_
     /* send finish signal to parent */
     set_state(GM_JOB_END);
 
+    current_gearman_job = NULL;
+
     /* start listening to SIGTERMs */
     sigprocmask(SIG_SETMASK, &old_mask, NULL);
 
@@ -262,8 +274,6 @@ void *get_job( gearman_job_st *job, void *context, size_t *result_size, gearman_
         clean_worker_exit(0);
         exit( EXIT_SUCCESS );
     }
-
-    current_gearman_job = NULL;
 
     return NULL;
 }
@@ -437,12 +447,22 @@ void clean_worker_exit(int sig) {
 
     gm_log( GM_LOG_TRACE, "clean_worker_exit(%d)\n", sig);
 
+    /* clear gearmans job, otherwise it would be retried and retried */
+    if(current_gearman_job != NULL) {
+        send_failed_result(current_job, sig);
+        gearman_job_send_complete(current_gearman_job, NULL, 0);
+    }
+
     gm_log( GM_LOG_TRACE, "cleaning worker\n");
     gearman_worker_unregister_all(&worker);
     gearman_job_free_all( &worker );
     gm_log( GM_LOG_TRACE, "cleaning client\n");
     gearman_client_free( &client );
     mod_gm_free_opt(mod_gm_opt);
+
+#ifdef EMBEDDEDPERL
+    deinit_embedded_perl();
+#endif
 
     /* Now we attach the segment to our data space. */
     if ((shm = shmat(shmid, NULL, 0)) == (int *) -1) {
