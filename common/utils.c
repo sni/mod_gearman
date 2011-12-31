@@ -244,7 +244,7 @@ int set_default_options(mod_gm_opt_t *opt) {
     opt->max_worker         = GM_DEFAULT_MAX_WORKER;
     opt->transportmode      = GM_ENCODE_AND_ENCRYPT;
     opt->daemon_mode        = GM_DISABLED;
-    opt->fork_on_exec       = GM_ENABLED;
+    opt->fork_on_exec       = GM_DISABLED;
     opt->idle_timeout       = GM_DEFAULT_IDLE_TIMEOUT;
     opt->max_jobs           = GM_DEFAULT_MAX_JOBS;
     opt->spawn_rate         = GM_DEFAULT_SPAWN_RATE;
@@ -419,11 +419,6 @@ int parse_args_line(mod_gm_opt_t *opt, char * arg, int recursion_level) {
         return(GM_OK);
     }
 
-    else if ( value == NULL ) {
-        gm_log( GM_LOG_ERROR, "unknown switch '%s'\n", key );
-        return(GM_OK);
-    }
-
     /* enable_embedded_perl */
     else if ( !strcmp( key, "enable_embedded_perl" ) ) {
 #ifdef EMBEDDEDPERL
@@ -446,6 +441,11 @@ int parse_args_line(mod_gm_opt_t *opt, char * arg, int recursion_level) {
         opt->use_perl_cache = parse_yes_or_no(value, GM_ENABLED);
         use_perl_cache = opt->use_perl_cache;
 #endif
+        return(GM_OK);
+    }
+
+    else if ( value == NULL ) {
+        gm_log( GM_LOG_ERROR, "unknown switch '%s'\n", key );
         return(GM_OK);
     }
 
@@ -861,6 +861,7 @@ void dumpconfig(mod_gm_opt_t *opt, int mode) {
         gm_log( GM_LOG_DEBUG, "\n" );
         gm_log( GM_LOG_DEBUG, "embedded perl:       %s\n", opt->enable_embedded_perl == GM_ENABLED ? "yes" : "no");
         gm_log( GM_LOG_DEBUG, "use_epn_implicitly:  %s\n", opt->use_embedded_perl_implicitly == GM_ENABLED ? "yes" : "no");
+        gm_log( GM_LOG_DEBUG, "use_perl_cache:      %s\n", opt->use_perl_cache == GM_ENABLED ? "yes" : "no");
         gm_log( GM_LOG_DEBUG, "p1_file:             %s\n", opt->p1_file == NULL ? "not set" : opt->p1_file );
 #endif
     }
