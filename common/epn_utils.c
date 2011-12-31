@@ -140,6 +140,8 @@ int run_epn_check(char *processed_command, char **ret, char **err) {
         close(pipe_stderr[1]);
         current_child_pid = getpid();
 
+        gm_log(GM_LOG_TRACE,"Embedded Perl starting %s\n",fname);
+
         /* run the perl script */
         ENTER;
         SAVETMPS;
@@ -153,12 +155,11 @@ int run_epn_check(char *processed_command, char **ret, char **err) {
         SPAGAIN;
         perl_plugin_output = POPpx;
         retval = POPi;
-        gm_log(GM_LOG_TRACE,"Embedded Perl ran %s: return code=%d, plugin output=%s\n",fname,retval,perl_plugin_output);
 
         /* NOTE: 07/16/07 This has to be done before FREETMPS statement below, or the POPpx pointer will be invalid (Hendrik B.) */
-        /* get perl plugin output - escape newlines */
         if(perl_plugin_output!=NULL) {
             printf("%s\n", perl_plugin_output);
+            gm_log(GM_LOG_TRACE,"Embedded Perl ran %s: return code=%d, plugin output=%s\n",fname,retval,perl_plugin_output);
         }
 
         PUTBACK;

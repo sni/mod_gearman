@@ -130,24 +130,24 @@ common/epn_utils.o:
 	$(am__mv) $$depbase.Tpo $$depbase.Po
 
 mod_gearman_neb.conf-local:
-	$(replace_vars) etc/mod_gearman_neb.conf.in > etc/mod_gearman_neb.conf
+	@$(replace_vars) etc/mod_gearman_neb.conf.in > etc/mod_gearman_neb.conf
 
 mod_gearman_worker.conf-local:
-	$(replace_vars) etc/mod_gearman_worker.conf.in > etc/mod_gearman_worker.conf
+	@$(replace_vars) etc/mod_gearman_worker.conf.in > etc/mod_gearman_worker.conf
 
 initscript-local:
-	$(replace_vars) worker/initscript.in > worker/initscript
+	@$(replace_vars) worker/initscript.in > worker/initscript
 
 gearmand-init-local:
-	$(replace_vars) extras/gearmand-init.in > extras/gearmand-init
-	if [ ! -z $$(which gearmand 2>/dev/null) ]; then \
+	@$(replace_vars) extras/gearmand-init.in > extras/gearmand-init
+	@if [ ! -z $$(which gearmand 2>/dev/null) ]; then \
 	    sed -i -e "s:%GEARMAND%:$$(which gearmand 2>/dev/null):g" extras/gearmand-init; \
 	fi
-	for gearm in $(GEARMANDS); do \
+	@for gearm in $(GEARMANDS); do \
   	    test -f $$gearm && sed -i -e "s:%GEARMAND%:$$gearm:g" extras/gearmand-init ; \
 	done; echo done
-	sed -i -e 's:%GEARMAND%:/usr/sbin/gearmand:g' extras/gearmand-init
-	chmod 755 extras/gearmand-init
+	@sed -i -e 's:%GEARMAND%:/usr/sbin/gearmand:g' extras/gearmand-init
+	@chmod 755 extras/gearmand-init
 
 all-local: mod_gearman.o initscript-local mod_gearman_neb.conf-local mod_gearman_worker.conf-local gearmand-init-local
 	@echo ""
