@@ -29,6 +29,8 @@
 #include "gearman.h"
 
 #ifdef EMBEDDEDPERL
+#include <EXTERN.h>
+#include <perl.h>
 #include  "include/nagios/epn_nagios.h"
 int use_embedded_perl            = TRUE;
 static PerlInterpreter *my_perl  = NULL;
@@ -44,7 +46,7 @@ int run_epn_check(char *processed_command, char **ret, char **err) {
     int retval;
     int pipe_stdout[2], pipe_stderr[2];
     char fname[512]="";
-    char *args[5]={"",use_perl_cache==GM_ENABLED ? "0" : "1", "", "", NULL };
+    char *args[5]={"",NULL, "", "", NULL };
     char *perl_plugin_output=NULL;
     SV *plugin_hndlr_cr;
     int count;
@@ -72,6 +74,7 @@ int run_epn_check(char *processed_command, char **ret, char **err) {
     gm_log(GM_LOG_DEBUG, "Using Embedded Perl interpreter for: %s\n", fname);
 
     args[0]=fname;
+    args[1]=use_perl_cache==GM_ENABLED ? "0" : "1";
     args[2]="";
 
     if(strchr(processed_command,' ')==NULL)
@@ -107,12 +110,11 @@ int run_epn_check(char *processed_command, char **ret, char **err) {
     }
     else {
         plugin_hndlr_cr=newSVsv(POPs);
-        gm_log( GM_LOG_TRACE, "Embedded Perl successfully compiled %s and returned code ref to plugin handler\n", fname );
         PUTBACK;
         FREETMPS;
         LEAVE;
+        gm_log( GM_LOG_TRACE, "Embedded Perl successfully compiled %s and returned code ref to plugin handler\n", fname );
     }
-
     /* now run run the check */
     if(pipe(pipe_stdout)) {
         gm_log( GM_LOG_ERROR, "error creating pipe: %s\n", strerror(errno));
@@ -128,6 +130,7 @@ int run_epn_check(char *processed_command, char **ret, char **err) {
     }
     else if(!pid) {
         /* child process */
+        gm_log( GM_LOG_TRACE, "Embedded Perl Child\n" );
         if((dup2(pipe_stdout[1],STDOUT_FILENO)<0)){
             gm_log( GM_LOG_ERROR, "dup2 error\n");
             _exit(STATE_UNKNOWN);
@@ -140,7 +143,11 @@ int run_epn_check(char *processed_command, char **ret, char **err) {
         close(pipe_stderr[1]);
         current_child_pid = getpid();
 
-        gm_log(GM_LOG_TRACE,"Embedded Perl starting %s\n",fname);
+        /* remove parents signal handler */
+        signal(SIGINT,  SIG_DFL);
+        signal(SIGTERM, SIG_DFL);
+        signal(SIGHUP,  SIG_DFL);
+        signal(SIGPIPE, SIG_DFL);
 
         /* run the perl script */
         ENTER;
@@ -156,10 +163,9 @@ int run_epn_check(char *processed_command, char **ret, char **err) {
         perl_plugin_output = POPpx;
         retval = POPi;
 
-        /* NOTE: 07/16/07 This has to be done before FREETMPS statement below, or the POPpx pointer will be invalid (Hendrik B.) */
         if(perl_plugin_output!=NULL) {
             printf("%s\n", perl_plugin_output);
-            gm_log(GM_LOG_TRACE,"Embedded Perl ran %s: return code=%d, plugin output=%s\n",fname,retval,perl_plugin_output);
+            //gm_log(GM_LOG_TRACE,"Embedded Perl ran %s: return code=%d, plugin output=%s\n",fname,retval,perl_plugin_output);
         }
 
         PUTBACK;

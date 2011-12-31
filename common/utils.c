@@ -23,7 +23,6 @@
 
 #include "config.h"
 #include "utils.h"
-#include "epn_utils.h"
 #include "crypt.h"
 #include "base64.h"
 #include "gearman.h"
@@ -34,6 +33,7 @@ char temp_buffer1[GM_BUFFERSIZE];
 char temp_buffer2[GM_BUFFERSIZE];
 
 #ifdef EMBEDDEDPERL
+#include "epn_utils.h"
 int enable_embedded_perl         = GM_ENABLED;
 int use_embedded_perl_implicitly = GM_DISABLED;
 int use_perl_cache               = GM_ENABLED;

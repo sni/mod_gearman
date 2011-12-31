@@ -298,9 +298,9 @@ int execute_safe_command(gm_job_t * exec_job, int fork_exec, char * identifier) 
     /* we are the parent */
     if( fork_exec == GM_DISABLED || pid > 0 ){
 
-        gm_log( GM_LOG_TRACE, "started check with pid: %d\n", pid);
-
         if( fork_exec == GM_ENABLED) {
+            gm_log( GM_LOG_TRACE, "started check with pid: %d\n", pid);
+
             close(pipe_stdout[1]);
             close(pipe_stderr[1]);
 
