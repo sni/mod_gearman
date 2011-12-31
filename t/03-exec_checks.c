@@ -8,10 +8,14 @@
 #include <common.h>
 #include <utils.h>
 #include <check_utils.h>
+#ifdef EMBEDDEDPERL
+#include <epn_utils.h>
+#endif
 
 mod_gm_opt_t *mod_gm_opt;
 
 int main (int argc, char **argv, char **env) {
+    argc = argc; argv = argv; env  = env;
     int rc, rrc;
     char *result, *error;
     char cmd[120];

@@ -297,8 +297,21 @@ void wait_for_empty_queue(char *queue, int timeout) {
     return;
 }
 
+char* my_tmpfile(void);
+char* my_tmpfile() {
+    char *sfn = strdup("/tmp/modgm.XXXXXX");
+    int fd = -1;
+    if ((fd = mkstemp(sfn)) == -1) {
+       fprintf(stderr, "%s: %s\n", sfn, strerror(errno));
+       return (NULL);
+    }
+    close(fd);
+    return sfn;
+}
+
 /* main tests */
 int main (int argc, char **argv, char **env) {
+    argc = argc; argv = argv; env  = env;
     int status, chld;
     int tests = 88;
     int rrc;
@@ -319,7 +332,7 @@ int main (int argc, char **argv, char **env) {
     ok(parse_args_line(mod_gm_opt, options, 0) == 0, "parse_args_line()");
     mod_gm_opt->debug_level = GM_LOG_ERROR;
 
-    worker_logfile = tmpnam(NULL);
+    worker_logfile = my_tmpfile();
     if(!ok(worker_logfile != NULL, "created temp logile: %s", worker_logfile)) {
         diag("could not create temp logfile");
         exit( EXIT_FAILURE );
