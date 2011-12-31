@@ -131,15 +131,11 @@ int run_epn_check(char *processed_command, char **ret, char **err) {
     else if(!pid) {
         /* child process */
         gm_log( GM_LOG_TRACE, "Embedded Perl Child\n" );
-        if((dup2(pipe_stdout[1],STDOUT_FILENO)<0)){
-            gm_log( GM_LOG_ERROR, "dup2 error\n");
-            _exit(STATE_UNKNOWN);
-        }
         if((dup2(pipe_stderr[1],STDERR_FILENO)<0)){
             gm_log( GM_LOG_ERROR, "dup2 error\n");
             _exit(STATE_UNKNOWN);
         }
-        close(pipe_stdout[1]);
+        close(pipe_stdout[0]);
         close(pipe_stderr[1]);
         current_child_pid = getpid();
 
@@ -164,8 +160,8 @@ int run_epn_check(char *processed_command, char **ret, char **err) {
         retval = POPi;
 
         if(perl_plugin_output!=NULL) {
-            printf("%s\n", perl_plugin_output);
-            //gm_log(GM_LOG_TRACE,"Embedded Perl ran %s: return code=%d, plugin output=%s\n",fname,retval,perl_plugin_output);
+            if(write(pipe_stdout[1], perl_plugin_output, strlen(perl_plugin_output)+1) <= 0)
+                perror("write stdout");
         }
 
         PUTBACK;
@@ -274,7 +270,7 @@ int init_embedded_perl(char **env){
     /* make sure the P1 file exists... */
     if(p1_file==NULL || stat(p1_file,&stat_buf)!=0){
         use_embedded_perl=FALSE;
-        gm_log(GM_LOG_ERROR,"Error: p1.pl file required for embedded Perl interpreter is missing!\n");
+        gm_log(GM_LOG_ERROR,"Error: p1.pl file (%s) required for embedded Perl interpreter is missing!\n", p1_file);
     }
 
     else{

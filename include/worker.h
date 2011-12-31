@@ -33,6 +33,7 @@
 #include <sys/shm.h>
 #include <libgearman/gearman.h>
 #include "common.h"
+#include "config.h"
 
 /** @file
  *  @brief Mod-Gearman Worker Client
@@ -54,7 +55,11 @@ int mod_gm_shm_key;        /**< key for the shared memory segment */
  *
  * @return when worker exits, returns exit code of worker
  */
+#ifdef EMBEDDEDPERL
 int main (int argc, char **argv, char **env);
+#else
+int main (int argc, char **argv);
+#endif
 
 /**
  * store the commandline to parse it again on reloading the worker

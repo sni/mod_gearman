@@ -930,6 +930,8 @@ void dumpconfig(mod_gm_opt_t *opt, int mode) {
 
 /* free options structure */
 void mod_gm_free_opt(mod_gm_opt_t *opt) {
+    if(opt == NULL)
+        return;
     int i,j;
     for(i=0;i<opt->server_num;i++)
         free(opt->server_list[i]);
@@ -961,6 +963,8 @@ void mod_gm_free_opt(mod_gm_opt_t *opt) {
     free(opt->p1_file);
 #endif
     free(opt);
+    opt=NULL;
+    return;
 }
 
 
@@ -1710,3 +1714,4 @@ char *md5sum(char *text) {
 
     return result;
 }
+

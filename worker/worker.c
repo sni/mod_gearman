@@ -22,6 +22,7 @@
  *****************************************************************************/
 
 /* include header */
+#include "config.h"
 #include "worker.h"
 #include "utils.h"
 #include "worker_client.h"
@@ -34,14 +35,21 @@ char ** orig_argv;
 int     last_time_increased;
 volatile sig_atomic_t shmid;
 int   * shm;
+#ifdef EMBEDDEDPERL
+extern char *p1_file;
 char **start_env;
+#endif
 
 
 /* work starts here */
+#ifdef EMBEDDEDPERL
 int main (int argc, char **argv, char **env) {
+    start_env=env;
+    struct stat stat_buf;
+#else
+int main (int argc, char **argv) {
+#endif
     int sid, x;
-    start_env = env;
-
     last_time_increased = 0;
 
     /* store the original command line for later reloads */
@@ -56,6 +64,19 @@ int main (int argc, char **argv, char **env) {
     if(parse_arguments(argc, argv) != GM_OK) {
         exit( EXIT_FAILURE );
     }
+
+#ifdef EMBEDDEDPERL
+    /* make sure the P1 file exists... */
+    if(p1_file==NULL){
+        gm_log(GM_LOG_ERROR,"Error: p1.pl file required for embedded Perl interpreter is not set!\n");
+        exit( EXIT_FAILURE );
+    }
+    if(stat(p1_file,&stat_buf)!=0){
+        gm_log(GM_LOG_ERROR,"Error: p1.pl file required for embedded Perl interpreter is missing!\n");
+        perror("stat");
+        exit( EXIT_FAILURE );
+    }
+#endif
 
     /* fork into daemon mode? */
     if(mod_gm_opt->daemon_mode == GM_ENABLED) {
@@ -76,16 +97,12 @@ int main (int argc, char **argv, char **env) {
                 exit( EXIT_FAILURE );
             }
 
-            /* Change the current working directory */
-            if ((chdir("/")) < 0) {
-                mod_gm_free_opt(mod_gm_opt);
-                exit(EXIT_FAILURE);
-            }
-
             /* Close out the standard file descriptors */
-            close(STDIN_FILENO);
-            close(STDOUT_FILENO);
-            close(STDERR_FILENO);
+            if(mod_gm_opt->debug_level <= 1) {
+                close(STDIN_FILENO);
+                close(STDOUT_FILENO);
+                close(STDERR_FILENO);
+            }
         }
         /* we are the parent. So forking into daemon mode worked */
         else {
@@ -125,7 +142,11 @@ int main (int argc, char **argv, char **env) {
     /* start a single non forked standalone worker */
     if(mod_gm_opt->debug_level >= 10) {
         gm_log( GM_LOG_TRACE, "starting standalone worker\n");
+#ifdef EMBEDDEDPERL
         worker_client(GM_WORKER_STANDALONE, 1, shmid, start_env);
+#else
+        worker_client(GM_WORKER_STANDALONE, 1, shmid);
+#endif
         exit(EXIT_SUCCESS);
     }
 
@@ -289,7 +310,11 @@ int make_new_child(int mode) {
         shm[next_shm_index] = -getpid();
 
         /* do the real work */
+#ifdef EMBEDDEDPERL
         worker_client(mode, next_shm_index, shmid, start_env);
+#else
+        worker_client(mode, next_shm_index, shmid);
+#endif
 
         exit(EXIT_SUCCESS);
     }
@@ -436,16 +461,15 @@ int verify_options(mod_gm_opt_t *opt) {
 void print_usage() {
     printf("usage:\n");
     printf("\n");
-    printf("worker [ --debug=<lvl>         ]\n");
-    printf("       [ --debug-result        ]\n");
-    printf("       [ --help|-h             ]\n");
-    printf("       [ --daemon|-d           ]\n");
-    printf("\n");
-    printf("       [ --config=<configfile> ]\n");
-    printf("\n");
-    printf("       [ --server=<server>     ]\n");
-    printf("\n");
-    printf("       [ --dupserver=<server>  ]\n");
+    printf("worker [ --debug=<lvl>                            ]\n");
+    printf("       [ --logmode=<automatic|stdout|syslog|file> ]\n");
+    printf("       [ --logfile=<path>                         ]\n");
+    printf("       [ --debug-result                           ]\n");
+    printf("       [ --help|-h                                ]\n");
+    printf("       [ --daemon|-d                              ]\n");
+    printf("       [ --config=<configfile>                    ]\n");
+    printf("       [ --server=<server>                        ]\n");
+    printf("       [ --dupserver=<server>                     ]\n");
     printf("\n");
     printf("       [ --hosts               ]\n");
     printf("       [ --services            ]\n");
@@ -474,8 +498,8 @@ void print_usage() {
     printf("\n");
     printf("       [ --enable_embedded_perl         ]\n");
     printf("       [ --use_embedded_perl_implicitly ]\n");
-    printf("       [ --use_perl_cache      ]\n");
-    printf("       [ --p1_file             ]\n");
+    printf("       [ --use_perl_cache               ]\n");
+    printf("       [ --p1_file                      ]\n");
     printf("\n");
     printf("       [ --workaround_rc_25    ]\n");
     printf("\n");

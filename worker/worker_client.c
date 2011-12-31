@@ -49,8 +49,11 @@ int shm_index = 0;
 volatile sig_atomic_t shmid;
 
 /* callback for task completed */
+#ifdef EMBEDDEDPERL
 void worker_client(int worker_mode, int indx, int shid, char **env) {
-    env=env;
+#else
+void worker_client(int worker_mode, int indx, int shid) {
+#endif
 
     gm_log( GM_LOG_TRACE, "%s worker client started\n", (worker_mode == GM_WORKER_STATUS ? "status" : "job" ));
 
@@ -465,10 +468,9 @@ void clean_worker_exit(int sig) {
 #endif
 
     /* Now we attach the segment to our data space. */
-    if ((shm = shmat(shmid, NULL, 0)) == (int *) -1) {
+    if((shm = shmat(shmid, NULL, 0)) == (int *) -1) {
         perror("shmat");
         gm_log( GM_LOG_TRACE, "worker finished: %d\n", getpid() );
-        clean_worker_exit(0);
         exit( EXIT_FAILURE );
     }
     shm[shm_index] = -1;
