@@ -825,6 +825,12 @@ General EPN documentation is valid for Mod-Gearman as well:
  * http://nagios.sourceforge.net/docs/3_0/embeddedperl.html[Embedded Perl]
  * http://nagios.sourceforge.net/docs/3_0/epnplugins.html[Plugin Guidelines]
 
+NOTE: Mod-Gearman does not fix all of the memory leaks introduced with
+Nagios and Embedded Perl, but it moves the Leaks away from the core.
+And they do not affect Mod-Gearman as well as they are only in the
+preforked worker processes which will be restarted automatically from
+time to time (see 'max-jobs').
+
 
 How To
 ------

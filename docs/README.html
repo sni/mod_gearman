@@ -1762,6 +1762,18 @@ tag are run without embedded Perl.</td>
 </p>
 </li>
 </ul></div>
+<div class="admonitionblock">
+<table><tr>
+<td class="icon">
+<div class="title">Note</div>
+</td>
+<td class="content">Mod-Gearman does not fix all of the memory leaks introduced with
+Nagios and Embedded Perl, but it moves the Leaks away from the core.
+And they do not affect Mod-Gearman as well as they are only in the
+preforked worker processes which will be restarted automatically from
+time to time (see <em>max-jobs</em>).</td>
+</tr></table>
+</div>
 </div>
 <h2 id="_how_to">How To</h2>
 <div class="sectionbody">
@@ -1973,7 +1985,7 @@ Make sure all your worker have the nagios-plugins available under
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2011-12-30 13:57:14 CEST
+Last updated 2012-01-01 16:02:56 CEST
 </div>
 </div>
 </body>
