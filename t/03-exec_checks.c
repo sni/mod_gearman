@@ -21,7 +21,7 @@ int main (int argc, char **argv, char **env) {
     char cmd[120];
     char hostname[GM_BUFFERSIZE];
 
-    plan(54);
+    plan(56);
 
     /* set hostname */
     gethostname(hostname, GM_BUFFERSIZE-1);
@@ -32,7 +32,9 @@ int main (int argc, char **argv, char **env) {
     mod_gm_opt->debug_level = 0;
 
 #ifdef EMBEDDEDPERL
-    parse_args_line(mod_gm_opt, strdup("p1_file=worker/mod_gearman_p1.pl"), 0);
+    char p1[150];
+    snprintf(p1, 150, "--p1_file=worker/mod_gearman_p1.pl");
+    parse_args_line(mod_gm_opt, p1, 0);
     init_embedded_perl(env);
 #endif
 
@@ -59,8 +61,9 @@ int main (int argc, char **argv, char **env) {
      */
     strcpy(cmd, "./send_gearman --server=blah --key=testtest --host=test --service=test --message=test --returncode=0");
     rrc = real_exit_code(run_check(cmd, &result, &error));
-    diag(result);
+    //diag(result);
     cmp_ok(rrc, "==", 3, "cmd '%s' returned rc %d", cmd, rrc);
+    like(result, "sending job to gearmand failed:", "result");
     free(result);
     free(error);
 
@@ -70,8 +73,9 @@ int main (int argc, char **argv, char **env) {
     //mod_gm_opt->debug_level = 4;
     strcpy(cmd, "./send_multi --server=blah --host=blah < t/data/send_multi.txt");
     rrc = real_exit_code(run_check(cmd, &result, &error));
-    diag(result);
+    //diag(result);
     cmp_ok(rrc, "==", 3, "cmd '%s' returned rc %d", cmd, rrc);
+    like(result, "sending job to gearmand failed:", "result");
     free(result);
     free(error);
 

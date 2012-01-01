@@ -183,15 +183,13 @@ void *get_results( gearman_job_st *job, void *context, size_t *result_size, gear
         *ret_ptr = GEARMAN_WORK_FAIL;
         return NULL;
     }
-    //diag("got result %s\n", gearman_job_handle( job ));
-    //diag("%d --->\n%s\n<---\n", strlen(decrypted_data), decrypted_data );
 
     like(decrypted_data, "host_name=host1", "output contains host_name");
     like(decrypted_data, "output=", "output contains output");
 
     if(last_result != NULL)
         free(last_result);
-    last_result = strdup(decrypted_data);
+    last_result = decrypted_data;
 
     return NULL;
 }
@@ -323,7 +321,9 @@ int main (int argc, char **argv, char **env) {
     set_default_options(mod_gm_opt);
 
 #ifdef EMBEDDEDPERL
-    parse_args_line(mod_gm_opt, strdup("p1_file=worker/mod_gearman_p1.pl"), 0);
+    char p1[150];
+    snprintf(p1, 150, "--p1_file=worker/mod_gearman_p1.pl");
+    parse_args_line(mod_gm_opt, p1, 0);
     init_embedded_perl(env);
 #endif
 
@@ -492,6 +492,7 @@ int main (int argc, char **argv, char **env) {
 #endif
 
     free(last_result);
+    free(worker_logfile);
     endskip;
     return exit_status();
 }

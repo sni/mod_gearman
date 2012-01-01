@@ -27,7 +27,9 @@ int main (int argc, char **argv, char **env) {
     mod_gm_opt->debug_level = 4;
 
 #ifdef EMBEDDEDPERL
-    parse_args_line(mod_gm_opt, strdup("p1_file=worker/mod_gearman_p1.pl"), 0);
+    char p1[150];
+    snprintf(p1, 150, "--p1_file=worker/mod_gearman_p1.pl");
+    parse_args_line(mod_gm_opt, p1, 0);
     init_embedded_perl(env);
 #endif
 
@@ -39,10 +41,14 @@ int main (int argc, char **argv, char **env) {
     //strcpy(cmd, "./t/both");
 
     run_check(cmd, &result, &error);
+    free(result);
+    free(error);
     mod_gm_opt->debug_level = 0;
 
     for(x=0;x<100;x++) {
         run_check(cmd, &result, &error);
+        free(result);
+        free(error);
     }
 
 

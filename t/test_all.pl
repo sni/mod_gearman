@@ -11,18 +11,24 @@ use Test::More;
 if($? != 0) {
     plan skip_all => 'valgrind required';
 }
-plan(tests => 19);
 
 my $makeout = `make clean  2>&1 && make 2>&1`;
 is($?, 0, "build rc is $?") or BAIL_OUT("no need to test without successful make!\n".$makeout);
 
+my $skip_perl_mem_leaks = "";
+if(`grep -c '^#define EMBEDDEDPERL' config.h` > 0) {
+    $skip_perl_mem_leaks = "--suppressions=./t/valgrind_suppress.cfg";
+}
+
 my $vallog  = '/tmp/valgrind.log';
 my $testlog = '/tmp/mod_gearman_test.log';
-for my $test (qw(01_utils 02_full 03_exec 04_log 05_neb 07_epn)) {
+my @tests = split/\s+/, `grep ^check_PROGRAMS Makefile.am | awk -F = '{print \$2}'`;
+for my $test (@tests) {
+    next if $test =~ m/^\s*$/;
     `make $test 2>/dev/null`;
     is($?, 0, "$test build rc is $?");
 
-    `valgrind --tool=memcheck --leak-check=yes --leak-check=full --show-reachable=yes --track-origins=yes --log-file=$vallog ./$test >$testlog 2>&1`;
+    `valgrind --tool=memcheck --leak-check=yes --leak-check=full --show-reachable=yes --track-origins=yes $skip_perl_mem_leaks --log-file=$vallog ./$test >$testlog 2>&1`;
     is($?, 0, "$test valgrind exit code is $?") or diag(`cat $testlog`);
 
     is(qx(grep "ERROR SUMMARY: " $vallog | grep -v "ERROR SUMMARY: 0 errors"), "", "valgrind Error Summary")
@@ -31,3 +37,5 @@ for my $test (qw(01_utils 02_full 03_exec 04_log 05_neb 07_epn)) {
 
 unlink($vallog);
 unlink($testlog);
+
+done_testing();

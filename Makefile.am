@@ -108,7 +108,7 @@ EXTRA_DIST = COPYING etc/*.in extras include \
              docs/QUICKSTART docs/QUICKSTART.html support/mod_gearman.spec \
              t/data/test1.key t/data/test2.key t/data/test3.key t/data/send_multi.txt \
              t/rc t/both t/killer t/sleep t/crit.pl t/ok.pl t/noepn.pl t/fail.pl \
-             worker/mod_gearman_p1.pl
+             worker/mod_gearman_p1.pl t/test_all.pl t/valgrind_suppress.cfg
 
 # other targets
 mod_gearman.o: $(mod_gearman_so_OBJECTS) $(mod_gearman_so_DEPENDENCIES)

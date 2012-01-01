@@ -297,6 +297,8 @@ int init_embedded_perl(char **env){
     exitstatus=perl_parse(my_perl,xs_init,2,(char **)embedding,env);
     if(!exitstatus)
         exitstatus=perl_run(my_perl);
+    free(*embedding);
+    free(*(embedding+1));
 #endif
     return GM_OK;
 }
@@ -309,6 +311,7 @@ int deinit_embedded_perl(void){
     perl_destruct(my_perl);
     perl_free(my_perl);
     PERL_SYS_TERM();
+    free(p1_file);
 #endif
     return GM_OK;
 }
