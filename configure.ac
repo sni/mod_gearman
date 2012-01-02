@@ -37,9 +37,9 @@ AC_CHECK_LIB([pthread], [pthread_create])
 
 ##############################################
 # Checks for header files.
-AC_CHECK_HEADERS([stdlib.h string.h unistd.h pthread.h arpa/inet.h fcntl.h limits.h netdb.h netinet/in.h stddef.h sys/socket.h sys/time.h sys/timeb.h syslog.h],,AC_MSG_ERROR([Compiling mod_gearman requires standard unix headers files]))
-AC_CHECK_HEADERS([ltdl.h],,AC_MSG_ERROR([Compiling mod_gearman requires ltdl.h]))
-AC_CHECK_HEADERS([curses.h],,AC_MSG_ERROR([Compiling mod_gearman requires curses.h]))
+AC_CHECK_HEADERS([stdlib.h string.h unistd.h pthread.h arpa/inet.h fcntl.h limits.h netdb.h netinet/in.h stddef.h sys/socket.h sys/time.h sys/timeb.h syslog.h],,AC_MSG_ERROR([Compiling Mod-Gearman requires standard unix headers files]))
+AC_CHECK_HEADERS([ltdl.h],,AC_MSG_ERROR([Compiling Mod-Gearman requires ltdl.h]))
+AC_CHECK_HEADERS([curses.h],,AC_MSG_ERROR([Compiling Mod-Gearman requires curses.h]))
 
 AC_ARG_WITH(gearman,
  [  --with-gearman=DIR Specify the path to your gearman library],
@@ -75,6 +75,7 @@ AC_ARG_ENABLE(embedded-perl,--enable-embedded-perl will enable embedded Perl int
 dnl Is embedded Perl being compiled in?
 AM_CONDITIONAL(USEPERL, test "$USEPERL" = "yes")
 if test "$USEPERL" == "yes"; then
+    AC_CHECK_LIB([perl],[perl_alloc],,AC_MSG_ERROR([Compiling Mod-Gearman with embedded Perl requires libperl.]))
     AC_DEFINE_UNQUOTED(EMBEDDEDPERL,,[Is embedded Perl being compiled in?])
     echo "creating common/perlxsi.c"
     perl -MExtUtils::Embed -e xsinit -- -o common/perlxsi.c
@@ -95,7 +96,7 @@ AC_TYPE_PID_T
 
 ##############################################
 # Checks for additional libraries.
-AC_CHECK_LIB([gearman], [gearman_client_create],,AC_MSG_ERROR([Compiling mod_gearman requires libgearman. You may specify the path by --with-gearman=path...]))
+AC_CHECK_LIB([gearman], [gearman_client_create],,AC_MSG_ERROR([Compiling Mod-Gearman requires libgearman. You may specify the path by --with-gearman=path...]))
 
 ##############################################
 # add a "make install" target
