@@ -23,7 +23,7 @@
 
 #include "config.h"
 #include "utils.h"
-#include "crypt.h"
+#include "gm_crypt.h"
 #include "base64.h"
 #include "gearman.h"
 #include "popenRWE.h"

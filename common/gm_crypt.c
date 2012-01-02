@@ -25,7 +25,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <assert.h>
-#include <crypt.h>
+#include <gm_crypt.h>
 #include "common.h"
 
 int encryption_initialized = 0;

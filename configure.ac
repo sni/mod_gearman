@@ -8,11 +8,13 @@ AM_INIT_AUTOMAKE([-Wall foreign subdir-objects])
 AC_CONFIG_SRCDIR([neb_module/mod_gearman.c],[worker/worker.c],[tools/send_gearman.c],[tools/check_gearman.c],[tools/gearman_top.c])
 AC_CONFIG_HEADER([config.h])
 
+CFLAGS="-Wall -W -Wstrict-prototypes -Wmissing-prototypes -Wnested-externs -O -fPIC -D_GNU_SOURCE -D_REENTRANT -D_FILE_OFFSET_BITS=64"
+
 ##############################################
 AC_ARG_ENABLE(debug,--enable-debug will enable debugging symbols,[
-    CFLAGS="-pedantic -Wfatal-errors -Wall -W -Wstrict-prototypes -Wshadow -Wpointer-arith -Wcast-qual -Wcast-align -Wstrict-prototypes -Wmissing-prototypes -Wnested-externs -g3 -O -fPIC"
+    CFLAGS="${CFLAGS} -pedantic -Wfatal-errors -Wshadow -Wpointer-arith -Wcast-qual -Wcast-align -g3"
     ],
-    CFLAGS="-Wall -W -Wstrict-prototypes -Wmissing-prototypes -Wnested-externs -s -O -fPIC"
+    CFLAGS="${CFLAGS} -s"
 )
 
 ##############################################
@@ -77,6 +79,8 @@ if test "$USEPERL" == "yes"; then
     echo "creating common/perlxsi.c"
     perl -MExtUtils::Embed -e xsinit -- -o common/perlxsi.c
     echo "Embedded Perl interpreter will be compiled in..."
+    PERLLIBS="`perl -MExtUtils::Embed -e ccopts -e ldopts`"
+    AC_SUBST(PERLLIBS)
 fi
 
 ##############################################

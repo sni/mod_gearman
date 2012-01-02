@@ -265,6 +265,7 @@ int init_embedded_perl(char **env){
     void **embedding;
     int exitstatus=0;
     int argc=2;
+    argc=argc;
     struct stat stat_buf;
 
     /* make sure the P1 file exists... */

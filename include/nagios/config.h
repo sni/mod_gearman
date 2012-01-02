@@ -296,7 +296,11 @@
 
 /* configure script should allow user to override ltdl choice, but this will do for now... */
 /* #undef USE_LTDL */
-#define HAVE_LTDL_H 
+#ifndef HAVE_LTDL_H
+#endif
+#ifndef HAVE_LTDL_H
+#define HAVE_LTDL_H
+#endif
 #ifdef HAVE_LTDL_H
 #define USE_LTDL
 #endif

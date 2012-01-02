@@ -17,28 +17,24 @@ OS=`uname`
 
 if USEPERL
 P1FILE  = worker/mod_gearman_p1.pl
+PERLLIB = @PERLLIBS@
 install_p1file = install_p1file
-mod_gearman_worker_LDADD = -lperl common/perlxsi.o common/epn_utils.o
-mod_gearman_worker_LDFLAGS = `perl -MExtUtils::Embed -e ccopts`
 EXTRA_mod_gearman_worker_SOURCES=common/perlxsi.c common/epn_utils.c
-01_utils_LDADD = -lperl common/perlxsi.o common/epn_utils.o
-01_utils_LDFLAGS = `perl -MExtUtils::Embed -e ccopts`
-02_full_LDADD = -lperl common/perlxsi.o common/epn_utils.o
-02_full_LDFLAGS = `perl -MExtUtils::Embed -e ccopts`
-03_exec_LDADD = -lperl common/perlxsi.o common/epn_utils.o
-03_exec_LDFLAGS = `perl -MExtUtils::Embed -e ccopts`
-06_exec_LDADD = -lperl common/perlxsi.o common/epn_utils.o
-06_exec_LDFLAGS = `perl -MExtUtils::Embed -e ccopts`
-07_epn_LDADD = -lperl common/perlxsi.o common/epn_utils.o
-07_epn_LDFLAGS = `perl -MExtUtils::Embed -e ccopts`
+#mod_gearman_worker_LDFLAGS = $(PERLLIB) common/perlxsi.o common/epn_utils.o
+01_utils_LDADD             = $(PERLLIB) common/perlxsi.o common/epn_utils.o
+02_full_LDADD              = $(PERLLIB) common/perlxsi.o common/epn_utils.o
+03_exec_LDADD              = $(PERLLIB) common/perlxsi.o common/epn_utils.o
+06_exec_LDADD              = $(PERLLIB) common/perlxsi.o common/epn_utils.o
+07_epn_LDADD               = $(PERLLIB) common/perlxsi.o common/epn_utils.o
 else
+PERLLIB =
 P1FILE  =
 install_p1file =
 endif
 
 # source definitions
 common_SOURCES             = common/base64.c \
-                             common/crypt.c  \
+                             common/gm_crypt.c  \
                              common/rijndael.c \
                              common/gearman.c \
                              common/gearman_utils.c \
@@ -112,20 +108,23 @@ EXTRA_DIST = COPYING etc/*.in extras include \
 
 # other targets
 mod_gearman.o: $(mod_gearman_so_OBJECTS) $(mod_gearman_so_DEPENDENCIES)
-	if [ "$(OS)" == "Darwin" ]; then \
+	@echo '    $$(CC) $<'
+	@if [ "$(OS)" == "Darwin" ]; then \
 	    $(CXX) $(LDFLAGS) -dynamiclib -single_module -undefined dynamic_lookup $(mod_gearman_so_OBJECTS) -o $@ -lpthread -lgearman; \
 	else \
 	    $(CXX) $(LDFLAGS) -fPIC -shared $(mod_gearman_so_OBJECTS) -o $@ -lpthread -lgearman; \
 	fi
-	$(RM) mod_gearman.so
+	@$(RM) mod_gearman.so
 
 common/perlxsi.o:
-	depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.o$$||'`;\
+	@echo '    $$(CC) $<'
+	@depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.o$$||'`;\
 	$(COMPILE) `perl -MExtUtils::Embed -e ccopts` -MT $@ -MD -MP -MF $$depbase.Tpo -c -o $@ common/perlxsi.c &&\
 	$(am__mv) $$depbase.Tpo $$depbase.Po
 
 common/epn_utils.o:
-	depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.o$$||'`;\
+	@echo '    $$(CC) $<'
+	@depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.o$$||'`;\
 	$(COMPILE) `perl -MExtUtils::Embed -e ccopts` -MT $@ -MD -MP -MF $$depbase.Tpo -c -o $@ common/epn_utils.c &&\
 	$(am__mv) $$depbase.Tpo $$depbase.Po
 
@@ -306,3 +305,8 @@ version:
 	fi ;
 	sed -i Changes -e "s/$(VERSION)/$$newversion $(shell date)\n          - ...\n\n$(VERSION)/"
 	$(MAKE) docs
+
+# order does matter for perl libs/includes (at least on centos)
+mod_gearman_worker$(EXEEXT): $(mod_gearman_worker_OBJECTS) common/perlxsi.o common/epn_utils.o $(mod_gearman_worker_DEPENDENCIES)
+	@rm -f mod_gearman_worker$(EXEEXT)
+	$(CCLD) $(AM_CFLAGS) $(CFLAGS) -o $@ $(mod_gearman_worker_OBJECTS) common/perlxsi.o common/epn_utils.o $(mod_gearman_worker_LDADD) $(LIBS) $(PERLLIB)
