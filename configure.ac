@@ -88,7 +88,7 @@ if test "$USEPERL" == "yes"; then
     perl -MExtUtils::Embed -e xsinit -- -o common/perlxsi.c
     echo "Embedded Perl interpreter will be compiled in..."
     PERLLIBS="`perl -MExtUtils::Embed -e ccopts -e ldopts`"
-    #AC_SUBST(PERLLIBS)
+    AC_SUBST(PERLLIBS)
 fi
 
 ##############################################
