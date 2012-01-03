@@ -16,20 +16,21 @@ AM_CPPFLAGS=-Iinclude
 OS=`uname`
 
 if USEPERL
-P1FILE  = worker/mod_gearman_p1.pl
-PERLLIB = @PERLLIBS@
+P1FILE         = worker/mod_gearman_p1.pl
+PERLLIB        = @PERLLIBS@
+perl_objects   = common/perlxsi.o common/epn_utils.o
 install_p1file = install_p1file
 EXTRA_mod_gearman_worker_SOURCES=common/perlxsi.c common/epn_utils.c
-#mod_gearman_worker_LDFLAGS = $(PERLLIB) common/perlxsi.o common/epn_utils.o
 01_utils_LDADD             = $(PERLLIB) common/perlxsi.o common/epn_utils.o
 02_full_LDADD              = $(PERLLIB) common/perlxsi.o common/epn_utils.o
 03_exec_LDADD              = $(PERLLIB) common/perlxsi.o common/epn_utils.o
 06_exec_LDADD              = $(PERLLIB) common/perlxsi.o common/epn_utils.o
 07_epn_LDADD               = $(PERLLIB) common/perlxsi.o common/epn_utils.o
 else
-PERLLIB =
-P1FILE  =
+PERLLIB        =
+P1FILE         =
 install_p1file =
+perl_objects   =
 endif
 
 # source definitions
@@ -307,6 +308,6 @@ version:
 	$(MAKE) docs
 
 # order does matter for perl libs/includes (at least on centos)
-mod_gearman_worker$(EXEEXT): $(mod_gearman_worker_OBJECTS) common/perlxsi.o common/epn_utils.o $(mod_gearman_worker_DEPENDENCIES)
+mod_gearman_worker$(EXEEXT): $(mod_gearman_worker_OBJECTS) $(perl_objects) $(mod_gearman_worker_DEPENDENCIES)
 	@rm -f mod_gearman_worker$(EXEEXT)
-	$(CCLD) $(AM_CFLAGS) $(CFLAGS) -o $@ $(mod_gearman_worker_OBJECTS) common/perlxsi.o common/epn_utils.o $(mod_gearman_worker_LDADD) $(LIBS) $(PERLLIB)
+	$(CCLD) $(AM_CFLAGS) $(CFLAGS) -o $@ $(mod_gearman_worker_OBJECTS) $(perl_objects) $(mod_gearman_worker_LDADD) $(LIBS) $(PERLLIB)
