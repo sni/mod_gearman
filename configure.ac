@@ -2,7 +2,8 @@
 # Process this file with autoconf to produce a configure script.
 
 ##############################################
-AC_PREREQ([2.59])
+# autoconf really does not work with 2.59 or older
+AC_PREREQ([2.60])
 AC_INIT([mod_gearman], [1.1.2], [sven.nierlein@consol.de])
 AM_INIT_AUTOMAKE([-Wall foreign subdir-objects])
 AC_CONFIG_SRCDIR([neb_module/mod_gearman.c],[worker/worker.c],[tools/send_gearman.c],[tools/check_gearman.c],[tools/gearman_top.c])
