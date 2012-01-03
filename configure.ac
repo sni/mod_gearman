@@ -48,6 +48,10 @@ AC_ARG_WITH(gearman,
  ])
 
 ##############################################
+# Checks for additional libraries.
+AC_CHECK_LIB([gearman], [gearman_client_create],,AC_MSG_ERROR([Compiling Mod-Gearman requires libgearman. You may specify the path by --with-gearman=path...]))
+
+##############################################
 # Determine the system init.d directory
 AC_ARG_WITH([init-dir],
 [AS_HELP_STRING([--with-init-dir],
@@ -75,7 +79,10 @@ AC_ARG_ENABLE(embedded-perl,--enable-embedded-perl will enable embedded Perl int
 dnl Is embedded Perl being compiled in?
 AM_CONDITIONAL(USEPERL, test "$USEPERL" = "yes")
 if test "$USEPERL" == "yes"; then
-    AC_CHECK_LIB([perl],[perl_alloc],,AC_MSG_ERROR([Compiling Mod-Gearman with embedded Perl requires libperl.]))
+    tmp=$LIBS
+    AC_CHECK_LIB([perl],[perl_alloc],,AC_MSG_ERROR([Compiling Mod-Gearman with embedded Perl requires libperl.]),[`perl -MExtUtils::Embed -e ccopts -e ldopts`])
+    # save libs, as we do not want to add -lperl to all LIBS
+    LIBS=$tmp
     AC_DEFINE_UNQUOTED(EMBEDDEDPERL,,[Is embedded Perl being compiled in?])
     echo "creating common/perlxsi.c"
     perl -MExtUtils::Embed -e xsinit -- -o common/perlxsi.c
@@ -93,10 +100,6 @@ AC_PROG_LN_S
 # Checks for typedefs, structures, and compiler characteristics.
 AC_TYPE_SIZE_T
 AC_TYPE_PID_T
-
-##############################################
-# Checks for additional libraries.
-AC_CHECK_LIB([gearman], [gearman_client_create],,AC_MSG_ERROR([Compiling Mod-Gearman requires libgearman. You may specify the path by --with-gearman=path...]))
 
 ##############################################
 # add a "make install" target
