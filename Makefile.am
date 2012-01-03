@@ -17,7 +17,7 @@ OS=`uname`
 
 if USEPERL
 P1FILE         = worker/mod_gearman_p1.pl
-PERLLIB        = @PERLLIBS@
+#PERLLIB        = @PERLLIBS@
 perl_objects   = common/perlxsi.o common/epn_utils.o
 install_p1file = install_p1file
 EXTRA_mod_gearman_worker_SOURCES=common/perlxsi.c common/epn_utils.c
@@ -27,7 +27,7 @@ EXTRA_mod_gearman_worker_SOURCES=common/perlxsi.c common/epn_utils.c
 06_exec_LDADD              = $(PERLLIB) common/perlxsi.o common/epn_utils.o
 07_epn_LDADD               = $(PERLLIB) common/perlxsi.o common/epn_utils.o
 else
-PERLLIB        =
+#PERLLIB        =
 P1FILE         =
 install_p1file =
 perl_objects   =
