@@ -20,16 +20,22 @@ if(`grep -c '^#define EMBEDDEDPERL' config.h` > 0) {
     $skip_perl_mem_leaks = "--suppressions=./t/valgrind_suppress.cfg";
 }
 
-my $vallog  = '/tmp/valgrind.log';
-my $testlog = '/tmp/mod_gearman_test.log';
+my $vallog       = '/tmp/valgrind.log';
+my $testlog      = '/tmp/mod_gearman_test.log';
+my $suppressions = '/tmp/suppressions.log';
+`>$suppressions`;
 my @tests = split/\s+/, `grep ^check_PROGRAMS Makefile.am | awk -F = '{print \$2}'`;
 for my $test (@tests) {
     next if $test =~ m/^\s*$/;
     `make $test 2>/dev/null`;
     is($?, 0, "$test build rc is $?");
 
-    `valgrind --tool=memcheck --leak-check=yes --leak-check=full --show-reachable=yes --track-origins=yes $skip_perl_mem_leaks --log-file=$vallog ./$test >$testlog 2>&1`;
+    my $cmd = "yes | valgrind --tool=memcheck --leak-check=yes --leak-check=full --show-reachable=yes --track-origins=yes $skip_perl_mem_leaks --gen-suppressions=yes --log-file=$vallog ./$test >$testlog 2>&1";
+    #diag($cmd);
+    `$cmd`;
     is($?, 0, "$test valgrind exit code is $?") or diag(`cat $testlog`);
+
+    `cat $vallog >> $suppressions`;
 
     is(qx(grep "ERROR SUMMARY: " $vallog | grep -v "ERROR SUMMARY: 0 errors"), "", "valgrind Error Summary")
       or BAIL_OUT("check memory $test in $vallog");
@@ -37,5 +43,7 @@ for my $test (@tests) {
 
 unlink($vallog);
 unlink($testlog);
+
+#diag(`ls -la $suppressions`);
 
 done_testing();
