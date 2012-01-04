@@ -90,7 +90,7 @@ TESTS            = $(check_PROGRAMS)
 
 
 GEARMANDS=/usr/sbin/gearmand /opt/sbin/gearmand
-replace_vars = sed -e 's:%CONFIG%:$(sysconfdir)/mod_gearman.conf:g' \
+replace_vars = sed -e 's:%CONFIG_WORKER%:$(sysconfdir)/mod_gearman_worker.conf:g' \
                -e 's:%PIDFILE%:$(localstatedir)/mod_gearman/mod_gearman_worker.pid:g' \
                -e 's:%LOGFILE_NEB%:$(localstatedir)/mod_gearman/mod_gearman_neb.log:g' \
                -e 's:%LOGFILE_WORKER%:$(localstatedir)/mod_gearman/mod_gearman_worker.log:g' \

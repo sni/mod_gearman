@@ -18,7 +18,7 @@
 PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 DAEMON=%WORKERBIN%
 NAME=mod_gearman_worker
-CONFIG=%CONFIG%
+CONFIG=%CONFIG_WORKER%
 PIDFILE=%PIDFILE%
 USER=%USER%
 USERID=`id -u`
