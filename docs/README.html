@@ -564,36 +564,83 @@ footnotes: function () {
 of distributing active Nagios checks across your network and
 increasing nagios scalability. Mod-Gearman can even help to reduce the
 load on a single nagios host, because its much smaller and more
-efficient in executing checks. It consists of three parts:</p></div>
+efficient in executing checks.</p></div>
+<div class="paragraph"><p>It consists of three parts:</p></div>
 <div class="ulist"><ul>
 <li>
 <p>
 There is a NEB module which resides in the Nagios core and adds servicechecks,
-  hostchecks and eventhandler to a Gearman queue.
+   hostchecks and eventhandler to a Gearman queue.
 </p>
 </li>
 <li>
 <p>
 The counterpart is one or more worker clients executing the checks.
-  Worker can be configured to only run checks for specific host- or
-  servicegroups.
+   Worker can be configured to only run checks for specific host- or
+   servicegroups.
 </p>
 </li>
 <li>
 <p>
 And you need at least one <a href="http://gearman.org">Gearman Job Server</a>
-  running.
+   running.
+</p>
+</li>
+<li>
+<p>
+See the <a href="#_common_scenarios">common scenarios</a> for some examples.
 </p>
 </li>
 </ul></div>
-<div class="paragraph"><p><a href="http://labs.consol.de/wp-content/uploads/2010/09/Mod-Gearman.pdf">Have a look at the slides from the Nagios Workshop 2011 in Hannover</a></p></div>
+<div class="paragraph"><p><a href="http://labs.consol.de/wp-content/uploads/2010/09/Mod-Gearman.pdf">Have a look at the slides of the last Mod-Gearman presentation on the Nagios Workshop 2011 in Hannover</a></p></div>
+</div>
+<h2 id="_features">Features</h2>
+<div class="sectionbody">
+<div class="ulist"><ul>
+<li>
+<p>
+Reduce load of your central nagios machine
+</p>
+</li>
+<li>
+<p>
+Make nagios scalable up to thousands of checks per second
+</p>
+</li>
+<li>
+<p>
+Easy distributed setups without configuration overhead
+</p>
+</li>
+<li>
+<p>
+Real loadbalancing across all workers
+</p>
+</li>
+<li>
+<p>
+Real failover for redundant workers
+</p>
+</li>
+<li>
+<p>
+Embedded Perl support for very fast execution of perl scripts
+</p>
+</li>
+<li>
+<p>
+Fast transport of passive check results with included tools like
+   send_gearman and send_multi
+</p>
+</li>
+</ul></div>
 </div>
 <h2 id="_download">Download</h2>
 <div class="sectionbody">
 <div class="ulist"><ul>
 <li>
 <p>
-Latest stable release <a href="http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.1.1.tar.gz">version 1.1.1</a> from November 10 2011
+Latest stable <a href="http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.2.0.tar.gz">version 1.2.0</a>, released January 08 2012
 </p>
 </li>
 <li>
@@ -603,7 +650,7 @@ Mod Gearman is available for download at: <a href="http://labs.consol.de/nagios/
 </li>
 <li>
 <p>
-Source is available at GitHub: <a href="http://github.com/sni/mod_gearman">http://github.com/sni/mod_gearman</a>
+Source is available on GitHub: <a href="http://github.com/sni/mod_gearman">http://github.com/sni/mod_gearman</a>
 </p>
 </li>
 <li>
@@ -611,26 +658,34 @@ Source is available at GitHub: <a href="http://github.com/sni/mod_gearman">http:
 Older versions are available in the <a href="#_archive">download archive</a>.
 </p>
 </li>
-</ul></div>
-</div>
-<h2 id="_support_amp_questions">Support &amp; Questions</h2>
-<div class="sectionbody">
-<div class="ulist"><ul>
 <li>
 <p>
-Mod-Gearman has been succesfully tested with Nagios &gt;3.2.3 and Icinga
-  &gt;1.2.0 running on Lib-Gearman &gt;0.14. There are no known bugs at the moment.
-  Let me know if you find one.
+Mod-Gearman is also included in <a href="http://omdistro.org">OMD</a>.
 </p>
 </li>
 <li>
 <p>
-<a href="https://groups.google.com/group/mod_gearman">google groups mailinglist</a>
+Debian users should use the <a href="http://packages.debian.org/source/wheezy/mod-gearman">official packages</a>
+</p>
+</li>
+</ul></div>
+</div>
+<h2 id="_support">Support</h2>
+<div class="sectionbody">
+<div class="ulist"><ul>
+<li>
+<p>
+Professional support and consulting is available via <a href="http://www.consol.de/open-source-monitoring/support/">www.consol.de</a>
 </p>
 </li>
 <li>
 <p>
 <a href="http://labs.consol.de/lang/de/forum/#/categories/mod-gearman">support forum</a>
+</p>
+</li>
+<li>
+<p>
+<a href="https://groups.google.com/group/mod_gearman">google groups mailinglist</a>
 </p>
 </li>
 <li>
@@ -645,30 +700,13 @@ Debian users may be interested in the <a href="http://labs.consol.de/nagios/mod-
 </li>
 <li>
 <p>
-Debian users may also be interested in the official packages: <a href="http://packages.debian.org/source/wheezy/mod-gearman">http://packages.debian.org/source/wheezy/mod-gearman</a>
-</p>
-</li>
-</ul></div>
-</div>
-<h2 id="_supported_gearman_versions">Supported Gearman Versions</h2>
-<div class="sectionbody">
-<div class="paragraph"><p>Mod-Gearman has successfully been tested on the following Gearmand
-Versions. It is recommended to always use the latest listed version of
-Gearman.</p></div>
-<div class="ulist"><ul>
-<li>
-<p>
-<a href="https://launchpad.net/gearmand/trunk/0.25">0.25</a>
+Mod-Gearman has been succesfully tested with latest Nagios/Icinga.
+   See <a href="#_supported_dependencys">Supported Dependencys</a> for details.
 </p>
 </li>
 <li>
 <p>
-<a href="https://launchpad.net/gearmand/trunk/0.23">0.23</a>
-</p>
-</li>
-<li>
-<p>
-<a href="https://launchpad.net/gearmand/trunk/0.14">0.14</a>
+There are no known bugs at the moment.  Let me know if you find one.
 </p>
 </li>
 </ul></div>
@@ -682,7 +720,7 @@ which are in one of the specified hostgroups, are sent into a seperate
 hostgroup queue. All non matching hosts are sent to a generic <em>hosts</em>
 queue.  Checks for services are first checked against the list of
 servicegroups, then against the hostgroups and if none matches they
-will be sent into a generic <em>service</em> queue.  The NEB module starts a
+will be sent into a generic <em>service</em> queue. The NEB module starts a
 single thread, which monitors the <em>check_results</em> where all results
 come in.</p></div>
 <a title="mod gearman architecture" rel="lightbox[mod_gm]" href="http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-e1284455350110.png"><img src="http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-e1284455350110.png" alt="mod_gearman architecture" width="480" height="300" style="float:none" /></a>
@@ -693,13 +731,13 @@ come in.</p></div>
 | Queue Name    | Worker Available | Jobs Waiting | Jobs Running |
 +---------------+------------------+--------------+--------------+
 | check_results | 1                | 0            | 0            |
+| eventhandler  | 50               | 0            | 0            |
 | host          | 50               | 0            | 1            |
 | service       | 50               | 0            | 13           |
-| eventhandler  | 50               | 0            | 0            |
 +---------------+------------------+--------------+--------------+</tt></pre>
 </div></div>
 <div class="paragraph"><p>There is one queue for the results and two for the checks plus the
-eventhandler.</p></div>
+eventhandler queue.</p></div>
 <div class="paragraph"><p>The workflow is simple:</p></div>
 <div class="olist arabic"><ol class="arabic">
 <li>
@@ -738,7 +776,7 @@ The nagios reaper reads all checks from the result list and
 </ol></div>
 <div class="paragraph"><p>You can set some host or servicegroups for special worker. This
 example uses a seperate hostgroup for Japan and a seperate
-servicegroup for jmx4perl.</p></div>
+servicegroup for resource intensive selenium checks.</p></div>
 <div class="paragraph"><p>It would look like this:</p></div>
 <div class="listingblock">
 <div class="content">
@@ -746,11 +784,11 @@ servicegroup for jmx4perl.</p></div>
 | Queue Name            | Worker Available | Jobs Waiting | Jobs Running |
 +-----------------------+------------------+--------------+--------------+
 | check_results         | 1                | 0            | 0            |
-| host                  | 50               | 0            | 1            |
-| service               | 50               | 0            | 13           |
-| servicegroup_jmx4perl | 3                | 0            | 3            |
-| hostgroup_japan       | 3                | 1            | 3            |
 | eventhandler          | 50               | 0            | 0            |
+| host                  | 50               | 0            | 1            |
+| hostgroup_japan       | 3                | 1            | 3            |
+| service               | 50               | 0            | 13           |
+| servicegroup_selenium | 2                | 0            | 2            |
 +-----------------------+------------------+--------------+--------------+</tt></pre>
 </div></div>
 <div class="paragraph"><p>You still have the generic queues and in addition there are two queues
@@ -759,7 +797,7 @@ for the specific groups.</p></div>
 back into the check_result queue which will then be taken back by the
 neb module and put back into the nagios core. A worker can work on one
 or more queues. So you could start a worker which only handles the
-<em>hostgroup_japan</em> group.  One worker for the <em>jmx4perl</em> checks and one
+<em>hostgroup_japan</em> group.  One worker for the <em>selenium</em> checks and one
 worker which covers the other queues. There can be more than one
 worker on each queue to share the load.</p></div>
 <a title="mod gearman queues" rel="lightbox[mod_gm]" href="http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman_queues.png"><img src="http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman_queues.png" alt="mod_gearman architecture " width="360" height="270" style="float:none" /></a>
@@ -1768,8 +1806,8 @@ tag are run without embedded Perl.</td>
 <div class="title">Note</div>
 </td>
 <td class="content">Mod-Gearman does not fix all of the memory leaks introduced with
-Nagios and Embedded Perl, but it moves the Leaks away from the core.
-And they do not affect Mod-Gearman as well as they are only in the
+Nagios and Embedded Perl, but it moves the leaks away from the core.
+And they do not affect Mod-Gearman at all, as they are only in the
 preforked worker processes which will be restarted automatically from
 time to time (see <em>max-jobs</em>).</td>
 </tr></table>
@@ -1829,9 +1867,55 @@ and the nagios check_results queue on the same server.</td>
 </div>
 <h2 id="_what_about_notifications">What About Notifications</h2>
 <div class="sectionbody">
-<div class="paragraph"><p>Notifications are very difficult to distribute. And i think its not
-very useful too. So this feature will not be implemented in the near
-future.</p></div>
+<div class="paragraph"><p>Notifications are currently not possible to distribute via
+Mod-Gearman. The nagios core would have to be patched to support this.
+And i think its not very useful at all. So don&#8217;t expect this feature
+to be implemented in the near future.</p></div>
+</div>
+<h2 id="_supported_dependencys">Supported Dependencys</h2>
+<div class="sectionbody">
+<h5 id="_lib_gearman">Lib-Gearman</h5>
+<div class="paragraph"><p>Mod-Gearman has successfully been tested on the following Gearmand
+Versions. It is recommended to always use the latest listed version of
+libgearman.</p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+<a href="https://launchpad.net/gearmand/trunk/0.25">libgearman 0.25</a>
+</p>
+</li>
+<li>
+<p>
+<a href="https://launchpad.net/gearmand/trunk/0.23">libgearman 0.23</a>
+</p>
+</li>
+<li>
+<p>
+<a href="https://launchpad.net/gearmand/trunk/0.14">libgearman 0.14</a>
+</p>
+</li>
+</ul></div>
+<h5 id="_nagios">Nagios</h5>
+<div class="paragraph"><p>Mod-Gearman works perfect with the latest stable nagios 3.2.3. Version
+3.3.1 has some serious bugs and is not recommended for use in
+production.</p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+<a href="http://sourceforge.net/projects/nagios/files/nagios-3.x/nagios-3.2.3/">Nagios 3.2.3</a>
+</p>
+</li>
+</ul></div>
+<h5 id="_icinga">Icinga</h5>
+<div class="paragraph"><p>Mod-Gearman has succesfully been tested on Icinga 1.2.0 and is running
+perfectly on up to the current version 1.6.1.</p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+<a href="http://sourceforge.net/projects/icinga/files/icinga/1.6.1/">Icinga 1.6.1</a>
+</p>
+</li>
+</ul></div>
 </div>
 <h2 id="_hints">Hints</h2>
 <div class="sectionbody">
@@ -1884,6 +1968,11 @@ Make sure all your worker have the nagios-plugins available under
 <h2 id="_archive">Archive</h2>
 <div class="sectionbody">
 <div class="ulist"><ul>
+<li>
+<p>
+<a href="http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.2.0.tar.gz">version 1.2.0 - January 08 2012</a>
+</p>
+</li>
 <li>
 <p>
 <a href="http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.1.1.tar.gz">version 1.1.1 - November 10 2011</a>
@@ -1985,7 +2074,7 @@ Make sure all your worker have the nagios-plugins available under
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2012-01-01 16:02:56 CEST
+Last updated 2012-01-08 20:01:07 CEST
 </div>
 </div>
 </body>

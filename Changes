@@ -1,6 +1,6 @@
 This file documents the revision history for mod_gearman.
 
-1.1.2  ...
+1.2.0  Sun Jan  8 18:42:56 CET 2012
           - added embedded perl support (see README for details)
           - added uniq key option for check_gearman (kgovande)
           - added contrib folder
