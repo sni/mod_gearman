@@ -92,8 +92,8 @@ TESTS            = $(check_PROGRAMS)
 GEARMANDS=/usr/sbin/gearmand /opt/sbin/gearmand
 replace_vars = sed -e 's:%CONFIG_WORKER%:$(sysconfdir)/mod_gearman_worker.conf:g' \
                -e 's:%PIDFILE%:$(localstatedir)/mod_gearman/mod_gearman_worker.pid:g' \
-               -e 's:%LOGFILE_NEB%:$(localstatedir)/mod_gearman/mod_gearman_neb.log:g' \
-               -e 's:%LOGFILE_WORKER%:$(localstatedir)/mod_gearman/mod_gearman_worker.log:g' \
+               -e 's:%LOGFILE_NEB%:$(localstatedir)/log/mod_gearman/mod_gearman_neb.log:g' \
+               -e 's:%LOGFILE_WORKER%:$(localstatedir)/log/mod_gearman/mod_gearman_worker.log:g' \
                -e 's:%P1FILE%:$(datadir)/mod_gearman/mod_gearman_p1.pl:g' \
                -e 's:%GPIDFILE%:$(localstatedir)/mod_gearman/gearmand.pid:g' \
                -e 's:%GLOGFILE%:$(localstatedir)/mod_gearman/gearmand.log:g' \
@@ -204,6 +204,7 @@ install_p1file:
 	@echo "################################################################"
 
 install-data-local: install-local-state-dir $(install_p1file)
+	$(install_sh_PROGRAM) -d $(DESTDIR)$(localstatedir)/log/mod_gearman
 	$(install_sh_PROGRAM) -m 644 extras/shared.conf            $(DESTDIR)$(datadir)/mod_gearman/shared.conf
 	$(install_sh_PROGRAM) -m 644 extras/standalone_worker.conf $(DESTDIR)$(datadir)/mod_gearman/standalone_worker.conf
 	@echo ""

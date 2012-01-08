@@ -215,11 +215,64 @@ Using OMD is propably the easiest way of installing and using
 Mod-Gearman. You just have to run 'omd config' or set Mod-Gearman
 to 'on'.
 
+OMD is available for Debian, Ubuntu, Centos/Redhat and SLES.
+
 --------------------------------------
 OMD[test]:~$ omd config set MOD_GEARMAN on
 --------------------------------------
 
 NOTE: Mod-Gearman is included in http://omdistro.org[OMD] since version 0.48.
+
+
+Debian / Ubuntu
+~~~~~~~~~~~~~~~
+It is strongly recommended to use the
+http://packages.debian.org/source/wheezy/mod-gearman[official
+packages].
+
+
+Centos/Redhat
+~~~~~~~~~~~~~
+The easy and proper way is to build RPM packages. The following steps
+assume a Centos 5.7. Other releases may have different versions but
+should behave similar.
+
+Build/install Gearmand rpms
+--------------------------------------
+#> yum install autoconf automake libtool boost141-devel boost141-program-options
+#> cd /tmp
+#> wget http://launchpad.net/gearmand/trunk/0.25/+download/gearmand-0.25.tar.gz
+#> tar zxf gearmand-0.25.tar.gz
+#> ln -s gearmand-0.25/support/gearmand.init /tmp/gearmand.init
+#> vi gearmand-0.25/support/gearmand.spec
+   change in line 9 and 25:
+   Requires: sqlite, libevent >= 1.4, boost-program-options >=  1.39
+   in
+   Requires: sqlite, libevent >= 1.4, boost141-program-options >=  1.39
+#> tar cfz gearmand-0.25.tar.gz gearmand-0.25
+#> LIBRARY_PATH=/usr/lib64/boost141:/usr/lib/boost141 \
+   LD_LIBRARY_PATH=/usr/lib64/boost141:/usr/lib/boost141 \
+   CPATH=/usr/include/boost141 \
+   rpmbuild -tb gearmand-0.25.tar.gz
+#> yum --nogpgcheck install /usr/src/redhat/RPMS/*/gearmand*-0.25-1*.rpm
+--------------------------------------
+
+NOTE: The link to gearmand.init is a workaround, otherwise the build
+will fail. It may not be necessary for future gearman versions.
+
+Build/install Mod-Gearman rpms
+--------------------------------------
+#> wget http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.2.0.tar.gz
+#> rpmbuild -tb mod_gearman-1.2.0.tar.gz
+#> yum --nogpgcheck install /usr/src/redhat/RPMS/*/mod_gearman-1.2.0-1.*.rpm
+--------------------------------------
+
+now start and check your installation
+--------------------------------------
+#> /etc/init.d/gearmand start
+#> /etc/init.d/mod_gearman_worker start
+#> gearman_top
+--------------------------------------
 
 
 From Source

@@ -840,6 +840,7 @@ results.</p></div>
 <div class="paragraph"><p>Using OMD is propably the easiest way of installing and using
 Mod-Gearman. You just have to run <em>omd config</em> or set Mod-Gearman
 to <em>on</em>.</p></div>
+<div class="paragraph"><p>OMD is available for Debian, Ubuntu, Centos/Redhat and SLES.</p></div>
 <div class="listingblock">
 <div class="content">
 <pre><tt>OMD[test]:~$ omd config set MOD_GEARMAN on</tt></pre>
@@ -852,6 +853,50 @@ to <em>on</em>.</p></div>
 <td class="content">Mod-Gearman is included in <a href="http://omdistro.org">OMD</a> since version 0.48.</td>
 </tr></table>
 </div>
+<h3 id="_debian_ubuntu">Debian / Ubuntu</h3><div style="clear:left"></div>
+<div class="paragraph"><p>It is strongly recommended to use the
+<a href="http://packages.debian.org/source/wheezy/mod-gearman">official
+packages</a>.</p></div>
+<h3 id="_centos_redhat">Centos/Redhat</h3><div style="clear:left"></div>
+<div class="paragraph"><p>The easy and proper way is to build RPM packages. The following steps
+assume a Centos 5.7. Other releases may have different versions but
+should behave similar.</p></div>
+<div class="paragraph"><p>Build/install Gearmand rpms</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><tt>#&gt; yum install autoconf automake libtool boost141-devel boost141-program-options
+#&gt; cd /tmp
+#&gt; wget http://launchpad.net/gearmand/trunk/0.25/+download/gearmand-0.25.tar.gz
+#&gt; tar zxf gearmand-0.25.tar.gz
+#&gt; ln -s gearmand-0.25/support/gearmand.init /tmp/gearmand.init
+#&gt; vi gearmand-0.25/support/gearmand.spec
+   change in line 9 and 25:
+   Requires: sqlite, libevent &gt;= 1.4, boost-program-options &gt;=  1.39
+   in
+   Requires: sqlite, libevent &gt;= 1.4, boost141-program-options &gt;=  1.39
+#&gt; tar cfz gearmand-0.25.tar.gz gearmand-0.25
+#&gt; LIBRARY_PATH=/usr/lib64/boost141:/usr/lib/boost141 \
+   LD_LIBRARY_PATH=/usr/lib64/boost141:/usr/lib/boost141 \
+   CPATH=/usr/include/boost141 \
+   rpmbuild -tb gearmand-0.25.tar.gz
+#&gt; yum --nogpgcheck install /usr/src/redhat/RPMS/*/gearmand*-0.25-1*.rpm</tt></pre>
+</div></div>
+<div class="admonitionblock">
+<table><tr>
+<td class="icon">
+<div class="title">Note</div>
+</td>
+<td class="content">The link to gearmand.init is a workaround, otherwise the build
+will fail. It may not be necessary for future gearman versions.</td>
+</tr></table>
+</div>
+<div class="paragraph"><p>Build/install Mod-Gearman rpms</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><tt>#&gt; wget http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.2.0.tar.gz
+#&gt; rpmbuild -tb mod_gearman-1.2.0.tar.gz
+#&gt; yum --nogpgcheck install /usr/src/redhat/RPMS/*/mod_gearman-1.2.0-1.*.rpm</tt></pre>
+</div></div>
 <h3 id="_from_source">From Source</h3><div style="clear:left"></div>
 <div class="paragraph"><p>Pre Requirements:</p></div>
 <div class="ulist"><ul>
@@ -2074,7 +2119,7 @@ Make sure all your worker have the nagios-plugins available under
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2012-01-08 20:01:07 CEST
+Last updated 2012-01-08 23:13:13 CEST
 </div>
 </div>
 </body>

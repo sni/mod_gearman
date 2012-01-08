@@ -10,10 +10,11 @@ Group:         Applications/Monitoring
 BuildRoot:     %{_tmppath}/%{name}-%{version}-root-%(%{__id_u} -n)
 BuildRequires: autoconf, automake, ncurses-devel
 BuildRequires: libtool, libtool-ltdl-devel, libevent-devel
-BuildRequires: libgearman-devel
+BuildRequires: gearmand-devel
 Summary:       Gearman module for Icinga/Nagios
 Requires(pre,post): /sbin/ldconfig
-Requires:      libgearman
+Requires(pre): shadow-utils
+Requires:      gearmand, perl
 
 Provides:      mod_gearman
 
@@ -36,7 +37,8 @@ be bound to host and servicegroups.
      --datarootdir="%{_datadir}" \
      --localstatedir="%{_localstatedir}" \
      --sysconfdir="%{_sysconfdir}/mod_gearman" \
-     --with-init-dir="%{_initrddir}"
+     --with-init-dir="%{_initrddir}" \
+     --enable-embedded-perl
 
 %{__make} %{_smp_mflags}
 
@@ -47,12 +49,16 @@ be bound to host and servicegroups.
      DESTDIR="%{buildroot}" \
      AM_INSTALL_PROGRAM_FLAGS=""
 
-#move shared config from datadir to sysconfdir
-mv %{buildroot}/%{_datadir}/mod_gearman/shared.conf %{buildroot}/%{_sysconfdir}/mod_gearman/shared.conf
-mv %{buildroot}/%{_datadir}/mod_gearman/standalone_worker.conf %{buildroot}/%{_sysconfdir}/mod_gearman/standalone_worker.conf
-
 # remove custom gearmand initscript
 %{__rm} -f %{buildroot}/%{_initrddir}/gearmand
+%{__rm} -f %{buildroot}/%{_libdir}/mod_gearman/mod_gearman.so
+
+%pre
+getent group nagios >/dev/null || groupadd -r nagios
+getent passwd nagios >/dev/null || \
+    useradd -r -g nagios -d %{_localstatedir}/mod_gearman -s /sbin/nologin \
+    -c "nagios user" nagios
+exit 0
 
 %post -p /sbin/ldconfig
 
@@ -63,9 +69,12 @@ mv %{buildroot}/%{_datadir}/mod_gearman/standalone_worker.conf %{buildroot}/%{_s
 
 %files
 %attr(755,root,root) %{_initrddir}/mod_gearman_worker
-%config(noreplace) %{_sysconfdir}/mod_gearman/mod_gearman.conf
-%config(noreplace) %{_sysconfdir}/mod_gearman/shared.conf
-%config(noreplace) %{_sysconfdir}/mod_gearman/standalone_worker.conf
+%config(noreplace) %{_sysconfdir}/mod_gearman/mod_gearman_neb.conf
+%config(noreplace) %{_sysconfdir}/mod_gearman/mod_gearman_worker.conf
+
+%{_datadir}/mod_gearman/standalone_worker.conf
+%{_datadir}/mod_gearman/shared.conf
+%{_datadir}/mod_gearman/mod_gearman_p1.pl
 
 %{_bindir}/check_gearman
 %{_bindir}/gearman_top
@@ -74,9 +83,9 @@ mv %{buildroot}/%{_datadir}/mod_gearman/standalone_worker.conf %{buildroot}/%{_s
 %{_bindir}/send_multi
 
 %{_libdir}/mod_gearman/mod_gearman.o
-%{_libdir}/mod_gearman/mod_gearman.so
 
 %attr(755,nagios,root) %{_localstatedir}/mod_gearman
+%attr(755,nagios,root) %{_localstatedir}/log/mod_gearman
 
 %defattr(-,root,root)
 %docdir %{_defaultdocdir}
