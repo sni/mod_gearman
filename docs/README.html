@@ -1818,7 +1818,7 @@ are a list of callbacks for which you want to export json data.
 </div>
 <h2 id="_embedded_perl">Embedded Perl</h2>
 <div class="sectionbody">
-<div class="paragraph"><p>Since 1.1.2 Mod-Gearman has builtin embedded Perl support which means
+<div class="paragraph"><p>Since 1.2.0 Mod-Gearman has builtin embedded Perl support which means
 generally a big performance boost when you have lots of perl plugins.</p></div>
 <div class="paragraph"><p>To enable embedded Perl you need to run configure with
 --enable-embedded-perl</p></div>
@@ -1839,6 +1839,12 @@ nagios: -epn</em> in the first 10 lines of the script or set
 tag are run without embedded Perl.</td>
 </tr></table>
 </div>
+<div class="paragraph"><p>The default configuration of Mod-Gearman enables embedded Perl, but
+only uses it for Perl scripts which explicitly set <em># nagios: +epn</em>.
+This is a very safe way of using embedded Perl but you probably miss
+some plugins which do not set the header and still would run with EPN.
+You may want to use the <em>mini_epn</em> from your nagios installation to
+verify if a plugin works with EPN or not.</p></div>
 <div class="paragraph"><p>General EPN documentation is valid for Mod-Gearman as well:</p></div>
 <div class="ulist"><ul>
 <li>
@@ -2126,7 +2132,7 @@ Make sure all your worker have the nagios-plugins available under
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2012-01-08 23:37:05 CEST
+Last updated 2012-01-08 23:45:26 CEST
 </div>
 </div>
 </body>

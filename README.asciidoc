@@ -859,7 +859,7 @@ are a list of callbacks for which you want to export json data.
 
 Embedded Perl
 -------------
-Since 1.1.2 Mod-Gearman has builtin embedded Perl support which means
+Since 1.2.0 Mod-Gearman has builtin embedded Perl support which means
 generally a big performance boost when you have lots of perl plugins.
 
 To enable embedded Perl you need to run configure with
@@ -876,6 +876,13 @@ NOTE: Not all perl plugins support EPN. You can fix them, add '#
 nagios: -epn' in the first 10 lines of the script or set
 'use_embedded_perl_implicitly=off' so all scripts without the explicit
 tag are run without embedded Perl.
+
+The default configuration of Mod-Gearman enables embedded Perl, but
+only uses it for Perl scripts which explicitly set '# nagios: +epn'.
+This is a very safe way of using embedded Perl but you probably miss
+some plugins which do not set the header and still would run with EPN.
+You may want to use the 'mini_epn' from your nagios installation to
+verify if a plugin works with EPN or not.
 
 General EPN documentation is valid for Mod-Gearman as well:
 
