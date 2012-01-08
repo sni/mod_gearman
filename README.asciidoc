@@ -267,7 +267,7 @@ Build/install Mod-Gearman rpms
 #> yum --nogpgcheck install /usr/src/redhat/RPMS/*/mod_gearman-1.2.0-1.*.rpm
 --------------------------------------
 
-now start and check your installation
+Finally start and check your installation
 --------------------------------------
 #> /etc/init.d/gearmand start
 #> /etc/init.d/mod_gearman_worker start
