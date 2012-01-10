@@ -235,8 +235,8 @@ int file_uses_embedded_perl(char *fname) {
 
         buf[sizeof(buf) - 1] = '\0';
 
-        /* skip lines not containing nagios 'epn' directives */
-        if(strstr(buf, "# nagios:")) {
+        /* skip lines not containing 'epn' directives */
+        if(strstr(buf, "# nagios:") || strstr(buf, "# icinga:")) {
             char *p;
             p = strstr(buf + 8, "epn");
             if (!p)
