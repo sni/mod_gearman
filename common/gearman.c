@@ -269,7 +269,7 @@ int add_job_to_queue( gearman_client_st *client, char ** server_list, char * que
     if(free_uniq)
         free(uniq);
 
-    gm_log( GM_LOG_TRACE, "add_job_to_queue() finished sucessfully: %d %d\n", ret1, ret2 );
+    gm_log( GM_LOG_TRACE, "add_job_to_queue() finished successfully: %d %d\n", ret1, ret2 );
     return GM_OK;
 }
 

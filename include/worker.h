@@ -124,7 +124,7 @@ int  adjust_number_of_worker(int min, int max, int cur_workers, int cur_jobs);
 void setup_child_communicator(void);
 
 /**
- * finish and clean all childs and shared memory segments, then exit.
+ * finish and clean all children and shared memory segments, then exit.
  *
  * @param[in] sig - signal which caused the exit
  *
@@ -164,7 +164,7 @@ void reload_config(int sig);
  *
  * @return nothing
  */
-void stop_childs(int mode);
+void stop_children(int mode);
 
 /**
  * main loop to maintain the child population
@@ -174,7 +174,7 @@ void stop_childs(int mode);
 void monitor_loop(void);
 
 /**
- * check and start new worker childs if level is too low
+ * check and start new worker children if level is too low
  *
  * @return nothing
  */

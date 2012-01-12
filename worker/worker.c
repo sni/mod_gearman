@@ -156,7 +156,7 @@ int main (int argc, char **argv) {
     /* start status worker */
     make_new_child(GM_WORKER_STATUS);
 
-    /* setup childs */
+    /* setup children */
     for(x=0; x < mod_gm_opt->min_worker; x++) {
         make_new_child(GM_WORKER_MULTI);
     }
@@ -583,8 +583,8 @@ void clean_exit(int sig) {
     if(mod_gm_opt->pidfile != NULL)
         unlink(mod_gm_opt->pidfile);
 
-    /* stop all childs */
-    stop_childs(GM_WORKER_STOP);
+    /* stop all children */
+    stop_children(GM_WORKER_STOP);
 
     /* detach shm */
     if(shmdt(shm) < 0)
@@ -596,20 +596,20 @@ void clean_exit(int sig) {
 }
 
 
-/* stop all childs */
-void stop_childs(int mode) {
+/* stop all children */
+void stop_children(int mode) {
     int status, chld;
     int waited = 0;
     int x, curpid;
 
-    gm_log( GM_LOG_TRACE, "stop_childs(%d)\n", mode);
+    gm_log( GM_LOG_TRACE, "stop_children(%d)\n", mode);
 
     /* ignore some signals for now */
     signal(SIGTERM, SIG_IGN);
     signal(SIGINT,  SIG_IGN);
 
     /*
-     * send term signal to our childs
+     * send term signal to our children
      * children will finish the current job and exit
      */
     killpg(0, SIGTERM);
@@ -633,7 +633,7 @@ void stop_childs(int mode) {
         count_current_worker(GM_DISABLED);
         if(current_number_of_workers == 0)
             return;
-        gm_log( GM_LOG_TRACE, "still waiting (%d) %d childs missing...\n", waited, current_number_of_workers);
+        gm_log( GM_LOG_TRACE, "still waiting (%d) %d children missing...\n", waited, current_number_of_workers);
     }
 
     if(mode == GM_WORKER_STOP) {
@@ -669,7 +669,7 @@ void stop_childs(int mode) {
             }
         }
 
-        /* count childs a last time */
+        /* count children a last time */
         count_current_worker(GM_DISABLED);
         if(current_number_of_workers == 0)
             return;
@@ -763,10 +763,10 @@ void reload_config(int sig) {
 
     /*
      * restart workers gracefully:
-     * send term signal to our childs
+     * send term signal to our children
      * children will finish the current job and exit
      */
-    stop_childs(GM_WORKER_RESTART);
+    stop_children(GM_WORKER_RESTART);
 
     /* start status worker */
     make_new_child(GM_WORKER_STATUS);
