@@ -301,12 +301,12 @@ mrproper:
 	git clean -xfd
 
 version:
-	newversion=$$(dialog --stdout --inputbox "New Version:" 0 0 "$(VERSION)") ; \
-	if [ -n "$$newversion" ] && [ "$$newversion" != "$(VERSION)" ]; then \
-		sed -ri "s/$(VERSION)/$$newversion/" include/common.h configure.ac docs/QUICKSTART support/mod_gearman.spec; \
-	fi ;
-	sed -i Changes -e "s/$(VERSION)/$$newversion $(shell date)\n          - ...\n\n$(VERSION)/"
-	$(MAKE) docs
+	if [ -z "$$NEWVERSION" ]; then NEWVERSION=$$(dialog --stdout --inputbox "New Version:" 0 0 "$(VERSION)"); fi; \
+	if [ -n "$$NEWVERSION" ] && [ "$$NEWVERSION" != "$(VERSION)" ]; then \
+		sed -ri "s/$(VERSION)/$$NEWVERSION/" include/common.h configure.ac docs/QUICKSTART support/mod_gearman.spec; \
+		sed -i Changes -e "s/$(VERSION)/$$NEWVERSION $(shell date)\n          - ...\n\n$(VERSION)/"; \
+		$(MAKE) docs; \
+	fi;
 
 # order does matter for perl libs/includes (at least on centos)
 mod_gearman_worker$(EXEEXT): $(mod_gearman_worker_OBJECTS) $(perl_objects) $(mod_gearman_worker_DEPENDENCIES)
