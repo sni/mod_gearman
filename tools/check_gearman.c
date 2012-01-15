@@ -137,7 +137,7 @@ void print_version() {
 void print_usage() {
     printf("usage:\n");
     printf("\n");
-    printf("check_gearman [ -H=<hostname>                ]\n");
+    printf("check_gearman [ -H=<hostname>[:port]         ]\n");
     printf("              [ -t=<timeout>                 ]\n");
     printf("              [ -w=<jobs warning level>      ]  default: %i\n", opt_job_warning);
     printf("              [ -c=<jobs critical level>     ]  default: %i\n", opt_job_critical);

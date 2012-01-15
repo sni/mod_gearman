@@ -116,7 +116,7 @@ void print_version() {
 void print_usage() {
     printf("usage:\n");
     printf("\n");
-    printf("gearman_top   [ -H <hostname>                  ]\n");
+    printf("gearman_top   [ -H <hostname>[:port]           ]\n");
     printf("              [ -i <sec>       seconds         ]\n");
     printf("              [ -q             quiet mode      ]\n");
     printf("\n");
