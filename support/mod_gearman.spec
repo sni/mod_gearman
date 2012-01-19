@@ -91,6 +91,9 @@ exit 0
 %docdir %{_defaultdocdir}
 
 %changelog
+* Thu Jan 19 2012 Sven Nierlein <sven@consol.de>
+- enabled embedded Perl
+
 * Mon Jun 06 2011 Michael Friedrich <michael.friedrich@univie.ac.at>
 - reworked spec file to fit fhs compliance in /etc/mod_gearman
 - moved extras/*conf from localestatedir to sysconfdir
