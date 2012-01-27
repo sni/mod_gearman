@@ -35,17 +35,17 @@ int main (int argc, char **argv, char **env) {
     /* create options structure and set debug level */
     mod_gm_opt = malloc(sizeof(mod_gm_opt_t));
     set_default_options(mod_gm_opt);
-    //mod_gm_opt->debug_level=4;
-    char p1[150];
-    snprintf(p1, 150, "--p1_file=worker/mod_gearman_p1.pl");
-    parse_args_line(mod_gm_opt, p1, 0);
-    char ep[150];
-    snprintf(ep, 150, "--enable_embedded_perl=on");
-    parse_args_line(mod_gm_opt, ep, 0);
-    char epi[150];
-    snprintf(epi, 150, "--use_embedded_perl_implicitly=on");
-    parse_args_line(mod_gm_opt, epi, 0);
-    //dumpconfig(mod_gm_opt, GM_WORKER_MODE);
+    char cmds[150];
+    strcpy(cmds, "--p1_file=worker/mod_gearman_p1.pl");
+    parse_args_line(mod_gm_opt, cmds, 0);
+    strcpy(cmds, "--enable_embedded_perl=on");
+    parse_args_line(mod_gm_opt, cmds, 0);
+    strcpy(cmds, "--use_embedded_perl_implicitly=on");
+    parse_args_line(mod_gm_opt, cmds, 0);
+    /*
+     * mod_gm_opt->debug_level=4;
+     * dumpconfig(mod_gm_opt, GM_WORKER_MODE);
+     */
     ok(p1_file != NULL, "p1_file: %s", p1_file);
 
     /*****************************************

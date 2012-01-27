@@ -24,7 +24,7 @@ my $vallog       = '/tmp/valgrind.log';
 my $testlog      = '/tmp/mod_gearman_test.log';
 my $suppressions = '/tmp/suppressions.log';
 `>$suppressions`;
-my @tests = split/\s+/, `grep ^check_PROGRAMS Makefile.am | awk -F = '{print \$2}'`;
+my @tests = $ARGV[0] || split/\s+/, `grep ^check_PROGRAMS Makefile.am | awk -F = '{print \$2}'`;
 for my $test (@tests) {
     next if $test =~ m/^\s*$/;
     `make $test 2>/dev/null`;
