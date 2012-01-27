@@ -661,7 +661,7 @@ Disabled when set to 0. Default: 1000
 fork_on_exec::
 Use this option to disable an extra fork for each plugin execution.
 Disabling this option will reduce the load on the worker host, but may
-cause trouble with unclean plugins. Default: yes
+cause trouble with unclean plugins. Default: no
 +
 ====
     fork_on_exec=no
