@@ -125,7 +125,7 @@ idle-timeout=30
 # after high load times
 max-jobs=1000
 
-# defined the rate of spawed worker per second as long
+# defines the rate of spawned worker per second as long
 # as there are jobs waiting
 spawn-rate=1
 
@@ -149,7 +149,7 @@ enable_embedded_perl=on
 use_embedded_perl_implicitly=off
 
 # Cache compiled perl scripts. This makes the worker process a little
-# bit bigger but makes exection of perl scripts even faster.
+# bit bigger but makes execution of perl scripts even faster.
 # When turned off, Mod-Gearman will still use the embedded perl
 # interpreter, but will not cache the compiled script.
 use_perl_cache=on
