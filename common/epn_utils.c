@@ -135,6 +135,7 @@ int run_epn_check(char *processed_command, char **ret, char **err) {
             gm_log( GM_LOG_ERROR, "dup2 error\n");
             _exit(STATE_UNKNOWN);
         }
+
         close(pipe_stdout[0]);
         close(pipe_stderr[1]);
         current_child_pid = getpid();
@@ -167,6 +168,10 @@ int run_epn_check(char *processed_command, char **ret, char **err) {
         PUTBACK;
         FREETMPS;
         LEAVE;
+
+        /* free structures */
+        mod_gm_free_opt(mod_gm_opt);
+        deinit_embedded_perl();
 
         _exit(retval);
     }

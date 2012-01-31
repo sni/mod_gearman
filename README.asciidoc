@@ -588,6 +588,29 @@ onto the same gearman queues. Default: `check_results`
 ====
 
 
+orphan_host_checks::
+The Mod-Gearman NEB module will submit a fake result for orphaned host
+checks with a message saying there is no worker running for this
+queue. Use this option to get better reporting results, otherwise your
+hosts will keep their last state as long as there is no worker
+running.
+Default is yes.
++
+====
+    orphan_host_checks=yes
+====
+
+
+orphan_service_checks::
+Same like 'orphan_host_checks' but for services.
+Default is yes.
++
+====
+    orphan_service_checks=yes
+====
+
+
+
 Worker Options
 ~~~~~~~~~~~~~~
 
@@ -661,7 +684,7 @@ Disabled when set to 0. Default: 1000
 fork_on_exec::
 Use this option to disable an extra fork for each plugin execution.
 Disabling this option will reduce the load on the worker host, but may
-cause trouble with unclean plugins. Default: yes
+cause trouble with unclean plugins. Default: no
 +
 ====
     fork_on_exec=no

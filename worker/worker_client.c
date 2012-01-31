@@ -527,7 +527,7 @@ void *return_status( gearman_job_st *job, void *context, size_t *result_size, ge
         return NULL;
     }
 
-    snprintf(result, GM_BUFFERSIZE, "%s has %i worker and is working on %i jobs. Version: %s|worker=%i jobs=%ic", hostname, shm[1], shm[2], GM_VERSION, shm[1], shm[0] );
+    snprintf(result, GM_BUFFERSIZE, "%s has %i worker and is working on %i jobs. Version: %s|worker=%i;;;%i;%i jobs=%ic", hostname, shm[1], shm[2], GM_VERSION, shm[1], mod_gm_opt->min_worker, mod_gm_opt->max_worker, shm[0] );
 
     /* detach from shared memory */
     if(shmdt(shm) < 0)

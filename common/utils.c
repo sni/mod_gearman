@@ -250,6 +250,8 @@ int set_default_options(mod_gm_opt_t *opt) {
     opt->spawn_rate         = GM_DEFAULT_SPAWN_RATE;
     opt->identifier         = NULL;
     opt->show_error_output  = GM_ENABLED;
+    opt->orphan_host_checks    = GM_ENABLED;
+    opt->orphan_service_checks = GM_ENABLED;
 
     opt->workaround_rc_25   = GM_DISABLED;
 
@@ -416,6 +418,18 @@ int parse_args_line(mod_gm_opt_t *opt, char * arg, int recursion_level) {
     /* workaround_rc_25 */
     else if ( !strcmp( key, "workaround_rc_25" ) ) {
         opt->workaround_rc_25 = parse_yes_or_no(value, GM_ENABLED);
+        return(GM_OK);
+    }
+
+    /* orphan_host_checks */
+    else if ( !strcmp( key, "orphan_host_checks" ) ) {
+        opt->orphan_host_checks = parse_yes_or_no(value, GM_ENABLED);
+        return(GM_OK);
+    }
+
+    /* orphan_service_checks */
+    else if ( !strcmp( key, "orphan_service_checks" ) ) {
+        opt->orphan_service_checks = parse_yes_or_no(value, GM_ENABLED);
         return(GM_OK);
     }
 
@@ -1714,4 +1728,3 @@ char *md5sum(char *text) {
 
     return result;
 }
-

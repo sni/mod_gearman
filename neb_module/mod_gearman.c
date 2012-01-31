@@ -389,6 +389,8 @@ static int handle_process_events( int event_type, void *data ) {
 /* handle eventhandler events */
 static int handle_eventhandler( int event_type, void *data ) {
     nebstruct_event_handler_data * ds;
+    host * hst    = NULL;
+    service * svc = NULL;
 
     gm_log( GM_LOG_DEBUG, "got eventhandler event\n" );
     gm_log( GM_LOG_TRACE, "handle_eventhandler(%i, data)\n", event_type );
@@ -399,6 +401,35 @@ static int handle_eventhandler( int event_type, void *data ) {
     ds = ( nebstruct_event_handler_data * )data;
 
     gm_log( GM_LOG_TRACE, "got eventhandler event: %s\n", ds->command_line );
+
+    /* service event handler? */
+    if(ds->service_description != NULL) {
+        if((svc=ds->object_ptr)==NULL) {
+            gm_log( GM_LOG_ERROR, "Eventhandler handler received NULL service object pointer.\n" );
+            return NEB_OK;
+        }
+        if((hst=svc->host_ptr)==NULL) {
+            gm_log( GM_LOG_ERROR, "Service handler received NULL host object pointer.\n" );
+            return NEB_OK;
+        }
+    }
+    else {
+        if((hst=ds->object_ptr)==NULL) {
+            gm_log( GM_LOG_ERROR, "Host handler received NULL host object pointer.\n" );
+            return NEB_OK;
+        }
+    }
+
+    /* local eventhandler? */
+    set_target_queue( hst, svc );
+    if(!strcmp( target_queue, "" )) {
+        if(svc != NULL) {
+            gm_log( GM_LOG_DEBUG, "passing by local service eventhandler: %s - %s\n", svc->host_name, svc->description );
+        } else {
+            gm_log( GM_LOG_DEBUG, "passing by local host eventhandler: %s\n", hst->name );
+        }
+        return NEB_OK;
+    }
 
     temp_buffer[0]='\x0';
     snprintf( temp_buffer,GM_BUFFERSIZE-1,"type=eventhandler\ncommand_line=%s\n\n\n",ds->command_line );
@@ -430,6 +461,8 @@ static int handle_host_check( int event_type, void *data ) {
     char *raw_command=NULL;
     char *processed_command=NULL;
     host * hst;
+    check_result * chk_result;
+    int check_options;
 
     gm_log( GM_LOG_TRACE, "handle_host_check(%i)\n", event_type );
 
@@ -475,10 +508,38 @@ static int handle_host_check( int event_type, void *data ) {
      * taken from checks.c:
      */
     /* clear check options - we don't want old check options retained */
+    check_options = hst->check_options;
     hst->check_options = CHECK_OPTION_NONE;
 
     /* adjust host check attempt */
     adjust_host_check_attempt_3x(hst,TRUE);
+
+    temp_buffer[0]='\x0';
+
+    /* orphanded check? */
+    if(mod_gm_opt->orphan_host_checks == GM_ENABLED && check_options & CHECK_OPTION_ORPHAN_CHECK) {
+        gm_log( GM_LOG_DEBUG, "host check for %s orphanded\n", hst->name );
+        if ( ( chk_result = ( check_result * )malloc( sizeof *chk_result ) ) == 0 )
+            return NEBERROR_CALLBACKCANCEL;
+        snprintf( temp_buffer,GM_BUFFERSIZE-1,"(host check orphaned, is the mod-gearman worker on queue '%s' running?)\n", target_queue);
+        init_check_result(chk_result);
+        chk_result->host_name           = strdup( hst->name );
+        chk_result->scheduled_check     = TRUE;
+        chk_result->reschedule_check    = TRUE;
+        chk_result->output_file         = 0;
+        chk_result->output_file_fd      = -1;
+        chk_result->output              = strdup(temp_buffer);
+        chk_result->return_code         = 2;
+        chk_result->check_options       = CHECK_OPTION_NONE;
+        chk_result->object_check_type   = HOST_CHECK;
+        chk_result->check_type          = HOST_CHECK_ACTIVE;
+        chk_result->start_time.tv_sec   = (unsigned long)time(NULL);
+        chk_result->finish_time.tv_sec  = (unsigned long)time(NULL);
+        chk_result->latency             = 0;
+        mod_gm_add_result_to_list( chk_result );
+        chk_result = NULL;
+        return NEBERROR_CALLBACKCANCEL;
+    }
 
     /* grab the host macro variables */
     clear_volatile_macros();
@@ -516,7 +577,6 @@ static int handle_host_check( int event_type, void *data ) {
 
     gm_log( GM_LOG_TRACE, "cmd_line: %s\n", processed_command );
 
-    temp_buffer[0]='\x0';
     snprintf( temp_buffer,GM_BUFFERSIZE-1,"type=host\nresult_queue=%s\nhost_name=%s\nstart_time=%i.0\ntimeout=%d\ncommand_line=%s\n\n\n",
               mod_gm_opt->result_queue,
               hst->name,
@@ -568,6 +628,7 @@ static int handle_svc_check( int event_type, void *data ) {
     char *processed_command=NULL;
     nebstruct_service_check_data * svcdata;
     int prio = GM_JOB_PRIO_LOW;
+    check_result * chk_result;
 
     gm_log( GM_LOG_TRACE, "handle_svc_check(%i, data)\n", event_type );
     svcdata = ( nebstruct_service_check_data * )data;
@@ -602,6 +663,36 @@ static int handle_svc_check( int event_type, void *data ) {
     if(!strcmp( target_queue, "" )) {
         gm_log( GM_LOG_DEBUG, "passing by local servicecheck: %s - %s\n", svcdata->host_name, svcdata->service_description);
         return NEB_OK;
+    }
+
+    gm_log( GM_LOG_DEBUG, "received job for queue %s: %s - %s\n", target_queue, svcdata->host_name, svcdata->service_description );
+
+    temp_buffer[0]='\x0';
+
+    /* orphanded check? */
+    if(mod_gm_opt->orphan_service_checks == GM_ENABLED && svc->check_options & CHECK_OPTION_ORPHAN_CHECK) {
+        gm_log( GM_LOG_DEBUG, "service check for %s - %s orphanded\n", svc->host_name, svc->description );
+        if ( ( chk_result = ( check_result * )malloc( sizeof *chk_result ) ) == 0 )
+            return NEBERROR_CALLBACKCANCEL;
+        snprintf( temp_buffer,GM_BUFFERSIZE-1,"(service check orphaned, is the mod-gearman worker on queue '%s' running?)\n", target_queue);
+        init_check_result(chk_result);
+        chk_result->host_name           = strdup( svc->host_name );
+        chk_result->service_description = strdup( svc->description );
+        chk_result->scheduled_check     = TRUE;
+        chk_result->reschedule_check    = TRUE;
+        chk_result->output_file         = 0;
+        chk_result->output_file_fd      = -1;
+        chk_result->output              = strdup(temp_buffer);
+        chk_result->return_code         = 2;
+        chk_result->check_options       = CHECK_OPTION_NONE;
+        chk_result->object_check_type   = SERVICE_CHECK;
+        chk_result->check_type          = SERVICE_CHECK_ACTIVE;
+        chk_result->start_time.tv_sec   = (unsigned long)time(NULL);
+        chk_result->finish_time.tv_sec  = (unsigned long)time(NULL);
+        chk_result->latency             = 0;
+        mod_gm_add_result_to_list( chk_result );
+        chk_result = NULL;
+        return NEBERROR_CALLBACKCANCEL;
     }
 
     /* as we have to intercept service checks so early
@@ -648,10 +739,8 @@ static int handle_svc_check( int event_type, void *data ) {
     /* set the execution flag */
     svc->is_executing=TRUE;
 
-    gm_log( GM_LOG_DEBUG, "received job for queue %s: %s - %s\n", target_queue, svcdata->host_name, svcdata->service_description );
     gm_log( GM_LOG_TRACE, "cmd_line: %s\n", processed_command );
 
-    temp_buffer[0]='\x0';
     snprintf( temp_buffer,GM_BUFFERSIZE-1,"type=service\nresult_queue=%s\nhost_name=%s\nservice_description=%s\nstart_time=%i.0\ntimeout=%d\ncommand_line=%s\n\n\n",
               mod_gm_opt->result_queue,
               svcdata->host_name,

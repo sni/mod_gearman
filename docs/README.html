@@ -1407,6 +1407,42 @@ onto the same gearman queues. Default: <tt>check_results</tt>
 </div></div>
 </div></div>
 </dd>
+<dt class="hdlist1">
+orphan_host_checks
+</dt>
+<dd>
+<p>
+The Mod-Gearman NEB module will submit a fake result for orphaned host
+checks with a message saying there is no worker running for this
+queue. Use this option to get better reporting results, otherwise your
+hosts will keep their last state as long as there is no worker
+running.
+Default is yes.
+</p>
+<div class="exampleblock">
+<div class="exampleblock-content">
+<div class="literalblock">
+<div class="content">
+<pre><tt>orphan_host_checks=yes</tt></pre>
+</div></div>
+</div></div>
+</dd>
+<dt class="hdlist1">
+orphan_service_checks
+</dt>
+<dd>
+<p>
+Same like <em>orphan_host_checks</em> but for services.
+Default is yes.
+</p>
+<div class="exampleblock">
+<div class="exampleblock-content">
+<div class="literalblock">
+<div class="content">
+<pre><tt>orphan_service_checks=yes</tt></pre>
+</div></div>
+</div></div>
+</dd>
 </dl></div>
 <h3 id="_worker_options">Worker Options</h3><div style="clear:left"></div>
 <div class="paragraph"><p>Additional options for worker:</p></div>
@@ -1533,7 +1569,7 @@ fork_on_exec
 <p>
 Use this option to disable an extra fork for each plugin execution.
 Disabling this option will reduce the load on the worker host, but may
-cause trouble with unclean plugins. Default: yes
+cause trouble with unclean plugins. Default: no
 </p>
 <div class="exampleblock">
 <div class="exampleblock-content">
@@ -2132,7 +2168,7 @@ Make sure all your worker have the nagios-plugins available under
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2012-01-08 23:45:26 CEST
+Last updated 2012-01-28 15:48:32 CEST
 </div>
 </div>
 </body>

@@ -193,6 +193,8 @@ typedef struct mod_gm_opt_struct {
     int            do_hostchecks;                           /**< flag whether mod-gearman will process hostchecks at all */
     mod_gm_exp_t * exports[GM_NEBTYPESSIZE];                /**< list of exporter queues */
     int            exports_count;                           /**< number of export queues */
+    int            orphan_host_checks;                      /**< generate fake result for orphaned host checks */
+    int            orphan_service_checks;                   /**< generate fake result for orphaned service checks */
 /* worker */
     char         * identifier;                              /**< identifier for this worker */
     char         * pidfile;                                 /**< path to a pidfile */
