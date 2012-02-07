@@ -38,12 +38,13 @@ Features
 
 Download
 --------
- * Latest stable http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.2.0.tar.gz[version 1.2.0], released January 08 2012
+ * Latest stable http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.2.2.tar.gz[version 1.2.2], released February 07 2012
  * Mod Gearman is available for download at: http://labs.consol.de/nagios/mod-gearman
  * Source is available on GitHub: http://github.com/sni/mod_gearman
  * Older versions are available in the <<_archive,download archive>>.
  * Mod-Gearman is also included in http://omdistro.org[OMD].
  * Debian users should use the http://packages.debian.org/source/wheezy/mod-gearman[official packages]
+ * SLES/RHEL users should use the http://mod-gearman.org/download/[prebuild packages]
 
 
 
@@ -1044,6 +1045,7 @@ Hints
 Archive
 -------
 
+* http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.2.2.tar.gz[version 1.2.2 - February 07 2012]
 * http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.2.0.tar.gz[version 1.2.0 - January 08 2012]
 * http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.1.1.tar.gz[version 1.1.1 - November 10 2011]
 * http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.1.0.tar.gz[version 1.1.0 - October 12 2011]

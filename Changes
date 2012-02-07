@@ -1,6 +1,6 @@
 This file documents the revision history for mod_gearman.
 
-1.2.2  ...
+1.2.2  Tue Feb  7 18:06:02 CET 2012
           - orphaned hosts/services generate a fake result with useful error message
           - bypass eventhandler from hosts/services in local host/servicegroups
           - fixed NAGIOS_PLUGIN env in epn
