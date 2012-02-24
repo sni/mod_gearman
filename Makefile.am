@@ -13,7 +13,7 @@ DOS2UNIX=$(shell which dos2unix || which fromdos)
 .PHONY: docs
 
 AM_CPPFLAGS=-Iinclude
-OS=`uname`
+OS=$(shell uname)
 
 if USEPERL
 P1FILE         = worker/mod_gearman_p1.pl
@@ -110,7 +110,7 @@ EXTRA_DIST = COPYING etc/*.in extras include \
 # other targets
 mod_gearman.o: $(mod_gearman_so_OBJECTS) $(mod_gearman_so_DEPENDENCIES)
 	@echo '    $$(CC) $<'
-	@if [ "$(OS)" == "Darwin" ]; then \
+	@if [ "$(OS)" = "Darwin" ]; then \
 	    $(CXX) $(LDFLAGS) -dynamiclib -single_module -undefined dynamic_lookup $(mod_gearman_so_OBJECTS) -o $@ -lpthread -lgearman; \
 	else \
 	    $(CXX) $(LDFLAGS) -fPIC -shared $(mod_gearman_so_OBJECTS) -o $@ -lpthread -lgearman; \

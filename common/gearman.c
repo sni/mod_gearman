@@ -152,7 +152,6 @@ int create_client( char ** server_list, gearman_client_st *client ) {
     }
     assert(x != 0);
 
-
     current_client = client;
 
     return GM_OK;

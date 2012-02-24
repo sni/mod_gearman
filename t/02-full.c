@@ -39,12 +39,12 @@ void *start_gearmand(void*data) {
         char port[30];
         snprintf(port, 30, "--port=%d", GEARMAND_TEST_PORT);
         /* for newer gearman versions */
-        if(atof(gearman_version()) > 0.14) {
-            //diag("having gearmand > 0.14");
+        if(atof(gearman_version()) >= 0.27) {
+            execlp("gearmand", "gearmand", "--threads=10", "--job-retries=0", port, "--verbose=DEBUG", "--log-file=/tmp/gearmand.log" , (char *)NULL);
+        } else if(atof(gearman_version()) > 0.14) {
             execlp("gearmand", "gearmand", "--threads=10", "--job-retries=0", port, "--verbose=999", "--log-file=/tmp/gearmand.log" , (char *)NULL);
         } else {
             /* for gearman 0.14 */
-            //diag("having gearmand <= 0.14");
             execlp("gearmand", "gearmand", "-t 10", "-j 0", port, (char *)NULL);
         }
         perror("gearmand");
@@ -348,7 +348,7 @@ int main (int argc, char **argv, char **env) {
         diag( "waitpid() %d exited with %d\n", chld, status);
     }
 
-    if(!ok(gearmand_pid > 0, "'gearmand --threads=10 --job-retries=0 --port=%d --verbose=5 --log-file=/tmp/gearmand.log' started with pid: %d", GEARMAND_TEST_PORT, gearmand_pid)) {
+    if(!ok(gearmand_pid > 0, "'gearmand started with pid: %d", GEARMAND_TEST_PORT, gearmand_pid)) {
         diag("make sure gearmand is in your PATH. Common locations are /usr/sbin or /usr/local/sbin");
         exit( EXIT_FAILURE );
     }
