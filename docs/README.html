@@ -1485,6 +1485,24 @@ Path to the pidfile.
 </div></div>
 </dd>
 <dt class="hdlist1">
+job_timeout
+</dt>
+<dd>
+<p>
+Default job timeout in seconds. Currently this value is only used for
+eventhandler. The worker will use the values from the core for host
+and service checks.
+Default: 60
+</p>
+<div class="exampleblock">
+<div class="exampleblock-content">
+<div class="literalblock">
+<div class="content">
+<pre><tt>job_timeout=60</tt></pre>
+</div></div>
+</div></div>
+</dd>
+<dt class="hdlist1">
 min-worker
 </dt>
 <dd>
@@ -2178,7 +2196,7 @@ Make sure all your worker have the nagios-plugins available under
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2012-02-07 18:10:36 CEST
+Last updated 2012-02-24 21:50:47 CEST
 </div>
 </div>
 </body>

@@ -388,6 +388,16 @@ void check_alarm_handler(int sig) {
 
     gm_log( GM_LOG_TRACE, "check_alarm_handler(%i)\n", sig );
     if(current_job != NULL && mod_gm_opt->fork_on_exec == GM_DISABLED) {
+        /* create a useful log message*/
+        if ( !strcmp( current_job->type, "service" ) ) {
+            gm_log( GM_LOG_INFO, "timeout (%is) hit for servicecheck: %s - %s\n", current_job->timeout, current_job->host_name, current_job->service_description);
+        }
+        else if ( !strcmp( current_job->type, "host" ) ) {
+            gm_log( GM_LOG_INFO, "timeout (%is) hit for hostcheck: %s\n", current_job->timeout, current_job->host_name);
+        }
+        else if ( !strcmp( current_job->type, "event" ) ) {
+            gm_log( GM_LOG_INFO, "timeout (%is) hit for eventhandler: %s\n", current_job->timeout, current_job->command_line);
+        }
         send_timeout_result(current_job);
         gearman_job_send_complete(current_gearman_job, NULL, 0);
     }

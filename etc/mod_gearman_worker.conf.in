@@ -104,6 +104,11 @@ key=should_be_changed
 # Path to the pidfile. Usually set by the init script
 #pidfile=%PIDFILE%
 
+# Default job timeout in seconds. Currently this value is only used for
+# eventhandler. The worker will use the values from the core for host and
+# service checks.
+job_timeout=60
+
 # Minimum number of worker processes which should
 # run at any time.
 min-worker=5
