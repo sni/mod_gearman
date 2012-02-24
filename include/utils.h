@@ -410,17 +410,17 @@ void gm_log( int lvl, const char *text, ... );
 void write_core_log(char *data);
 
 /**
- * get_param_server
+ * check_param_server
  *
- * return string of new server or NULL on duplicate
+ * check if server is already in the list
  *
- * @param[in] servername - server name to parse
+ * @param[in] new_server - server to check
  * @param[in] server_list - list of servers to check for duplicates
  * @param[in] server_num - number of server in this list
  *
  * @returns the new server name or NULL
  */
-char * get_param_server(char * servername, char * server_list[GM_LISTSIZE], int server_num);
+int check_param_server(gm_server_t * new_server, gm_server_t * server_list[GM_LISTSIZE], int server_num);
 
 /**
  * send_result_back
@@ -443,6 +443,19 @@ void send_result_back(gm_job_t * exec_job);
  * @return md5sum (hex)
  */
 char *md5sum(char *text);
+
+/**
+ * add_server(
+ *
+ * adds parsed server to list
+ *
+ * @param[in] server_num - insert server at that point
+ * @param[in] server_list - add server to this list
+ * @param[in] servername - parse and add this server
+ *
+ * @return nothing
+ */
+void add_server(int * server_num, gm_server_t * server_list[GM_LISTSIZE], char * servername);
 
 /**
  * @}

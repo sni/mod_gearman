@@ -27,7 +27,7 @@
 
 
 /* get worker/jobs data from gearman server */
-int get_gearman_server_data(mod_gm_server_status_t *stats, char ** message, char ** version, char * hostname, int port) {
+int get_gearman_server_data(mod_gm_server_status_t *stats, char ** message, char ** version, char * hostnam, int port) {
     int sockfd, n;
     struct sockaddr_in serv_addr;
     struct hostent *server;
@@ -53,9 +53,9 @@ int get_gearman_server_data(mod_gm_server_status_t *stats, char ** message, char
         return( STATE_CRITICAL );
     }
 
-    server = gethostbyname(hostname);
+    server = gethostbyname(hostnam);
     if( server == NULL ) {
-        snprintf(*message, GM_BUFFERSIZE, "failed to resolve %s\n", hostname);
+        snprintf(*message, GM_BUFFERSIZE, "failed to resolve %s\n", hostnam);
         return( STATE_CRITICAL );
     }
     serv_addr.sin_family = AF_INET;
@@ -64,7 +64,7 @@ int get_gearman_server_data(mod_gm_server_status_t *stats, char ** message, char
          server->h_length);
     serv_addr.sin_port = htons(port);
     if (connect(sockfd,(const struct sockaddr *)&serv_addr,sizeof(serv_addr)) < 0) {
-        snprintf(*message, GM_BUFFERSIZE, "failed to connect to %s:%i - %s\n", hostname, (int)port, strerror(errno));
+        snprintf(*message, GM_BUFFERSIZE, "failed to connect to %s:%i - %s\n", hostnam, (int)port, strerror(errno));
         close(sockfd);
         return( STATE_CRITICAL );
     }
@@ -72,7 +72,7 @@ int get_gearman_server_data(mod_gm_server_status_t *stats, char ** message, char
     cmd = "status\nversion\n";
     n = write(sockfd,cmd,strlen(cmd));
     if (n < 0) {
-        snprintf(*message, GM_BUFFERSIZE, "failed to send to %s:%i - %s\n", hostname, (int)port, strerror(errno));
+        snprintf(*message, GM_BUFFERSIZE, "failed to send to %s:%i - %s\n", hostnam, (int)port, strerror(errno));
         close(sockfd);
         return( STATE_CRITICAL );
     }
@@ -80,7 +80,7 @@ int get_gearman_server_data(mod_gm_server_status_t *stats, char ** message, char
     n = read( sockfd, buf, GM_BUFFERSIZE-1 );
     buf[n] = '\x0';
     if (n < 0) {
-        snprintf(*message, GM_BUFFERSIZE, "error reading from %s:%i - %s\n", hostname, (int)port, strerror(errno));
+        snprintf(*message, GM_BUFFERSIZE, "error reading from %s:%i - %s\n", hostnam, (int)port, strerror(errno));
         close(sockfd);
         return( STATE_CRITICAL );
     }
@@ -137,7 +137,7 @@ int get_gearman_server_data(mod_gm_server_status_t *stats, char ** message, char
         gm_log( GM_LOG_DEBUG, "%i: name:%-20s worker:%-5i waiting:%-5i running:%-5i\n", stats->function_num, func->queue, func->worker, func->waiting, func->running );
     }
 
-    snprintf(*message, GM_BUFFERSIZE, "got no valid data from %s:%i\n", hostname, (int)port);
+    snprintf(*message, GM_BUFFERSIZE, "got no valid data from %s:%i\n", hostnam, (int)port);
     free(output_c);
     close(sockfd);
     return( STATE_UNKNOWN );

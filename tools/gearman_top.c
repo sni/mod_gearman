@@ -130,8 +130,8 @@ void print_usage() {
 
 
 /* print stats */
-void print_stats(char * hostname) {
-    char * hst    = strdup(hostname);
+void print_stats(char * hostnam) {
+    char * hst    = strdup(hostnam);
     char * hst_c  = hst;
     char * server = NULL;
     char * port_c = NULL;

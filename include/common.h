@@ -48,6 +48,7 @@
 #include <config.h>
 #include <stdio.h>
 #include <sys/time.h>
+#include <arpa/inet.h>
 
 #ifndef MOD_GM_COMMON_H
 #define MOD_GM_COMMON_H
@@ -152,6 +153,16 @@ typedef struct mod_gm_export {
     int      elem_number;                   /**< number of elements */
 } mod_gm_exp_t;
 
+/** server structure
+ *
+ * structure for server definition
+ *
+ */
+typedef struct gm_server {
+    char            * host;                 /**< hostname of server */
+    in_port_t       port;                   /**< port number */
+} gm_server_t;
+
 /** options structure
  *
  * structure union for all components
@@ -163,9 +174,9 @@ typedef struct mod_gm_opt_struct {
 
     char         * crypt_key;                               /**< encryption key used for securing the messages sent over gearman */
     char         * keyfile;                                 /**< path to a file where the crypt_key is read from */
-    char         * server_list[GM_LISTSIZE];                /**< list of gearmand servers */
+    gm_server_t  * server_list[GM_LISTSIZE];                /**< list of gearmand servers */
     int            server_num;                              /**< number of gearmand servers */
-    char         * dupserver_list[GM_LISTSIZE];             /**< list of gearmand servers to duplicate results */
+    gm_server_t  * dupserver_list[GM_LISTSIZE];             /**< list of gearmand servers to duplicate results */
     int            dupserver_num;                           /**< number of duplicate gearmand servers */
     char         * hostgroups_list[GM_LISTSIZE];            /**< list of hostgroups which get own queues */
     int            hostgroups_num;                          /**< number of elements in hostgroups_list */

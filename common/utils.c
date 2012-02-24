@@ -649,11 +649,7 @@ int parse_args_line(mod_gm_opt_t *opt, char * arg, int recursion_level) {
     else if ( !strcmp( key, "server" ) ) {
         char *servername;
         while ( (servername = strsep( &value, "," )) != NULL ) {
-            char * new_server = get_param_server(servername, opt->server_list, opt->server_num);
-            if(new_server != NULL) {
-                opt->server_list[opt->server_num] = new_server;
-                opt->server_num++;
-            }
+            add_server(&opt->server_num, opt->server_list, servername);
         }
     }
 
@@ -661,11 +657,7 @@ int parse_args_line(mod_gm_opt_t *opt, char * arg, int recursion_level) {
     else if ( !strcmp( key, "dupserver" ) ) {
         char *servername;
         while ( (servername = strsep( &value, "," )) != NULL ) {
-            char * new_server = get_param_server(servername, opt->dupserver_list, opt->dupserver_num);
-            if(new_server != NULL) {
-                opt->dupserver_list[opt->dupserver_num] = new_server;
-                opt->dupserver_num++;
-            }
+            add_server(&opt->dupserver_num, opt->dupserver_list, servername);
         }
     }
 
@@ -891,10 +883,10 @@ void dumpconfig(mod_gm_opt_t *opt, int mode) {
 
     /* server && queues */
     for(i=0;i<opt->server_num;i++)
-        gm_log( GM_LOG_DEBUG, "server:              %s\n", opt->server_list[i]);
+        gm_log( GM_LOG_DEBUG, "server:              %s:%i\n", opt->server_list[i]->host, opt->server_list[i]->port);
     gm_log( GM_LOG_DEBUG, "\n" );
     for(i=0;i<opt->dupserver_num;i++)
-        gm_log( GM_LOG_DEBUG, "dupserver:           %s\n", opt->dupserver_list[i]);
+        gm_log( GM_LOG_DEBUG, "dupserver:           %s:%i\n", opt->dupserver_list[i]->host, opt->dupserver_list[i]->port);
     gm_log( GM_LOG_DEBUG, "\n" );
     if(mode == GM_NEB_MODE) {
         gm_log( GM_LOG_DEBUG, "perfdata:            %s\n", opt->perfdata      == GM_ENABLED ? "yes" : "no");
@@ -948,8 +940,10 @@ void mod_gm_free_opt(mod_gm_opt_t *opt) {
         return;
     int i,j;
     for(i=0;i<opt->server_num;i++)
+        free(opt->server_list[i]->host);
         free(opt->server_list[i]);
     for(i=0;i<opt->dupserver_num;i++)
+        free(opt->dupserver_list[i]->host);
         free(opt->dupserver_list[i]);
     for(i=0;i<opt->hostgroups_num;i++)
         free(opt->hostgroups_list[i]);
@@ -1565,36 +1559,16 @@ void gm_log( int lvl, const char *text, ... ) {
     return;
 }
 
-/* extract server from string and check for duplicates */
-char * get_param_server(char * servername, char * server_list[GM_LISTSIZE], int server_num) {
-    char temp_buffer[GM_BUFFERSIZE];
-    char * new_server;
+/* check server for duplicates */
+int check_param_server(gm_server_t * new_server, gm_server_t * server_list[GM_LISTSIZE], int server_num) {
     int i;
-    servername = trim(servername);
-
-    if ( ! strcmp( servername, "" ) ) {
-        return NULL;
-    }
-
-    if(strcspn(servername, ":") == 0) {
-        temp_buffer[0]='\x0';
-        snprintf( temp_buffer,sizeof( temp_buffer )-1, "localhost%s", servername);
-        temp_buffer[sizeof( temp_buffer )-1]='\x0';
-        new_server = strdup(temp_buffer);
-    } else {
-        new_server = strdup(servername);
-    }
-
-    // check for duplicates
     for(i=0;i<server_num;i++) {
-        if ( ! strcmp( new_server, server_list[i] ) ) {
-            gm_log( GM_LOG_ERROR, "duplicate definition of server: %s\n", new_server);
-            free(new_server);
-            return NULL;
+        if ( ! strcmp( new_server->host, server_list[i]->host ) && new_server->port == server_list[i]->port ) {
+            gm_log( GM_LOG_ERROR, "duplicate definition of server: %s:%i\n", new_server->host, new_server->port);
+            return GM_ERROR;
         }
     }
-
-    return new_server;
+    return GM_OK;
 }
 
 
@@ -1727,4 +1701,30 @@ char *md5sum(char *text) {
            sum[0],sum[1],sum[2],sum[3],sum[4],sum[5],sum[6],sum[7],sum[8],sum[9],sum[10],sum[11],sum[12],sum[13],sum[14],sum[15]);
 
     return result;
+}
+
+/* add parsed server to list */
+void add_server(int * server_num, gm_server_t * server_list[GM_LISTSIZE], char * servername) {
+    char * server   = strdup( servername );
+    char * server_c = server;
+    char * host     = strsep( &server, ":" );
+    char * port_val = strsep( &server, "\x0" );
+    in_port_t port  = GM_SERVER_DEFAULT_PORT;
+    if(port_val != NULL) {
+        port  = ( in_port_t ) atoi( port_val );
+    }
+    gm_server_t *new_server;
+    new_server = malloc(sizeof(gm_server_t));
+    if(!strcmp(host, "")) {
+        new_server->host = strdup("localhost");
+    } else {
+        new_server->host = strdup(host);
+    }
+    new_server->port = port;
+    if(check_param_server(new_server, server_list, *server_num) == GM_OK) {
+        server_list[*server_num] = new_server;
+        *server_num = *server_num + 1;
+    }
+    free(server_c);
+    return;
 }

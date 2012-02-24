@@ -85,7 +85,7 @@ void alarm_sighandler(int sig);
  *
  * @return returns a nagios compatible exit code
  */
-int check_server(char * server);
+int check_server(char * server, in_port_t port);
 
 /**
  *

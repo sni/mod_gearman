@@ -33,14 +33,13 @@ int opt_job_warning     =  10;
 int opt_job_critical    = 100;
 int opt_worker_warning  =  25;
 int opt_worker_critical =  50;
-char * opt_server       = NULL;
 char * opt_queue        = NULL;
 char * opt_send         = NULL;
 char * opt_expect       = NULL;
 char * opt_unique_id    = NULL;
 int send_async          = 0;
 
-char * server_list[GM_LISTSIZE];
+gm_server_t  * server_list[GM_LISTSIZE];
 int server_list_num = 0;
 
 gearman_client_st client;
@@ -75,8 +74,7 @@ int main (int argc, char **argv) {
                         break;
             case 'C':   opt_worker_critical = atoi(optarg);
                         break;
-            case 'H':   opt_server = optarg;
-                        server_list[server_list_num++] = optarg;
+            case 'H':   add_server(&server_list_num, server_list, optarg);
                         break;
             case 's':   opt_send = optarg;
                         break;
@@ -95,9 +93,8 @@ int main (int argc, char **argv) {
     }
     mod_gm_opt->debug_level = opt_verbose;
     mod_gm_opt->logmode     = GM_LOG_MODE_TOOLS;
-    server_list[server_list_num] = NULL;
 
-    if(opt_server == NULL) {
+    if(server_list_num == 0) {
         printf("Error - no hostname given\n\n");
         print_usage();
     }
@@ -117,7 +114,7 @@ int main (int argc, char **argv) {
     else {
         /* get gearman server statistics */
         alarm(opt_timeout);
-        result = check_server(opt_server);
+        result = check_server(server_list[server_list_num-1]->host, server_list[server_list_num-1]->port);
     }
     alarm(0);
 
@@ -191,31 +188,23 @@ void print_usage() {
 void alarm_sighandler(int sig) {
     gm_log( GM_LOG_TRACE, "alarm_sighandler(%i)\n", sig );
 
-    printf("timeout while waiting for %s\n", opt_server);
+    printf("timeout while waiting for %s:%i\n", server_list[server_list_num-1]->host, server_list[server_list_num-1]->port);
 
     exit( STATE_CRITICAL );
 }
 
 
 /* check gearman server */
-int check_server(char * hostname) {
-    int port = GM_SERVER_DEFAULT_PORT;
+int check_server(char * server, in_port_t port) {
     mod_gm_server_status_t *stats;
     int x;
     char * message = NULL;
     char * version = NULL;
-    char * server = NULL;
-    char * port_c = NULL;
     int total_running = 0;
     int total_waiting = 0;
     int checked       = 0;
     int rc;
     char *buf;
-
-    server = strsep(&hostname, ":");
-    port_c = strsep(&hostname, "\x0");
-    if(port_c != NULL)
-        port = atoi(port_c);
 
     stats = malloc(sizeof(mod_gm_server_status_t));
     rc = get_gearman_server_data(stats, &message, &version, server, port);

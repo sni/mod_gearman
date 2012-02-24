@@ -29,7 +29,7 @@ mod_gm_opt_t * renew_opts() {
 }
 
 int main(void) {
-    plan(60);
+    plan(65);
 
     /* lowercase */
     char test[100];
@@ -170,14 +170,16 @@ int main(void) {
     mod_gm_opt = renew_opts();
     strcpy(test, "server=host:4730");
     parse_args_line(mod_gm_opt, test, 0);
-    like(mod_gm_opt->server_list[0], "host:4730", "server=host:4730");
+    like(mod_gm_opt->server_list[0]->host, "host", "server=host:4730");
+    ok(mod_gm_opt->server_list[0]->port == 4730, "server=host:4730");
     ok(mod_gm_opt->server_num == 1, "server_number = %d", mod_gm_opt->server_num);
 
     mod_gm_free_opt(mod_gm_opt);
     mod_gm_opt = renew_opts();
     strcpy(test, "server=:4730");
     parse_args_line(mod_gm_opt, test, 0);
-    like(mod_gm_opt->server_list[0], "localhost:4730", "server=:4730");
+    like(mod_gm_opt->server_list[0]->host, "localhost", "server=:4730");
+    ok(mod_gm_opt->server_list[0]->port == 4730, "server=:4730");
     ok(mod_gm_opt->server_num == 1, "server_number = %d", mod_gm_opt->server_num);
 
     mod_gm_free_opt(mod_gm_opt);
@@ -186,15 +188,18 @@ int main(void) {
     parse_args_line(mod_gm_opt, test, 0);
     strcpy(test, "server=localhost:4730");
     parse_args_line(mod_gm_opt, test, 0);
-    like(mod_gm_opt->server_list[0], "localhost:4730", "duplicate server");
+    like(mod_gm_opt->server_list[0]->host, "localhost", "duplicate server");
+    ok(mod_gm_opt->server_list[0]->port == 4730, "duplicate server");
     ok(mod_gm_opt->server_num == 1, "server_number = %d", mod_gm_opt->server_num);
 
     mod_gm_free_opt(mod_gm_opt);
     mod_gm_opt = renew_opts();
     strcpy(test, "server=localhost:4730,localhost:4730,:4730,host:4730,");
     parse_args_line(mod_gm_opt, test, 0);
-    like(mod_gm_opt->server_list[0], "localhost:4730", "duplicate server");
-    like(mod_gm_opt->server_list[1], "host:4730", "duplicate server");
+    like(mod_gm_opt->server_list[0]->host, "localhost", "duplicate server");
+    ok(mod_gm_opt->server_list[0]->port == 4730, "duplicate server");
+    like(mod_gm_opt->server_list[1]->host, "host", "duplicate server");
+    ok(mod_gm_opt->server_list[1]->port == 4730, "duplicate server");
     ok(mod_gm_opt->server_num == 2, "server_number = %d", mod_gm_opt->server_num);
 
     /* escape newlines */

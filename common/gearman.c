@@ -29,7 +29,7 @@ int mod_gm_con_errors = 0;
 struct timeval mod_gm_error_time;
 
 /* create the gearman worker */
-int create_worker( char ** server_list, gearman_worker_st *worker ) {
+int create_worker( gm_server_t * server_list[GM_LISTSIZE], gearman_worker_st *worker ) {
     int x = 0;
 
     gearman_return_t ret;
@@ -42,21 +42,11 @@ int create_worker( char ** server_list, gearman_worker_st *worker ) {
     }
 
     while ( server_list[x] != NULL ) {
-        char * server   = strdup( server_list[x] );
-        char * server_c = server;
-        char * host     = strsep( &server, ":" );
-        char * port_val = strsep( &server, "\x0" );
-        in_port_t port  = GM_SERVER_DEFAULT_PORT;
-        if(port_val != NULL) {
-            port  = ( in_port_t ) atoi( port_val );
-        }
-        ret = gearman_worker_add_server( worker, host, port );
+        ret = gearman_worker_add_server( worker, server_list[x]->host, server_list[x]->port );
         if ( ret != GEARMAN_SUCCESS ) {
             gm_log( GM_LOG_ERROR, "worker error: %s\n", gearman_worker_error( worker ) );
-            free(server_c);
             return GM_ERROR;
         }
-        free(server_c);
         x++;
     }
     assert(x != 0);
@@ -79,7 +69,7 @@ int worker_add_function( gearman_worker_st * worker, char * queue, gearman_worke
 
 
 /* create the gearman duplicate client */
-int create_client_dup( char ** server_list, gearman_client_st *client ) {
+int create_client_dup( gm_server_t * server_list[GM_LISTSIZE], gearman_client_st *client ) {
     gearman_return_t ret;
     int x = 0;
 
@@ -94,21 +84,11 @@ int create_client_dup( char ** server_list, gearman_client_st *client ) {
     }
 
     while ( server_list[x] != NULL ) {
-        char * server   = strdup( server_list[x] );
-        char * server_c = server;
-        char * host     = strsep( &server, ":" );
-        char * port_val = strsep( &server, "\x0" );
-        in_port_t port  = GM_SERVER_DEFAULT_PORT;
-        if(port_val != NULL) {
-            port  = ( in_port_t ) atoi( port_val );
-        }
-        ret = gearman_client_add_server( client, host, port );
+        ret = gearman_client_add_server( client, server_list[x]->host, server_list[x]->port );
         if ( ret != GEARMAN_SUCCESS ) {
             gm_log( GM_LOG_ERROR, "client error: %s\n", gearman_client_error( client ) );
-            free(server_c);
             return GM_ERROR;
         }
-        free(server_c);
         x++;
     }
 
@@ -118,7 +98,7 @@ int create_client_dup( char ** server_list, gearman_client_st *client ) {
 }
 
 /* create the gearman client */
-int create_client( char ** server_list, gearman_client_st *client ) {
+int create_client( gm_server_t * server_list[GM_LISTSIZE], gearman_client_st *client ) {
     gearman_return_t ret;
     int x = 0;
 
@@ -133,24 +113,15 @@ int create_client( char ** server_list, gearman_client_st *client ) {
     }
 
     while ( server_list[x] != NULL ) {
-        char * server   = strdup( server_list[x] );
-        char * server_c = server;
-        char * host     = strsep( &server, ":" );
-        char * port_val = strsep( &server, "\x0" );
-        in_port_t port  = GM_SERVER_DEFAULT_PORT;
-        if(port_val != NULL) {
-            port  = ( in_port_t ) atoi( port_val );
-        }
-        ret = gearman_client_add_server( client, host, port );
+        ret = gearman_client_add_server( client, server_list[x]->host, server_list[x]->port );
         if ( ret != GEARMAN_SUCCESS ) {
             gm_log( GM_LOG_ERROR, "client error: %s\n", gearman_client_error( client ) );
-            free(server_c);
             return GM_ERROR;
         }
-        free(server_c);
         x++;
     }
     assert(x != 0);
+
 
     current_client = client;
 
@@ -159,7 +130,7 @@ int create_client( char ** server_list, gearman_client_st *client ) {
 
 
 /* create a task and send it */
-int add_job_to_queue( gearman_client_st *client, char ** server_list, char * queue, char * uniq, char * data, int priority, int retries, int transport_mode, int send_now ) {
+int add_job_to_queue( gearman_client_st *client, gm_server_t * server_list[GM_LISTSIZE], char * queue, char * uniq, char * data, int priority, int retries, int transport_mode, int send_now ) {
     gearman_task_st *task = NULL;
     gearman_return_t ret1, ret2;
     char * crypted_data;
