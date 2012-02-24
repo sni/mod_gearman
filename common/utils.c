@@ -621,7 +621,7 @@ int parse_args_line(mod_gm_opt_t *opt, char * arg, int recursion_level) {
     /* idle-timeout */
     else if ( !strcmp( key, "idle-timeout" ) ) {
         opt->idle_timeout = atoi( value );
-        if(opt->idle_timeout < 0) { opt->job_timeout = GM_DEFAULT_IDLE_TIMEOUT; }
+        if(opt->idle_timeout < 0) { opt->idle_timeout = GM_DEFAULT_IDLE_TIMEOUT; }
     }
 
     /* max-jobs */
