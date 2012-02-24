@@ -1,4 +1,4 @@
-#!/usr/bin/env perl
+#!/usr/bin/perl
 
 # nagios: -epn
 print "no epn should be used\n";
