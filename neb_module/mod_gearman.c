@@ -391,15 +391,21 @@ static int handle_eventhandler( int event_type, void *data ) {
     nebstruct_event_handler_data * ds;
     host * hst    = NULL;
     service * svc = NULL;
+    struct timeval start_time;
 
-    gm_log( GM_LOG_DEBUG, "got eventhandler event\n" );
     gm_log( GM_LOG_TRACE, "handle_eventhandler(%i, data)\n", event_type );
 
-    if ( event_type != NEBTYPE_EVENTHANDLER_START )
+    if ( event_type != NEBCALLBACK_EVENT_HANDLER_DATA )
         return NEB_OK;
 
     ds = ( nebstruct_event_handler_data * )data;
 
+    if ( ds->type != NEBTYPE_EVENTHANDLER_START ) {
+        gm_log( GM_LOG_TRACE, "skiped type %i, expecting: %i\n", ds->type, NEBTYPE_EVENTHANDLER_START );
+        return NEB_OK;
+    }
+
+    gm_log( GM_LOG_DEBUG, "got eventhandler event\n" );
     gm_log( GM_LOG_TRACE, "got eventhandler event: %s\n", ds->command_line );
 
     /* service event handler? */
@@ -432,7 +438,12 @@ static int handle_eventhandler( int event_type, void *data ) {
     }
 
     temp_buffer[0]='\x0';
-    snprintf( temp_buffer,GM_BUFFERSIZE-1,"type=eventhandler\ncommand_line=%s\n\n\n",ds->command_line );
+    gettimeofday(&start_time,NULL);
+    snprintf( temp_buffer,GM_BUFFERSIZE-1,
+                "type=eventhandler\nstart_time=%i.0\ncommand_line=%s\n\n\n",
+                (int)start_time.tv_sec,
+                ds->command_line
+    );
 
     if(add_job_to_queue( &client,
                          mod_gm_opt->server_list,

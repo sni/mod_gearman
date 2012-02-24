@@ -395,7 +395,7 @@ void check_alarm_handler(int sig) {
         else if ( !strcmp( current_job->type, "host" ) ) {
             gm_log( GM_LOG_INFO, "timeout (%is) hit for hostcheck: %s\n", current_job->timeout, current_job->host_name);
         }
-        else if ( !strcmp( current_job->type, "event" ) ) {
+        else if ( !strcmp( current_job->type, "eventhandler" ) ) {
             gm_log( GM_LOG_INFO, "timeout (%is) hit for eventhandler: %s\n", current_job->timeout, current_job->command_line);
         }
         send_timeout_result(current_job);

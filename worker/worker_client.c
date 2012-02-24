@@ -304,7 +304,7 @@ void do_exec_job( ) {
     else if ( !strcmp( exec_job->type, "host" ) ) {
         gm_log( GM_LOG_DEBUG, "got host job: %s\n", exec_job->host_name);
     }
-    else if ( !strcmp( exec_job->type, "event" ) ) {
+    else if ( !strcmp( exec_job->type, "eventhandler" ) ) {
         gm_log( GM_LOG_DEBUG, "got eventhandler job\n");
     }
 
