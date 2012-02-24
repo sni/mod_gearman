@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/env perl
 
 print "test plugin CRITICAL\n";
 print STDERR "some errors on stderr\n";

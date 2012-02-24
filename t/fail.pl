@@ -1,3 +1,3 @@
-#!/usr/bin/perl
+#!/usr/bin/env perl
 
 my $a =

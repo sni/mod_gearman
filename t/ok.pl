@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/env perl
 
 # nagios: +epn
 print "test plugin OK\n";

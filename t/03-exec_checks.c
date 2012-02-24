@@ -42,7 +42,7 @@ int main (int argc, char **argv, char **env) {
      * arg parsing test 1
      */
     char *args[MAX_CMD_ARGS];
-    strcpy(cmd, "/bin/true");
+    strcpy(cmd, "/bin/hostname");
     parse_command_line(cmd, args);
     like(args[0], cmd, "parsing args cmd 1");
 
@@ -82,7 +82,7 @@ int main (int argc, char **argv, char **env) {
     /*****************************************
      * simple test command 1
      */
-    strcpy(cmd, "/bin/true");
+    strcpy(cmd, "/bin/hostname");
     rc = run_check(cmd, &result, &error);
     cmp_ok(rc, "==", 0, "pclose for cmd '%s' returned rc %d", cmd, rc);
     rrc = real_exit_code(rc);
@@ -93,7 +93,7 @@ int main (int argc, char **argv, char **env) {
     /*****************************************
      * simple test command 2
      */
-    strcpy(cmd, "/bin/true 2>&1");
+    strcpy(cmd, "/bin/hostname 2>&1");
     rc = run_check(cmd, &result, &error);
     cmp_ok(rc, "==", 0, "pclose for cmd '%s' returned rc %d", cmd, rc);
     rrc = real_exit_code(rc);

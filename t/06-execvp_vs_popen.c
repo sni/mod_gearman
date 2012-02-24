@@ -36,9 +36,7 @@ int main (int argc, char **argv, char **env) {
     gm_job_t * exec_job;
     exec_job = ( gm_job_t * )malloc( sizeof *exec_job );
     set_default_job(exec_job, mod_gm_opt);
-    //strcpy(cmd, "/bin/true;");
-    strcpy(cmd, "/bin/true;");
-    //strcpy(cmd, "./t/both");
+    strcpy(cmd, "/bin/hostname;");
 
     run_check(cmd, &result, &error);
     free(result);
