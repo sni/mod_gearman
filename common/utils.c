@@ -939,12 +939,14 @@ void mod_gm_free_opt(mod_gm_opt_t *opt) {
     if(opt == NULL)
         return;
     int i,j;
-    for(i=0;i<opt->server_num;i++)
+    for(i=0;i<opt->server_num;i++) {
         free(opt->server_list[i]->host);
         free(opt->server_list[i]);
-    for(i=0;i<opt->dupserver_num;i++)
+    }
+    for(i=0;i<opt->dupserver_num;i++) {
         free(opt->dupserver_list[i]->host);
         free(opt->dupserver_list[i]);
+    }
     for(i=0;i<opt->hostgroups_num;i++)
         free(opt->hostgroups_list[i]);
     for(i=0;i<opt->servicegroups_num;i++)
@@ -1724,6 +1726,9 @@ void add_server(int * server_num, gm_server_t * server_list[GM_LISTSIZE], char *
     if(check_param_server(new_server, server_list, *server_num) == GM_OK) {
         server_list[*server_num] = new_server;
         *server_num = *server_num + 1;
+    } else {
+        free(new_server->host);
+        free(new_server);
     }
     free(server_c);
     return;
