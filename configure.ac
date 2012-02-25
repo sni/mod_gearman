@@ -79,7 +79,7 @@ AC_ARG_ENABLE(embedded-perl,--enable-embedded-perl will enable embedded Perl int
 
 dnl Is embedded Perl being compiled in?
 AM_CONDITIONAL(USEPERL, test "$USEPERL" = "yes")
-if test "$USEPERL" == "yes"; then
+if test "$USEPERL" = "yes"; then
     tmp=$LIBS
     AC_CHECK_LIB([perl],[perl_alloc],,AC_MSG_ERROR([Compiling Mod-Gearman with embedded Perl requires libperl.]),[`perl -MExtUtils::Embed -e ccopts -e ldopts`])
     # save libs, as we do not want to add -lperl to all LIBS
