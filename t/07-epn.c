@@ -63,7 +63,7 @@ int main (int argc, char **argv, char **env) {
     rrc = real_exit_code(run_check(cmd, &result, &error));
     cmp_ok(rrc, "==", 3, "cmd '%s' returned rc %d", cmd, rrc);
     like(result, "ePN failed to compile", "returned result string");
-    like(error, "", "returned error string");
+    like(error, "^$", "returned error string");
     free(result);
     free(error);
 
@@ -71,7 +71,7 @@ int main (int argc, char **argv, char **env) {
     rrc = real_exit_code(run_check(cmd, &result, &error));
     cmp_ok(rrc, "==", 0, "cmd '%s' returned rc %d", cmd, rrc);
     like(result, "test plugin OK", "returned result string");
-    like(error, "", "returned error string");
+    like(error, "^$", "returned error string");
     free(result);
     free(error);
 
