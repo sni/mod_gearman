@@ -590,6 +590,16 @@ void clean_exit(int sig) {
     if(shmdt(shm) < 0)
         perror("shmdt");
 
+    /*
+     * clean up shared memory
+     * will be removed when last client detaches
+     */
+    if( shmctl( shmid, IPC_RMID, 0 ) == -1 ) {
+        perror("shmctl");
+    } else {
+        gm_log( GM_LOG_DEBUG, "shared memory deleted\n");
+    }
+
     gm_log( GM_LOG_INFO, "mod_gearman worker exited\n");
     mod_gm_free_opt(mod_gm_opt);
     exit( EXIT_SUCCESS );
@@ -673,16 +683,6 @@ void stop_children(int mode) {
         count_current_worker(GM_DISABLED);
         if(current_number_of_workers == 0)
             return;
-
-        /*
-         * clean up shared memory
-         * will be removed when last client detaches
-         */
-        if( shmctl( shmid, IPC_RMID, 0 ) == -1 ) {
-            perror("shmctl");
-        } else {
-            gm_log( GM_LOG_TRACE, "shared memory deleted\n");
-        }
 
         /* this will kill us too */
         gm_log( GM_LOG_ERROR, "exiting by SIGKILL...\n");

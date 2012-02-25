@@ -415,6 +415,9 @@ void set_state(int status) {
 
     gm_log( GM_LOG_TRACE, "set_state(%d)\n", status );
 
+    if(worker_run_mode == GM_WORKER_STANDALONE)
+        return;
+
     /* Now we attach the segment to our data space. */
     if ((shm = shmat(shmid, NULL, 0)) == (int *) -1) {
         perror("shmat");
@@ -467,6 +470,9 @@ void clean_worker_exit(int sig) {
     deinit_embedded_perl();
 #endif
 
+    if(worker_run_mode == GM_WORKER_STANDALONE)
+        exit( EXIT_SUCCESS );
+
     /* Now we attach the segment to our data space. */
     if((shm = shmat(shmid, NULL, 0)) == (int *) -1) {
         perror("shmat");
@@ -478,17 +484,6 @@ void clean_worker_exit(int sig) {
     /* detach from shared memory */
     if(shmdt(shm) < 0)
         perror("shmdt");
-
-    if(worker_run_mode != GM_WORKER_STANDALONE)
-        exit( EXIT_SUCCESS );
-
-    /*
-     * clean up shared memory
-     * will be removed when last client detaches
-     */
-    if( shmctl( shmid, IPC_RMID, 0 ) == -1 ) {
-        perror("shmctl");
-    }
 
     exit( EXIT_SUCCESS );
 }
@@ -528,6 +523,9 @@ void *return_status( gearman_job_st *job, void *context, size_t *result_size, ge
     }
 
     snprintf(result, GM_BUFFERSIZE, "%s has %i worker and is working on %i jobs. Version: %s|worker=%i;;;%i;%i jobs=%ic", hostname, shm[1], shm[2], GM_VERSION, shm[1], mod_gm_opt->min_worker, mod_gm_opt->max_worker, shm[0] );
+
+    /* and increase job counter */
+    shm[0]++;
 
     /* detach from shared memory */
     if(shmdt(shm) < 0)
