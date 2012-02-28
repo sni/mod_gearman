@@ -38,9 +38,9 @@ install Gearman from source.
 
 --------------------------------------
 #> cd /tmp
-#> wget "http://launchpad.net/gearmand/trunk/0.14/+download/gearmand-0.14.tar.gz"
-#> tar zxf gearmand-0.14.tar.gz
-#> cd gearmand-0.14
+#> wget "http://launchpad.net/gearmand/trunk/0.25/+download/gearmand-0.25.tar.gz"
+#> tar zxf gearmand-0.25.tar.gz
+#> cd gearmand-0.25
 #> ./configure --prefix=/opt
 #> make
 #> make install
@@ -137,7 +137,7 @@ Gearman-Top
 First we have a look at '/opt/bin/gearman_top'. You should have at least one
 worker for each queue.
 
- 2011-01-07 23:23:24  -  localhost:4730   -  v0.14
+ 2011-01-07 23:23:24  -  localhost:4730   -  v0.25
  Queue Name      | Worker Available | Jobs Waiting | Jobs Running
  ------------------------------------------------------------------
  check_results   |               1  |           0  |           0

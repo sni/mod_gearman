@@ -1,13 +1,13 @@
-Gearman Module for Nagios
-=========================
+Gearman Module for Nagios / Icinga
+==================================
 
 What is Mod-Gearman
 -------------------
 
 http://labs.consol.de/nagios/mod-gearman[Mod_Gearman] is an easy way
-of distributing active Nagios checks across your network and
-increasing nagios scalability. Mod-Gearman can even help to reduce the
-load on a single nagios host, because its much smaller and more
+of distributing active Nagios/Icinga checks across your network and
+increasing Nagios scalability. Mod-Gearman can even help to reduce the
+load on a single Nagios host, because its much smaller and more
 efficient in executing checks.
 
 It consists of three parts:
@@ -26,8 +26,8 @@ http://labs.consol.de/wp-content/uploads/2010/09/Mod-Gearman.pdf[Have a look at 
 
 Features
 --------
- * Reduce load of your central nagios machine
- * Make nagios scalable up to thousands of checks per second
+ * Reduce load of your central Nagios machine
+ * Make Nagios scalable up to thousands of checks per second
  * Easy distributed setups without configuration overhead
  * Real loadbalancing across all workers
  * Real failover for redundant workers
@@ -59,6 +59,11 @@ Support
    See <<_supported_dependencys,Supported Dependencys>> for details.
  * There are no known bugs at the moment.  Let me know if you find one.
 
+
+Changelog
+---------
+The changelog is available on
+https://github.com/sni/mod_gearman/blob/master/Changes[github].
 
 
 How does it work
@@ -103,7 +108,7 @@ The workflow is simple:
     'check_results' queue
  5. Mod-Gearman grabs the result job and puts back the result onto the
     check result list
- 6. The nagios reaper reads all checks from the result list and
+ 6. The Nagios reaper reads all checks from the result list and
     updates hosts and services
 
 
@@ -132,7 +137,7 @@ for the specific groups.
 
 The worker processes will take jobs from the queues and put the result
 back into the check_result queue which will then be taken back by the
-neb module and put back into the nagios core. A worker can work on one
+neb module and put back into the Nagios core. A worker can work on one
 or more queues. So you could start a worker which only handles the
 'hostgroup_japan' group.  One worker for the 'selenium' checks and one
 worker which covers the other queues. There can be more than one
@@ -157,9 +162,9 @@ alt="Load Balancing" width="300" height="125" style="float:none" /></a>
 ++++
 
 The easiest variant is a simple load balancing. For example if your
-single nagios box just cannot handle the load, you could just add a
+single Nagios box just cannot handle the load, you could just add a
 worker in the same network (or even on the same host) to reduce your
-load on the nagios box. Therefor we just enable hosts, services and
+load on the Nagios box. Therefor we just enable hosts, services and
 eventhandler on the server and the worker.
 
 
@@ -294,7 +299,7 @@ Download the tarball and perform the following steps:
 #> make install
 --------------------------------------
 
-Then add the mod_gearman.o to your nagios installation and add a
+Then add the mod_gearman.o to your Nagios installation and add a
 broker line to your nagios.cfg:
 
 --------------------------------------
@@ -338,7 +343,7 @@ have an older version.
 It is not possible to distribute eventhandler with Nagios versions
 prior 3.2.2. Just apply the patch from the ./extras/patches directory
 to your Nagios sources and build Nagios again if you want to use an
-older version. You only need to replace the nagios binary. Nothing
+older version. You only need to replace the Nagios binary. Nothing
 else has changed. If you plan to distribute only Host/Servicechecks,
 no patch is needed.
 
@@ -402,7 +407,7 @@ logmode::
     * `stdout`    - just print all messages to stdout
     * `syslog`    - use syslog for all log events
     * `file`      - use logfile
-    * `core`      - use nagios internal loging (not thread safe! Use
+    * `core`      - use Nagios internal loging (not thread safe! Use
                     with care)
 --
 +
@@ -581,7 +586,7 @@ Default is 1.
 
 
 result_queue::
-sets the result queue. Necessary when putting jobs from several nagios instances
+sets the result queue. Necessary when putting jobs from several Nagios instances
 onto the same gearman queues. Default: `check_results`
 +
 ====
@@ -855,16 +860,16 @@ Performance
 
 While the main motivation was to ease distributed configuration, this
 plugin also helps to spread the load on multiple worker. Throughput is
-mainly limited by the amount of jobs a single nagios instance can put
+mainly limited by the amount of jobs a single Nagios instance can put
 onto the Gearman job server. Keep the Gearman job server close to the
-nagios box. Best practice is to put both on the same machine. Both
+Nagios box. Best practice is to put both on the same machine. Both
 processes will utilize one core. Some testing with my workstation
 (Dual Core 2.50GHz) and two worker boxes gave me these results. I used
 a sample Nagios installation with 20.000 Services at a 1 minute
 interval and a sample plugin which returns just a single line of
 output. I got over 300 Servicechecks per second, which means you could
 easily setup 100.000 services at a 5 minute interval with a single
-nagios box. The amount of worker boxes depends on your check types.
+Nagios box. The amount of worker boxes depends on your check types.
 
 ++++
 <a title="mod gearman performance" rel="lightbox[mod_gm]" href="http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman_performance_2.png"><img src="http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman_performance_2.png" alt="mod_gearman performance" width="473" height="122" style="float:none" /></a>
@@ -916,7 +921,7 @@ The default configuration of Mod-Gearman enables embedded Perl, but
 only uses it for Perl scripts which explicitly set '# nagios: +epn'.
 This is a very safe way of using embedded Perl but you probably miss
 some plugins which do not set the header and still would run with EPN.
-You may want to use the 'mini_epn' from your nagios installation to
+You may want to use the 'mini_epn' from your Nagios installation to
 verify if a plugin works with EPN or not.
 
 General EPN documentation is valid for Mod-Gearman as well:
@@ -990,13 +995,13 @@ achieve this with the following neb module settings:
  broker_module=/usr/local/share/nagios/mod_gearman.o server=localhost encryption=no eventhandler=no hosts=no services=no hostgroups=does_not_exist
 
 NOTE: encryption is not necessary if you both run the check_multi checks
-and the nagios check_results queue on the same server.
+and the Nagios check_results queue on the same server.
 
 
 What About Notifications
 ------------------------
 Notifications are currently not possible to distribute via
-Mod-Gearman. The nagios core would have to be patched to support this.
+Mod-Gearman. The Nagios core would have to be patched to support this.
 And i think its not very useful at all. So don't expect this feature
 to be implemented in the near future.
 
@@ -1041,14 +1046,14 @@ Hints
    worker.
  - Make sure all gearman checks are in local groups. Gearman self
    checks should not be monitored through gearman.
- - Checks which write directly to the nagios command file (ex.:
+ - Checks which write directly to the Nagios command file (ex.:
    check_mk) have to run on a local worker or have to be excluded by
    the localservicegroups.
  - Keep the gearmand server close to Nagios for better performance.
  - If you have some checks which should not run parallel, just setup a
    single worker with --max-worker=1 and they will be executed one
    after another. For example for cpu intesive checks with selenium.
- - Make sure all your worker have the nagios-plugins available under
+ - Make sure all your worker have the Nagios-Plugins available under
    the same path. Otherwise they could'nt be found by the worker.
 
 
