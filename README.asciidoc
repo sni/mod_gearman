@@ -651,6 +651,20 @@ Default: 60
 ====
 
 
+max-age::
+Threshold for discarding too old jobs. When a new job is older than
+this amount of seconds it will not be executed and just discarded.
+This will result in a message like "(Could Not Start Check In Time)".
+Possible reasons for this are time differences between core and
+worker (use NTP!) or the smart rescheduler of the core which shoudl be
+disabled.
+Default: 600
++
+====
+    max-age=600
+====
+
+
 min-worker::
 Minimum number of worker processes which should run at any time. Default: 1
 +

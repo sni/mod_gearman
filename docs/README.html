@@ -1508,6 +1508,27 @@ Default: 60
 </div></div>
 </dd>
 <dt class="hdlist1">
+max-age
+</dt>
+<dd>
+<p>
+Threshold for discarding too old jobs. When a new job is older than
+this amount of seconds it will not be executed and just discarded.
+This will result in a message like "(Could Not Start Check In Time)".
+Possible reasons for this are time differences between core and
+worker (use NTP!) or the smart rescheduler of the core which shoudl be
+disabled.
+Default: 600
+</p>
+<div class="exampleblock">
+<div class="exampleblock-content">
+<div class="literalblock">
+<div class="content">
+<pre><tt>max-age=600</tt></pre>
+</div></div>
+</div></div>
+</dd>
+<dt class="hdlist1">
 min-worker
 </dt>
 <dd>
@@ -2206,7 +2227,7 @@ Make sure all your worker have the Nagios-Plugins available under
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2012-02-28 14:39:08 CEST
+Last updated 2012-03-01 19:02:57 CEST
 </div>
 </div>
 </body>
