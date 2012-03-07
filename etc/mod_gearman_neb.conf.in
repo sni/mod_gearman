@@ -127,6 +127,11 @@ result_workers=1
 # Default: no
 perfdata=no
 
+# perfdata mode overwrite helps preventing the perdata queue getting to big
+# 1 = overwrote
+# 2 = append
+perfdata_mode=1
+
 # The Mod-Gearman NEB module will submit a fake result for orphaned host
 # checks with a message saying there is no worker running for this
 # queue. Use this option to get better reporting results, otherwise your
