@@ -818,7 +818,7 @@ Queue Names
 -----------
 
 You may want to watch your gearman server job queue. The shipped
-tools/queue_top.pl does this. It polls the gearman server every second
+gearman_top does this. It polls the gearman server every second
 and displays the current queue statistics.
 
 --------------------------------------
@@ -1025,6 +1025,27 @@ achieve this with the following neb module settings:
 
 NOTE: encryption is not necessary if you both run the check_multi checks
 and the Nagios check_results queue on the same server.
+
+
+How to Set Queue by Custom Variable
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Set 'queue_custom_variable=worker' in your Mod-Gearman NEB
+configuration. Then adjust your nagios host/service configuration and
+add the custom variable:
+
+-------
+  define host {
+    ...
+    _WORKER    hostgroup_test
+  }
+-------
+
+The test hostgroup does not have to exist, it is a virtual queue name
+which is used by the worker.
+
+Adjust your Mod-Gearman worker configuration and put 'test' in the
+'hostgroups' attribute. From then on, the worker will work on all jobs
+in the 'hostgroup_test' queue.
 
 
 What About Notifications

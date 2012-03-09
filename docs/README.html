@@ -1779,7 +1779,7 @@ code 25 randomly. Default is off.
 <h2 id="_queue_names">Queue Names</h2>
 <div class="sectionbody">
 <div class="paragraph"><p>You may want to watch your gearman server job queue. The shipped
-tools/queue_top.pl does this. It polls the gearman server every second
+gearman_top does this. It polls the gearman server every second
 and displays the current queue statistics.</p></div>
 <div class="listingblock">
 <div class="content">
@@ -2028,6 +2028,22 @@ achieve this with the following neb module settings:</p></div>
 and the Nagios check_results queue on the same server.</td>
 </tr></table>
 </div>
+<h3 id="_how_to_set_queue_by_custom_variable">How to Set Queue by Custom Variable</h3><div style="clear:left"></div>
+<div class="paragraph"><p>Set <em>queue_custom_variable=worker</em> in your Mod-Gearman NEB
+configuration. Then adjust your nagios host/service configuration and
+add the custom variable:</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><tt>  define host {
+    ...
+    _WORKER    hostgroup_test
+  }</tt></pre>
+</div></div>
+<div class="paragraph"><p>The test hostgroup does not have to exist, it is a virtual queue name
+which is used by the worker.</p></div>
+<div class="paragraph"><p>Adjust your Mod-Gearman worker configuration and put <em>test</em> in the
+<em>hostgroups</em> attribute. From then on, the worker will work on all jobs
+in the <em>hostgroup_test</em> queue.</p></div>
 </div>
 <h2 id="_what_about_notifications">What About Notifications</h2>
 <div class="sectionbody">
@@ -2248,7 +2264,7 @@ Make sure all your worker have the Nagios-Plugins available under
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2012-03-09 17:17:17 CEST
+Last updated 2012-03-09 17:38:19 CEST
 </div>
 </div>
 </body>
