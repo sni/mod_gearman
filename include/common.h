@@ -202,6 +202,7 @@ typedef struct mod_gm_opt_struct {
     char         * local_servicegroups_list[GM_LISTSIZE];   /**< list of group  which will not be distributed */
     int            local_servicegroups_num;                 /**< number of elements in local_servicegroups_list */
     int            do_hostchecks;                           /**< flag whether mod-gearman will process hostchecks at all */
+    char         * queue_cust_var;                          /**< custom variable name which contains the target queue */
     mod_gm_exp_t * exports[GM_NEBTYPESSIZE];                /**< list of exporter queues */
     int            exports_count;                           /**< number of export queues */
     int            orphan_host_checks;                      /**< generate fake result for orphaned host checks */

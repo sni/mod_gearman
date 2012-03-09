@@ -879,9 +879,42 @@ static int verify_options(mod_gm_opt_t *opt) {
 /* return the prefered target function for our worker */
 static void set_target_queue( host *hst, service *svc ) {
     int x=0;
+    customvariablesmember *temp_customvariablesmember = NULL;
 
     /* empty our target */
     target_queue[0] = '\x0';
+
+    /* grab target queue from custom variable */
+    if( mod_gm_opt->queue_cust_var ) {
+        if( svc ) {
+            temp_customvariablesmember = svc->custom_variables;
+            for(; temp_customvariablesmember != NULL; temp_customvariablesmember = temp_customvariablesmember->next) {
+                if(!strcmp(mod_gm_opt->queue_cust_var, temp_customvariablesmember->variable_name)) {
+                    if(!strcmp(temp_customvariablesmember->variable_value, "local")) {
+                        gm_log( GM_LOG_TRACE, "bypassing local check from service custom variable\n" );
+                        return;
+                    }
+                    gm_log( GM_LOG_TRACE, "got target queue from service custom variable: %s\n", temp_customvariablesmember->variable_value );
+                    snprintf( target_queue, GM_BUFFERSIZE-1, "%s", temp_customvariablesmember->variable_value );
+                    return;
+                }
+            }
+        }
+
+        /* search in host custom variables */
+        temp_customvariablesmember = hst->custom_variables;
+        for(; temp_customvariablesmember != NULL; temp_customvariablesmember = temp_customvariablesmember->next) {
+            if(!strcmp(mod_gm_opt->queue_cust_var, temp_customvariablesmember->variable_name)) {
+                if(!strcmp(temp_customvariablesmember->variable_value, "local")) {
+                    gm_log( GM_LOG_TRACE, "bypassing local check from host custom variable\n" );
+                    return;
+                }
+                gm_log( GM_LOG_TRACE, "got target queue from host custom variable: %s\n", temp_customvariablesmember->variable_value );
+                snprintf( target_queue, GM_BUFFERSIZE-1, "%s", temp_customvariablesmember->variable_value );
+                return;
+            }
+        }
+    }
 
     /* look for matching local servicegroups */
     if ( svc ) {

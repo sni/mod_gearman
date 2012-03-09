@@ -529,6 +529,21 @@ just passed through.
 ====
 
 
+queue_custom_variable::
+Can be used to define the target queue by a custom variable in
+addition to host/servicegroups. When set for ex. to 'WORKER' you then
+could define a '_WORKER' custom variable for your hosts and services
+to directly set the worker queue. The host queue is inherited unless
+overwritten by a service custom variable. Set the value of your custom
+variable to 'local' to bypass Mod-Gearman (Same behaviour as in
+localhostgroups/localservicegroups).
++
+====
+    queue_custom_variable=WORKER
+====
+
+
+
 do_hostchecks::
 Set this to 'no' if you want Mod-Gearman to only take care about
 servicechecks. No hostchecks will be processed by Mod-Gearman. Use

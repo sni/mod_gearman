@@ -249,6 +249,7 @@ int set_default_options(mod_gm_opt_t *opt) {
     opt->max_jobs           = GM_DEFAULT_MAX_JOBS;
     opt->spawn_rate         = GM_DEFAULT_SPAWN_RATE;
     opt->identifier         = NULL;
+    opt->queue_cust_var     = NULL;
     opt->show_error_output  = GM_ENABLED;
     opt->orphan_host_checks    = GM_ENABLED;
     opt->orphan_service_checks = GM_ENABLED;
@@ -324,6 +325,7 @@ int parse_yes_or_no(char*value, int dfl) {
 
 /* parse one line of args into the given struct */
 int parse_args_line(mod_gm_opt_t *opt, char * arg, int recursion_level) {
+    int x;
     char *key;
     char *value;
 
@@ -725,6 +727,15 @@ int parse_args_line(mod_gm_opt_t *opt, char * arg, int recursion_level) {
         }
     }
 
+    /* queue_custom_variable */
+    else if ( !strcmp( key, "queue_custom_variable" ) ) {
+        /* uppercase custom variable name */
+        for(x = 0; value[x] != '\x0'; x++) {
+            value[x] = toupper(value[x]);
+        }
+        opt->queue_cust_var = strdup( value );
+    }
+
     /* export queues */
     else if ( !strcmp( key, "export" ) ) {
         char *callback;
@@ -872,6 +883,7 @@ void dumpconfig(mod_gm_opt_t *opt, int mode) {
 #endif
     }
     if(mode == GM_NEB_MODE) {
+        gm_log( GM_LOG_DEBUG, "queue by cust var:   %s\n", opt->queue_cust_var == NULL ? "no" : opt->queue_cust_var);
         gm_log( GM_LOG_DEBUG, "debug result:        %s\n", opt->debug_result == GM_ENABLED ? "yes" : "no");
         gm_log( GM_LOG_DEBUG, "result_worker:       %d\n", opt->result_workers);
         gm_log( GM_LOG_DEBUG, "do_hostchecks:       %s\n", opt->do_hostchecks == GM_ENABLED ? "yes" : "no");
@@ -969,6 +981,7 @@ void mod_gm_free_opt(mod_gm_opt_t *opt) {
     free(opt->host);
     free(opt->service);
     free(opt->identifier);
+    free(opt->queue_cust_var);
 #ifdef EMBEDDEDPERL
     free(opt->p1_file);
 #endif
