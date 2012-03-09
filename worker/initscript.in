@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# chkconfig: - 85 15
+# chkconfig: 2345 85 15
 # description: Mod-Gearman Worker Daemon
 
 ### BEGIN INIT INFO
