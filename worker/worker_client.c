@@ -107,7 +107,7 @@ void worker_loop() {
         gearman_return_t ret;
 
         /* wait for a job, otherwise exit when hit the idle timeout */
-        if(mod_gm_opt->idle_timeout > 0 && worker_run_mode == GM_WORKER_MULTI) {
+        if(mod_gm_opt->idle_timeout > 0 && ( worker_run_mode == GM_WORKER_MULTI || worker_run_mode == GM_WORKER_STATUS )) {
             signal(SIGALRM, idle_sighandler);
             alarm(mod_gm_opt->idle_timeout);
         }
