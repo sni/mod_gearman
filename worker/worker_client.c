@@ -479,7 +479,9 @@ void clean_worker_exit(int sig) {
         gm_log( GM_LOG_TRACE, "worker finished: %d\n", getpid() );
         exit( EXIT_FAILURE );
     }
-    shm[shm_index] = -1;
+    if( shm[shm_index] == current_pid || shm[shm_index] == -current_pid ) {
+        shm[shm_index] = -1;
+    }
 
     /* detach from shared memory */
     if(shmdt(shm) < 0)
