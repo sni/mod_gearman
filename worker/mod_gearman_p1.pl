@@ -260,9 +260,9 @@ sub run_package {
 
     # Second parm (after $filename) _may_ be used to wallop stashes.
 
-    my $res = 3;
-    my $ts  = localtime( time() )
-        if DEBUG_LEVEL;
+    my $has_exit = 0;
+    my $res      = 3;
+    my $ts       = localtime( time() ) if DEBUG_LEVEL;
 
     local $SIG{__WARN__} = \&throw_exception;
     my $stdout = tie( *STDOUT, 'OutputTrap' );
@@ -278,10 +278,10 @@ sub run_package {
 
         # Error => normal plugin termination (exit) || run time error.
         $_ = $@;
-        /^ExitTrap: (-?\d+)/ ? $res = $1 :
+        /^ExitTrap: (-?\d+)/ ? do {$has_exit = 1; $res = $1} :
 
             # For normal plugin exit, $@ will  always match /^ExitTrap: (-?\d+)/
-            /^ExitTrap:  / ? $res = 0 : do {
+            /^ExitTrap:  / ? do { $has_exit = 1; $res = 0 } : do {
 
             # Run time error/abnormal plugin termination.
 
@@ -302,6 +302,8 @@ sub run_package {
 
     undef $stdout;
     untie *STDOUT;
+
+    $plugin_output = "**ePN $filename: plugin did not call exit()\n".$plugin_output if $has_exit == 0;
 
     print LH qq($ts run_package: "$filename $plugin_args" returning ($res, "$plugin_output").\n)
         if DEBUG_LEVEL & LEAVE_MSG;

@@ -30,7 +30,7 @@ int main (int argc, char **argv, char **env) {
     char *result, *error;
     char cmd[120];
 
-    plan(12);
+    plan(17);
 
     /* create options structure and set debug level */
     mod_gm_opt = malloc(sizeof(mod_gm_opt_t));
@@ -71,6 +71,7 @@ int main (int argc, char **argv, char **env) {
     rrc = real_exit_code(run_check(cmd, &result, &error));
     cmp_ok(rrc, "==", 0, "cmd '%s' returned rc %d", cmd, rrc);
     like(result, "test plugin OK", "returned result string");
+    unlike(result, "plugin did not call exit", "returned result string");
     like(error, "^$", "returned error string");
     free(result);
     free(error);
@@ -80,6 +81,15 @@ int main (int argc, char **argv, char **env) {
     cmp_ok(rrc, "==", 2, "cmd '%s' returned rc %d", cmd, rrc);
     like(result, "test plugin CRITICAL", "returned result string");
     like(error, "some errors on stderr", "returned error string");
+    free(result);
+    free(error);
+
+    strcpy(cmd, "./t/noexit.pl");
+    rrc = real_exit_code(run_check(cmd, &result, &error));
+    cmp_ok(rrc, "==", 3, "cmd '%s' returned rc %d", cmd, rrc);
+    like(result, "sample output but no exit", "returned result string");
+    like(result, "plugin did not call exit", "returned result string");
+    like(error, "^$", "returned error string");
     free(result);
     free(error);
 
