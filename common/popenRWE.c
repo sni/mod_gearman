@@ -62,7 +62,7 @@ int popenRWE(int *rwepipe, char *command) {
 		}
 
 		execl( "/bin/sh", "sh", "-c", command, NULL );
-		exit(1);
+		_exit(1);
 	} else
 		goto error_fork;
 

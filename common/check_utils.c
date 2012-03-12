@@ -285,7 +285,7 @@ int execute_safe_command(gm_job_t * exec_job, int fork_exec, char * identifier) 
             return_code = real_exit_code(pclose_result);
             free(plugin_output);
             free(plugin_error);
-            exit(return_code);
+            _exit(return_code);
         }
         else {
             snprintf( buffer,    sizeof( buffer )-1,    "%s", plugin_output );

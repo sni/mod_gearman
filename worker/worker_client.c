@@ -72,25 +72,25 @@ void worker_client(int worker_mode, int indx, int shid) {
     if(set_worker(&worker) != GM_OK) {
         gm_log( GM_LOG_ERROR, "cannot start worker\n" );
         clean_worker_exit(0);
-        exit( EXIT_FAILURE );
+        _exit( EXIT_FAILURE );
     }
 
     /* create client */
     if ( create_client( mod_gm_opt->server_list, &client ) != GM_OK ) {
         gm_log( GM_LOG_ERROR, "cannot start client\n" );
         clean_worker_exit(0);
-        exit( EXIT_FAILURE );
+        _exit( EXIT_FAILURE );
     }
 
     /* create duplicate client */
     if ( create_client_dup( mod_gm_opt->dupserver_list, &client_dup ) != GM_OK ) {
         gm_log( GM_LOG_ERROR, "cannot start client for duplicate server\n" );
-        exit( EXIT_FAILURE );
+        _exit( EXIT_FAILURE );
     }
 
 #ifdef EMBEDDEDPERL
     if(init_embedded_perl(env) == GM_ERROR) {
-        exit( EXIT_FAILURE );
+        _exit( EXIT_FAILURE );
     }
 #endif
 
@@ -283,7 +283,7 @@ void *get_job( gearman_job_st *job, void *context, size_t *result_size, gearman_
     if(mod_gm_opt->max_jobs > 0 && jobs_done >= mod_gm_opt->max_jobs) {
         gm_log( GM_LOG_TRACE, "jobs done: %i -> exiting...\n", jobs_done );
         clean_worker_exit(0);
-        exit( EXIT_SUCCESS );
+        _exit( EXIT_SUCCESS );
     }
 
     return NULL;
@@ -420,7 +420,7 @@ int set_worker( gearman_worker_st *w ) {
 void idle_sighandler(int sig) {
     gm_log( GM_LOG_TRACE, "idle_sighandler(%i)\n", sig );
     clean_worker_exit(0);
-    exit( EXIT_SUCCESS );
+    _exit( EXIT_SUCCESS );
 }
 
 
@@ -438,7 +438,7 @@ void set_state(int status) {
         perror("shmat");
         gm_log( GM_LOG_TRACE, "worker finished: %d\n", getpid() );
         clean_worker_exit(0);
-        exit( EXIT_FAILURE );
+        _exit( EXIT_FAILURE );
     }
 
     if(status == GM_JOB_START)
@@ -450,14 +450,14 @@ void set_state(int status) {
         if( shm[shm_index] == -1 ) {
             gm_log( GM_LOG_TRACE, "worker finished: %d\n", getpid() );
             clean_worker_exit(0);
-            exit( EXIT_SUCCESS );
+            _exit( EXIT_SUCCESS );
         }
 
         /* pid in our status slot changed, this should not happen -> exit */
         if( shm[shm_index] != current_pid && shm[shm_index] != -current_pid ) {
             gm_log( GM_LOG_ERROR, "double used worker slot: %d != %d\n", current_pid, shm[shm_index] );
             clean_worker_exit(0);
-            exit( EXIT_FAILURE );
+            _exit( EXIT_FAILURE );
         }
         shm[shm_index] = -current_pid;
     }
@@ -500,7 +500,7 @@ void clean_worker_exit(int sig) {
     if((shm = shmat(shmid, NULL, 0)) == (int *) -1) {
         perror("shmat");
         gm_log( GM_LOG_TRACE, "worker finished: %d\n", getpid() );
-        exit( EXIT_FAILURE );
+        _exit( EXIT_FAILURE );
     }
     if( shm[shm_index] == current_pid || shm[shm_index] == -current_pid ) {
         shm[shm_index] = -1;
@@ -510,7 +510,7 @@ void clean_worker_exit(int sig) {
     if(shmdt(shm) < 0)
         perror("shmdt");
 
-    exit( EXIT_SUCCESS );
+    _exit( EXIT_SUCCESS );
 }
 
 
