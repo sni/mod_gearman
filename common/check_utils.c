@@ -111,7 +111,7 @@ int run_check(char *processed_command, char **ret, char **err) {
 
     /* check for check execution method (shell or execvp) */
     if(!strpbrk(processed_command,"!$^&*()~[]|{};<>?`\"'")) {
-        /* use the fast execvp when there are now shell characters */
+        /* use the fast execvp when there are no shell characters */
         gm_log( GM_LOG_TRACE, "using execvp, no shell characters found\n" );
 
         parse_command_line(processed_command,argv);
