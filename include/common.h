@@ -257,7 +257,8 @@ typedef struct gm_job_struct {
     int            exited_ok;           /**< did the plugin exit normally? */
     int            timeout;             /**< timeout for this job */
     double         latency;             /**< latency for from this job */
-    struct timeval core_start_time;     /**< time when the core started the job */
+    struct timeval next_check;          /**< next_check value of host / service */
+    struct timeval core_time;           /**< time when the core started the job */
     struct timeval start_time;          /**< time when the job really started */
     struct timeval finish_time;         /**< time when the job was finished */
 } gm_job_t;

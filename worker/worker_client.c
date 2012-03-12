@@ -237,8 +237,16 @@ void *get_job( gearman_job_st *job, void *context, size_t *result_size, gearman_
         } else if ( !strcmp( key, "latency" ) ) {
             exec_job->latency = atof(value);
             valid_lines++;
+        } else if ( !strcmp( key, "next_check" ) ) {
+            string2timeval(value, &exec_job->next_check);
+            valid_lines++;
         } else if ( !strcmp( key, "start_time" ) ) {
-            string2timeval(value, &exec_job->core_start_time);
+            /* for compatibility reasons... (used by older mod-gearman neb modules) */
+            string2timeval(value, &exec_job->next_check);
+            string2timeval(value, &exec_job->core_time);
+            valid_lines++;
+        } else if ( !strcmp( key, "core_time" ) ) {
+            string2timeval(value, &exec_job->core_time);
             valid_lines++;
         } else if ( !strcmp( key, "timeout" ) ) {
             exec_job->timeout = atoi(value);
@@ -250,7 +258,7 @@ void *get_job( gearman_job_st *job, void *context, size_t *result_size, gearman_
     }
 
 #ifdef GM_DEBUG
-    if(exec_job->core_start_time.tv_sec < 10000)
+    if(exec_job->next_check.tv_sec < 10000)
         write_debug_file(&decrypted_orig);
 #endif
 
@@ -260,9 +268,6 @@ void *get_job( gearman_job_st *job, void *context, size_t *result_size, gearman_
         do_exec_job();
     }
 
-    /* send finish signal to parent */
-    set_state(GM_JOB_END);
-
     current_gearman_job = NULL;
 
     /* start listening to SIGTERMs */
@@ -271,6 +276,9 @@ void *get_job( gearman_job_st *job, void *context, size_t *result_size, gearman_
     free(decrypted_orig);
     free(decrypted_data_c);
     free_job(exec_job);
+
+    /* send finish signal to parent */
+    set_state(GM_JOB_END);
 
     if(mod_gm_opt->max_jobs > 0 && jobs_done >= mod_gm_opt->max_jobs) {
         gm_log( GM_LOG_TRACE, "jobs done: %i -> exiting...\n", jobs_done );
@@ -285,7 +293,7 @@ void *get_job( gearman_job_st *job, void *context, size_t *result_size, gearman_
 /* do some job */
 void do_exec_job( ) {
     struct timeval start_time, end_time;
-    int latency;
+    int latency, age;
 
     gm_log( GM_LOG_TRACE, "do_exec_job()\n" );
 
@@ -316,15 +324,22 @@ void do_exec_job( ) {
     /* get the check start time */
     gettimeofday(&start_time,NULL);
     exec_job->start_time = start_time;
-    latency = start_time.tv_sec - exec_job->core_start_time.tv_sec;
+    latency = start_time.tv_sec - exec_job->next_check.tv_sec;
+    age     = start_time.tv_sec - exec_job->core_time.tv_sec;
 
     gm_log( GM_LOG_TRACE, "timeout: %i, core latency: %i\n", exec_job->timeout, latency);
 
     /* job is too old */
-    if(latency > mod_gm_opt->max_age) {
+    if(age > mod_gm_opt->max_age) {
         exec_job->return_code   = 3;
 
-        gm_log( GM_LOG_INFO, "discarded too old %s job: %i > %i\n", exec_job->type, (int)latency, mod_gm_opt->max_age);
+        if ( !strcmp( exec_job->type, "service" ) ) {
+            gm_log( GM_LOG_INFO, "discarded too old %s job: %i > %i (%s - %s)\n", exec_job->type, (int)age, mod_gm_opt->max_age, exec_job->host_name, exec_job->service_description);
+        } else if ( !strcmp( exec_job->type, "host" ) ) {
+            gm_log( GM_LOG_INFO, "discarded too old %s job: %i > %i (%s - %s)\n", exec_job->type, (int)age, mod_gm_opt->max_age, exec_job->host_name);
+        } else {
+            gm_log( GM_LOG_INFO, "discarded too old %s job: %i > %i\n", exec_job->type, (int)age, mod_gm_opt->max_age);
+        }
 
         gettimeofday(&end_time, NULL);
         exec_job->finish_time = end_time;
@@ -430,6 +445,14 @@ void set_state(int status) {
         shm[shm_index] = current_pid;
     if(status == GM_JOB_END) {
         shm[0]++; /* increase jobs done */
+
+        /* status slot changed to -1 -> exit */
+        if( shm[shm_index] == -1 ) {
+            gm_log( GM_LOG_TRACE, "worker finished: %d\n", getpid() );
+            clean_worker_exit(0);
+            exit( EXIT_SUCCESS );
+        }
+
         /* pid in our status slot changed, this should not happen -> exit */
         if( shm[shm_index] != current_pid && shm[shm_index] != -current_pid ) {
             gm_log( GM_LOG_ERROR, "double used worker slot: %d != %d\n", current_pid, shm[shm_index] );

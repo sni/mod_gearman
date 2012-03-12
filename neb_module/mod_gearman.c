@@ -391,7 +391,8 @@ static int handle_eventhandler( int event_type, void *data ) {
     nebstruct_event_handler_data * ds;
     host * hst    = NULL;
     service * svc = NULL;
-    struct timeval start_time;
+    struct timeval core_time;
+    gettimeofday(&core_time,NULL);
 
     gm_log( GM_LOG_TRACE, "handle_eventhandler(%i, data)\n", event_type );
 
@@ -438,10 +439,10 @@ static int handle_eventhandler( int event_type, void *data ) {
     }
 
     temp_buffer[0]='\x0';
-    gettimeofday(&start_time,NULL);
     snprintf( temp_buffer,GM_BUFFERSIZE-1,
-                "type=eventhandler\nstart_time=%i.0\ncommand_line=%s\n\n\n",
-                (int)start_time.tv_sec,
+                "type=eventhandler\ncore_time=%i.%i\ncommand_line=%s\n\n\n",
+                (int)core_time.tv_sec,
+                (int)core_time.tv_usec,
                 ds->command_line
     );
 
@@ -474,6 +475,8 @@ static int handle_host_check( int event_type, void *data ) {
     host * hst;
     check_result * chk_result;
     int check_options;
+    struct timeval core_time;
+    gettimeofday(&core_time,NULL);
 
     gm_log( GM_LOG_TRACE, "handle_host_check(%i)\n", event_type );
 
@@ -572,12 +575,11 @@ static int handle_host_check( int event_type, void *data ) {
 
     /* log latency */
     if(mod_gm_opt->debug_level >= GM_LOG_DEBUG) {
-        time_t t = time(NULL);
         struct tm next_check;
         localtime_r(&hst->next_check, &next_check);
         char buffer1[GM_BUFFERSIZE];
         strftime(buffer1, sizeof(buffer1), "%Y-%m-%d %H:%M:%S", &next_check );
-        gm_log( GM_LOG_DEBUG, "host: '%s', next_check is at %s, latency: %i\n", hst->name, buffer1, ((int) t - (int)hst->next_check));
+        gm_log( GM_LOG_DEBUG, "host: '%s', next_check is at %s, latency so far: %i\n", hst->name, buffer1, ((int)core_time.tv_sec - (int)hst->next_check));
     }
 
     /* increment number of host checks that are currently running */
@@ -588,11 +590,13 @@ static int handle_host_check( int event_type, void *data ) {
 
     gm_log( GM_LOG_TRACE, "cmd_line: %s\n", processed_command );
 
-    snprintf( temp_buffer,GM_BUFFERSIZE-1,"type=host\nresult_queue=%s\nhost_name=%s\nstart_time=%i.0\ntimeout=%d\ncommand_line=%s\n\n\n",
+    snprintf( temp_buffer,GM_BUFFERSIZE-1,"type=host\nresult_queue=%s\nhost_name=%s\nnext_check=%i.0\ntimeout=%d\ncore_time=%i.%i\ncommand_line=%s\n\n\n",
               mod_gm_opt->result_queue,
               hst->name,
-              ( int )hst->next_check,
+              (int)hst->next_check,
               host_check_timeout,
+              (int)core_time.tv_sec,
+              (int)core_time.tv_usec,
               processed_command
             );
 
@@ -640,6 +644,8 @@ static int handle_svc_check( int event_type, void *data ) {
     nebstruct_service_check_data * svcdata;
     int prio = GM_JOB_PRIO_LOW;
     check_result * chk_result;
+    struct timeval core_time;
+    gettimeofday(&core_time,NULL);
 
     gm_log( GM_LOG_TRACE, "handle_svc_check(%i, data)\n", event_type );
     svcdata = ( nebstruct_service_check_data * )data;
@@ -736,12 +742,11 @@ static int handle_svc_check( int event_type, void *data ) {
 
     /* log latency */
     if(mod_gm_opt->debug_level >= GM_LOG_DEBUG) {
-        time_t t = time(NULL);
         struct tm next_check;
         localtime_r(&svc->next_check, &next_check);
         char buffer1[GM_BUFFERSIZE];
         strftime(buffer1, sizeof(buffer1), "%Y-%m-%d %H:%M:%S", &next_check );
-        gm_log( GM_LOG_DEBUG, "service: '%s' - '%s', next_check is at %s, latency: %i\n", svcdata->host_name, svcdata->service_description, buffer1, ((int) t - (int)svc->next_check));
+        gm_log( GM_LOG_DEBUG, "service: '%s' - '%s', next_check is at %s, latency so far: %i\n", svcdata->host_name, svcdata->service_description, buffer1, ((int)core_time.tv_sec - (int)svc->next_check));
     }
 
     /* increment number of service checks that are currently running... */
@@ -752,11 +757,13 @@ static int handle_svc_check( int event_type, void *data ) {
 
     gm_log( GM_LOG_TRACE, "cmd_line: %s\n", processed_command );
 
-    snprintf( temp_buffer,GM_BUFFERSIZE-1,"type=service\nresult_queue=%s\nhost_name=%s\nservice_description=%s\nstart_time=%i.0\ntimeout=%d\ncommand_line=%s\n\n\n",
+    snprintf( temp_buffer,GM_BUFFERSIZE-1,"type=service\nresult_queue=%s\nhost_name=%s\nservice_description=%s\nnext_check=%i.0\ncore_time=%i.%i\ntimeout=%d\ncommand_line=%s\n\n\n",
               mod_gm_opt->result_queue,
               svcdata->host_name,
               svcdata->service_description,
-              ( int )svc->next_check,
+              (int)svc->next_check,
+              (int)core_time.tv_sec,
+              (int)core_time.tv_usec,
               service_check_timeout,
               processed_command
             );
