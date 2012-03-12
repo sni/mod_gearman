@@ -5,12 +5,10 @@ use warnings;
 die("please run from project root") unless -d 't';
 create_suppressions();
 split_suppressions();
-uniq_suppressions();
 exit 0;
 
 #################################################
 sub create_suppressions {
-    mkdir('t/out') or die("mkdir failed: $!");
     `make clean >/dev/null && ./configure --enable-embedded-perl --enable-debug && make >/dev/null`;
     `>t/valgrind_suppress.cfg`;
 
@@ -25,13 +23,16 @@ sub create_suppressions {
 #################################################
 sub split_suppressions {
     my $x = 1;
-    my $fh2;
+    my $all_suppressions = {};
     if(-f '/tmp/suppressions.log') {
-        `cat /tmp/suppressions.log >> t/valgrind_suppress.cfg`;
+        print `cat /tmp/suppressions.log >> t/valgrind_suppress.cfg`;
     }
     print `ls -la t/valgrind_suppress.cfg`;
     open(my $fh, '<', 't/valgrind_suppress.cfg') or die($!);
+    my $text;
     while(my $line = <$fh>) {
+        next if $line =~ m/^\s*$/;
+        next if $line =~ m/^{$/;
         next if $line =~ m/^#/;
         next if $line =~ m/^==/;
         next if $line =~ m/^ok/;
@@ -41,35 +42,24 @@ sub split_suppressions {
         next if $line =~ m/^core logger is not available/;
 
         if($line =~ m/^\s+<insert_a_suppression_name_here/) {
-            $fh2 = open_new_file($fh2, $x++);
-            print $fh2 "{\n";
+            $text = "{\n";
         }
-        die("line: ".$line) unless defined $fh2;
-        print $fh2 $line;
+        die("line: ".$line) unless defined $text;
+        $text .= $line;
         if($line =~ m/^\s*}\s*$/) {
-            close($fh2);
-            undef $fh2;
+            $all_suppressions->{$text} = 1 if $text =~ m/Perl_/;
+            undef $text;
         }
     }
-    die("open file") if defined $fh2;
-}
+    die("unmatched entry") if defined $text;
+    close($fh);
 
-#################################################
-sub uniq_suppressions {
-    `fdupes -Nd t/out/`;
-    `grep -ci perl t/out/* | grep :0 | awk -F : '{ print \$1 }' | xargs -r rm`;
-    `cat t/out/* > t/valgrind_suppress.cfg`;
-    `rm -rf t/out`;
-    print "striped:\n";
+    my @sorted = sort keys %{$all_suppressions};
+
+    open($fh, '>', 't/valgrind_suppress.cfg') or die("cannot open file: $!");
+    print $fh join("\n", @sorted);
+    close($fh);
+    print `cat t/valgrind_extra_manual.cfg >> t/valgrind_suppress.cfg`;
     print `ls -la t/valgrind_suppress.cfg`;
-}
-
-#################################################
-sub open_new_file {
-    my $fh2 = shift;
-    my $nr  = shift;
-    close($fh2) if defined $fh2;
-    my $file = sprintf('t/out/%08d.cfg', $nr);
-    open $fh2, '>', $file or die $file.": ".$!;
-    return $fh2;
+    return;
 }
