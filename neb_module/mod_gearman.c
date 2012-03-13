@@ -440,7 +440,8 @@ static int handle_eventhandler( int event_type, void *data ) {
 
     temp_buffer[0]='\x0';
     snprintf( temp_buffer,GM_BUFFERSIZE-1,
-                "type=eventhandler\ncore_time=%i.%i\ncommand_line=%s\n\n\n",
+                "type=eventhandler\nstart_time=%i.0\ncore_time=%i.%i\ncommand_line=%s\n\n\n",
+                (int)core_time.tv_sec,
                 (int)core_time.tv_sec,
                 (int)core_time.tv_usec,
                 ds->command_line
@@ -590,9 +591,10 @@ static int handle_host_check( int event_type, void *data ) {
 
     gm_log( GM_LOG_TRACE, "cmd_line: %s\n", processed_command );
 
-    snprintf( temp_buffer,GM_BUFFERSIZE-1,"type=host\nresult_queue=%s\nhost_name=%s\nnext_check=%i.0\ntimeout=%d\ncore_time=%i.%i\ncommand_line=%s\n\n\n",
+    snprintf( temp_buffer,GM_BUFFERSIZE-1,"type=host\nresult_queue=%s\nhost_name=%s\nstart_time=%i.0\nnext_check=%i.0\ntimeout=%d\ncore_time=%i.%i\ncommand_line=%s\n\n\n",
               mod_gm_opt->result_queue,
               hst->name,
+              (int)hst->next_check,
               (int)hst->next_check,
               host_check_timeout,
               (int)core_time.tv_sec,
@@ -757,10 +759,11 @@ static int handle_svc_check( int event_type, void *data ) {
 
     gm_log( GM_LOG_TRACE, "cmd_line: %s\n", processed_command );
 
-    snprintf( temp_buffer,GM_BUFFERSIZE-1,"type=service\nresult_queue=%s\nhost_name=%s\nservice_description=%s\nnext_check=%i.0\ncore_time=%i.%i\ntimeout=%d\ncommand_line=%s\n\n\n",
+    snprintf( temp_buffer,GM_BUFFERSIZE-1,"type=service\nresult_queue=%s\nhost_name=%s\nservice_description=%s\nstart_time=%i.0\nnext_check=%i.0\ncore_time=%i.%i\ntimeout=%d\ncommand_line=%s\n\n\n",
               mod_gm_opt->result_queue,
               svcdata->host_name,
               svcdata->service_description,
+              (int)svc->next_check,
               (int)svc->next_check,
               (int)core_time.tv_sec,
               (int)core_time.tv_usec,
