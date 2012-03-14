@@ -102,7 +102,7 @@
 /* worker */
 #define GM_DEFAULT_MIN_WORKER           1      /**< minumum number of worker             */
 #define GM_DEFAULT_MAX_WORKER          20      /**< maximum number of concurrent worker  */
-#define GM_DEFAULT_JOB_MAX_AGE        600      /**< discard jobs older than that         */
+#define GM_DEFAULT_JOB_MAX_AGE          0      /**< discard jobs older than that         */
 #define GM_DEFAULT_SPAWN_RATE           1      /**< number of spawned worker per seconds */
 #define GM_DEFAULT_WORKER_LOOP_SLEEP    1      /**< sleep in worker main loop */
 
