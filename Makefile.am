@@ -197,7 +197,6 @@ install-exec-local: install-local-state-dir
 	$(install_sh_PROGRAM) -m 755 extras/gearmand-init $(DESTDIR)$(initrddir)/gearmand
 
 install-local-state-dir:
-	$(RM) $(DESTDIR)$(pkglibdir)/mod_gearman.so
 	$(install_sh_PROGRAM) -d $(DESTDIR)$(localstatedir)/mod_gearman/
 
 install_p1file:
@@ -241,6 +240,7 @@ install-data-local: install-local-state-dir $(install_p1file)
 	@echo "         worker:     $(DESTDIR)$(sysconfdir)/mod_gearman_worker.conf"
 	@echo ""
 	@echo "################################################################"
+	$(RM) $(DESTDIR)$(pkglibdir)/mod_gearman.so
 
 
 install-config:
