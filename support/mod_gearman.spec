@@ -51,7 +51,6 @@ be bound to host and servicegroups.
 
 # remove custom gearmand initscript
 %{__rm} -f %{buildroot}/%{_initrddir}/gearmand
-%{__rm} -f %{buildroot}/%{_libdir}/mod_gearman/mod_gearman.so
 
 %pre
 getent group nagios >/dev/null || groupadd -r nagios
