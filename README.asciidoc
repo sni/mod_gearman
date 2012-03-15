@@ -671,9 +671,9 @@ Threshold for discarding too old jobs. When a new job is older than
 this amount of seconds it will not be executed and just discarded.
 This will result in a message like "(Could Not Start Check In Time)".
 Possible reasons for this are time differences between core and
-worker (use NTP!) or the smart rescheduler of the core which shoudl be
-disabled.
-Default: 600
+worker (use NTP!) or the smart rescheduler of the core which should be
+disabled. Set to zero to disable this check.
+Default: 0
 +
 ====
     max-age=600

@@ -330,7 +330,7 @@ void do_exec_job( ) {
     gm_log( GM_LOG_TRACE, "timeout: %i, core latency: %i\n", exec_job->timeout, latency);
 
     /* job is too old */
-    if(age > mod_gm_opt->max_age) {
+    if(mod_gm_opt->max_age > 0 && age > mod_gm_opt->max_age) {
         exec_job->return_code   = 3;
 
         if ( !strcmp( exec_job->type, "service" ) ) {

@@ -617,7 +617,7 @@ int parse_args_line(mod_gm_opt_t *opt, char * arg, int recursion_level) {
     /* max-age */
     else if ( !strcmp( key, "max-age" ) ) {
         opt->max_age = atoi( value );
-        if(opt->max_age <= 0) { opt->max_age = 1; }
+        if(opt->max_age < 0) { opt->max_age = GM_DEFAULT_JOB_MAX_AGE; }
     }
 
     /* idle-timeout */

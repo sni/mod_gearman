@@ -1537,9 +1537,9 @@ Threshold for discarding too old jobs. When a new job is older than
 this amount of seconds it will not be executed and just discarded.
 This will result in a message like "(Could Not Start Check In Time)".
 Possible reasons for this are time differences between core and
-worker (use NTP!) or the smart rescheduler of the core which shoudl be
-disabled.
-Default: 600
+worker (use NTP!) or the smart rescheduler of the core which should be
+disabled. Set to zero to disable this check.
+Default: 0
 </p>
 <div class="exampleblock">
 <div class="exampleblock-content">
@@ -2264,7 +2264,7 @@ Make sure all your worker have the Nagios-Plugins available under
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2012-03-12 16:02:06 CEST
+Last updated 2012-03-14 22:48:36 CEST
 </div>
 </div>
 </body>
