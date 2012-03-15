@@ -5,6 +5,7 @@ This file documents the revision history for mod_gearman.
           - disabled default max job age check
           - added docs in sample config about max-age
           - added usefull message when epn plugin does not call exit()
+          - added new option dup_results_are_passive
           - fixed "Could Not Start Check In Time" problem
 
 1.2.4  Mon Feb 27 23:54:39 CET 2012

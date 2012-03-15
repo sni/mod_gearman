@@ -756,6 +756,16 @@ Default is yes.
 ====
 
 
+dup_results_are_passive::
+Use this option to set if the duplicate result send to the 'dupserver'
+will be passive or active.
+Default is yes (passive).
++
+====
+    dup_results_are_passive=yes
+====
+
+
 debug-result::
 When enabled, the hostname of the executing worker will be put in
 front of the plugin output. This may help with debugging your plugin

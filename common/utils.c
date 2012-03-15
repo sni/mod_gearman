@@ -251,8 +251,9 @@ int set_default_options(mod_gm_opt_t *opt) {
     opt->identifier         = NULL;
     opt->queue_cust_var     = NULL;
     opt->show_error_output  = GM_ENABLED;
-    opt->orphan_host_checks    = GM_ENABLED;
-    opt->orphan_service_checks = GM_ENABLED;
+    opt->dup_results_are_passive = GM_ENABLED;
+    opt->orphan_host_checks      = GM_ENABLED;
+    opt->orphan_service_checks   = GM_ENABLED;
 
     opt->workaround_rc_25   = GM_DISABLED;
 
@@ -414,6 +415,12 @@ int parse_args_line(mod_gm_opt_t *opt, char * arg, int recursion_level) {
     /* show_error_output */
     else if ( !strcmp( key, "show_error_output" ) ) {
         opt->show_error_output = parse_yes_or_no(value, GM_ENABLED);
+        return(GM_OK);
+    }
+
+    /* dup_results_are_passive */
+    else if ( !strcmp( key, "dup_results_are_passive" ) ) {
+        opt->dup_results_are_passive = parse_yes_or_no(value, GM_ENABLED);
         return(GM_OK);
     }
 
@@ -1675,7 +1682,9 @@ void send_result_back(gm_job_t * exec_job) {
     }
 
     if( mod_gm_opt->dupserver_num ) {
-        strncpy(temp_buffer2, "type=passive\n", (sizeof(temp_buffer1)-2));
+        if(mod_gm_opt->dup_results_are_passive) {
+            strncpy(temp_buffer2, "type=passive\n", (sizeof(temp_buffer1)-2));
+        }
         strncat(temp_buffer2, temp_buffer1, (sizeof(temp_buffer2)-2));
         temp_buffer2[sizeof( temp_buffer2 )-1]='\x0';
         if( add_job_to_queue( current_client_dup,
