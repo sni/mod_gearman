@@ -56,7 +56,7 @@ Support
  * http://www.nagios-portal.org[german nagios portal]
  * Debian users may be interested in the http://labs.consol.de/nagios/mod-gearman/mod-gearman-quickstart-guide/[quickstart guide].
  * Mod-Gearman has been succesfully tested with latest Nagios/Icinga.
-   See <<_supported_dependencys,Supported Dependencys>> for details.
+   See <<_supported_dependencies,Supported Dependencies>> for details.
  * There are no known bugs at the moment.  Let me know if you find one.
 
 
@@ -1066,8 +1066,8 @@ And i think its not very useful at all. So don't expect this feature
 to be implemented in the near future.
 
 
-Supported Dependencys
----------------------
+Supported Dependencies
+----------------------
 
 Lib-Gearman
 +++++++++++
