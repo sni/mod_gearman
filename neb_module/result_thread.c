@@ -46,6 +46,7 @@ static void cancel_worker_thread (void * data) {
 void *result_worker( void * data ) {
     gearman_worker_st worker;
     int *worker_num = (int*)data;
+    gearman_return_t ret;
 
     gm_log( GM_LOG_TRACE, "worker %d started\n", *worker_num );
 
@@ -57,14 +58,19 @@ void *result_worker( void * data ) {
     pthread_cleanup_push ( cancel_worker_thread, (void*) &worker);
 
     while ( 1 ) {
-        gearman_return_t ret;
         ret = gearman_worker_work( &worker );
         if ( ret != GEARMAN_SUCCESS && ret != GEARMAN_WORK_FAIL ) {
-            gm_log( GM_LOG_ERROR, "worker error: %s\n", gearman_worker_error( &worker ) );
+            if ( ret != GEARMAN_TIMEOUT)
+                gm_log( GM_LOG_ERROR, "worker error: %s\n", gearman_worker_error( &worker ) );
             gearman_job_free_all( &worker );
-            gearman_worker_free( &worker );
+            if ( ret == GEARMAN_TIMEOUT) {
+                gearman_worker_unregister_all(&worker);
+                gearman_worker_remove_servers(&worker);
+            } else {
+                gearman_worker_free( &worker );
+                sleep(1);
+            }
 
-            sleep(1);
             set_worker(&worker);
         }
     }
@@ -310,6 +316,10 @@ int set_worker( gearman_worker_st *worker ) {
 
     /* add our dummy queue, gearman sometimes forgets the last added queue */
     worker_add_function( worker, "dummy", dummy);
+
+    /* let our worker renew itself every 30 seconds */
+    if(mod_gm_opt->server_num > 1)
+        gearman_worker_set_timeout(worker, 30000);
 
     return GM_OK;
 }
