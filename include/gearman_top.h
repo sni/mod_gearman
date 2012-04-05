@@ -86,5 +86,16 @@ void print_version(void);
 void print_stats(char * hostname);
 
 /**
+ *
+ * print to window or stdout, depending on settings
+ *
+ * @param[in] fmt - format string
+ * @param[in] ... - list
+ *
+ * @return nothing
+ */
+void my_printf(const char *fmt, ...);
+
+/**
  * @}
  */

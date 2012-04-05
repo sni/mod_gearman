@@ -28,25 +28,25 @@
 
 int opt_verbose    = GM_DISABLED;
 int opt_quiet      = GM_DISABLED;
+int opt_batch      = GM_DISABLED;
 int opt_interval   = 1;
 
 char * server_list[GM_LISTSIZE];
 int server_list_num = 0;
+WINDOW *w;
 
 
 /* work starts here */
 int main (int argc, char **argv) {
     int opt;
-    WINDOW *w;
 
     mod_gm_opt = malloc(sizeof(mod_gm_opt_t));
     set_default_options(mod_gm_opt);
 
-
     /*
      * and parse command line
      */
-    while((opt = getopt(argc, argv, "qvVhH:s:i:")) != -1) {
+    while((opt = getopt(argc, argv, "qvVhH:s:i:b")) != -1) {
         switch(opt) {
             case 'h':   print_usage();
                         break;
@@ -60,6 +60,8 @@ int main (int argc, char **argv) {
             case 'q':   opt_quiet = GM_ENABLED;
                         break;
             case 'i':   opt_interval = atoi(optarg);
+                        break;
+            case 'b':   opt_batch = GM_ENABLED;
                         break;
             case '?':   printf("Error - No such option: `%c'\n\n", optopt);
                         print_usage();
@@ -77,6 +79,12 @@ int main (int argc, char **argv) {
 
     signal(SIGINT, clean_exit);
     signal(SIGTERM,clean_exit);
+
+    /* in batch mode, print stats once and exit */
+    if(opt_batch == GM_ENABLED) {
+        print_stats(server_list[0]);
+        clean_exit(0);
+    }
 
     /* init curses */
     w = initscr();
@@ -119,6 +127,7 @@ void print_usage() {
     printf("gearman_top   [ -H <hostname>[:port]           ]\n");
     printf("              [ -i <sec>       seconds         ]\n");
     printf("              [ -q             quiet mode      ]\n");
+    printf("              [ -b             batch mode      ]\n");
     printf("\n");
     printf("              [ -h             print help      ]\n");
     printf("              [ -v             verbose output  ]\n");
@@ -166,11 +175,13 @@ void print_stats(char * hostnam) {
     now = *(localtime(&t));
     strftime(cur_time, sizeof(cur_time), "%Y-%m-%d %H:%M:%S", &now );
 
-    erase(); /* clear screen */
-    printw("%s  -  %s:%i ", cur_time, server, port );
+    if(opt_batch == GM_DISABLED) {
+        erase(); /* clear screen */
+    }
+    my_printf("%s  -  %s:%i ", cur_time, server, port );
     if(version != NULL && strcmp(version, "") != 0)
-        printw("  -  v%s", version );
-    printw("\n\n");
+        my_printf("  -  v%s", version );
+    my_printf("\n\n");
 
     if( rc == STATE_OK ) {
         for(x=0; x<stats->function_num;x++) {
@@ -182,28 +193,28 @@ void print_stats(char * hostnam) {
         }
         snprintf(format1, sizeof(format1), " %%-%is | %%16s | %%12s | %%12s\n", max_length);
         snprintf(format2, sizeof(format2), " %%-%is |%%16i  |%%12i  |%%12i \n", max_length);
-        printw(format1, "Queue Name", "Worker Available", "Jobs Waiting", "Jobs Running");
+        my_printf(format1, "Queue Name", "Worker Available", "Jobs Waiting", "Jobs Running");
         for(x=0; x < max_length + 51; x++)
-            printw("-");
-        printw("\n");
+            my_printf("-");
+        my_printf("\n");
         for(x=0; x<stats->function_num;x++) {
             if(opt_quiet == GM_ENABLED && stats->function[x]->worker == 0 && stats->function[x]->total == 0)
                 continue;
-            printw(format2, stats->function[x]->queue, stats->function[x]->worker, stats->function[x]->waiting, stats->function[x]->running);
+            my_printf(format2, stats->function[x]->queue, stats->function[x]->worker, stats->function[x]->waiting, stats->function[x]->running);
             found++;
         }
         if(found == 0) {
             for(x=0; x < max_length + 25; x++) {
-                printw(" ");
+                my_printf(" ");
             }
-            printw("no queues found\n");
+            my_printf("no queues found\n");
         }
         for(x=0; x < max_length + 51; x++)
-            printw("-");
-        printw("\n");
+            my_printf("-");
+        my_printf("\n");
     }
     else {
-        printw(" %s\n", message);
+        my_printf(" %s\n", message);
     }
     refresh();
 
@@ -214,6 +225,18 @@ void print_stats(char * hostnam) {
     return;
 }
 
+/* print curses or normal depending on batch mode setting */
+void my_printf(const char *fmt, ...) {
+    va_list ap;
+    va_start( ap, fmt );
+    if(opt_batch == GM_ENABLED) {
+        vprintf(fmt, ap);
+    } else {
+        vw_printw(w, fmt, ap);
+    }
+    va_end( ap );
+    return;
+}
 
 /* core log wrapper */
 void write_core_log(char *data) {
