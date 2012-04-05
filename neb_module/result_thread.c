@@ -59,13 +59,13 @@ void *result_worker( void * data ) {
     while ( 1 ) {
         gearman_return_t ret;
         ret = gearman_worker_work( &worker );
-        if ( ret != GEARMAN_SUCCESS ) {
+        if ( ret != GEARMAN_SUCCESS && ret != GEARMAN_WORK_FAIL ) {
             gm_log( GM_LOG_ERROR, "worker error: %s\n", gearman_worker_error( &worker ) );
             gearman_job_free_all( &worker );
             gearman_worker_free( &worker );
 
             sleep(1);
-            set_worker(&worker );
+            set_worker(&worker);
         }
     }
 
