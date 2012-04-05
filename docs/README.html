@@ -842,7 +842,15 @@ the Mod-Gearman NEB module and disable all distribution features. You
 still can receive passive results by the core send via
 send_gearman / send_multi. Make sure you use the same encryption
 settings like the neb module or your core won&#8217;t be able to process the
-results.</p></div>
+results or use the <em>accept_clear_results</em> option.</p></div>
+<h3 id="_gearman_proxy">Gearman Proxy</h3><div style="clear:left"></div>
+<a title="Gearman Proxy" rel="lightbox[mod_gm]" href="http://labs.consol.de/wp-content/uploads/2010/09/gearman_proxy.png"><img src="http://labs.consol.de/wp-content/uploads/2010/09/gearman_proxy.png" alt="Gearman Proxy" width="300" height="220" style="float:none" /></a>
+<div class="paragraph"><p>Sometimes you may need to reverse the direction of the initial
+connection attempt. Usually the worker and the neb module open the
+initial connection so they need to access the gearmand port. In cases
+where no direct connection is possible use ssh tunnel or the Gearman
+proxy. The Gearman proxy just puts jobs from one gearmand into another
+gearmand and vice versa.</p></div>
 </div>
 <h2 id="_installation">Installation</h2>
 <div class="sectionbody">
@@ -2305,7 +2313,7 @@ Make sure all your worker have the Nagios-Plugins available under
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2012-04-05 17:49:05 CEST
+Last updated 2012-04-06 00:59:42 CEST
 </div>
 </div>
 </body>

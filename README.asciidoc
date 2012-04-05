@@ -205,7 +205,23 @@ the Mod-Gearman NEB module and disable all distribution features. You
 still can receive passive results by the core send via
 send_gearman / send_multi. Make sure you use the same encryption
 settings like the neb module or your core won't be able to process the
-results.
+results or use the 'accept_clear_results' option.
+
+
+Gearman Proxy
+~~~~~~~~~~~~~
+
+++++
+<a title="Gearman Proxy" rel="lightbox[mod_gm]" href="http://labs.consol.de/wp-content/uploads/2010/09/gearman_proxy.png"><img src="http://labs.consol.de/wp-content/uploads/2010/09/gearman_proxy.png" alt="Gearman Proxy" width="300" height="220" style="float:none" /></a>
+++++
+
+Sometimes you may need to reverse the direction of the initial
+connection attempt. Usually the worker and the neb module open the
+initial connection so they need to access the gearmand port. In cases
+where no direct connection is possible use ssh tunnel or the Gearman
+proxy. The Gearman proxy just puts jobs from one gearmand into another
+gearmand and vice versa.
+
 
 
 
