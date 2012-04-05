@@ -84,6 +84,10 @@ int parse_arguments(int argc, char **argv) {
     int errors = 0;
     mod_gm_opt = malloc(sizeof(mod_gm_opt_t));
     set_default_options(mod_gm_opt);
+
+    /* special default: encryption disabled */
+    mod_gm_opt->encryption = GM_DISABLED;
+
     for(i=1;i<argc;i++) {
         char * arg   = strdup( argv[i] );
         char * arg_c = arg;
