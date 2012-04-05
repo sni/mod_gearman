@@ -109,7 +109,7 @@ EXTRA_DIST = COPYING etc/*.in extras include \
              docs/QUICKSTART docs/QUICKSTART.html support/mod_gearman.spec \
              t/data/test1.key t/data/test2.key t/data/test3.key t/data/send_multi.txt \
              t/rc t/both t/killer t/sleep t/crit.pl t/ok.pl t/noepn.pl t/fail.pl t/noexit.pl \
-             worker/mod_gearman_p1.pl t/test_all.pl t/valgrind_suppress.cfg
+             worker/mod_gearman_p1.pl t/test_all.pl t/valgrind_suppress.cfg contrib
 
 # other targets
 mod_gearman.o: $(mod_gearman_so_OBJECTS) $(mod_gearman_so_DEPENDENCIES)
@@ -210,6 +210,7 @@ install-data-local: install-local-state-dir $(install_p1file)
 	$(install_sh_PROGRAM) -d $(DESTDIR)$(localstatedir)/log/mod_gearman
 	$(install_sh_PROGRAM) -m 644 extras/shared.conf            $(DESTDIR)$(datadir)/mod_gearman/shared.conf
 	$(install_sh_PROGRAM) -m 644 extras/standalone_worker.conf $(DESTDIR)$(datadir)/mod_gearman/standalone_worker.conf
+	$(install_sh_PROGRAM) -m 644 contrib/gearman_proxy.pl      $(DESTDIR)$(datadir)/mod_gearman/gearman_proxy.pl
 	@echo ""
 	@echo "################################################################"
 	@echo ""

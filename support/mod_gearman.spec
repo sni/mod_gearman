@@ -52,6 +52,7 @@ be bound to host and servicegroups.
 # remove custom gearmand initscript
 %{__rm} -f %{buildroot}/%{_initrddir}/gearmand
 
+
 %pre
 getent group nagios >/dev/null || groupadd -r nagios
 getent passwd nagios >/dev/null || \
@@ -74,6 +75,7 @@ exit 0
 %{_datadir}/mod_gearman/standalone_worker.conf
 %{_datadir}/mod_gearman/shared.conf
 %{_datadir}/mod_gearman/mod_gearman_p1.pl
+%{_datadir}/mod_gearman/gearman_proxy.pl
 
 %{_bindir}/check_gearman
 %{_bindir}/gearman_top
@@ -90,6 +92,9 @@ exit 0
 %docdir %{_defaultdocdir}
 
 %changelog
+* Fri Apr 06 2012 Sven Nierlein <sven@consol.de>
+- added gearman_proxy to package
+
 * Thu Jan 19 2012 Sven Nierlein <sven@consol.de>
 - enabled embedded Perl
 

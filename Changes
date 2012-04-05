@@ -3,6 +3,7 @@ This file documents the revision history for mod_gearman.
 1.2.8  not yet released
           - add new new option 'accept_clear_results'
           - added batch mode for gearman_top
+          - added gearman_proxy to package
           - fixed problem when neb module is not reconnecting
 
 1.2.6  Mon Mar 12 15:14:21 CET 2012
