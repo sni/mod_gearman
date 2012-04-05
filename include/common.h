@@ -109,6 +109,7 @@
 /* transport modes */
 #define GM_ENCODE_AND_ENCRYPT           1
 #define GM_ENCODE_ONLY                  2
+#define GM_ENCODE_ACCEPT_ALL            3
 
 /* dump config modes */
 #define GM_WORKER_MODE                  1
@@ -207,6 +208,7 @@ typedef struct mod_gm_opt_struct {
     int            exports_count;                           /**< number of export queues */
     int            orphan_host_checks;                      /**< generate fake result for orphaned host checks */
     int            orphan_service_checks;                   /**< generate fake result for orphaned service checks */
+    int            accept_clear_results;                    /**< accept unencrypted results */
 /* worker */
     char         * identifier;                              /**< identifier for this worker */
     char         * pidfile;                                 /**< path to a pidfile */

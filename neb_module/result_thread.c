@@ -75,7 +75,7 @@ void *result_worker( void * data ) {
 
 /* put back the result into the core */
 void *get_results( gearman_job_st *job, void *context, size_t *result_size, gearman_return_t *ret_ptr ) {
-    int wsize;
+    int wsize, transportmode;
     char workload[GM_BUFFERSIZE];
     char *decrypted_data;
     char *decrypted_data_c;
@@ -110,7 +110,13 @@ void *get_results( gearman_job_st *job, void *context, size_t *result_size, gear
     /* decrypt data */
     decrypted_data   = malloc(GM_BUFFERSIZE);
     decrypted_data_c = decrypted_data;
-    mod_gm_decrypt(&decrypted_data, workload, mod_gm_opt->transportmode);
+
+    if(mod_gm_opt->transportmode == GM_ENCODE_AND_ENCRYPT && mod_gm_opt->accept_clear_results == GM_ENABLED) {
+        transportmode = GM_ENCODE_ACCEPT_ALL;
+    } else {
+        transportmode = mod_gm_opt->transportmode;
+    }
+    mod_gm_decrypt(&decrypted_data, workload, transportmode);
 
     if(decrypted_data == NULL) {
         *ret_ptr = GEARMAN_WORK_FAIL;
@@ -198,7 +204,7 @@ void *get_results( gearman_job_st *job, void *context, size_t *result_size, gear
 
     if ( chk_result->host_name == NULL || chk_result->output == NULL ) {
         *ret_ptr= GEARMAN_WORK_FAIL;
-        gm_log( GM_LOG_ERROR, "discarded invalid result\n" );
+        gm_log( GM_LOG_ERROR, "discarded invalid job (%s), check your encryption settings\n", gearman_job_handle( job ) );
         return NULL;
     }
 

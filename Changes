@@ -1,5 +1,8 @@
 This file documents the revision history for mod_gearman.
 
+1.2.8  not yet released
+          - add new new option 'accept_clear_results'
+
 1.2.6  Mon Mar 12 15:14:21 CET 2012
           - set worker queue by custom variable
           - disabled default max job age check

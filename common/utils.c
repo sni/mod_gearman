@@ -139,11 +139,13 @@ int mod_gm_encrypt(char ** encrypted, char * text, int mode) {
 
 /* decrypt text with given key */
 void mod_gm_decrypt(char ** decrypted, char * text, int mode) {
+    char *test;
     unsigned char * buffer = malloc(sizeof(unsigned char) * GM_BUFFERSIZE);
 
     /* first decode from base64 */
     size_t bsize = base64_decode(text, buffer, GM_BUFFERSIZE);
-    if(mode == GM_ENCODE_AND_ENCRYPT) {
+    test = strndup(buffer, 5);
+    if(mode == GM_ENCODE_AND_ENCRYPT || (mode == GM_ENCODE_ACCEPT_ALL && strcmp(test, "type="))) {
         /* then decrypt */
         mod_gm_aes_decrypt(decrypted, buffer, bsize);
     }
@@ -153,6 +155,7 @@ void mod_gm_decrypt(char ** decrypted, char * text, int mode) {
         debase64[bsize] = '\0';
         strcpy(*decrypted, debase64);
     }
+    free(test);
     free(buffer);
     return;
 }
@@ -254,6 +257,7 @@ int set_default_options(mod_gm_opt_t *opt) {
     opt->dup_results_are_passive = GM_ENABLED;
     opt->orphan_host_checks      = GM_ENABLED;
     opt->orphan_service_checks   = GM_ENABLED;
+    opt->accept_clear_results    = GM_DISABLED;
 
     opt->workaround_rc_25   = GM_DISABLED;
 
@@ -439,6 +443,12 @@ int parse_args_line(mod_gm_opt_t *opt, char * arg, int recursion_level) {
     /* orphan_service_checks */
     else if ( !strcmp( key, "orphan_service_checks" ) ) {
         opt->orphan_service_checks = parse_yes_or_no(value, GM_ENABLED);
+        return(GM_OK);
+    }
+
+    /* accept_clear_results */
+    else if ( !strcmp( key, "accept_clear_results" ) ) {
+        opt->accept_clear_results = parse_yes_or_no(value, GM_ENABLED);
         return(GM_OK);
     }
 
@@ -1202,8 +1212,6 @@ void escape(char *out, int ch) {
             strcpy(out, "\\a"); break;
         case '\\':
             strcpy(out, "\\\\"); break;
-        //case '\'':
-        //    strcpy(out, "\\\'"); break;
         case '\"':
             strcpy(out, "\\\""); break;
         default:
@@ -1729,6 +1737,7 @@ char *md5sum(char *text) {
 
 /* add parsed server to list */
 void add_server(int * server_num, gm_server_t * server_list[GM_LISTSIZE], char * servername) {
+    gm_server_t *new_server;
     char * server   = strdup( servername );
     char * server_c = server;
     char * host     = strsep( &server, ":" );
@@ -1737,7 +1746,6 @@ void add_server(int * server_num, gm_server_t * server_list[GM_LISTSIZE], char *
     if(port_val != NULL) {
         port  = ( in_port_t ) atoi( port_val );
     }
-    gm_server_t *new_server;
     new_server = malloc(sizeof(gm_server_t));
     if(!strcmp(host, "")) {
         new_server->host = strdup("localhost");

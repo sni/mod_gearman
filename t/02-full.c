@@ -89,9 +89,10 @@ void *start_worker(void*data) {
 /* test event handler over gearmand */
 void test_eventhandler(int transportmode);
 void test_eventhandler(int transportmode) {
-    char * testdata = "type=eventhandler\ncommand_line=/bin/hostname\n\n\n";
+    char * testdata = strdup("type=eventhandler\ncommand_line=/bin/hostname\n\n\n");
     int rt = add_job_to_queue( &client, mod_gm_opt->server_list, "eventhandler", NULL, testdata, GM_JOB_PRIO_NORMAL, 1, transportmode, TRUE );
     ok(rt == GM_OK, "eventhandler sent successfully in mode %s", transportmode == GM_ENCODE_ONLY ? "base64" : "aes256");
+    free(testdata);
     return;
 }
 

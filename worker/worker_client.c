@@ -263,7 +263,7 @@ void *get_job( gearman_job_st *job, void *context, size_t *result_size, gearman_
 #endif
 
     if(valid_lines == 0) {
-        gm_log( GM_LOG_ERROR, "discarded invalid job, check your encryption settings\n" );
+        gm_log( GM_LOG_ERROR, "discarded invalid job (%s), check your encryption settings\n", gearman_job_handle( job ) );
     } else {
         do_exec_job();
     }

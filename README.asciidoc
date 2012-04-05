@@ -631,6 +631,19 @@ Default is yes.
 ====
 
 
+accept_clear_results::
+When enabled, the NEB module will accept unencrypted results too. This
+is quite useful if you have lots of passive checks and make use of
+send_gearman/send_multi where you would have to spread the shared key
+to all clients using these tools.
+Default is no.
++
+====
+    accept_clear_results=yes
+====
+
+
+
 
 Worker Options
 ~~~~~~~~~~~~~~

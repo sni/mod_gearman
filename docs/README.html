@@ -1474,6 +1474,25 @@ Default is yes.
 </div></div>
 </div></div>
 </dd>
+<dt class="hdlist1">
+accept_clear_results
+</dt>
+<dd>
+<p>
+When enabled, the NEB module will accept unencrypted results too. This
+is quite useful if you have lots of passive checks and make use of
+send_gearman/send_multi where you would have to spread the shared key
+to all clients using these tools.
+Default is no.
+</p>
+<div class="exampleblock">
+<div class="exampleblock-content">
+<div class="literalblock">
+<div class="content">
+<pre><tt>accept_clear_results=yes</tt></pre>
+</div></div>
+</div></div>
+</dd>
 </dl></div>
 <h3 id="_worker_options">Worker Options</h3><div style="clear:left"></div>
 <div class="paragraph"><p>Additional options for worker:</p></div>
@@ -2286,7 +2305,7 @@ Make sure all your worker have the Nagios-Plugins available under
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2012-03-30 21:55:00 CEST
+Last updated 2012-04-05 17:49:05 CEST
 </div>
 </div>
 </body>
