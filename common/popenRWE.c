@@ -36,7 +36,7 @@ int popenRWE(int *rwepipe, char *command) {
 		goto error_err;
 
 	pid = fork();
-	if (pid > 0) { // parent
+	if (pid > 0) { /* parent */
 		close(in[0]);
 		close(out[1]);
 		close(err[1]);
@@ -44,7 +44,7 @@ int popenRWE(int *rwepipe, char *command) {
 		rwepipe[1] = out[0];
 		rwepipe[2] = err[0];
 		return pid;
-	} else if (pid == 0) { // child
+	} else if (pid == 0) { /* child */
 		close(in[1]);
 		close(out[0]);
 		close(err[0]);

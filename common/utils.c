@@ -330,9 +330,15 @@ int parse_yes_or_no(char*value, int dfl) {
 
 /* parse one line of args into the given struct */
 int parse_args_line(mod_gm_opt_t *opt, char * arg, int recursion_level) {
-    int x;
+    int i, x, number, callback_num;
     char *key;
     char *value;
+    char *callback;
+    char *export_queue;
+    char *return_code;
+    int return_code_num;
+    char *callbacks;
+    char * type;
 
     gm_log( GM_LOG_TRACE, "parse_args_line(%s, %d)\n", arg, recursion_level);
 
@@ -755,24 +761,21 @@ int parse_args_line(mod_gm_opt_t *opt, char * arg, int recursion_level) {
 
     /* export queues */
     else if ( !strcmp( key, "export" ) ) {
-        char *callback;
-        char *export_queue;
         export_queue        = strsep( &value, ":" );
         export_queue        = trim(export_queue);
-        char *return_code   = strsep( &value, ":" );
-        int return_code_num = atoi(return_code);
-        char *callbacks     = strsep( &value, ":" );
+        return_code         = strsep( &value, ":" );
+        return_code_num     = atoi(return_code);
+        callbacks           = strsep( &value, ":" );
         if(strlen(export_queue) > 50) {
             gm_log( GM_LOG_ERROR, "export queue name '%s' is too long, please use a maximum of 50 characters\n", export_queue );
         } else {
             while ( (callback = strsep( &callbacks, "," )) != NULL ) {
-                int callback_num = atoi(trim(callback));
+                callback_num = atoi(trim(callback));
                 if(index(callback, 'N') != NULL) {
                     callback_num = -1;
                     /* get neb callback number by name */
-                    int i;
                     for(i=0;i<GM_NEBTYPESSIZE;i++) {
-                        char * type = nebcallback2str(i);
+                        type = nebcallback2str(i);
                         if(!strcmp(type, callback)) {
                             callback_num = i;
                         }
@@ -784,7 +787,7 @@ int parse_args_line(mod_gm_opt_t *opt, char * arg, int recursion_level) {
                     }
                 }
 
-                int number = opt->exports[callback_num]->elem_number;
+                number = opt->exports[callback_num]->elem_number;
                 opt->exports[callback_num]->name[number]        = strdup(export_queue);
                 opt->exports[callback_num]->return_code[number] = return_code_num;
                 opt->exports[callback_num]->elem_number++;
@@ -965,9 +968,9 @@ void dumpconfig(mod_gm_opt_t *opt, int mode) {
 
 /* free options structure */
 void mod_gm_free_opt(mod_gm_opt_t *opt) {
+    int i,j;
     if(opt == NULL)
         return;
-    int i,j;
     for(i=0;i<opt->server_num;i++) {
         free(opt->server_list[i]->host);
         free(opt->server_list[i]);

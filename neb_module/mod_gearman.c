@@ -477,6 +477,9 @@ static int handle_host_check( int event_type, void *data ) {
     check_result * chk_result;
     int check_options;
     struct timeval core_time;
+    struct tm next_check;
+    char buffer1[GM_BUFFERSIZE];
+
     gettimeofday(&core_time,NULL);
 
     gm_log( GM_LOG_TRACE, "handle_host_check(%i)\n", event_type );
@@ -576,9 +579,7 @@ static int handle_host_check( int event_type, void *data ) {
 
     /* log latency */
     if(mod_gm_opt->debug_level >= GM_LOG_DEBUG) {
-        struct tm next_check;
         localtime_r(&hst->next_check, &next_check);
-        char buffer1[GM_BUFFERSIZE];
         strftime(buffer1, sizeof(buffer1), "%Y-%m-%d %H:%M:%S", &next_check );
         gm_log( GM_LOG_DEBUG, "host: '%s', next_check is at %s, latency so far: %i\n", hst->name, buffer1, ((int)core_time.tv_sec - (int)hst->next_check));
     }
@@ -647,6 +648,9 @@ static int handle_svc_check( int event_type, void *data ) {
     int prio = GM_JOB_PRIO_LOW;
     check_result * chk_result;
     struct timeval core_time;
+    struct tm next_check;
+    char buffer1[GM_BUFFERSIZE];
+
     gettimeofday(&core_time,NULL);
 
     gm_log( GM_LOG_TRACE, "handle_svc_check(%i, data)\n", event_type );
@@ -744,9 +748,7 @@ static int handle_svc_check( int event_type, void *data ) {
 
     /* log latency */
     if(mod_gm_opt->debug_level >= GM_LOG_DEBUG) {
-        struct tm next_check;
         localtime_r(&svc->next_check, &next_check);
-        char buffer1[GM_BUFFERSIZE];
         strftime(buffer1, sizeof(buffer1), "%Y-%m-%d %H:%M:%S", &next_check );
         gm_log( GM_LOG_DEBUG, "service: '%s' - '%s', next_check is at %s, latency so far: %i\n", svcdata->host_name, svcdata->service_description, buffer1, ((int)core_time.tv_sec - (int)svc->next_check));
     }
@@ -1124,17 +1126,18 @@ int handle_perfdata(int event_type, void *data) {
 
 /* handle generic exports */
 int handle_export(int callback_type, void *data) {
-    int i;
+    int i, debug_level_orig, return_code;
     char * buffer;
     char * type;
     char * event_type;
-    temp_buffer[0]          = '\x0';
-    int debug_level_orig    = mod_gm_opt->debug_level;
-    mod_gm_opt->debug_level = -1;
-    int return_code         = 0;
     nebstruct_log_data          * nld;
     nebstruct_process_data      * npd;
     nebstruct_timed_event_data  * nted;
+
+    temp_buffer[0]          = '\x0';
+    mod_gm_opt->debug_level = -1;
+    debug_level_orig    = mod_gm_opt->debug_level;
+    return_code         = 0;
 
     /* what type of event/data do we have? */
     switch (callback_type) {

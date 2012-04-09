@@ -139,8 +139,7 @@ int verify_options(mod_gm_opt_t *opt) {
 
     /* no server specified? then default to localhost */
     if(opt->server_num == 0) {
-        opt->server_list[opt->server_num] = strdup("localhost");
-        opt->server_num++;
+        add_server(&opt->server_num, opt->server_list, "localhost");
     }
 
     /* host is mandatory */

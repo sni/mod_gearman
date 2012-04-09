@@ -456,6 +456,7 @@ void send_timeout_result(gm_job_t * exec_job) {
 void send_failed_result(gm_job_t * exec_job, int sig) {
     struct timeval end_time;
     char buffer[GM_BUFFERSIZE];
+    char * signame;
     buffer[0] = '\x0';
 
     gm_log( GM_LOG_TRACE, "send_failed_result()\n");
@@ -464,7 +465,7 @@ void send_failed_result(gm_job_t * exec_job, int sig) {
     exec_job->finish_time = end_time;
     exec_job->return_code = STATE_CRITICAL;
 
-    char * signame = nr2signal(sig);
+    signame = nr2signal(sig);
     snprintf( buffer, sizeof( buffer )-1, "(Return code of %d is out of bounds. Worker exited by signal %s on worker: %s)", sig, signame, mod_gm_opt->identifier);
     free(exec_job->output);
     exec_job->output = strdup( buffer );

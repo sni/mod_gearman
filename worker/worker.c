@@ -44,12 +44,15 @@ char **start_env;
 /* work starts here */
 #ifdef EMBEDDEDPERL
 int main (int argc, char **argv, char **env) {
-    start_env=env;
     struct stat stat_buf;
 #else
 int main (int argc, char **argv) {
 #endif
     int sid, x;
+#ifdef EMBEDDEDPERL
+    start_env=env;
+#endif
+
     last_time_increased = 0;
 
     /* store the original command line for later reloads */
