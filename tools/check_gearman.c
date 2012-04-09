@@ -24,7 +24,6 @@
 /* include header */
 #include "check_gearman.h"
 #include "utils.h"
-#include "gearman.h"
 #include "gearman_utils.h"
 
 int opt_verbose         =   0;

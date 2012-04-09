@@ -26,7 +26,7 @@
 #include "result_thread.h"
 #include "utils.h"
 #include "mod_gearman.h"
-#include "gearman.h"
+#include "gearman_utils.h"
 
 /* cleanup and exit this thread */
 static void cancel_worker_thread (void * data) {

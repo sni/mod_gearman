@@ -14,7 +14,6 @@
 #ifdef EMBEDDEDPERL
 #include <epn_utils.h>
 #endif
-#include <gearman.h>
 #include "gearman_utils.h"
 
 #define GEARMAND_TEST_PORT   54730

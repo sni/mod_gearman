@@ -25,7 +25,7 @@
 #include "check_utils.h"
 #include "utils.h"
 #include "epn_utils.h"
-#include "gearman.h"
+#include "gearman_utils.h"
 #include "popenRWE.h"
 
 pid_t current_child_pid = 0;

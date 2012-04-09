@@ -37,7 +37,6 @@ endif
 common_SOURCES             = common/base64.c \
                              common/gm_crypt.c  \
                              common/rijndael.c \
-                             common/gearman.c \
                              common/gearman_utils.c \
                              common/utils.c \
                              common/md5.c

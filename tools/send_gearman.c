@@ -24,7 +24,7 @@
 /* include header */
 #include "send_gearman.h"
 #include "utils.h"
-#include "gearman.h"
+#include "gearman_utils.h"
 
 gearman_client_st client;
 gearman_client_st client_dup;

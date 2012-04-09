@@ -27,7 +27,7 @@
 #include "worker_client.h"
 #include "utils.h"
 #include "check_utils.h"
-#include "gearman.h"
+#include "gearman_utils.h"
 #ifdef EMBEDDEDPERL
 #include "epn_utils.h"
 #endif

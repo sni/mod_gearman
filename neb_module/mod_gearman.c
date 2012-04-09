@@ -24,7 +24,7 @@
 /* include header */
 #include "result_thread.h"
 #include "mod_gearman.h"
-#include "gearman.h"
+#include "gearman_utils.h"
 
 /* specify event broker API version (required) */
 NEB_API_VERSION( CURRENT_NEB_API_VERSION )

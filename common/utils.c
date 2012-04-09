@@ -25,7 +25,7 @@
 #include "utils.h"
 #include "gm_crypt.h"
 #include "base64.h"
-#include "gearman.h"
+#include "gearman_utils.h"
 #include "popenRWE.h"
 #include "polarssl/md5.h"
 
