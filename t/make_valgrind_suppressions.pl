@@ -3,7 +3,11 @@ use strict;
 use warnings;
 
 die("please run from project root") unless -d 't';
-create_suppressions();
+if(defined $ARGV[0] and $ARGV[0] eq '-c') {
+    create_suppressions();
+} else {
+    print "merging only, use -c to create new files...\n";
+}
 split_suppressions();
 exit 0;
 
@@ -21,15 +25,11 @@ sub create_suppressions {
 }
 
 #################################################
-sub split_suppressions {
-    my $x = 1;
-    my $all_suppressions = {};
-    if(-f '/tmp/suppressions.log') {
-        print `cat /tmp/suppressions.log >> t/valgrind_suppress.cfg`;
-    }
-    print `ls -la t/valgrind_suppress.cfg`;
-    open(my $fh, '<', 't/valgrind_suppress.cfg') or die($!);
+sub make_uniq {
+    my($file) = @_;
+    open(my $fh, '<', $file) or die($!);
     my $text;
+    my $all_suppressions = {};
     while(my $line = <$fh>) {
         next if $line =~ m/^\s*$/;
         next if $line =~ m/^{$/;
@@ -48,6 +48,7 @@ sub split_suppressions {
         $text .= $line;
         if($line =~ m/^\s*}\s*$/) {
             $all_suppressions->{$text} = 1 if $text =~ m/Perl_/;
+            $all_suppressions->{$text} = 1 if $text =~ m/init_embedded_perl/;
             undef $text;
         }
     }
@@ -56,10 +57,21 @@ sub split_suppressions {
 
     my @sorted = sort keys %{$all_suppressions};
 
-    open($fh, '>', 't/valgrind_suppress.cfg') or die("cannot open file: $!");
+    open($fh, '>', $file) or die("cannot open file: $!");
     print $fh join("\n", @sorted);
     close($fh);
+    return;
+}
+
+#################################################
+sub split_suppressions {
+    my $x = 1;
+    if(-f '/tmp/suppressions.log') {
+        print `cat /tmp/suppressions.log >> t/valgrind_suppress.cfg`;
+    }
+    make_uniq('t/valgrind_extra_manual.cfg');
     print `cat t/valgrind_extra_manual.cfg >> t/valgrind_suppress.cfg`;
+    make_uniq('t/valgrind_suppress.cfg');
     print `ls -la t/valgrind_suppress.cfg`;
     return;
 }
