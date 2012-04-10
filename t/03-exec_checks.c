@@ -63,7 +63,11 @@ int main (int argc, char **argv, char **env) {
     rrc = real_exit_code(run_check(cmd, &result, &error));
     //diag(result);
     cmp_ok(rrc, "==", 3, "cmd '%s' returned rc %d", cmd, rrc);
-    like(result, "sending job to gearmand failed:", "result");
+    if(atof(gearman_version()) >= 0.31) {
+        like(result, "send_gearman UNKNOWN:", "result");
+    } else {
+        like(result, "sending job to gearmand failed:", "result");
+    }
     free(result);
     free(error);
 
@@ -75,7 +79,11 @@ int main (int argc, char **argv, char **env) {
     rrc = real_exit_code(run_check(cmd, &result, &error));
     //diag(result);
     cmp_ok(rrc, "==", 3, "cmd '%s' returned rc %d", cmd, rrc);
-    like(result, "sending job to gearmand failed:", "result");
+    if(atof(gearman_version()) >= 0.31) {
+        like(result, "send_multi UNKNOWN:", "result");
+    } else {
+        like(result, "sending job to gearmand failed:", "result");
+    }
     free(result);
     free(error);
 
