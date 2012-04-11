@@ -45,12 +45,16 @@ AC_CHECK_HEADERS([curses.h],,AC_MSG_ERROR([Compiling Mod-Gearman requires curses
 AC_ARG_WITH(gearman,
  [  --with-gearman=DIR Specify the path to your gearman library],
  [
+    found=0
     for d in libgearman/.libs lib .; do
-      [ test -e "$withval/$d/libgearman.so" ] && LDFLAGS="${LDFLAGS} -L$withval/$d" && CFLAGS="${CFLAGS} -L$withval/$d" && break;
+      test -e "$withval/$d/libgearman.so" && LDFLAGS="${LDFLAGS} -L$withval/$d" && CFLAGS="${CFLAGS} -L$withval/$d" && found=1 && break;
     done
+    test $found -eq 1 || { echo 'did not find libgearman.so under your specified path!' && exit 1; }
+    found=0
     for d in libgearman-1.0 include .; do
-      [ test -e "$withval/$d/libgearman-1.0/gearman.h" ] && CFLAGS="${CFLAGS} -I$withval/$d" && break;
+      test -e "$withval/$d/libgearman-1.0/gearman.h" && CFLAGS="${CFLAGS} -I$withval/$d" && found=1 && break;
     done
+    test $found -eq 1 || { echo 'did not find gearman.h under your specified path!' && exit 1; }
  ])
 
 ##############################################

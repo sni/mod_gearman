@@ -32,3 +32,4 @@ gearman_top
 common/perlxsi.c
 etc/mod_gearman_neb.conf
 etc/mod_gearman_worker.conf
+worker.log

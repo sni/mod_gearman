@@ -89,7 +89,7 @@ endif
 07_epn_SOURCES   = $(common_SOURCES) t/tap.h t/tap.c t/07-epn.c $(common_check_SOURCES)
 # only used for performance tests
 06_exec_SOURCES  = $(common_SOURCES) t/06-execvp_vs_popen.c $(common_check_SOURCES)
-TESTS            = $(check_PROGRAMS)
+TESTS            = $(check_PROGRAMS) t/benchmark.t
 
 
 GEARMANDS=/usr/sbin/gearmand /opt/sbin/gearmand
@@ -107,7 +107,7 @@ EXTRA_DIST = COPYING etc/*.in extras include \
              THANKS README docs/README.html Changes worker/initscript.in \
              docs/QUICKSTART docs/QUICKSTART.html support/mod_gearman.spec \
              t/data/test1.key t/data/test2.key t/data/test3.key t/data/send_multi.txt \
-             t/rc t/both t/killer t/sleep t/crit.pl t/ok.pl t/noepn.pl t/fail.pl t/noexit.pl \
+             t/rc t/both t/killer t/sleep t/*.pl \
              worker/mod_gearman_p1.pl t/test_all.pl t/valgrind_suppress.cfg contrib
 
 # other targets
