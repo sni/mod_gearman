@@ -53,12 +53,12 @@ AC_ARG_WITH(gearman,
     test $found -eq 1 || { echo 'did not find libgearman.so under your specified path!' && exit 1; }
     found=0
     for d in libgearman-1.0 include .; do
-      test -e "$withval/$d/libgearman-1.0/gearman.h" && CFLAGS="${CFLAGS} -I$withval/$d" && found=1 && libgm_1_0 = 1 && break;
+      test -e "$withval/$d/libgearman-1.0/gearman.h" && CFLAGS="${CFLAGS} -I$withval/$d" && found=1 && libgm_1_0=1 && break;
       test -e "$withval/$d/libgearman/gearman.h"     && CFLAGS="${CFLAGS} -I$withval/$d" && found=1 && break;
     done
     test $found -eq 1 || { echo 'did not find gearman.h under your specified path!' && exit 1; }
+    test $libgm_1_0 -eq 1 && { AC_DEFINE_UNQUOTED(LIBGEARMAN_1_0,,[libgearman 1.0 uses different header name. introduced with libgearman 0.25 ]) }
  ])
-AM_CONDITIONAL(LIBGEARMAN_1_0, test libgm_1_0 = 1)
 
 ##############################################
 # Checks for additional libraries.
