@@ -2,19 +2,19 @@
 
 use warnings;
 use strict;
-use Test::More;
+use Test::More tests => 8;
 use Data::Dumper;
 use Time::HiRes qw( gettimeofday tv_interval sleep );
 
 my $TESTPORT    = 54730;
-my $NR_TST_JOBS = 5000;
+my $NR_TST_JOBS = 2000;
 
 # check requirements
 ok(-f './mod_gearman_worker', 'worker present') or BAIL_OUT("no worker!");
 chomp(my $gearmand = `which gearmand 2>/dev/null`);
 isnt($gearmand, '', 'gearmand present: '.$gearmand) or BAIL_OUT("no gearmand");
 
-`$gearmand --port $TESTPORT --pid-file=./gearman.pid -d`;
+system("$gearmand --port $TESTPORT --pid-file=./gearman.pid -d");
 chomp(my $gearmand_pid = `cat ./gearman.pid`);
 
 isnt($gearmand_pid, '', 'gearmand running: '.$gearmand_pid) or BAIL_OUT("no gearmand");
@@ -34,7 +34,7 @@ ok($rate > 100, 'fill rate '.$rate.'/s');
 # now clear the queue
 `>worker.log`;
 $t0 = [gettimeofday];
-`./mod_gearman_worker --server=localhost:$TESTPORT --debug=0 --max-worker=1 --encryption=off --p1_file=./worker/mod_gearman_p1.pl --daemon --pidfile=./worker.pid --logfile=./worker.log`;
+system("./mod_gearman_worker --server=localhost:$TESTPORT --debug=0 --max-worker=1 --encryption=off --p1_file=./worker/mod_gearman_p1.pl --daemon --pidfile=./worker.pid --logfile=./worker.log");
 chomp(my $worker_pid = `cat ./worker.pid`);
 isnt($worker_pid, '', 'worker running: '.$worker_pid);
 
@@ -53,7 +53,7 @@ ok($rate > 500, 'clear rate '.$rate.'/s');
 `kill $worker_pid`;
 `kill $gearmand_pid`;
 
-done_testing();
+exit(0);
 
 #################################################
 sub get_queue {
@@ -72,3 +72,4 @@ sub get_queue {
         running => -1,
     });
 }
+
