@@ -53,6 +53,7 @@ AC_ARG_WITH(gearman,
     found=0
     for d in libgearman-1.0 include .; do
       test -e "$withval/$d/libgearman-1.0/gearman.h" && CFLAGS="${CFLAGS} -I$withval/$d" && found=1 && break;
+      test -e "$withval/$d/libgearman/gearman.h"     && CFLAGS="${CFLAGS} -I$withval/$d" && found=1 && break;
     done
     test $found -eq 1 || { echo 'did not find gearman.h under your specified path!' && exit 1; }
  ])
