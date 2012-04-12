@@ -11,6 +11,7 @@
 #ifdef EMBEDDEDPERL
 #include <epn_utils.h>
 #endif
+#include "gearman_utils.h"
 
 mod_gm_opt_t *mod_gm_opt;
 
