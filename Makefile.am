@@ -107,7 +107,7 @@ EXTRA_DIST = COPYING etc/*.in extras include \
              THANKS README docs/README.html Changes worker/initscript.in \
              docs/QUICKSTART docs/QUICKSTART.html support/mod_gearman.spec \
              t/data/test1.key t/data/test2.key t/data/test3.key t/data/send_multi.txt \
-             t/rc t/both t/killer t/sleep t/*.pl \
+             t/rc t/both t/killer t/sleep t/*.pl t/*.t \
              worker/mod_gearman_p1.pl t/test_all.pl t/valgrind_suppress.cfg contrib
 
 # other targets
