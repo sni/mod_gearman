@@ -851,6 +851,8 @@ initial connection so they need to access the gearmand port. In cases
 where no direct connection is possible use ssh tunnel or the Gearman
 proxy. The Gearman proxy just puts jobs from one gearmand into another
 gearmand and vice versa.</p></div>
+<div class="paragraph"><p>Just copy the gearman_proxy.pl from the contrib directory and adjust
+the first few lines to match you needs.</p></div>
 </div>
 <h2 id="_installation">Installation</h2>
 <div class="sectionbody">
@@ -2098,7 +2100,7 @@ to be implemented in the near future.</p></div>
 </div>
 <h2 id="_supported_dependencies">Supported Dependencies</h2>
 <div class="sectionbody">
-<h5 id="_lib_gearman">Lib-Gearman</h5>
+<h3 id="_lib_gearman">Lib-Gearman</h3><div style="clear:left"></div>
 <div class="paragraph"><p>Mod-Gearman has successfully been tested on the following Gearmand
 Versions. It is recommended to always use the latest listed version of
 libgearman.</p></div>
@@ -2119,7 +2121,7 @@ libgearman.</p></div>
 </p>
 </li>
 </ul></div>
-<h5 id="_nagios">Nagios</h5>
+<h3 id="_nagios">Nagios</h3><div style="clear:left"></div>
 <div class="paragraph"><p>Mod-Gearman works perfect with the latest stable nagios 3.2.3. Version
 3.3.1 has some serious bugs and is not recommended for use in
 production.</p></div>
@@ -2130,7 +2132,7 @@ production.</p></div>
 </p>
 </li>
 </ul></div>
-<h5 id="_icinga">Icinga</h5>
+<h3 id="_icinga">Icinga</h3><div style="clear:left"></div>
 <div class="paragraph"><p>Mod-Gearman has succesfully been tested on Icinga 1.2.0 and is running
 perfectly on up to the current version 1.6.1.</p></div>
 <div class="ulist"><ul>
@@ -2313,7 +2315,7 @@ Make sure all your worker have the Nagios-Plugins available under
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2012-04-06 00:59:42 CEST
+Last updated 2012-04-12 13:12:41 CEST
 </div>
 </div>
 </body>

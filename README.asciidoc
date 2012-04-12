@@ -222,6 +222,9 @@ where no direct connection is possible use ssh tunnel or the Gearman
 proxy. The Gearman proxy just puts jobs from one gearmand into another
 gearmand and vice versa.
 
+Just copy the gearman_proxy.pl from the contrib directory and adjust
+the first few lines to match you needs.
+
 
 
 
@@ -1099,7 +1102,7 @@ Supported Dependencies
 ----------------------
 
 Lib-Gearman
-+++++++++++
+~~~~~~~~~~~
 Mod-Gearman has successfully been tested on the following Gearmand
 Versions. It is recommended to always use the latest listed version of
 libgearman.
@@ -1109,7 +1112,7 @@ libgearman.
  * https://launchpad.net/gearmand/trunk/0.14[libgearman 0.14]
 
 Nagios
-++++++
+~~~~~~
 Mod-Gearman works perfect with the latest stable nagios 3.2.3. Version
 3.3.1 has some serious bugs and is not recommended for use in
 production.
@@ -1117,7 +1120,7 @@ production.
  * http://sourceforge.net/projects/nagios/files/nagios-3.x/nagios-3.2.3/[Nagios 3.2.3]
 
 Icinga
-++++++
+~~~~~~
 Mod-Gearman has succesfully been tested on Icinga 1.2.0 and is running
 perfectly on up to the current version 1.6.1.
 
