@@ -38,7 +38,7 @@ Features
 
 Download
 --------
- * Latest stable http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.2.6.tar.gz[version 1.2.6], released March 15 2012
+ * Latest stable http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.2.8.tar.gz[version 1.2.8], released April 12 2012
  * Mod Gearman is available for download at: http://labs.consol.de/nagios/mod-gearman
  * Source is available on GitHub: http://github.com/sni/mod_gearman
  * Older versions are available in the <<_archive,download archive>>.
@@ -222,8 +222,8 @@ where no direct connection is possible use ssh tunnel or the Gearman
 proxy. The Gearman proxy just puts jobs from one gearmand into another
 gearmand and vice versa.
 
-Just copy the gearman_proxy.pl from the contrib directory and adjust
-the first few lines to match you needs.
+Just copy the gearman_proxy.pl from the contrib or share directory and
+adjust the first few lines to match you needs.
 
 
 
@@ -1107,6 +1107,7 @@ Mod-Gearman has successfully been tested on the following Gearmand
 Versions. It is recommended to always use the latest listed version of
 libgearman.
 
+ * https://launchpad.net/gearmand/trunk/0.32[libgearman 0.32]
  * https://launchpad.net/gearmand/trunk/0.25[libgearman 0.25]
  * https://launchpad.net/gearmand/trunk/0.23[libgearman 0.23]
  * https://launchpad.net/gearmand/trunk/0.14[libgearman 0.14]
@@ -1153,6 +1154,7 @@ Hints
 Archive
 -------
 
+* http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.2.8.tar.gz[version 1.2.8 - April 12 2012]
 * http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.2.6.tar.gz[version 1.2.6 - March 15 2012]
 * http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.2.4.tar.gz[version 1.2.4 - February 27 2012]
 * http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.2.2.tar.gz[version 1.2.2 - February 07 2012]
