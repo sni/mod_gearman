@@ -21,11 +21,11 @@ PERLLIB        = @PERLLIBS@
 perl_objects   = common/perlxsi.o common/epn_utils.o
 install_p1file = install_p1file
 EXTRA_mod_gearman_worker_SOURCES=common/perlxsi.c common/epn_utils.c
-01_utils_LDADD             = $(PERLLIB) common/perlxsi.o common/epn_utils.o
-02_full_LDADD              = $(PERLLIB) common/perlxsi.o common/epn_utils.o
-03_exec_LDADD              = $(PERLLIB) common/perlxsi.o common/epn_utils.o
-06_exec_LDADD              = $(PERLLIB) common/perlxsi.o common/epn_utils.o
-07_epn_LDADD               = $(PERLLIB) common/perlxsi.o common/epn_utils.o
+EXTRA_01_utils_SOURCES=common/perlxsi.c common/epn_utils.c
+EXTRA_02_full_SOURCES=common/perlxsi.c common/epn_utils.c
+EXTRA_03_exec_SOURCES=common/perlxsi.c common/epn_utils.c
+EXTRA_06_exec_SOURCES=common/perlxsi.c common/epn_utils.c
+EXTRA_07_epn_SOURCES=common/perlxsi.c common/epn_utils.c
 else
 PERLLIB        =
 P1FILE         =
@@ -312,7 +312,27 @@ version:
 		$(MAKE) docs; \
 	fi;
 
-# order does matter for perl libs/includes (at least on centos)
+# order does matter for perl libs/includes (at least on centos 5)
 mod_gearman_worker$(EXEEXT): $(mod_gearman_worker_OBJECTS) $(perl_objects) $(mod_gearman_worker_DEPENDENCIES)
 	@rm -f mod_gearman_worker$(EXEEXT)
 	$(CCLD) $(AM_CFLAGS) $(CFLAGS) -o $@ $(mod_gearman_worker_OBJECTS) $(perl_objects) $(mod_gearman_worker_LDADD) $(LIBS) $(PERLLIB)
+
+01_utils$(EXEEXT): $(01_utils_OBJECTS) $(perl_objects) $(01_utils_DEPENDENCIES)
+	@rm -f 01_utils$(EXEEXT)
+	$(CCLD) $(AM_CFLAGS) $(CFLAGS) -o $@ $(01_utils_OBJECTS) $(perl_objects) $(01_utils_LDADD) $(LIBS) $(PERLLIB)
+
+02_full$(EXEEXT): $(02_full_OBJECTS) $(perl_objects) $(02_full_DEPENDENCIES)
+	@rm -f 02_full$(EXEEXT)
+	$(CCLD) $(AM_CFLAGS) $(CFLAGS) -o $@ $(02_full_OBJECTS) $(perl_objects) $(02_full_LDADD) $(LIBS) $(PERLLIB)
+
+03_exec$(EXEEXT): $(03_exec_OBJECTS) $(perl_objects) $(03_exec_DEPENDENCIES)
+	@rm -f 03_exec$(EXEEXT)
+	$(CCLD) $(AM_CFLAGS) $(CFLAGS) -o $@ $(03_exec_OBJECTS) $(perl_objects) $(03_exec_LDADD) $(LIBS) $(PERLLIB)
+
+06_exec$(EXEEXT): $(06_exec_OBJECTS) $(perl_objects) $(06_exec_DEPENDENCIES)
+	@rm -f 06_exec$(EXEEXT)
+	$(CCLD) $(AM_CFLAGS) $(CFLAGS) -o $@ $(06_exec_OBJECTS) $(perl_objects) $(06_exec_LDADD) $(LIBS) $(PERLLIB)
+
+07_epn$(EXEEXT): $(07_epn_OBJECTS) $(perl_objects) $(07_epn_DEPENDENCIES)
+	@rm -f 07_epn$(EXEEXT)
+	$(CCLD) $(AM_CFLAGS) $(CFLAGS) -o $@ $(07_epn_OBJECTS) $(perl_objects) $(07_epn_LDADD) $(LIBS) $(PERLLIB)
