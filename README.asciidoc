@@ -38,7 +38,8 @@ Features
 
 Download
 --------
- * Latest stable http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.2.8.tar.gz[version 1.2.8], released April 12 2012
+ * Latest stable
+   http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.3.0.tar.gz[version 1.3.0], released April 27 2012
  * Mod Gearman is available for download at: http://labs.consol.de/nagios/mod-gearman
  * Source is available on GitHub: http://github.com/sni/mod_gearman
  * Older versions are available in the <<_archive,download archive>>.
@@ -1154,6 +1155,7 @@ Hints
 Archive
 -------
 
+* http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.3.0.tar.gz[version 1.3.0 - April 27 2012]
 * http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.2.8.tar.gz[version 1.2.8 - April 12 2012]
 * http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.2.6.tar.gz[version 1.2.6 - March 15 2012]
 * http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.2.4.tar.gz[version 1.2.4 - February 27 2012]
