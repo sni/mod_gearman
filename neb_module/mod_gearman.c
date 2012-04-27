@@ -180,11 +180,11 @@ int nebmodule_init( int flags, char *args, nebmodule *handle ) {
 static void register_neb_callbacks(void) {
 
     /* only if we have hostgroups defined or general hosts enabled */
-    if ( mod_gm_opt->do_hostchecks == GM_ENABLED && ( mod_gm_opt->hostgroups_num > 0 || mod_gm_opt->hosts == GM_ENABLED ))
+    if ( mod_gm_opt->do_hostchecks == GM_ENABLED && ( mod_gm_opt->hostgroups_num > 0 || mod_gm_opt->hosts == GM_ENABLED || mod_gm_opt->queue_cust_var ))
         neb_register_callback( NEBCALLBACK_HOST_CHECK_DATA,    gearman_module_handle, 0, handle_host_check );
 
     /* only if we have groups defined or general services enabled */
-    if ( mod_gm_opt->servicegroups_num > 0 || mod_gm_opt->hostgroups_num > 0 || mod_gm_opt->services == GM_ENABLED )
+    if ( mod_gm_opt->servicegroups_num > 0 || mod_gm_opt->hostgroups_num > 0 || mod_gm_opt->services == GM_ENABLED || mod_gm_opt->queue_cust_var )
         neb_register_callback( NEBCALLBACK_SERVICE_CHECK_DATA, gearman_module_handle, 0, handle_svc_check );
 
     if ( mod_gm_opt->events == GM_ENABLED )

@@ -1,5 +1,8 @@
 This file documents the revision history for mod_gearman.
 
+1.3.0  Fri Apr 27 16:45:02 CEST 2012
+          - fixed setting queues by custom variables
+
 1.2.8  Thu Apr 12 13:37:20 CEST 2012
           - add new new option 'accept_clear_results'
           - added batch mode for gearman_top
