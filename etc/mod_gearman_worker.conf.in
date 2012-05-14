@@ -59,7 +59,7 @@ hosts=yes
 # queues.
 #servicegroups=name1,name2,name3
 
-# Set this to 'no' if you want Mod-Gearman to only take care about
+# Set this to 'no' if you want Mod-Gearman to only take care of
 # servicechecks. No hostchecks will be processed by Mod-Gearman. Use
 # this option to disable hostchecks and still have the possibility to
 # use hostgroups for easy configuration of your services.
