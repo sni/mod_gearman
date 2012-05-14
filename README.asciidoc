@@ -45,7 +45,7 @@ Download
  * Older versions are available in the <<_archive,download archive>>.
  * Mod-Gearman is also included in http://omdistro.org[OMD].
  * Debian users should use the http://packages.debian.org/source/wheezy/mod-gearman[official packages]
- * SLES/RHEL users should use the http://mod-gearman.org/download/[prebuild packages]
+ * SLES/RHEL/Centos users should use the http://mod-gearman.org/download/[prebuild packages]
 
 
 
@@ -262,6 +262,9 @@ Centos/Redhat
 The easy and proper way is to build RPM packages. The following steps
 assume a Centos 5.7. Other releases may have different versions but
 should behave similar.
+
+NOTE: use the http://mod-gearman.org/download/[prebuild packages] if
+available.
 
 Build/install Gearmand rpms
 --------------------------------------
