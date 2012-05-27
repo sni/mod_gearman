@@ -114,7 +114,7 @@ int run_check(char *processed_command, char **ret, char **err) {
      * and cmd must begin with a /. Otherwise "BLAH=BLUB cmd" would lead
      * to file not found errors
      */
-    if(!strpbrk(processed_command,"!$^&*()~[]\\|{};<>?`\"'") && (*processed_command == '/' || *processed_command == '.')) {
+    if((*processed_command == '/' || *processed_command == '.') && !strpbrk(processed_command,"!$^&*()~[]\\|{};<>?`\"'")) {
         /* use the fast execvp when there are no shell characters */
         gm_log( GM_LOG_TRACE, "using execvp, no shell characters found\n" );
 
