@@ -109,8 +109,12 @@ int run_check(char *processed_command, char **ret, char **err) {
     }
 #endif
 
-    /* check for check execution method (shell or execvp) */
-    if(!strpbrk(processed_command,"!$^&*()~[]|{};<>?`\"'")) {
+    /* check for check execution method (shell or execvp)
+     * command line does not have to contain shell meta characters
+     * and cmd must begin with a /. Otherwise "BLAH=BLUB cmd" would lead
+     * to file not found errors
+     */
+    if(!strpbrk(processed_command,"!$^&*()~[]\\|{};<>?`\"'") && (*processed_command == '/' || *processed_command == '.')) {
         /* use the fast execvp when there are no shell characters */
         gm_log( GM_LOG_TRACE, "using execvp, no shell characters found\n" );
 

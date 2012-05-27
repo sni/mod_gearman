@@ -22,7 +22,7 @@ int main (int argc, char **argv, char **env) {
     char cmd[120];
     char hostname[GM_BUFFERSIZE];
 
-    plan(56);
+    plan(58);
 
     /* set hostname */
     gethostname(hostname, GM_BUFFERSIZE-1);
@@ -335,6 +335,17 @@ int main (int argc, char **argv, char **env) {
     cmp_ok(exec_job->return_code, "==", 0, "cmd '%s' returns rc 0", exec_job->command_line);
     like(exec_job->output, "out", "returned result string");
     like(exec_job->error,  "err", "returned error string");
+    free(exec_job->output);
+    free(exec_job->error);
+
+    /*****************************************
+     * cmd env
+     */
+    free(exec_job->command_line);
+    exec_job->command_line = strdup("BLAH=BLUB ./t/ok.pl");
+    execute_safe_command(exec_job, fork_on_exec, hostname);
+    cmp_ok(exec_job->return_code, "==", 0, "cmd '%s' returns rc 0", exec_job->command_line);
+    like(exec_job->output, "test plugin OK", "returned result string");
 
     /*****************************************
      * clean up

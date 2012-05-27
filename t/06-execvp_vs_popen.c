@@ -36,8 +36,14 @@ int main (int argc, char **argv, char **env) {
     gm_job_t * exec_job;
     exec_job = ( gm_job_t * )malloc( sizeof *exec_job );
     set_default_job(exec_job, mod_gm_opt);
-    strcpy(cmd, "/bin/hostname;");
+    strcpy(cmd, "BLAH=BLUB /bin/hostname");
+    printf("this should be popen\n");
+    run_check(cmd, &result, &error);
+    free(result);
+    free(error);
 
+    strcpy(cmd, "/bin/hostname");
+    printf("this should be execvp\n");
     run_check(cmd, &result, &error);
     free(result);
     free(error);
