@@ -14,7 +14,7 @@ ok(-f './mod_gearman_worker', 'worker present') or BAIL_OUT("no worker!");
 chomp(my $gearmand = `which gearmand 2>/dev/null`);
 isnt($gearmand, '', 'gearmand present: '.$gearmand) or BAIL_OUT("no gearmand");
 
-system("$gearmand --port $TESTPORT --pid-file=./gearman.pid -d");
+system("$gearmand --port $TESTPORT --pid-file=./gearman.pid -d --log-file=/tmp/gearmand_bench.log");
 chomp(my $gearmand_pid = `cat ./gearman.pid`);
 
 isnt($gearmand_pid, '', 'gearmand running: '.$gearmand_pid) or BAIL_OUT("no gearmand");
@@ -52,6 +52,7 @@ ok($rate > 500, 'clear rate '.$rate.'/s');
 # clean up
 `kill $worker_pid`;
 `kill $gearmand_pid`;
+unlink("/tmp/gearmand_bench.log");
 
 exit(0);
 
