@@ -182,7 +182,7 @@ void print_usage() {
     printf("\n");
     printf("             [ --host=<hostname>        ]\n");
     printf("             [ --result_queue=<queue>   ]\n");
-    printf("                 default:result_queue    \n");
+    printf("                 default:check_results   \n");
     printf("             [ --timeout=<seconds>      ]\n");
     printf("\n");
     printf("For details see\n");
