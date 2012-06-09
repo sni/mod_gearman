@@ -54,7 +54,7 @@ Support
  * Professional support and consulting is available via http://www.consol.de/open-source-monitoring/support/[www.consol.de]
  * http://labs.consol.de/lang/de/forum/#/categories/mod-gearman[support forum]
  * https://groups.google.com/group/mod_gearman[google groups mailinglist]
- * http://www.nagios-portal.org[german nagios portal]
+ * http://www.monitoring-portal.org[german monitoring portal]
  * Debian users may be interested in the http://labs.consol.de/nagios/mod-gearman/mod-gearman-quickstart-guide/[quickstart guide].
  * Mod-Gearman has been succesfully tested with latest Nagios/Icinga.
    See <<_supported_dependencies,Supported Dependencies>> for details.
