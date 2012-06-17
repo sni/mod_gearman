@@ -614,7 +614,8 @@ int parse_args_line(mod_gm_opt_t *opt, char * arg, int recursion_level) {
     }
 
     /* timeout */
-    else if ( !strcmp( key, "timeout" ) ) {
+    else if (   !strcmp( key, "timeout" )
+             || !strcmp( key, "t" )) {
         opt->timeout = atoi( value );
         if(opt->timeout < 0) { opt->timeout = 10; }
     }

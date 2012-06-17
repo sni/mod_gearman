@@ -158,6 +158,8 @@ void print_usage() {
     printf("\n");
     printf("             [ --server=<server>            ]\n");
     printf("\n");
+    printf("             [ --timeout|-t=<timeout>       ]\n");
+    printf("\n");
     printf("             [ --encryption=<yes|no>        ]\n");
     printf("             [ --key=<string>               ]\n");
     printf("             [ --keyfile=<file>             ]\n");
@@ -210,12 +212,13 @@ int send_result() {
         return( STATE_UNKNOWN );
     }
     if(mod_gm_opt->message == NULL) {
-        /* get all lines from stdin, wait maximum of 5 seconds */
-        alarm(5);
+        /* get all lines from stdin */
+        alarm(mod_gm_opt->timeout);
         mod_gm_opt->message = malloc(GM_BUFFERSIZE);
         strcpy(buffer,"");
         size = GM_MAX_OUTPUT;
         while(size > 0 && fgets(buffer,sizeof(buffer)-1,stdin)){
+            alarm(0);
             strncat(mod_gm_opt->message, buffer, size);
             size -= strlen(buffer);
         }
@@ -304,7 +307,7 @@ int send_result() {
 void alarm_sighandler(int sig) {
     gm_log( GM_LOG_TRACE, "alarm_sighandler(%i)\n", sig );
 
-    printf("got no input! Either send plugin output to stdin or use --message=...\n");
+    printf("got no input after %i seconds! Either send plugin output to stdin or use --message=...\n", mod_gm_opt->timeout);
 
     exit( STATE_UNKNOWN );
 }
