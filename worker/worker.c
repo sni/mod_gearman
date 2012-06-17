@@ -631,7 +631,7 @@ void stop_children(int mode) {
         for(x=3; x < mod_gm_opt->max_worker+4; x++) {
             curpid = shm[x];
             if(curpid < 0) { curpid = -curpid; }
-            if( curpid != 0 ) {
+            if( curpid != 0 && curpid != 1 ) {
                 kill(curpid, SIGTERM);
             }
         }
@@ -659,7 +659,7 @@ void stop_children(int mode) {
         for(x=3; x < mod_gm_opt->max_worker+4; x++) {
             curpid = shm[x];
             if(curpid < 0) { curpid = -curpid; }
-            if( curpid != 0 ) {
+            if( curpid != 0 && curpid != 1 ) {
                 kill(curpid, SIGINT);
             }
         }
