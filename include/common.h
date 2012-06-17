@@ -93,7 +93,7 @@
 
 #define GM_DEFAULT_JOB_TIMEOUT         60
 #define GM_DEFAULT_JOB_RETRIES          1
-#define GM_CHILD_SHUTDOWN_TIMEOUT      30
+#define GM_CHILD_SHUTDOWN_TIMEOUT      10
 #define GM_DEFAULT_RESULT_QUEUE  "check_results"
 #define GM_DEFAULT_IDLE_TIMEOUT        10
 #define GM_DEFAULT_MAX_JOBS          1000

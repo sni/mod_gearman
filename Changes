@@ -1,8 +1,9 @@
 This file documents the revision history for mod_gearman.
 
 1.3.4  not yet released
-          - fixed potential problem on deinitializing epn
           - send_gearman: make timeout configurable
+          - fixed killing worker on reload, worker now finishes current job
+          - fixed potential problem on deinitializing epn
 
 1.3.2  Sun May 27 11:39:55 CEST 2012
           - fixed problem with commands containing ENV definitions

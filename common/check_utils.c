@@ -101,6 +101,7 @@ int run_check(char *processed_command, char **ret, char **err) {
     pid_t pid;
     int pipe_stdout[2], pipe_stderr[2], pipe_rwe[3];
     int retval;
+    sigset_t mask;
 
 #ifdef EMBEDDEDPERL
     retval = run_epn_check(processed_command, ret, err);
@@ -135,6 +136,10 @@ int run_check(char *processed_command, char **ret, char **err) {
             _exit(STATE_UNKNOWN);
         }
         else if(!pid){
+            /* remove all customn signal handler */
+            sigfillset(&mask);
+            sigprocmask(SIG_UNBLOCK, &mask, NULL);
+
             /* child process */
             if((dup2(pipe_stdout[1],STDOUT_FILENO)<0)){
                 gm_log( GM_LOG_ERROR, "dup2 error\n");
@@ -221,7 +226,6 @@ int execute_safe_command(gm_job_t * exec_job, int fork_exec, char * identifier) 
     char *plugin_output, *plugin_error;
     char *bufdup;
     char buffer[GM_BUFFERSIZE], buf_error[GM_BUFFERSIZE];
-    sigset_t mask;
     struct timeval start_time,end_time;
     pid_t pid    = 0;
     buffer[0]    = '\x0';
@@ -257,10 +261,6 @@ int execute_safe_command(gm_job_t * exec_job, int fork_exec, char * identifier) 
         /* become the process group leader */
         setpgid(0,0);
         pid = getpid();
-
-        /* remove all customn signal handler */
-        sigfillset(&mask);
-        sigprocmask(SIG_UNBLOCK, &mask, NULL);
 
         if( fork_exec == GM_ENABLED ) {
             close(pipe_stdout[0]);
@@ -332,11 +332,7 @@ int execute_safe_command(gm_job_t * exec_job, int fork_exec, char * identifier) 
         else if(return_code >= 128 && return_code < 144) {
             char * signame = nr2signal((int)(return_code-128));
             bufdup = strdup(buffer);
-            snprintf( buffer, sizeof( buffer )-1, "CRITICAL: Return code of %d is out of bounds. Plugin exited by signal %s. (worker: %s)", (int)(return_code), signame, identifier);
-            if(strlen(bufdup) > 0) {
-                strncat(buffer, "\\n", (sizeof(buffer)-1));
-                strncat(buffer, bufdup, (sizeof(buffer)-1));
-            }
+            snprintf( buffer, sizeof( buffer )-1, "CRITICAL: Return code of %d is out of bounds. Plugin exited by signal %s. (worker: %s)\\n%s", (int)(return_code), signame, identifier, bufdup);
             return_code = STATE_CRITICAL;
             free(bufdup);
             free(signame);
@@ -461,6 +457,7 @@ void send_failed_result(gm_job_t * exec_job, int sig) {
     struct timeval end_time;
     char buffer[GM_BUFFERSIZE];
     char * signame;
+    char * buf_dup;
     buffer[0] = '\x0';
 
     gm_log( GM_LOG_TRACE, "send_failed_result()\n");

@@ -664,6 +664,10 @@ void stop_children(int mode) {
             }
         }
 
+        /* wait 3 more seconds*/
+        if(current_number_of_workers > 0)
+            sleep(3);
+
         while((chld = waitpid(-1, &status, WNOHANG)) != -1 && chld > 0) {
             gm_log( GM_LOG_TRACE, "wait() %d exited with %d\n", chld, status);
         }

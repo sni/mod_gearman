@@ -143,7 +143,6 @@ void worker_loop() {
 /* get a job */
 void *get_job( gearman_job_st *job, void *context, size_t *result_size, gearman_return_t *ret_ptr ) {
     sigset_t block_mask;
-    sigset_t old_mask;
     int wsize, valid_lines;
     char workload[GM_BUFFERSIZE];
     char * decrypted_data;
@@ -174,7 +173,7 @@ void *get_job( gearman_job_st *job, void *context, size_t *result_size, gearman_
     /* ignore sigterms while running job */
     sigemptyset(&block_mask);
     sigaddset(&block_mask, SIGTERM);
-    sigprocmask(SIG_BLOCK, &block_mask, &old_mask);
+    sigprocmask(SIG_BLOCK, &block_mask, NULL);
 
     /* get the data */
     current_gearman_job = job;
@@ -271,7 +270,7 @@ void *get_job( gearman_job_st *job, void *context, size_t *result_size, gearman_
     current_gearman_job = NULL;
 
     /* start listening to SIGTERMs */
-    sigprocmask(SIG_SETMASK, &old_mask, NULL);
+    sigprocmask(SIG_UNBLOCK, &block_mask, NULL);
 
     free(decrypted_orig);
     free(decrypted_data_c);

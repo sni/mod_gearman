@@ -53,6 +53,8 @@ int run_epn_check(char *processed_command, char **ret, char **err) {
     int count;
     FILE *fp;
     pid_t pid;
+    sigset_t mask;
+
     int use_epn=FALSE;
     if(my_perl == NULL) {
         gm_log(GM_LOG_ERROR, "Embedded Perl has to be initialized before running the first check\n");
@@ -131,6 +133,11 @@ int run_epn_check(char *processed_command, char **ret, char **err) {
     }
     else if(!pid) {
         /* child process */
+
+        /* remove all customn signal handler */
+        sigfillset(&mask);
+        sigprocmask(SIG_UNBLOCK, &mask, NULL);
+
         gm_log( GM_LOG_TRACE, "Embedded Perl Child\n" );
         if((dup2(pipe_stderr[1],STDERR_FILENO)<0)){
             gm_log( GM_LOG_ERROR, "dup2 error\n");
