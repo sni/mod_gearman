@@ -490,7 +490,7 @@ void clean_worker_exit(int sig) {
     mod_gm_free_opt(mod_gm_opt);
 
 #ifdef EMBEDDEDPERL
-    deinit_embedded_perl();
+    deinit_embedded_perl(0);
 #endif
 
     if(worker_run_mode == GM_WORKER_STANDALONE)

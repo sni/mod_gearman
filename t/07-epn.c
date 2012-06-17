@@ -97,7 +97,7 @@ int main (int argc, char **argv, char **env) {
      * clean up
      */
     mod_gm_free_opt(mod_gm_opt);
-    deinit_embedded_perl();
+    deinit_embedded_perl(0);
 
     return exit_status();
 #endif

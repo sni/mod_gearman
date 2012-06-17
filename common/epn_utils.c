@@ -33,6 +33,7 @@
 #include <perl.h>
 #include  "include/nagios/epn_nagios.h"
 int use_embedded_perl            = TRUE;
+int deinit_rc                    = 0;
 static PerlInterpreter *my_perl  = NULL;
 extern int current_child_pid;
 extern int enable_embedded_perl;
@@ -171,7 +172,7 @@ int run_epn_check(char *processed_command, char **ret, char **err) {
 
         /* free structures */
         mod_gm_free_opt(mod_gm_opt);
-        deinit_embedded_perl();
+        deinit_embedded_perl(retval);
 
         _exit(retval);
     }
@@ -309,15 +310,24 @@ int init_embedded_perl(char **env){
     return GM_OK;
 }
 
+#ifdef EMBEDDEDPERL
+/* catch sigsegv during deinitialzing and just exit */
+void deinit_segv( int sig ) {
+    _exit(deinit_rc);
+}
+#endif
 
 /* closes embedded perl interpreter */
-int deinit_embedded_perl(void){
+int deinit_embedded_perl(int rc) {
 #ifdef EMBEDDEDPERL
+    deinit_rc = rc;
+    signal(SIGSEGV, deinit_segv);
     PL_perl_destruct_level=0;
     perl_destruct(my_perl);
     perl_free(my_perl);
     PERL_SYS_TERM();
     free(p1_file);
+    signal(SIGSEGV, SIG_DFL);
 #endif
     return GM_OK;
 }

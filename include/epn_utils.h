@@ -66,14 +66,28 @@ int file_uses_embedded_perl(char *);
 int init_embedded_perl(char **);
 
 /**
+ * deinit_segv
+ *
+ * sigsegv handler during deinitialzing embedded perl
+ *
+ * @param[in] sig - signal number
+ *
+ * @returns nothing, just exits
+ */
+
+void deinit_segv( int );
+
+/**
  * deinit_embedded_perl
  *
  * deinitialize embedded perl interpreter
  *
+ * @param[in] rc - exit code in case deinitializing fails
+ *
  * @return true
  */
 
-int deinit_embedded_perl(void);
+int deinit_embedded_perl(int rc);
 
 /**
  * @}

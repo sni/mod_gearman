@@ -488,7 +488,7 @@ int main (int argc, char **argv, char **env) {
     endtodo;
 
 #ifdef EMBEDDEDPERL
-    deinit_embedded_perl();
+    deinit_embedded_perl(0);
 #endif
 
     free(last_result);

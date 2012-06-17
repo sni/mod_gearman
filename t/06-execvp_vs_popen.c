@@ -59,7 +59,7 @@ int main (int argc, char **argv, char **env) {
     free_job(exec_job);
     mod_gm_free_opt(mod_gm_opt);
 #ifdef EMBEDDEDPERL
-    deinit_embedded_perl();
+    deinit_embedded_perl(0);
 #endif
     exit(0);
 }
