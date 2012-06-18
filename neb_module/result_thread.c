@@ -137,6 +137,7 @@ void *get_results( gearman_job_st *job, void *context, size_t *result_size, gear
      * save this result to a file, so when nagios crashes,
      * we have at least the crashed package
      */
+#ifdef GM_DEBUG
     if(mod_gm_opt->debug_result == GM_ENABLED) {
         FILE * fd;
         fd = fopen( "/tmp/last_result_received.txt", "w+" );
@@ -145,6 +146,7 @@ void *get_results( gearman_job_st *job, void *context, size_t *result_size, gear
         fputs( decrypted_data, fd );
         fclose( fd );
     }
+#endif
 
     /* nagios will free it after processing */
     if ( ( chk_result = ( check_result * )malloc( sizeof *chk_result ) ) == 0 ) {

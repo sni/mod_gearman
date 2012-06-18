@@ -94,6 +94,16 @@ int execute_safe_command(gm_job_t * exec_job, int fork_exec, char * identifier);
 
 /**
  *
+ * kill_child_checks
+ *
+ * remove all forked check childs
+ *
+ * @return nothing
+ */
+void kill_child_checks(void);
+
+/**
+ *
  * check_alarm_handler
  *
  * called when a check runs into the timeout

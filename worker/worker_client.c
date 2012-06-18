@@ -477,8 +477,14 @@ void clean_worker_exit(int sig) {
 
     /* clear gearmans job, otherwise it would be retried and retried */
     if(current_gearman_job != NULL) {
-        send_failed_result(current_job, sig);
-        gearman_job_send_complete(current_gearman_job, NULL, 0);
+        if(sig == 2) {
+            /* if worker stopped with sigint, let the job retry */
+        } else {
+            send_failed_result(current_job, sig);
+            gearman_job_send_complete(current_gearman_job, NULL, 0);
+        }
+        /* make sure no processes are left over */
+        kill_child_checks();
     }
 
     gm_log( GM_LOG_TRACE, "cleaning worker\n");

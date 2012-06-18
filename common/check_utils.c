@@ -383,10 +383,10 @@ int execute_safe_command(gm_job_t * exec_job, int fork_exec, char * identifier) 
 
 /* called when check runs into timeout */
 void check_alarm_handler(int sig) {
-    int retval;
-    pid_t pid = getpid();
+    pid_t pid;
 
     gm_log( GM_LOG_TRACE, "check_alarm_handler(%i)\n", sig );
+    pid = getpid();
     if(current_job != NULL && mod_gm_opt->fork_on_exec == GM_DISABLED) {
         /* create a useful log message*/
         if ( !strcmp( current_job->type, "service" ) ) {
@@ -403,16 +403,7 @@ void check_alarm_handler(int sig) {
     }
 
     if(current_child_pid > 0) {
-        gm_log( GM_LOG_TRACE, "send SIGINT to %d\n", current_child_pid);
-        signal(SIGINT, SIG_IGN);
-        kill(-current_child_pid, SIGINT);
-        sleep(1);
-        if(waitpid(pid,&retval,0)!=pid)
-            return;
-        if(pid_alive(current_child_pid)) {
-            gm_log( GM_LOG_TRACE, "send SIGKILL to %d\n", current_child_pid);
-            kill(-current_child_pid, SIGKILL);
-        }
+        kill_child_checks();
     } else {
         signal(SIGINT, SIG_IGN);
         gm_log( GM_LOG_TRACE, "send SIGINT to %d\n", pid);
@@ -423,6 +414,30 @@ void check_alarm_handler(int sig) {
         kill(-pid, SIGKILL);
     }
 
+    return;
+}
+
+/* send kill to all forked processes */
+void kill_child_checks(void) {
+    int retval;
+    pid_t pid;
+
+    pid = getpid();
+    if(current_child_pid > 0) {
+        gm_log( GM_LOG_TRACE, "kill_child_checks(): send SIGINT to %d\n", current_child_pid);
+        signal(SIGINT, SIG_IGN);
+        kill(current_child_pid, SIGINT);
+        sleep(1);
+        if(waitpid(pid,&retval,0)!=pid)
+            return;
+        if(pid_alive(current_child_pid)) {
+            gm_log( GM_LOG_TRACE, "kill_child_checks(): send SIGKILL to %d\n", current_child_pid);
+            kill(current_child_pid, SIGKILL);
+        }
+    }
+    gm_log( GM_LOG_TRACE, "send SIGINT to %d\n", pid);
+    kill(0, SIGINT);
+    signal(SIGINT, SIG_DFL);
     return;
 }
 
