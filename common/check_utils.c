@@ -422,14 +422,16 @@ void kill_child_checks(void) {
     int retval;
     pid_t pid;
 
+    signal(SIGINT, SIG_IGN);
     pid = getpid();
-    if(current_child_pid > 0) {
+    if(current_child_pid > 0 && current_child_pid != pid) {
         gm_log( GM_LOG_TRACE, "kill_child_checks(): send SIGINT to %d\n", current_child_pid);
-        signal(SIGINT, SIG_IGN);
         kill(current_child_pid, SIGINT);
         sleep(1);
-        if(waitpid(pid,&retval,0)!=pid)
+        if(waitpid(pid,&retval,0)!=pid) {
+            signal(SIGINT, SIG_DFL);
             return;
+        }
         if(pid_alive(current_child_pid)) {
             gm_log( GM_LOG_TRACE, "kill_child_checks(): send SIGKILL to %d\n", current_child_pid);
             kill(current_child_pid, SIGKILL);
