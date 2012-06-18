@@ -1,6 +1,8 @@
 This file documents the revision history for mod_gearman.
 
 1.3.4  not yet released
+          - worker: added 'timeout_result' config option to
+                    set return code for checks running into timeout
           - send_gearman: make timeout configurable
           - fixed killing worker on reload, worker now finishes current job
           - fixed executing jobs while restarting worker

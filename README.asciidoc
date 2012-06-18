@@ -792,6 +792,16 @@ Default is yes.
 ====
 
 
+timeout_result::
+Defines the return code for timed out checks. Accepted return codes
+are 0 (Ok), 1 (Warning), 2 (Critical) and 3 (Unknown)
+Default: 2
++
+====
+    timeout_result=2
+====
+
+
 dup_results_are_passive::
 Use this option to set if the duplicate result send to the 'dupserver'
 will be passive or active.

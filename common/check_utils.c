@@ -454,7 +454,7 @@ void send_timeout_result(gm_job_t * exec_job) {
     gettimeofday(&end_time, NULL);
     exec_job->finish_time = end_time;
 
-    exec_job->return_code   = 2;
+    exec_job->return_code   = mod_gm_opt->timeout_return;
     exec_job->early_timeout = 1;
     if ( !strcmp( exec_job->type, "service" ) )
         snprintf( buffer, sizeof( buffer ) -1, "(Service Check Timed Out On Worker: %s)\n", mod_gm_opt->identifier);

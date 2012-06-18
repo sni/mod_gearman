@@ -251,6 +251,7 @@ int set_default_options(mod_gm_opt_t *opt) {
     opt->idle_timeout       = GM_DEFAULT_IDLE_TIMEOUT;
     opt->max_jobs           = GM_DEFAULT_MAX_JOBS;
     opt->spawn_rate         = GM_DEFAULT_SPAWN_RATE;
+    opt->timeout_return     = 2;
     opt->identifier         = NULL;
     opt->queue_cust_var     = NULL;
     opt->show_error_output  = GM_ENABLED;
@@ -660,6 +661,13 @@ int parse_args_line(mod_gm_opt_t *opt, char * arg, int recursion_level) {
     else if ( !strcmp( key, "spawn-rate" ) ) {
         opt->spawn_rate = atoi( value );
         if(opt->spawn_rate < 0) { opt->spawn_rate = GM_DEFAULT_SPAWN_RATE; }
+    }
+
+    /* timeout_return */
+    else if ( !strcmp( key, "timeout_return" ) ) {
+        opt->timeout_return = atoi( value );
+        if(opt->timeout_return < 0) { opt->timeout_return = 2; }
+        if(opt->timeout_return > 3) { opt->timeout_return = 2; }
     }
 
     /* perfdata_mode */
