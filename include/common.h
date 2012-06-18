@@ -222,6 +222,7 @@ typedef struct mod_gm_opt_struct {
     int            max_jobs;                                /**< maximum number of jobs done after a worker exits */
     int            spawn_rate;                              /**< number of spawned new worker */
     int            show_error_output;                       /**< optional display the stderr output of plugins */
+    int            timeout_return;                          /**< timeout return code */
     int            dup_results_are_passive;                 /**< send duplicate results as passive checks */
 #ifdef EMBEDDEDPERL
     int            enable_embedded_perl;                    /**< enabled embedded perl */
