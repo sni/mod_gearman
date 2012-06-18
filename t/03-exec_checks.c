@@ -22,7 +22,7 @@ int main (int argc, char **argv, char **env) {
     char cmd[120];
     char hostname[GM_BUFFERSIZE];
 
-    plan(58);
+    plan(60);
 
     /* set hostname */
     gethostname(hostname, GM_BUFFERSIZE-1);
@@ -58,11 +58,10 @@ int main (int argc, char **argv, char **env) {
     like(args[3], "foo", "parsing args cmd 2");
 
     /*****************************************
-     * send_gearman
+     * send_gearman 1
      */
     strcpy(cmd, "./send_gearman --server=blah --key=testtest --host=test --service=test --message=test --returncode=0");
     rrc = real_exit_code(run_check(cmd, &result, &error));
-    //diag(result);
     cmp_ok(rrc, "==", 3, "cmd '%s' returned rc %d", cmd, rrc);
     if(atof(gearman_version()) >= 0.31) {
         like(result, "send_gearman UNKNOWN:", "result");
@@ -73,12 +72,24 @@ int main (int argc, char **argv, char **env) {
     free(error);
 
     /*****************************************
-     * send_gearman
+     * send_gearman 2
      */
-    //mod_gm_opt->debug_level = 4;
+    strcpy(cmd, "./send_gearman --server=blah < t/data/send_gearman_results.txt");
+    rrc = real_exit_code(run_check(cmd, &result, &error));
+    cmp_ok(rrc, "==", 3, "cmd '%s' returned rc %d", cmd, rrc);
+    if(atof(gearman_version()) >= 0.31) {
+        like(result, "send_gearman UNKNOWN:", "result");
+    } else {
+        like(result, "sending job to gearmand failed:", "result");
+    }
+    free(result);
+    free(error);
+
+    /*****************************************
+     * send_multi
+     */
     strcpy(cmd, "./send_multi --server=blah --host=blah < t/data/send_multi.txt");
     rrc = real_exit_code(run_check(cmd, &result, &error));
-    //diag(result);
     cmp_ok(rrc, "==", 3, "cmd '%s' returned rc %d", cmd, rrc);
     if(atof(gearman_version()) >= 0.31) {
         like(result, "send_multi UNKNOWN:", "result");

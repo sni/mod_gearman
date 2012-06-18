@@ -237,9 +237,13 @@ typedef struct mod_gm_opt_struct {
     char         * message;                                 /**< message output */
     char         * host;                                    /**< hostname for this check */
     char         * service;                                 /**< service description for this check */
+    char         * delimiter;                               /**< delimiter to cut check results */
     int            active;                                  /**< flag wheter the result is a active or a passive check */
+    int            has_starttime;                           /**< flag when starttime is set */
     struct timeval starttime;                               /**< time when the check started */
+    int            has_finishtime;                          /**< flag when finishtime is set */
     struct timeval finishtime;                              /**< time when the check finished */
+    int            has_latency;                             /**< flag when latency is set */
     struct timeval latency;                                 /**< latency for this result */
 } mod_gm_opt_t;
 

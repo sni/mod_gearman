@@ -91,11 +91,20 @@ int verify_options(mod_gm_opt_t *opt);
 /**
  * send_result
  *
- * create and send back the gearman jobs
+ * extract result
  *
  * @return TRUE on success or FALSE if something went wrong
  */
 int send_result(void);
+
+/**
+ * submit_result
+ *
+ * send back result as gearman job
+ *
+ * @return TRUE on success or FALSE if something went wrong
+ */
+int submit_result(void);
 
 /**
  * alarm_sighandler

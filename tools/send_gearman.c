@@ -28,6 +28,7 @@
 
 gearman_client_st client;
 gearman_client_st client_dup;
+int results_sent = 0;
 
 /* work starts here */
 int main (int argc, char **argv) {
@@ -73,6 +74,7 @@ int main (int argc, char **argv) {
     if( mod_gm_opt->dupserver_num )
         gearman_client_free( &client_dup );
     mod_gm_free_opt(mod_gm_opt);
+
     exit( rc );
 }
 
@@ -159,6 +161,7 @@ void print_usage() {
     printf("             [ --server=<server>            ]\n");
     printf("\n");
     printf("             [ --timeout|-t=<timeout>       ]\n");
+    printf("             [ --delimiter|-d=<delimiter>   ]\n");
     printf("\n");
     printf("             [ --encryption=<yes|no>        ]\n");
     printf("             [ --key=<string>               ]\n");
@@ -177,41 +180,95 @@ void print_usage() {
     printf("             [ --latency=<seconds>          ]\n");
     printf("\n");
     printf("plugin output is read from stdin unless --message is used.\n");
+    printf("Use this mode when plugin has multiple lines of plugin output.\n");
+    printf("\n");
+    printf("Note: When using a delimiter (-d) you may also submit one result\n");
+    printf("      for each line.\n");
+    printf("      Service Checks:\n");
+    printf("      <host_name>[tab]<svc_description>[tab]<return_code>[tab]<plugin_output>[newline]\n");
+    printf("\n");
+    printf("      Host Checks:\n");
+    printf("      <host_name>[tab]<return_code>[tab]<plugin_output>[newline]\n");
     printf("\n");
     printf("see README for a detailed explaination of all options.\n");
     printf("\n");
 
+    mod_gm_free_opt(mod_gm_opt);
     exit( STATE_UNKNOWN );
 }
 
 
 /* send message to job server */
 int send_result() {
-    struct timeval now;
     char buffer[GM_BUFFERSIZE] = "";
-    char * buf;
-    char temp_buffer1[GM_BUFFERSIZE];
-    char temp_buffer2[GM_BUFFERSIZE];
     int size;
+    char *ptr1, *ptr2, *ptr3, *ptr4;
 
     gm_log( GM_LOG_TRACE, "send_result()\n" );
-
-    gettimeofday(&now, NULL);
-    if(mod_gm_opt->starttime.tv_sec == 0)
-        mod_gm_opt->starttime = now;
-
-    if(mod_gm_opt->finishtime.tv_sec == 0)
-        mod_gm_opt->finishtime = now;
 
     if(mod_gm_opt->result_queue == NULL) {
         printf( "got no result queue, please use --result_queue=...\n" );
         return( STATE_UNKNOWN );
     }
+
+    /* multiple results */
     if(mod_gm_opt->host == NULL) {
-        printf("got no hostname, please use --host=...\n" );
-        return( STATE_UNKNOWN );
+        while(fgets(buffer,sizeof(buffer)-1,stdin)) {
+            if(feof(stdin))
+                break;
+
+            /* disable alarm */
+            alarm(0);
+
+            /* read host_name */
+            ptr1=strtok(buffer,mod_gm_opt->delimiter);
+            if(ptr1==NULL)
+                continue;
+
+            /* get the service description or return code */
+            ptr2=strtok(NULL,mod_gm_opt->delimiter);
+            if(ptr2==NULL)
+                continue;
+
+            /* get the return code or plugin output */
+            ptr3=strtok(NULL,mod_gm_opt->delimiter);
+            if(ptr3==NULL)
+                continue;
+
+            /* get the plugin output - if NULL, this is a host check result */
+            ptr4=strtok(NULL,"\n");
+
+            free(mod_gm_opt->host);
+            if(mod_gm_opt->service != NULL) {
+                free(mod_gm_opt->service);
+                mod_gm_opt->service = NULL;
+            }
+            free(mod_gm_opt->message);
+
+            /* host result */
+            if(ptr4 == NULL) {
+                mod_gm_opt->host        = strdup(ptr1);
+                mod_gm_opt->return_code = atoi(ptr2);
+                mod_gm_opt->message     = strdup(ptr3);
+            } else {
+                /* service result */
+                mod_gm_opt->host        = strdup(ptr1);
+                mod_gm_opt->service     = strdup(ptr2);
+                mod_gm_opt->return_code = atoi(ptr3);
+                mod_gm_opt->message     = strdup(ptr4);
+            }
+            if(submit_result() == STATE_OK) {
+                results_sent++;
+            } else {
+                printf("failed to send result!\n");
+                return(STATE_UNKNOWN);
+            }
+        }
+        printf("%d data packet(s) sent to host successfully.\n",results_sent);
+        return(STATE_OK);
     }
-    if(mod_gm_opt->message == NULL) {
+    /* multi line plugin output */
+    else if(mod_gm_opt->message == NULL) {
         /* get all lines from stdin */
         alarm(mod_gm_opt->timeout);
         mod_gm_opt->message = malloc(GM_BUFFERSIZE);
@@ -224,12 +281,40 @@ int send_result() {
         }
         alarm(0);
     }
+    return(submit_result());
+}
+
+/* submit result */
+int submit_result() {
+    char * buf;
+    char temp_buffer1[GM_BUFFERSIZE];
+    char temp_buffer2[GM_BUFFERSIZE];
+    struct timeval now;
+    struct timeval starttime;
+    struct timeval finishtime;
+
+    gettimeofday(&now, NULL);
+    if(mod_gm_opt->has_starttime == FALSE) {
+        starttime = now;
+    } else {
+        starttime = mod_gm_opt->starttime;
+    }
+
+    if(mod_gm_opt->has_finishtime == FALSE) {
+        finishtime = now;
+    } else {
+        finishtime = mod_gm_opt->finishtime;
+    }
+
+    if(mod_gm_opt->has_latency == FALSE) {
+        mod_gm_opt->latency.tv_sec  = 0;
+        mod_gm_opt->latency.tv_usec = 0;
+    }
 
     /* escape newline */
     buf = gm_escape_newlines(mod_gm_opt->message, GM_DISABLED);
     free(mod_gm_opt->message);
-    mod_gm_opt->message = malloc(GM_BUFFERSIZE);
-    snprintf(mod_gm_opt->message, GM_BUFFERSIZE, "%s", buf);
+    mod_gm_opt->message = strdup(buf);
     free(buf);
 
     gm_log( GM_LOG_TRACE, "queue: %s\n", mod_gm_opt->result_queue );
@@ -237,10 +322,10 @@ int send_result() {
     snprintf( temp_buffer1, sizeof( temp_buffer1 )-1, "type=%s\nhost_name=%s\nstart_time=%i.%i\nfinish_time=%i.%i\nlatency=%i.%i\nreturn_code=%i\n",
               mod_gm_opt->active == GM_ENABLED ? "active" : "passive",
               mod_gm_opt->host,
-              (int)mod_gm_opt->starttime.tv_sec,
-              (int)mod_gm_opt->starttime.tv_usec,
-              (int)mod_gm_opt->finishtime.tv_sec,
-              (int)mod_gm_opt->finishtime.tv_usec,
+              (int)starttime.tv_sec,
+              (int)starttime.tv_usec,
+              (int)finishtime.tv_sec,
+              (int)finishtime.tv_usec,
               ( int )mod_gm_opt->latency.tv_sec,
               ( int )mod_gm_opt->latency.tv_usec,
               mod_gm_opt->return_code

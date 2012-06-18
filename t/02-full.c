@@ -448,7 +448,7 @@ int main (int argc, char **argv, char **env) {
     free(error);
 
     /*****************************************
-     * send_gearman
+     * send_multi
      */
     snprintf(cmd, 150, "./send_multi --server=localhost:%d --host=blah < t/data/send_multi.txt", GEARMAND_TEST_PORT);
     rrc = real_exit_code(run_check(cmd, &result, &error));

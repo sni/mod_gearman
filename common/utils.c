@@ -229,6 +229,7 @@ int set_default_options(mod_gm_opt_t *opt) {
     opt->logmode            = GM_LOG_MODE_AUTO;
     opt->logfile_fp         = NULL;
     opt->message            = NULL;
+    opt->delimiter          = strdup("\t");
     opt->return_code        = 0;
     opt->timeout            = 10;
     opt->debug_level        = GM_LOG_INFO;
@@ -259,6 +260,10 @@ int set_default_options(mod_gm_opt_t *opt) {
     opt->orphan_host_checks      = GM_ENABLED;
     opt->orphan_service_checks   = GM_ENABLED;
     opt->accept_clear_results    = GM_DISABLED;
+    opt->has_starttime      = FALSE;
+    opt->has_finishtime     = FALSE;
+    opt->has_latency        = FALSE;
+    opt->active             = GM_DISABLED;
 
     opt->workaround_rc_25   = GM_DISABLED;
 
@@ -357,9 +362,13 @@ int parse_args_line(mod_gm_opt_t *opt, char * arg, int recursion_level) {
     while(key[0] == '-')
         key++;
 
-    /* daemon mode */
+    /* daemon mode or delimiter */
     if ( !strcmp( key, "daemon" ) ||  !strcmp( key, "d" ) ) {
         opt->daemon_mode = parse_yes_or_no(value, GM_ENABLED);
+        if(value != NULL) {
+            free(opt->delimiter);
+            opt->delimiter = strdup( value );
+        }
         return(GM_OK);
     }
 
@@ -549,6 +558,12 @@ int parse_args_line(mod_gm_opt_t *opt, char * arg, int recursion_level) {
         opt->message = strdup( value );
     }
 
+    /* delimiter */
+    else if (   !strcmp( key, "delimiter" ) ) {
+        free(opt->delimiter);
+        opt->delimiter = strdup( value );
+    }
+
     /* host */
     else if (   !strcmp( key, "host" ) ) {
         opt->host = strdup( value );
@@ -561,16 +576,19 @@ int parse_args_line(mod_gm_opt_t *opt, char * arg, int recursion_level) {
 
     /* latency */
     else if ( !strcmp( key, "latency" ) ) {
+        opt->has_latency = TRUE;
         string2timeval(value, &opt->latency);
     }
 
     /* start time */
     else if ( !strcmp( key, "starttime" ) ) {
+        opt->has_starttime = TRUE;
         string2timeval(value, &opt->starttime);
     }
 
     /* finish time */
     else if ( !strcmp( key, "finishtime" ) ) {
+        opt->has_finishtime = TRUE;
         string2timeval(value, &opt->finishtime);
     }
 
@@ -1005,6 +1023,7 @@ void mod_gm_free_opt(mod_gm_opt_t *opt) {
     free(opt->crypt_key);
     free(opt->keyfile);
     free(opt->message);
+    free(opt->delimiter);
     free(opt->pidfile);
     free(opt->logfile);
     free(opt->host);

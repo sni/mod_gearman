@@ -4,6 +4,7 @@ This file documents the revision history for mod_gearman.
           - worker: added 'timeout_result' config option to
                     set return code for checks running into timeout
           - send_gearman: make timeout configurable
+          - send_gearman: added new mode which sends one result per line
           - fixed killing worker on reload, worker now finishes current job
           - fixed executing jobs while restarting worker
           - fixed potential problem on deinitializing epn

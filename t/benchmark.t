@@ -20,22 +20,25 @@ chomp(my $gearmand_pid = `cat ./gearman.pid`);
 isnt($gearmand_pid, '', 'gearmand running: '.$gearmand_pid) or BAIL_OUT("no gearmand");
 
 # fill the queue
+open(my $ph, "|./send_gearman --server=localhost:$TESTPORT --result_queue=eventhandler") or die("failed to open send_gearman: $!");
 my $t0 = [gettimeofday];
 for my $x (1..$NR_TST_JOBS) {
-    `./send_gearman --server=localhost:$TESTPORT --host=test --message="test" --result_queue=eventhandler`;
+    print $ph "hostname\t1\ttest\n";
 }
+close($ph);
 my $elapsed = tv_interval ( $t0 );
 my $rate    = int($NR_TST_JOBS / $elapsed);
 ok($elapsed, 'filling gearman queue with '.$NR_TST_JOBS.' jobs took: '.$elapsed.' seconds');
-ok($rate > 100, 'fill rate '.$rate.'/s');
+ok($rate > 500, 'fill rate '.$rate.'/s');
 
 #diag(`./gearman_top -b -H localhost:$TESTPORT`);
 
 # now clear the queue
 `>worker.log`;
 $t0 = [gettimeofday];
-system("./mod_gearman_worker --server=localhost:$TESTPORT --debug=0 --max-worker=1 --encryption=off --p1_file=./worker/mod_gearman_p1.pl --daemon --pidfile=./worker.pid --logfile=./worker.log");
-chomp(my $worker_pid = `cat ./worker.pid`);
+my $cmd = "./mod_gearman_worker --server=localhost:$TESTPORT --debug=0 --max-worker=1 --encryption=off --p1_file=./worker/mod_gearman_p1.pl --daemon --pidfile=./worker.pid --logfile=./worker.log";
+system($cmd);
+chomp(my $worker_pid = `cat ./worker.pid 2>/dev/null`);
 isnt($worker_pid, '', 'worker running: '.$worker_pid);
 
 while(get_queue("eventhandler")->{'waiting'} != 0) {
@@ -73,4 +76,3 @@ sub get_queue {
         running => -1,
     });
 }
-
