@@ -1,6 +1,6 @@
 This file documents the revision history for mod_gearman.
 
-1.3.4  not yet released
+1.3.4 Tue Jun 19 14:58:14 CEST 2012
           - worker: added 'timeout_result' config option to
                     set return code for checks running into timeout
           - send_gearman: make timeout configurable
