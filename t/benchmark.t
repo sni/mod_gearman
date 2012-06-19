@@ -31,8 +31,6 @@ my $rate    = int($NR_TST_JOBS / $elapsed);
 ok($elapsed, 'filling gearman queue with '.$NR_TST_JOBS.' jobs took: '.$elapsed.' seconds');
 ok($rate > 500, 'fill rate '.$rate.'/s');
 
-#diag(`./gearman_top -b -H localhost:$TESTPORT`);
-
 # now clear the queue
 `>worker.log`;
 $t0 = [gettimeofday];
@@ -41,16 +39,12 @@ system($cmd);
 chomp(my $worker_pid = `cat ./worker.pid 2>/dev/null`);
 isnt($worker_pid, '', 'worker running: '.$worker_pid);
 
-while(get_queue("eventhandler")->{'waiting'} != 0) {
-    sleep(0.1);
-}
+wait_for_empty_queue("eventhandler");
 
 $elapsed = tv_interval ( $t0 );
 $rate    = int($NR_TST_JOBS / $elapsed);
 ok($elapsed, 'cleared gearman queue in '.$elapsed.' seconds');
-ok($rate > 500, 'clear rate '.$rate.'/s');
-
-#diag(`./gearman_top -b -H localhost:$TESTPORT`);
+ok($rate > 300, 'clear rate '.$rate.'/s');
 
 # clean up
 `kill $worker_pid`;
@@ -60,19 +54,18 @@ unlink("/tmp/gearmand_bench.log");
 exit(0);
 
 #################################################
-sub get_queue {
+sub wait_for_empty_queue {
     my $queue = shift;
-    my $out = `./gearman_top -b -H localhost:$TESTPORT`;
-    if($out =~ m/^\s*$queue\s*\|\s*(\d+)\s*\|\s*(\d+)\s*\|\s*(\d+)/mx) {
-        return({
-            worker  => $1,
-            waiting => $2,
-            running => $3,
-        });
+    open(my $ph, "./gearman_top -b -i 0.1 -H localhost:$TESTPORT |") or die("cannot launch gearman_top: $!");
+    while(my $line = <$ph>) {
+        if($line =~ m/^\s*$queue\s*\|\s*(\d+)\s*\|\s*(\d+)\s*\|\s*(\d+)/mx) {
+            my $worker  = $1;
+            my $waiting = $2;
+            my $running = $3;
+            if($running == 0 and $waiting == 0) {
+                close($ph);
+                return;
+            }
+        };
     }
-    return({
-        worker  => -1,
-        waiting => -1,
-        running => -1,
-    });
 }
