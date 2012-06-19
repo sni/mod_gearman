@@ -640,8 +640,7 @@ Fast transport of passive check results with included tools like
 <div class="ulist"><ul>
 <li>
 <p>
-Latest stable
-   <a href="http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.3.0.tar.gz">version 1.3.0</a>, released April 27 2012
+Latest stable <a href="http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.3.4.tar.gz">version 1.3.4</a>, released June 19 2012
 </p>
 </li>
 <li>
@@ -825,6 +824,22 @@ single Nagios box just cannot handle the load, you could just add a
 worker in the same network (or even on the same host) to reduce your
 load on the Nagios box. Therefor we just enable hosts, services and
 eventhandler on the server and the worker.</p></div>
+<div class="paragraph"><p>Pro:</p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+reduced load on your monitoring box
+</p>
+</li>
+</ul></div>
+<div class="paragraph"><p>Contra:</p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+no failover
+</p>
+</li>
+</ul></div>
 <h3 id="_distributed_monitoring">Distributed Monitoring</h3><div style="clear:left"></div>
 <a title="Distributed Monitoring" rel="lightbox[mod_gm]" href="http://labs.consol.de/wp-content/uploads/2010/09/sample_distributed.png"><img src="http://labs.consol.de/wp-content/uploads/2010/09/sample_distributed.png" alt="Distributed Monitoring" width="350" height="125" style="float:none" /></a>
 <div class="paragraph"><p>If your checks have to be run from different network segments, then
@@ -832,10 +847,57 @@ you can use the hostgroups (or servicegroups) to define a hostgroup
 for specific worker. The general hosts and services queue is disabled
 for this worker and just the hosts and services from the given
 hostgroup will be processed.</p></div>
+<div class="paragraph"><p>Pro:</p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+reduced load on your monitoring box
+</p>
+</li>
+<li>
+<p>
+ability to access remote networks
+</p>
+</li>
+</ul></div>
+<div class="paragraph"><p>Contra:</p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+no failover
+</p>
+</li>
+</ul></div>
 <h3 id="_distributed_monitoring_with_load_balancing">Distributed Monitoring with Load Balancing</h3><div style="clear:left"></div>
 <a title="Distributed Monitoring with Load Balancing" rel="lightbox[mod_gm]" href="http://labs.consol.de/wp-content/uploads/2010/09/sample_distributed_load_balanced.png"><img src="http://labs.consol.de/wp-content/uploads/2010/09/sample_distributed_load_balanced.png" alt="Distributed Monitoring with Load Balancing" width="350" height="225" style="float:none" /></a>
 <div class="paragraph"><p>Your distributed setup could easily be extended to a load balanced
 setup with just adding more worker of the same config.</p></div>
+<div class="paragraph"><p>Pro:</p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+reduced load on your monitoring box
+</p>
+</li>
+<li>
+<p>
+ability to access remote networks
+</p>
+</li>
+<li>
+<p>
+automatic failover and load balancing for worker
+</p>
+</li>
+</ul></div>
+<div class="paragraph"><p>Contra:</p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+no failover for the master
+</p>
+</li>
+</ul></div>
 <h3 id="_nsca_replacement">NSCA Replacement</h3><div style="clear:left"></div>
 <a title="NSCA Replacement" rel="lightbox[mod_gm]" href="http://labs.consol.de/wp-content/uploads/2010/09/nsca_replacement.png"><img src="http://labs.consol.de/wp-content/uploads/2010/09/nsca_replacement.png" alt="NSCA Replacement" width="300" height="220" style="float:none" /></a>
 <div class="paragraph"><p>If you just want to replace a current NSCA solution, you could load
@@ -844,8 +906,51 @@ still can receive passive results by the core send via
 send_gearman / send_multi. Make sure you use the same encryption
 settings like the neb module or your core won&#8217;t be able to process the
 results or use the <em>accept_clear_results</em> option.</p></div>
+<div class="paragraph"><p>Pro:</p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+easy to setup in existing environments
+</p>
+</li>
+</ul></div>
+<h3 id="_distributed_setup_with_remote_scheduler">Distributed Setup With Remote Scheduler</h3><div style="clear:left"></div>
+<a title="Distributed Setup With Remote Scheduler" rel="lightbox[mod_gm]" href="http://labs.consol.de/wp-content/uploads/2010/09/advanced_distributed.png"><img src="http://labs.consol.de/wp-content/uploads/2010/09/advanced_distributed.png" alt="Distributed Setup With Remote Scheduler" width="360" height="270" style="float:none" /></a>
+<div class="paragraph"><p>In case your network is unstable or you need a gui view from the
+remote location or any other reason which makes a remote core
+unavoidable you may want this setup. Thist setup consists of 2
+independent Mod-Gearman setups and the slave worker just send their
+results to the master via the <em>dup_server</em> option. The master
+objects configuration must contain all slave services and hosts.
+The configuration sync is not part of Mod-Gearman.</p></div>
+<div class="paragraph"><p>Pro:</p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+independent from network outtakes
+</p>
+</li>
+<li>
+<p>
+local view
+</p>
+</li>
+</ul></div>
+<div class="paragraph"><p>Contra:</p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+more complex setup
+</p>
+</li>
+<li>
+<p>
+requires configuration sync
+</p>
+</li>
+</ul></div>
 <h3 id="_gearman_proxy">Gearman Proxy</h3><div style="clear:left"></div>
-<a title="Gearman Proxy" rel="lightbox[mod_gm]" href="http://labs.consol.de/wp-content/uploads/2010/09/gearman_proxy.png"><img src="http://labs.consol.de/wp-content/uploads/2010/09/gearman_proxy.png" alt="Gearman Proxy" width="300" height="220" style="float:none" /></a>
+<a title="Gearman Proxy" rel="lightbox[mod_gm]" href="http://labs.consol.de/wp-content/uploads/2010/09/gearman_proxy.png"><img src="http://labs.consol.de/wp-content/uploads/2010/09/gearman_proxy.png" alt="Gearman Proxy" width="360" height="270" style="float:none" /></a>
 <div class="paragraph"><p>Sometimes you may need to reverse the direction of the initial
 connection attempt. Usually the worker and the neb module open the
 initial connection so they need to access the gearmand port. In cases
@@ -854,6 +959,27 @@ proxy. The Gearman proxy just puts jobs from one gearmand into another
 gearmand and vice versa.</p></div>
 <div class="paragraph"><p>Just copy the gearman_proxy.pl from the contrib or share directory and
 adjust the first few lines to match you needs.</p></div>
+<div class="paragraph"><p>Pro:</p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+changes direction of initial connection setup
+</p>
+</li>
+<li>
+<p>
+buffers network outages
+</p>
+</li>
+</ul></div>
+<div class="paragraph"><p>Contra:</p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+two more daemon to monitor and maintain
+</p>
+</li>
+</ul></div>
 </div>
 <h2 id="_installation">Installation</h2>
 <div class="sectionbody">
@@ -2228,6 +2354,16 @@ Make sure all your worker have the Nagios-Plugins available under
 <div class="ulist"><ul>
 <li>
 <p>
+<a href="http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.3.4.tar.gz">version 1.3.4 - June 19 2012</a>
+</p>
+</li>
+<li>
+<p>
+<a href="http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.3.2.tar.gz">version 1.3.2 - May 27 2012</a>
+</p>
+</li>
+<li>
+<p>
 <a href="http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.3.0.tar.gz">version 1.3.0 - April 27 2012</a>
 </p>
 </li>
@@ -2357,7 +2493,7 @@ Make sure all your worker have the Nagios-Plugins available under
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2012-06-18 16:49:22 CEST
+Last updated 2012-06-19 16:39:23 CEST
 </div>
 </div>
 </body>

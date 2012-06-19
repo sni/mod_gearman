@@ -38,8 +38,7 @@ Features
 
 Download
 --------
- * Latest stable
-   http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.3.0.tar.gz[version 1.3.0], released April 27 2012
+ * Latest stable http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.3.4.tar.gz[version 1.3.4], released June 19 2012
  * Mod Gearman is available for download at: http://labs.consol.de/nagios/mod-gearman
  * Source is available on GitHub: http://github.com/sni/mod_gearman
  * Older versions are available in the <<_archive,download archive>>.
@@ -168,6 +167,15 @@ worker in the same network (or even on the same host) to reduce your
 load on the Nagios box. Therefor we just enable hosts, services and
 eventhandler on the server and the worker.
 
+Pro:
+
+ * reduced load on your monitoring box
+
+Contra:
+
+ * no failover
+
+
 
 Distributed Monitoring
 ~~~~~~~~~~~~~~~~~~~~~~
@@ -182,6 +190,16 @@ for specific worker. The general hosts and services queue is disabled
 for this worker and just the hosts and services from the given
 hostgroup will be processed.
 
+Pro:
+
+ * reduced load on your monitoring box
+ * ability to access remote networks
+
+Contra:
+
+ * no failover
+
+
 
 Distributed Monitoring with Load Balancing
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -192,6 +210,17 @@ Distributed Monitoring with Load Balancing
 
 Your distributed setup could easily be extended to a load balanced
 setup with just adding more worker of the same config.
+
+Pro:
+
+ * reduced load on your monitoring box
+ * ability to access remote networks
+ * automatic failover and load balancing for worker
+
+Contra:
+
+ * no failover for the master
+
 
 
 NSCA Replacement
@@ -208,12 +237,44 @@ send_gearman / send_multi. Make sure you use the same encryption
 settings like the neb module or your core won't be able to process the
 results or use the 'accept_clear_results' option.
 
+Pro:
+
+ * easy to setup in existing environments
+
+
+
+Distributed Setup With Remote Scheduler
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+++++
+<a title="Distributed Setup With Remote Scheduler" rel="lightbox[mod_gm]" href="http://labs.consol.de/wp-content/uploads/2010/09/advanced_distributed.png"><img src="http://labs.consol.de/wp-content/uploads/2010/09/advanced_distributed.png" alt="Distributed Setup With Remote Scheduler" width="360" height="270" style="float:none" /></a>
+++++
+
+In case your network is unstable or you need a gui view from the
+remote location or any other reason which makes a remote core
+unavoidable you may want this setup. Thist setup consists of 2
+independent Mod-Gearman setups and the slave worker just send their
+results to the master via the 'dup_server' option. The master
+objects configuration must contain all slave services and hosts.
+The configuration sync is not part of Mod-Gearman.
+
+Pro:
+
+ * independent from network outtakes
+ * local view
+
+Contra:
+
+ * more complex setup
+ * requires configuration sync
+
+
 
 Gearman Proxy
 ~~~~~~~~~~~~~
 
 ++++
-<a title="Gearman Proxy" rel="lightbox[mod_gm]" href="http://labs.consol.de/wp-content/uploads/2010/09/gearman_proxy.png"><img src="http://labs.consol.de/wp-content/uploads/2010/09/gearman_proxy.png" alt="Gearman Proxy" width="300" height="220" style="float:none" /></a>
+<a title="Gearman Proxy" rel="lightbox[mod_gm]" href="http://labs.consol.de/wp-content/uploads/2010/09/gearman_proxy.png"><img src="http://labs.consol.de/wp-content/uploads/2010/09/gearman_proxy.png" alt="Gearman Proxy" width="360" height="270" style="float:none" /></a>
 ++++
 
 Sometimes you may need to reverse the direction of the initial
@@ -225,6 +286,15 @@ gearmand and vice versa.
 
 Just copy the gearman_proxy.pl from the contrib or share directory and
 adjust the first few lines to match you needs.
+
+Pro:
+
+ * changes direction of initial connection setup
+ * buffers network outages
+
+Contra:
+
+ * two more daemon to monitor and maintain
 
 
 
@@ -1168,6 +1238,8 @@ Hints
 Archive
 -------
 
+* http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.3.4.tar.gz[version 1.3.4 - June 19 2012]
+* http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.3.2.tar.gz[version 1.3.2 - May 27 2012]
 * http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.3.0.tar.gz[version 1.3.0 - April 27 2012]
 * http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.2.8.tar.gz[version 1.2.8 - April 12 2012]
 * http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.2.6.tar.gz[version 1.2.6 - March 15 2012]
