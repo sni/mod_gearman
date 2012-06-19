@@ -26,10 +26,10 @@
 #include "utils.h"
 #include "gearman_utils.h"
 
-int opt_verbose    = GM_DISABLED;
-int opt_quiet      = GM_DISABLED;
-int opt_batch      = GM_DISABLED;
-int opt_interval   = 1;
+int opt_verbose     = GM_DISABLED;
+int opt_quiet       = GM_DISABLED;
+int opt_batch       = GM_DISABLED;
+double opt_interval = 0;
 
 char * server_list[GM_LISTSIZE];
 int server_list_num = 0;
@@ -59,7 +59,7 @@ int main (int argc, char **argv) {
                         break;
             case 'q':   opt_quiet = GM_ENABLED;
                         break;
-            case 'i':   opt_interval = atoi(optarg);
+            case 'i':   opt_interval = atof(optarg) * 1000000;
                         break;
             case 'b':   opt_batch = GM_ENABLED;
                         break;
@@ -74,17 +74,24 @@ int main (int argc, char **argv) {
         server_list[server_list_num++] = "localhost";
     server_list[server_list_num] = NULL;
 
-    if(opt_interval <= 0)
-        opt_interval = 1;
-
     signal(SIGINT, clean_exit);
     signal(SIGTERM,clean_exit);
 
     /* in batch mode, print stats once and exit */
     if(opt_batch == GM_ENABLED) {
-        print_stats(server_list[0]);
+        if(opt_interval > 0) {
+            while(1) {
+                print_stats(server_list[0]);
+                usleep(opt_interval);
+            }
+        } else {
+            print_stats(server_list[0]);
+        }
         clean_exit(0);
     }
+
+    if(opt_interval <= 0)
+        opt_interval = 1000000;
 
     /* init curses */
     w = initscr();
@@ -97,7 +104,7 @@ int main (int argc, char **argv) {
         if(getch() == 'q')
             clean_exit(0);
         print_stats(server_list[0]);
-        sleep(opt_interval);
+        usleep(opt_interval);
     }
 
     clean_exit(0);
