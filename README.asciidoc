@@ -862,13 +862,13 @@ Default is yes.
 ====
 
 
-timeout_result::
+timeout_return::
 Defines the return code for timed out checks. Accepted return codes
 are 0 (Ok), 1 (Warning), 2 (Critical) and 3 (Unknown)
 Default: 2
 +
 ====
-    timeout_result=2
+    timeout_return=2
 ====
 
 
