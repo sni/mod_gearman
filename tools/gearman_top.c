@@ -39,6 +39,7 @@ WINDOW *w;
 /* work starts here */
 int main (int argc, char **argv) {
     int opt;
+    int i;
 
     mod_gm_opt = malloc(sizeof(mod_gm_opt_t));
     set_default_options(mod_gm_opt);
@@ -81,11 +82,15 @@ int main (int argc, char **argv) {
     if(opt_batch == GM_ENABLED) {
         if(opt_interval > 0) {
             while(1) {
-                print_stats(server_list[0]);
+                for(i=0;i<server_list_num;i++) {
+                    print_stats(server_list[i]);
+                }
                 usleep(opt_interval);
             }
         } else {
-            print_stats(server_list[0]);
+            for(i=0;i<server_list_num;i++) {
+                print_stats(server_list[i]);
+            }
         }
         clean_exit(0);
     }
@@ -103,7 +108,11 @@ int main (int argc, char **argv) {
     while(1) {
         if(getch() == 'q')
             clean_exit(0);
-        print_stats(server_list[0]);
+        if(opt_batch == GM_DISABLED)
+            erase(); /* clear screen */
+        for(i=0;i<server_list_num;i++) {
+            print_stats(server_list[i]);
+        }
         usleep(opt_interval);
     }
 
@@ -182,9 +191,6 @@ void print_stats(char * hostnam) {
     now = *(localtime(&t));
     strftime(cur_time, sizeof(cur_time), "%Y-%m-%d %H:%M:%S", &now );
 
-    if(opt_batch == GM_DISABLED) {
-        erase(); /* clear screen */
-    }
     my_printf("%s  -  %s:%i ", cur_time, server, port );
     if(version != NULL && strcmp(version, "") != 0)
         my_printf("  -  v%s", version );
