@@ -193,6 +193,7 @@ typedef struct mod_gm_opt_struct {
     int            logmode;                                 /**< logmode: auto, syslog, file or nagios */
     char         * logfile;                                 /**< path for the logfile */
     FILE         * logfile_fp;                              /**< filedescriptor for the logfile */
+    int            use_uniq_jobs;                           /**< flag whether normal jobs will be sent with/without uniq set */
 /* neb module */
     char         * result_queue;                            /**< name of the result queue used by the neb module */
     int            result_workers;                          /**< number of result worker threads started */

@@ -235,6 +235,7 @@ int set_default_options(mod_gm_opt_t *opt) {
     opt->debug_level        = GM_LOG_INFO;
     opt->perfdata           = GM_DISABLED;
     opt->perfdata_mode      = GM_PERFDATA_OVERWRITE;
+    opt->use_uniq_jobs      = GM_ENABLED;
     opt->do_hostchecks      = GM_ENABLED;
     opt->hosts              = GM_DISABLED;
     opt->services           = GM_DISABLED;
@@ -491,6 +492,11 @@ int parse_args_line(mod_gm_opt_t *opt, char * arg, int recursion_level) {
         use_perl_cache = opt->use_perl_cache;
 #endif
         return(GM_OK);
+    }
+
+    /* use_uniq_jobs */
+    else if ( !strcmp( key, "use_uniq_jobs" ) ) {
+        opt->use_uniq_jobs = parse_yes_or_no(value, GM_ENABLED);
     }
 
     else if ( value == NULL ) {
@@ -990,6 +996,7 @@ void dumpconfig(mod_gm_opt_t *opt, int mode) {
         gm_log( GM_LOG_DEBUG, "accept clear result: %s\n", opt->accept_clear_results == GM_ENABLED ? "yes" : "no");
     }
     gm_log( GM_LOG_DEBUG, "transport mode:      %s\n", opt->encryption == GM_ENABLED ? "aes-256+base64" : "base64 only");
+    gm_log( GM_LOG_DEBUG, "use uniq jobs:       %s\n", opt->use_uniq_jobs == GM_ENABLED ? "overwrite" : "append");
 
     gm_log( GM_LOG_DEBUG, "--------------------------------\n" );
     return;
