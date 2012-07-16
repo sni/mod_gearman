@@ -986,6 +986,9 @@ void dumpconfig(mod_gm_opt_t *opt, int mode) {
             gm_log( GM_LOG_DEBUG, "encryption key:      not set\n" );
         }
     }
+    if(mode == GM_NEB_MODE) {
+        gm_log( GM_LOG_DEBUG, "accept clear result: %s\n", opt->accept_clear_results == GM_ENABLED ? "yes" : "no");
+    }
     gm_log( GM_LOG_DEBUG, "transport mode:      %s\n", opt->encryption == GM_ENABLED ? "aes-256+base64" : "base64 only");
 
     gm_log( GM_LOG_DEBUG, "--------------------------------\n" );
