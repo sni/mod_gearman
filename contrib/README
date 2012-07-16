@@ -16,3 +16,15 @@ Mod-Gearman <-> Gearmand <-> Gearman-Proxy <--|--> Gearmand <-> Worker
 Instead of the Worker polling from the master gearmand, it can now
 poll the jobs from a local jobserver which gets fed by the
 Gearman-Proxy.
+
+Written by: Sven Nierlein
+
+
+
+send_gearman.pl
+---------------
+send_gearman.pl is a perl implementation of the send_gearman tool. You
+can use it to compile a windows binary and use that to send in results
+from windows platforms.
+
+Written by: Vincent Candeau
