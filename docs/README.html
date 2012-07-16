@@ -640,7 +640,7 @@ Fast transport of passive check results with included tools like
 <div class="ulist"><ul>
 <li>
 <p>
-Latest stable <a href="http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.3.4.tar.gz">version 1.3.4</a>, released June 19 2012
+Latest stable <a href="http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.3.6.tar.gz">version 1.3.6</a>, released July 19 2012
 </p>
 </li>
 <li>
@@ -1369,7 +1369,8 @@ enables or disables encryption. It is strongly advised to not disable
 encryption. Anybody will be able to inject packages to your worker. Encryption
 is enabled by default and you have to explicitly disable it. When using
 encryption, you will either have to specify a shared password with <tt>key=...</tt> or
-a keyfile with <tt>keyfile=...</tt>  Default is On.
+a keyfile with <tt>keyfile=...</tt>.
+Default is On.
 </p>
 <div class="exampleblock">
 <div class="exampleblock-content">
@@ -1412,7 +1413,28 @@ Whitespace to the right will be trimmed.
 </div></div>
 </div></div>
 </dd>
+<dt class="hdlist1">
+use_uniq_jobs
+</dt>
+<dd>
+<p>
+Using uniq keys prevents the gearman queues from filling up when there
+is no worker. However, gearmand seems to have problems with the uniq
+key and sometimes jobs get stuck in the queue. Set this option to <em>off</em>
+when you run into problems with stuck jobs but make sure your worker
+are running.
+Default is On.
+</p>
+</dd>
 </dl></div>
+<div class="paragraph"><p>+</p></div>
+<div class="exampleblock">
+<div class="exampleblock-content">
+<div class="literalblock">
+<div class="content">
+<pre><tt>use_uniq_jobs=on</tt></pre>
+</div></div>
+</div></div>
 <h3 id="_server_options">Server Options</h3><div style="clear:left"></div>
 <div class="paragraph"><p>Additional options for the NEB module only:</p></div>
 <div class="dlist"><dl>
@@ -2354,6 +2376,11 @@ Make sure all your worker have the Nagios-Plugins available under
 <div class="ulist"><ul>
 <li>
 <p>
+<a href="http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.3.6.tar.gz">version 1.3.6 - July 19 2012</a>
+</p>
+</li>
+<li>
+<p>
 <a href="http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.3.4.tar.gz">version 1.3.4 - June 19 2012</a>
 </p>
 </li>
@@ -2493,7 +2520,7 @@ Make sure all your worker have the Nagios-Plugins available under
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2012-06-22 18:41:00 CEST
+Last updated 2012-07-16 21:07:23 CEST
 </div>
 </div>
 </body>

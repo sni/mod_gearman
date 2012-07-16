@@ -1,6 +1,7 @@
 This file documents the revision history for mod_gearman.
 
-1.3.6 not yet released
+1.3.6 Mon Jul 19 17:08:19 CEST 2012
+          - added 'use_uniq_jobs' option
           - allow gearman_top to display multiple servers (Thomas Dohl)
           - fixed typo in 'timeout_return' docs
           - added send_gearman.pl (Vincent Candeau)

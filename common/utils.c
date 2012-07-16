@@ -497,6 +497,7 @@ int parse_args_line(mod_gm_opt_t *opt, char * arg, int recursion_level) {
     /* use_uniq_jobs */
     else if ( !strcmp( key, "use_uniq_jobs" ) ) {
         opt->use_uniq_jobs = parse_yes_or_no(value, GM_ENABLED);
+        return(GM_OK);
     }
 
     else if ( value == NULL ) {
