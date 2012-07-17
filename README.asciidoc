@@ -1155,7 +1155,7 @@ After installing strawberry perl, you need to install the
 --------------------------------------
 
 Or just use the prebuild one from labs.consol.de:
-<a href="http://labs.consol.de/wp-content/uploads/2010/09/send_gearman.exe">send_gearman.exe</a>.
+http://labs.consol.de/wp-content/uploads/2010/09/send_gearman.exe[send_gearman.exe].
 
 
 
