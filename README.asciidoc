@@ -1144,6 +1144,20 @@ check would do.
 --------------------------------------
 
 
+How to build send_gearman.exe
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+After installing strawberry perl, you need to install the
+'PAR::Packer' module and run pp:
+
+--------------------------------------
+  pp -z 9 -M Class::Load::XS -M Moose -M Nagios::Passive::Base -M Params::Validate::XS -o send_gearman.exe send_gearman.pl
+--------------------------------------
+
+Or just use the prebuild one from labs.consol.de:
+<a href="http://labs.consol.de/wp-content/uploads/2010/09/send_gearman.exe">send_gearman.exe</a>.
+
+
 
 How to Submit check_multi Results
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
