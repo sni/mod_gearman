@@ -14,7 +14,7 @@ use Getopt::Long;
 ### Manage CLI options
 my($server, $encryption, $key, $host, $service, $message, $returncode, $debug, $help);
 my $params = GetOptions(
-    "server=s"       => \$server,        # Serveur Addresse IP:PORT
+    "server=s"       => \$server,        # Serveur Addresse IP:PORT,IP:PORT
     "e|encryption"   => \$encryption,    # Enable Encryption
     "k|key=s"        => \$key,           # Encryption key
     "h|host=s"       => \$host,          # HostName
@@ -28,7 +28,7 @@ my $params = GetOptions(
 ### HELP
 sub help {
     print("help:\n");
-    print("usage : $0 [ --server <IP:PORT> ] [ -e / --encryption [ -k / --key <Key passphrase> ] ] [ -h / --host <hostname> ] [ -s / --service service name> ] [ -m / --message \"<output>\" ][ -r / --returncode <Code(0,1,2,3)> ] [ -d / --debug ] [ --help ]\n");
+    print("usage : $0 [ --server <IP[:PORT],IP[:PORT]> ] [ -e / --encryption [ -k / --key <Key passphrase> ] ] [ -h / --host <hostname> ] [ -s / --service service name> ] [ -m / --message \"<output>\" ][ -r / --returncode <Code(0,1,2,3)> ] [ -d / --debug ] [ --help ]\n");
     print("\tserver\t\tServer IP:PORT (Default: IP: 127.0.0.1 / PORT: 4730)\n");
     print("\tencryption\tEnable / Disable Encryption\n");
     print("\tkey\t\tEncryption passphrase\n");
@@ -52,17 +52,26 @@ elsif ( !defined($host) || !defined($service) || !defined($message) || !defined(
     &help();
 }
 else {
-    if( !defined($server) ) {
-        $server = "127.0.0.1:4730";
-    }
-    else {
-        if( not $server =~ /:/ ) {
-            $server = $server . ":4730";
+    my @server;
+    if ( $server =~ /,/ ) {
+        foreach my $adr ( split(',', $server) ) {
+            if ( not $adr  =~ /:/ ) {
+                $adr = $adr.":4730";
+            } 
+            push( @server, $adr );
         }
+    } elsif ( ! defined($server) ) {
+        $server = "127.0.0.1:4730";
+        push( @server, $server );
+    } else {
+        if ( not $server =~ /:/ ){
+            $server = $server.":4730";
+        }
+        push( @server, $server );
     }
 
-    if( defined($debug) ) {
-        print "Server: " . $server . "\n";
+    if ( defined($debug) ){
+        print "Server: ".join(',',@server)."\n";
         print "Encryption: " .(defined $encryption ? 'on' : 'off'). "\n";
         print "Key: " . $key . "\n" if defined $encryption;
         print "Host: " . $host . "\n";
