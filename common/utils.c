@@ -1152,6 +1152,7 @@ int set_default_job(gm_job_t *job, mod_gm_opt_t *opt) {
     job->timeout             = opt->job_timeout;
     job->start_time.tv_sec   = 0L;
     job->start_time.tv_usec  = 0L;
+    job->has_been_sent       = FALSE;
 
     return(GM_OK);
 }
@@ -1647,6 +1648,12 @@ int check_param_server(gm_server_t * new_server, gm_server_t * server_list[GM_LI
 /* send results back */
 void send_result_back(gm_job_t * exec_job) {
     gm_log( GM_LOG_TRACE, "send_result_back()\n" );
+
+    /* avoid duplicate returned results */
+    if(exec_job->has_been_sent == TRUE) {
+        return;
+    }
+    exec_job->has_been_sent = TRUE;
 
     if(exec_job->result_queue == NULL) {
         return;

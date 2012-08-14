@@ -270,6 +270,7 @@ typedef struct gm_job_struct {
     struct timeval core_time;           /**< time when the core started the job */
     struct timeval start_time;          /**< time when the job really started */
     struct timeval finish_time;         /**< time when the job was finished */
+    int            has_been_sent;       /**< flag if job has been sent back */
 } gm_job_t;
 
 
