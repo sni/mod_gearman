@@ -220,9 +220,9 @@ int run_epn_check(char *processed_command, char **ret, char **err) {
 
 /* checks to see if we should run a script using the embedded Perl interpreter */
 int file_uses_embedded_perl(char *fname) {
-    #ifndef EMBEDDEDPERL
+#ifndef EMBEDDEDPERL
     return FALSE;
-    #else
+#else
     int line;
     FILE *fp = NULL;
     char buf[256] = "";
@@ -268,7 +268,7 @@ int file_uses_embedded_perl(char *fname) {
     fclose(fp);
 
     return use_embedded_perl_implicitly;
-    #endif
+#endif
 }
 
 
