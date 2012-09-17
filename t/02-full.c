@@ -220,7 +220,12 @@ void do_result_work(int nr) {
 }
 
 
-/* check logfile for errors, set mode to 1 to display file by diag() */
+/* check logfile for errors
+ * mode:
+ *       1 to display complete file by diag()
+ *       2 to display only errors
+ *       3 to display even without errors
+ */
 void check_logfile(char *logfile, int mode);
 void check_logfile(char *logfile, int mode) {
     FILE * fp;
@@ -235,13 +240,14 @@ void check_logfile(char *logfile, int mode) {
     line = malloc(GM_BUFFERSIZE);
     while(fgets(line, GM_BUFFERSIZE, fp) != NULL) {
         if(strstr(line, "ERROR") != NULL) {
+            mode == 2 && diag("logfile: %s", line);
             errors++;
         }
     }
     fclose(fp);
 
     /* output complete logfile */
-    if(errors > 0 || mode == 1) {
+    if((errors > 0 && mode == 1) || mode == 3) {
         fp = fopen(logfile, "r");
         while(fgets(line, GM_BUFFERSIZE, fp) != NULL) {
             diag("logfile: %s", line);
@@ -252,7 +258,11 @@ void check_logfile(char *logfile, int mode) {
     ok(errors == 0, "errors in logfile: %d", errors);
 
     /* cleanup logfile */
-    ok(unlink(logfile) == 0, "removed temporary logfile: %s", logfile);
+    if(errors == 0) {
+        ok(TRUE, "not removed temporary logfile due to errors: %s", logfile);
+    } else {
+        ok(unlink(logfile) == 0, "removed temporary logfile: %s", logfile);
+    }
 
     free(line);
     return;
@@ -310,11 +320,11 @@ char* my_tmpfile() {
 /* main tests */
 int main (int argc, char **argv, char **env) {
     argc = argc; argv = argv; env  = env;
-    int status, chld;
-    int tests = 88;
+    int status, chld, rc;
+    int tests = 92;
     int rrc;
     char cmd[150];
-    char *result, *error;
+    char *result, *error, *message, *output;
     plan(tests);
 
     mod_gm_opt = malloc(sizeof(mod_gm_opt_t));
@@ -344,8 +354,9 @@ int main (int argc, char **argv, char **env) {
 
     /* wait one second and catch died procs */
     sleep(1);
-    while((chld = waitpid(-1, &status, WNOHANG)) != -1 && chld > 0) {
+        while((chld = waitpid(-1, &status, WNOHANG)) != -1 && chld > 0) {
         diag( "waitpid() %d exited with %d\n", chld, status);
+        status = 0;
     }
 
     if(!ok(gearmand_pid > 0, "'gearmand started with pid: %d", GEARMAND_TEST_PORT, gearmand_pid)) {
@@ -358,7 +369,7 @@ int main (int argc, char **argv, char **env) {
     if(!ok(worker_pid > 0, "worker started with pid: %d", worker_pid))
         diag("could not start worker");
     if(!ok(pid_alive(worker_pid) == TRUE, "worker alive")) {
-        check_logfile(worker_logfile, 1);
+        check_logfile(worker_logfile, 3);
         kill(gearmand_pid, SIGTERM);
         exit( EXIT_FAILURE );
     }
@@ -402,6 +413,7 @@ int main (int argc, char **argv, char **env) {
     kill(worker_pid, SIGTERM);
     waitpid(worker_pid, &status, 0);
     ok(status == 0, "worker exited with exit code %d", real_exit_code(status));
+    status = 0;
     check_logfile(worker_logfile, 0);
 
     char * test_keys[] = {
@@ -434,6 +446,7 @@ int main (int argc, char **argv, char **env) {
         kill(worker_pid, SIGTERM);
         waitpid(worker_pid, &status, 0);
         ok(status == 0, "worker exited with exit code %d", real_exit_code(status));
+        status = 0;
         check_logfile(worker_logfile, 0);
     }
 
@@ -472,20 +485,38 @@ int main (int argc, char **argv, char **env) {
     free_client(&client);
     free_worker(&worker);
 
-    kill(gearmand_pid, SIGTERM);
-    waitpid(gearmand_pid, &status, 0);
-    ok(status == 0, "gearmand exited with exit code %d", real_exit_code(status));
+    /* shutdown gearmand */
+    rc = send2gearmandadmin("shutdown\n", "localhost", GEARMAND_TEST_PORT, &output, &message);
+    ok(rc == 0, "rc of send2gearmandadmin %d", rc);
+    like(output, "OK", "output contains OK");
+
+    /* wait 5 seconds to shutdown */
+    for(i=0;i<=5;i++) {
+        waitpid(gearmand_pid, &status, WNOHANG);
+        if(pid_alive(gearmand_pid) == FALSE) {
+            todo();
+            ok(status == 0, "gearmand exited with: %d", real_exit_code(status));
+            endtodo;
+            break;
+        }
+        sleep(1);
+    }
+
+    if(pid_alive(gearmand_pid) == TRUE) {
+        /* kill it the hard way */
+        kill(gearmand_pid, SIGTERM);
+        waitpid(gearmand_pid, &status, 0);
+        ok(status == 0, "gearmand exited with exit code %d", real_exit_code(status));
+        ok(false, "gearmand had to be killed!");
+    }
+    check_logfile("/tmp/gearmand.log", status != 0 ? 2 : 0);
+    status = 0;
 
     kill(worker_pid, SIGTERM);
     waitpid(worker_pid, &status, 0);
     ok(status == 0, "worker exited with exit code %d", real_exit_code(status));
-    todo();
-    if(status != 0) {
-        check_logfile("/tmp/gearmand.log", 1);
-    } else {
-        check_logfile("/tmp/gearmand.log", 0);
-    }
-    endtodo;
+    check_logfile(worker_logfile, status != 0 ? 3 : 0);
+    status = 0;
 
 #ifdef EMBEDDEDPERL
     deinit_embedded_perl(0);

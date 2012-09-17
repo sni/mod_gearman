@@ -271,64 +271,16 @@ void free_worker(gearman_worker_st *worker) {
 
 /* get worker/jobs data from gearman server */
 int get_gearman_server_data(mod_gm_server_status_t *stats, char ** message, char ** version, char * hostnam, int port) {
-    int sockfd, n;
-    struct sockaddr_in serv_addr;
-    struct hostent *server;
-    char * cmd;
-    char buf[GM_BUFFERSIZE];
-    char * line;
-    char * output;
-    char * output_c;
-    char * name;
-    char * total;
-    char * running;
-    char * worker;
+    int rc;
+    char *total, *running, *worker, *output, *output_c, *line, *name;
     mod_gm_status_function_t *func;
 
-    *message = malloc(GM_BUFFERSIZE);
-    *version = malloc(GM_BUFFERSIZE);
-    snprintf(*message, GM_BUFFERSIZE, "%s", "" );
-    snprintf(*version, GM_BUFFERSIZE, "%s", "" );
+    *version  = malloc(GM_BUFFERSIZE);
+    snprintf(*version,  GM_BUFFERSIZE, "%s", "" );
 
-    sockfd = socket(AF_INET, SOCK_STREAM, 0);
-    if( sockfd < 0 ) {
-        snprintf(*message, GM_BUFFERSIZE, "failed to open socket: %s\n", strerror(errno));
-        return( STATE_CRITICAL );
-    }
+    rc = send2gearmandadmin("status\nversion\n", hostnam, port, &output, message);
+    if(rc != STATE_OK) { return rc; }
 
-    server = gethostbyname(hostnam);
-    if( server == NULL ) {
-        snprintf(*message, GM_BUFFERSIZE, "failed to resolve %s\n", hostnam);
-        return( STATE_CRITICAL );
-    }
-    serv_addr.sin_family = AF_INET;
-    bcopy((char *)server->h_addr,
-         (char *)&serv_addr.sin_addr.s_addr,
-         server->h_length);
-    serv_addr.sin_port = htons(port);
-    if (connect(sockfd,(const struct sockaddr *)&serv_addr,sizeof(serv_addr)) < 0) {
-        snprintf(*message, GM_BUFFERSIZE, "failed to connect to %s:%i - %s\n", hostnam, (int)port, strerror(errno));
-        close(sockfd);
-        return( STATE_CRITICAL );
-    }
-
-    cmd = "status\nversion\n";
-    n = write(sockfd,cmd,strlen(cmd));
-    if (n < 0) {
-        snprintf(*message, GM_BUFFERSIZE, "failed to send to %s:%i - %s\n", hostnam, (int)port, strerror(errno));
-        close(sockfd);
-        return( STATE_CRITICAL );
-    }
-
-    n = read( sockfd, buf, GM_BUFFERSIZE-1 );
-    buf[n] = '\x0';
-    if (n < 0) {
-        snprintf(*message, GM_BUFFERSIZE, "error reading from %s:%i - %s\n", hostnam, (int)port, strerror(errno));
-        close(sockfd);
-        return( STATE_CRITICAL );
-    }
-
-    output = strdup(buf);
     output_c = output;
     while ( (line = strsep( &output, "\n" )) != NULL ) {
         gm_log( GM_LOG_TRACE, "%s\n", line );
@@ -346,7 +298,6 @@ int get_gearman_server_data(mod_gm_server_status_t *stats, char ** message, char
             /* sort our array by queue name */
             qsort(stats->function, stats->function_num, sizeof(mod_gm_status_function_t*), struct_cmp_by_queue);
 
-            close(sockfd);
             free(output_c);
             return( STATE_OK );
         }
@@ -382,8 +333,66 @@ int get_gearman_server_data(mod_gm_server_status_t *stats, char ** message, char
 
     snprintf(*message, GM_BUFFERSIZE, "got no valid data from %s:%i\n", hostnam, (int)port);
     free(output_c);
+    return(rc);
+}
+
+
+/* send gearman admin */
+int send2gearmandadmin(char * cmd, char * hostnam, int port, char ** output, char ** error) {
+    int sockfd, n;
+    struct sockaddr_in serv_addr;
+    struct hostent *server;
+    char buf[GM_BUFFERSIZE];
+
+    gm_log( GM_LOG_TRACE, "connecting to %s:%i...\n", hostnam, port );
+
+    *error  = malloc(GM_BUFFERSIZE);
+    snprintf(*error,  GM_BUFFERSIZE, "%s", "" );
+    *output = malloc(GM_BUFFERSIZE);
+    snprintf(*output,  GM_BUFFERSIZE, "%s", "" );
+
+    sockfd = socket(AF_INET, SOCK_STREAM, 0);
+    if( sockfd < 0 ) {
+        snprintf(*error, GM_BUFFERSIZE, "failed to open socket: %s\n", strerror(errno));
+        return( STATE_CRITICAL );
+    }
+
+    server = gethostbyname(hostnam);
+    if( server == NULL ) {
+        snprintf(*error, GM_BUFFERSIZE, "failed to resolve %s\n", hostnam);
+        return( STATE_CRITICAL );
+    }
+    serv_addr.sin_family = AF_INET;
+    bcopy((char *)server->h_addr,
+         (char *)&serv_addr.sin_addr.s_addr,
+         server->h_length);
+    serv_addr.sin_port = htons(port);
+    if (connect(sockfd,(const struct sockaddr *)&serv_addr,sizeof(serv_addr)) < 0) {
+        snprintf(*error, GM_BUFFERSIZE, "failed to connect to %s:%i - %s\n", hostnam, (int)port, strerror(errno));
+        close(sockfd);
+        return( STATE_CRITICAL );
+    }
+
+    n = write(sockfd,cmd,strlen(cmd));
+    if (n < 0) {
+        snprintf(*error, GM_BUFFERSIZE, "failed to send to %s:%i - %s\n", hostnam, (int)port, strerror(errno));
+        close(sockfd);
+        return( STATE_CRITICAL );
+    }
+
+    n = read( sockfd, buf, GM_BUFFERSIZE-1 );
+    buf[n] = '\x0';
+    if (n < 0) {
+        snprintf(*error, GM_BUFFERSIZE, "error reading from %s:%i - %s\n", hostnam, (int)port, strerror(errno));
+        close(sockfd);
+        return( STATE_CRITICAL );
+    }
+    free(*output);
+    *output = strdup(buf);
     close(sockfd);
-    return( STATE_UNKNOWN );
+
+    gm_log( GM_LOG_TRACE, "got:\n%s\n", *output );
+    return( STATE_OK );
 }
 
 

@@ -103,6 +103,22 @@ typedef struct mod_gm_status_server {
 int get_gearman_server_data(mod_gm_server_status_t *stats, char ** message, char **version, char * hostname, int port);
 
 /**
+ * send2gearmandadmin
+ *
+ * send command via gearman admin protocol
+ *
+ * @param[in] cmd - cmd to send
+ * @param[in] hostname - hostname to connect to
+ * @param[in] port - port to connect
+ * @param[out] output - result from gearmand
+ * @param[out] error - error message
+ *
+ * @return true on success
+ */
+
+int send2gearmandadmin(char * cmd, char * hostnam, int port, char ** output, char ** error);
+
+/**
  * free_mod_gm_status_server
  *
  * free status structure
