@@ -489,6 +489,8 @@ int main (int argc, char **argv, char **env) {
     rc = send2gearmandadmin("shutdown\n", "localhost", GEARMAND_TEST_PORT, &output, &message);
     ok(rc == 0, "rc of send2gearmandadmin %d", rc);
     like(output, "OK", "output contains OK");
+    free(message);
+    free(output);
 
     /* wait 5 seconds to shutdown */
     for(i=0;i<=5;i++) {

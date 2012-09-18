@@ -344,8 +344,6 @@ int send2gearmandadmin(char * cmd, char * hostnam, int port, char ** output, cha
     struct hostent *server;
     char buf[GM_BUFFERSIZE];
 
-    gm_log( GM_LOG_TRACE, "connecting to %s:%i...\n", hostnam, port );
-
     *error  = malloc(GM_BUFFERSIZE);
     snprintf(*error,  GM_BUFFERSIZE, "%s", "" );
     *output = malloc(GM_BUFFERSIZE);
@@ -391,7 +389,6 @@ int send2gearmandadmin(char * cmd, char * hostnam, int port, char ** output, cha
     *output = strdup(buf);
     close(sockfd);
 
-    gm_log( GM_LOG_TRACE, "got:\n%s\n", *output );
     return( STATE_OK );
 }
 
