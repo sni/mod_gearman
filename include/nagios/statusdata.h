@@ -2,8 +2,6 @@
  *
  * STATUSDATA.H - Header for external status data routines
  *
- * Copyright (c) 2000-2007 Ethan Galstad (egalstad@nagios.org)
- * Last Modified:   10-19-2007
  *
  * License:
  *
@@ -25,12 +23,10 @@
 #ifndef _STATUSDATA_H
 #define _STATUSDATA_H
 
+#include "common.h"
+
 #ifdef NSCORE
 #include "objects.h"
-#endif
-
-#ifdef __cplusplus
-  extern "C" {
 #endif
 
 #ifdef NSCGI
@@ -44,17 +40,18 @@
 
 
 
-/*************************** CHAINED HASH LIMITS ***************************/
+	/*************************** CHAINED HASH LIMITS ***************************/
 
 #define SERVICESTATUS_HASHSLOTS      1024
 #define HOSTSTATUS_HASHSLOTS         1024
 
 
-/**************************** DATA STRUCTURES ******************************/
+	/**************************** DATA STRUCTURES ******************************/
 
+NAGIOS_BEGIN_DECL
 
 /* HOST STATUS structure */
-typedef struct hoststatus_struct{
+typedef struct hoststatus_struct {
 	char    *host_name;
 	char    *plugin_output;
 	char    *long_plugin_output;
@@ -83,7 +80,7 @@ typedef struct hoststatus_struct{
 	int     problem_has_been_acknowledged;
 	int     acknowledgement_type;
 	int     current_notification_number;
-	int     accept_passive_host_checks;
+	int     accept_passive_checks;
 	int     event_handler_enabled;
 	int     checks_enabled;
 	int     flap_detection_enabled;
@@ -92,16 +89,15 @@ typedef struct hoststatus_struct{
 	double  latency;
 	double  execution_time;
 	int     scheduled_downtime_depth;
-	int     failure_prediction_enabled;
 	int     process_performance_data;
-	int     obsess_over_host;
+	int     obsess;
 	struct  hoststatus_struct *next;
 	struct  hoststatus_struct *nexthash;
-        }hoststatus;
+	} hoststatus;
 
 
 /* SERVICE STATUS structure */
-typedef struct servicestatus_struct{
+typedef struct servicestatus_struct {
 	char    *host_name;
 	char    *description;
 	char    *plugin_output;
@@ -133,7 +129,7 @@ typedef struct servicestatus_struct{
 	int     problem_has_been_acknowledged;
 	int     acknowledgement_type;
 	int     current_notification_number;
-	int     accept_passive_service_checks;
+	int     accept_passive_checks;
 	int     event_handler_enabled;
 	int     flap_detection_enabled;
 	int     is_flapping;
@@ -141,12 +137,11 @@ typedef struct servicestatus_struct{
 	double  latency;
 	double  execution_time;
 	int     scheduled_downtime_depth;
-	int     failure_prediction_enabled;
 	int     process_performance_data;
-	int     obsess_over_service;
+	int     obsess;
 	struct  servicestatus_struct *next;
 	struct  servicestatus_struct *nexthash;
-        }servicestatus;
+	} servicestatus;
 
 
 /*************************** SERVICE STATES ***************************/
@@ -162,24 +157,34 @@ typedef struct servicestatus_struct{
 /**************************** HOST STATES ****************************/
 
 #define HOST_PENDING			1
-#define HOST_UP				2
-#define HOST_DOWN			4
-#define HOST_UNREACHABLE		8
+#define SD_HOST_UP				2
+#define SD_HOST_DOWN			4
+#define SD_HOST_UNREACHABLE		8
+
+/* Convert the (historically ordered) host states into a notion of "urgency".
+	  This is defined as, in ascending order:
+		SD_HOST_UP			(business as usual)
+		HOST_PENDING		(waiting for - supposedly first - check result)
+		SD_HOST_UNREACHABLE	(a problem, but likely not its cause)
+		SD_HOST_DOWN		(look here!!)
+	  The exact values are irrelevant, so I try to make the conversion as
+	  CPU-efficient as possible: */
+#define HOST_URGENCY(hs)		((hs)|(((hs)&0x5)<<1))
 
 
 
 /**************************** FUNCTIONS ******************************/
 
-int read_status_data(char *,int);                       /* reads all status data */
+int read_status_data(char *, int);                      /* reads all status data */
 int add_host_status(hoststatus *);                      /* adds a host status entry to the list in memory */
 int add_service_status(servicestatus *);                /* adds a service status entry to the list in memory */
 
 int add_hoststatus_to_hashlist(hoststatus *);
 int add_servicestatus_to_hashlist(servicestatus *);
 
-servicestatus *find_servicestatus(char *,char *);       /* finds status information for a specific service */
+servicestatus *find_servicestatus(char *, char *);      /* finds status information for a specific service */
 hoststatus *find_hoststatus(char *);                    /* finds status information for a specific host */
-int get_servicestatus_count(char *,int);		/* gets total number of services of a certain type for a specific host */
+int get_servicestatus_count(char *, int);		/* gets total number of services of a certain type for a specific host */
 
 void free_status_data(void);                            /* free all memory allocated to status data */
 #endif
@@ -187,15 +192,12 @@ void free_status_data(void);                            /* free all memory alloc
 #ifdef NSCORE
 int initialize_status_data(char *);                     /* initializes status data at program start */
 int update_all_status_data(void);                       /* updates all status data */
-int cleanup_status_data(char *,int);                    /* cleans up status data at program termination */
+int cleanup_status_data(char *, int);                   /* cleans up status data at program termination */
 int update_program_status(int);                         /* updates program status data */
-int update_host_status(host *,int);                     /* updates host status data */
-int update_service_status(service *,int);               /* updates service status data */
-int update_contact_status(contact *,int);               /* updates contact status data */
+int update_host_status(host *, int);                    /* updates host status data */
+int update_service_status(service *, int);              /* updates service status data */
+int update_contact_status(contact *, int);              /* updates contact status data */
 #endif
 
-#ifdef __cplusplus
-  }
-#endif
-
+NAGIOS_END_DECL
 #endif

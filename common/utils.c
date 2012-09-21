@@ -1167,6 +1167,7 @@ int free_job(gm_job_t *job) {
     free(job->result_queue);
     free(job->command_line);
     free(job->output);
+    free(job->source);
     if(job->error != NULL)
         free(job->error);
     free(job);
@@ -1675,7 +1676,7 @@ void send_result_back(gm_job_t * exec_job) {
 
     gm_log( GM_LOG_TRACE, "queue: %s\n", exec_job->result_queue );
     temp_buffer1[0]='\x0';
-    snprintf( temp_buffer1, sizeof( temp_buffer1 )-1, "host_name=%s\ncore_start_time=%i.%i\nstart_time=%i.%i\nfinish_time=%i.%i\nreturn_code=%i\nexited_ok=%i\n",
+    snprintf( temp_buffer1, sizeof( temp_buffer1 )-1, "host_name=%s\ncore_start_time=%i.%i\nstart_time=%i.%i\nfinish_time=%i.%i\nreturn_code=%i\nexited_ok=%i\nsource=%s\n",
               exec_job->host_name,
               ( int )exec_job->next_check.tv_sec,
               ( int )exec_job->next_check.tv_usec,
@@ -1684,7 +1685,8 @@ void send_result_back(gm_job_t * exec_job) {
               ( int )exec_job->finish_time.tv_sec,
               ( int )exec_job->finish_time.tv_usec,
               exec_job->return_code,
-              exec_job->exited_ok
+              exec_job->exited_ok,
+              exec_job->source
             );
     temp_buffer1[sizeof( temp_buffer1 )-1]='\x0';
 

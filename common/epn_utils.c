@@ -31,7 +31,7 @@
 #ifdef EMBEDDEDPERL
 #include <EXTERN.h>
 #include <perl.h>
-#include  "include/nagios/epn_nagios.h"
+#include  "epn_mod_gearman.h"
 int use_embedded_perl            = TRUE;
 int deinit_rc                    = 0;
 static PerlInterpreter *my_perl  = NULL;

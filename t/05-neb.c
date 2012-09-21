@@ -3,6 +3,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <dlfcn.h>
+#include <ltdl.h>
 #include <t/tap.h>
 
 #include "nagios/nagios.h"
@@ -15,7 +16,7 @@ int service_check_timeout;
 int host_check_timeout;
 int currently_running_service_checks;
 int currently_running_host_checks;
-int event_broker_options;
+unsigned long event_broker_options;
 check_result *check_result_list;
 check_result check_result_info;
 int process_performance_data;

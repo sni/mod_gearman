@@ -1,12 +1,9 @@
-/* include/cgiutils.h.  Generated from cgiutils.h.in by configure.  */
 /************************************************************************
  *
  * CGIUTILS.H - Header file for common CGI functions
- * Copyright (c) 1999-2008  Ethan Galstad (egalstad@nagios.org)
- * Last Modified: 10-15-2008
  *
  * License:
- * 
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
  * published by the Free Software Foundation.
@@ -23,30 +20,19 @@
 
 #ifndef _CGIUTILS_H
 #define _CGIUTILS_H
-
+#include "lib/libnagios.h"
+#include "logging.h"
 #include "objects.h"
 #include "cgiauth.h"
 
-#ifdef __cplusplus
-extern "C" { 
-#endif
+NAGIOS_BEGIN_DECL
 
-/* should we compile and use the statusmap CGI? */
-#define USE_STATUSMAP 
-/* should we compile and use the statuswrl CGI? */
-#define USE_STATUSWRL 
-/* should we compile and use the trends CGI? */
-#define USE_TRENDS 
-/* should we compile and use the histogram CGI? */
-#define USE_HISTOGRAM 
-
-
-/**************************** CGI REFRESH RATE ******************************/
+	/**************************** CGI REFRESH RATE ******************************/
 
 #define DEFAULT_REFRESH_RATE	60	/* 60 second refresh rate for CGIs */
 
 
-/******************************* CGI NAMES **********************************/
+	/******************************* CGI NAMES **********************************/
 
 #define STATUS_CGI		"status.cgi"
 #define STATUSMAP_CGI		"statusmap.cgi"
@@ -69,7 +55,7 @@ extern "C" {
 #define SUMMARY_CGI	        "summary.cgi"
 
 
-/**************************** STYLE SHEET NAMES ******************************/
+	/**************************** STYLE SHEET NAMES ******************************/
 
 #define COMMON_CSS		"common.css"
 
@@ -90,8 +76,10 @@ extern "C" {
 #define MINISTATUS_CSS          "ministatus.css"
 #define SUMMARY_CSS             "summary.css"
 
+	/********************************* JAVASCRIPT INCLUDES **********************/
+#define JQUERY_JS		"jquery-1.7.1.min.js"	
 
-/********************************* ICONS ************************************/
+	/********************************* ICONS ************************************/
 
 #define STATUS_ICON_WIDTH		20
 #define STATUS_ICON_HEIGHT		20
@@ -102,21 +90,21 @@ extern "C" {
 #define START_ICON_ALT			"Program Start"
 #define STOP_ICON			"stop.gif"
 #define STOP_ICON_ALT			"Program End"
-#define RESTART_ICON			"restart.gif" 
+#define RESTART_ICON			"restart.gif"
 #define RESTART_ICON_ALT		"Program Restart"
-#define OK_ICON				"recovery.png" 
+#define OK_ICON				"recovery.png"
 #define OK_ICON_ALT			"Service Ok"
-#define CRITICAL_ICON			"critical.png" 
+#define CRITICAL_ICON			"critical.png"
 #define CRITICAL_ICON_ALT		"Service Critical"
-#define WARNING_ICON			"warning.png" 
+#define WARNING_ICON			"warning.png"
 #define WARNING_ICON_ALT		"Service Warning"
-#define UNKNOWN_ICON			"unknown.png" 
+#define UNKNOWN_ICON			"unknown.png"
 #define UNKNOWN_ICON_ALT		"Service Unknown"
-#define NOTIFICATION_ICON		"notify.gif" 
+#define NOTIFICATION_ICON		"notify.gif"
 #define NOTIFICATION_ICON_ALT		"Service Notification"
-#define LOG_ROTATION_ICON		"logrotate.png" 
+#define LOG_ROTATION_ICON		"logrotate.png"
 #define LOG_ROTATION_ICON_ALT		"Log Rotation"
-#define EXTERNAL_COMMAND_ICON		"command.png" 
+#define EXTERNAL_COMMAND_ICON		"command.png"
 #define EXTERNAL_COMMAND_ICON_ALT	"External Command"
 
 #define STATUS_DETAIL_ICON		"status2.gif"
@@ -189,17 +177,13 @@ extern "C" {
 #define SPLUNK_SMALL_WHITE_ICON		"splunk1.gif"
 #define SPLUNK_SMALL_BLACK_ICON		"splunk2.gif"
 
+#define FIRST_PAGE_ICON			"b_first2.png"
+#define LAST_PAGE_ICON			"b_last2.png"
+#define NEXT_PAGE_ICON			"b_next2.png"
+#define PREVIOUS_PAGE_ICON		"b_prev2.png"
 
 
-/************************** PLUGIN RETURN VALUES ****************************/
-
-#define STATE_OK		0
-#define STATE_WARNING		1
-#define STATE_CRITICAL		2
-#define STATE_UNKNOWN		3       /* changed from -1 on 02/24/2001 */
-
-
-/********************* EXTENDED INFO CGI DISPLAY TYPES  *********************/
+	/********************* EXTENDED INFO CGI DISPLAY TYPES  *********************/
 
 #define DISPLAY_PROCESS_INFO		0
 #define DISPLAY_HOST_INFO		1
@@ -212,7 +196,7 @@ extern "C" {
 #define DISPLAY_SERVICEGROUP_INFO       8
 
 
-/************************ COMMAND CGI COMMAND MODES *************************/
+	/************************ COMMAND CGI COMMAND MODES *************************/
 
 #define CMDMODE_NONE            0
 #define CMDMODE_REQUEST         1
@@ -220,7 +204,7 @@ extern "C" {
 
 
 
-/******************** HOST AND SERVICE NOTIFICATION TYPES ******************/
+	/******************** HOST AND SERVICE NOTIFICATION TYPES ******************/
 
 #define NOTIFICATION_ALL		0	/* all service and host notifications */
 #define NOTIFICATION_SERVICE_ALL	1	/* all types of service notifications */
@@ -240,7 +224,7 @@ extern "C" {
 #define NOTIFICATION_HOST_CUSTOM        16384
 
 
-/********************** HOST AND SERVICE ALERT TYPES **********************/
+	/********************** HOST AND SERVICE ALERT TYPES **********************/
 
 #define HISTORY_ALL			0	/* all service and host alert */
 #define HISTORY_SERVICE_ALL		1	/* all types of service alerts */
@@ -254,14 +238,14 @@ extern "C" {
 #define HISTORY_HOST_RECOVERY		256
 
 
-/****************************** SORT TYPES  *******************************/
+	/****************************** SORT TYPES  *******************************/
 
 #define SORT_NONE			0
 #define SORT_ASCENDING			1
 #define SORT_DESCENDING			2
 
 
-/***************************** SORT OPTIONS  ******************************/
+	/***************************** SORT OPTIONS  ******************************/
 
 #define SORT_NOTHING			0
 #define SORT_HOSTNAME			1
@@ -272,9 +256,10 @@ extern "C" {
 #define SORT_STATEDURATION		6
 #define SORT_NEXTCHECKTIME		7
 #define SORT_HOSTSTATUS                 8
+#define SORT_HOSTURGENCY                9
 
 
-/****************** HOST AND SERVICE FILTER PROPERTIES  *******************/
+	/****************** HOST AND SERVICE FILTER PROPERTIES  *******************/
 
 #define HOST_SCHEDULED_DOWNTIME		1
 #define HOST_NO_SCHEDULED_DOWNTIME	2
@@ -320,14 +305,14 @@ extern "C" {
 #define SERVICE_SOFT_STATE		524288
 
 
-/****************************** SSI TYPES  ********************************/
+	/****************************** SSI TYPES  ********************************/
 
 #define SSI_HEADER                      0
 #define SSI_FOOTER                      1
 
 
 
-/************************ CONTEXT-SENSITIVE HELP  *************************/
+	/************************ CONTEXT-SENSITIVE HELP  *************************/
 
 #define CONTEXTHELP_STATUS_DETAIL	"A1"
 #define CONTEXTHELP_STATUS_HGOVERVIEW	"A2"
@@ -416,7 +401,7 @@ extern "C" {
 #define CONTEXTHELP_SUMMARY_SERVICEGROUP_ALERT_TOTALS "N8"
 
 
-/************************** LIFO RETURN CODES  ****************************/
+	/************************** LIFO RETURN CODES  ****************************/
 
 #define LIFO_OK			0
 #define LIFO_ERROR_MEMORY	1
@@ -430,81 +415,51 @@ extern "C" {
 /*************************** DATA STRUCTURES  *****************************/
 
 /* LIFO data structure */
-typedef struct lifo_struct{
+typedef struct lifo_struct {
 	char *data;
 	struct lifo_struct *next;
-        }lifo;
-
-
-/* MMAPFILE structure - used for reading files via mmap() */
-typedef struct mmapfile_struct{
-	char *path;
-	int mode;
-	int fd;
-	unsigned long file_size;
-	unsigned long current_position;
-	unsigned long current_line;
-	void *mmap_buf;
-        }mmapfile;
-
-
+	} lifo;
 
 /******************************** FUNCTIONS *******************************/
 
 void reset_cgi_vars(void);
-void free_cgi_vars(void);
 void free_memory(void);
 
-char * get_cgi_config_location(void);				/* gets location of the CGI config file to read */
-char * get_cmd_file_location(void);				/* gets location of external command file to write to */
+char *get_cgi_config_location(void);				/* gets location of the CGI config file to read */
+char *get_cmd_file_location(void);				/* gets location of external command file to write to */
 
 int read_cgi_config_file(char *);
 int read_main_config_file(char *);
-int read_all_object_configuration_data(char *,int);
-int read_all_status_data(char *,int);
+int read_all_object_configuration_data(char *, int);
+int read_all_status_data(char *, int);
 
-int hashfunc(const char *name1, const char *name2, int hashslots);
-int compare_hashdata(const char *,const char *,const char *,const char *);
-
-void strip(char *);                                		/* strips newlines, carriage returns, and spaces from end of buffer */
 char *unescape_newlines(char *);
 void sanitize_plugin_output(char *);                            /* strips HTML and bad characters from plugin output */
 void strip_html_brackets(char *);				/* strips > and < from string */
-int process_macros(char *,char **,int);				/* processes macros in a string */
 
-void get_time_string(time_t *,char *,int,int);			/* gets a date/time string */
-void get_datetime_string(time_t *,char *,int,int);
-void get_interval_time_string(double,char *,int);		/* gets a time string for an interval of time */
-void get_expire_time_string(time_t *,char *,int);		/* gets a date/time string in the format used for Expire: tags*/
+void get_time_string(time_t *, char *, int, int);			/* gets a date/time string */
+void get_interval_time_string(double, char *, int);		/* gets a time string for an interval of time */
 
-char * my_strtok(char *,char *);				/* replacement for strtok() function - doesn't skip multiple tokens */
-char * my_strsep (char **, const char *);
-#ifdef REMOVED_10182007
-int my_free(void **);                                   	/* my wrapper for free() */
-#endif
+char *url_encode(char *);		        		/* encodes a string in proper URL format */
+char *html_encode(char *, int);					/* encodes a string in HTML format (for what the user sees) */
+char *escape_string(char *);					/* escape string for html form usage */
 
-char * url_encode(char *);		        		/* encodes a string in proper URL format */
-char * html_encode(char *,int);					/* encodes a string in HTML format (for what the user sees) */
-char * escape_string(char *);					/* escape string for html form usage */
-
-void get_time_breakdown(unsigned long,int *,int *,int *,int *);	/* given total seconds, get days, hours, minutes, seconds */
-
-void get_log_archive_to_use(int,char *,int);			/* determines the name of the log archive to use */
+void get_log_archive_to_use(int, char *, int);			/* determines the name of the log archive to use */
 void determine_log_rotation_times(int);
 int determine_archive_to_use_from_time(time_t);
 
-void print_extra_hostgroup_url(char *,char *);
-void print_extra_servicegroup_url(char *,char *);
+void print_extra_hostgroup_url(char *, char *);
+void print_extra_servicegroup_url(char *, char *);
 
-void display_info_table(char *,int,authdata *);
-void display_nav_table(char *,int);
+void display_info_table(char *, int, authdata *);
+void display_nav_table(char *, int);
 
 void display_splunk_host_url(host *);
 void display_splunk_service_url(service *);
-void display_splunk_generic_url(char *,int);
+void display_splunk_generic_url(char *, int);
 void strip_splunk_query_terms(char *);
 
-void include_ssi_files(char *,int);                             /* include user-defined SSI footers/headers */
+void include_ssi_files(char *, int);                            /* include user-defined SSI footers/headers */
 void include_ssi_file(char *);                                  /* include user-defined SSI footer/header */
 
 void cgi_config_file_error(char *);
@@ -519,14 +474,5 @@ void free_lifo_memory(void);
 int push_lifo(char *);
 char *pop_lifo(void);
 
-mmapfile *mmap_fopen(char *);					/* open a file read-only using mmap() */
-int mmap_fclose(mmapfile *);
-char *mmap_fgets(mmapfile *);
-char *mmap_fgets_multiline(mmapfile *);
-
-#ifdef __cplusplus
-}
+NAGIOS_END_DECL
 #endif
-
-#endif
-

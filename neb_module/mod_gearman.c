@@ -30,7 +30,7 @@
 NEB_API_VERSION( CURRENT_NEB_API_VERSION )
 
 /* import some global variables */
-extern int            event_broker_options;
+extern unsigned long  event_broker_options;
 extern int            currently_running_host_checks;
 extern int            currently_running_service_checks;
 extern int            service_check_timeout;
@@ -38,11 +38,11 @@ extern int            host_check_timeout;
 extern timed_event  * event_list_low;
 extern timed_event  * event_list_low_tail;
 extern int            process_performance_data;
-extern check_result   check_result_info;
+//extern check_result   check_result_info;
 extern check_result * check_result_list;
 
 /* global variables */
-static check_result * mod_gm_result_list = 0;
+static objectlist * mod_gm_result_list = 0;
 static pthread_mutex_t mod_gm_result_list_mutex = PTHREAD_MUTEX_INITIALIZER;
 void *gearman_module_handle=NULL;
 gearman_client_st client;
@@ -65,7 +65,6 @@ static void  set_target_queue( host *, service * );
 static int   handle_process_events( int, void * );
 static int   handle_timed_events( int, void * );
 static void  start_threads(void);
-static check_result * merge_result_lists(check_result * lista, check_result * listb);
 static void move_results_to_core(void);
 
 int nebmodule_init( int flags, char *args, nebmodule *handle ) {
@@ -272,56 +271,29 @@ static int handle_timed_events( int event_type, void *data ) {
 }
 
 
-/* merge results with core */
-static check_result * merge_result_lists(check_result * lista, check_result * listb) {
-    check_result * result = 0;
-
-    check_result ** iter;
-    for (iter = &result; lista && listb; iter = &(*iter)->next) {
-        if (mod_gm_time_compare(&lista->finish_time, &listb->finish_time) <= 0) {
-            *iter = lista; lista = lista->next;
-        } else {
-            *iter = listb; listb = listb->next;
-        }
-    }
-
-    *iter = lista? lista: listb;
-
-    return result;
-}
-
-
 /* insert results list into core */
 static void move_results_to_core() {
-   check_result * local;
+    /* safely save off currently local list */
+    pthread_mutex_lock(&mod_gm_result_list_mutex);
 
-   /* safely save off currently local list */
-   pthread_mutex_lock(&mod_gm_result_list_mutex);
-   local = mod_gm_result_list;
-   mod_gm_result_list = 0;
-   pthread_mutex_unlock(&mod_gm_result_list_mutex);
+    objectlist *tmp_list = NULL;
+    for (mod_gm_result_list; mod_gm_result_list; mod_gm_result_list = mod_gm_result_list->next) {
+        free(tmp_list);
+        process_check_result(mod_gm_result_list->object_ptr);
+        tmp_list = mod_gm_result_list;
+    }
+    mod_gm_result_list = 0;
+    free(tmp_list);
 
-   /* merge local into check_result_list, store in check_result_list */
-   check_result_list = merge_result_lists(local, check_result_list);
+    pthread_mutex_unlock(&mod_gm_result_list_mutex);
 }
 
 
 /* add list to gearman result list */
 void mod_gm_add_result_to_list(check_result * newcr) {
-   check_result ** curp;
-
-   assert(newcr);
-
-   pthread_mutex_lock(&mod_gm_result_list_mutex);
-
-   for (curp = &mod_gm_result_list; *curp; curp = &(*curp)->next)
-      if (mod_gm_time_compare(&(*curp)->finish_time, &newcr->finish_time) >= 0)
-         break;
-
-   newcr->next = *curp;
-   *curp = newcr;
-
-   pthread_mutex_unlock(&mod_gm_result_list_mutex);
+    pthread_mutex_lock(&mod_gm_result_list_mutex);
+    add_object_to_objectlist(&mod_gm_result_list, newcr);
+    pthread_mutex_unlock(&mod_gm_result_list_mutex);
 }
 
 
@@ -530,7 +502,7 @@ static int handle_host_check( int event_type, void *data ) {
     hst->check_options = CHECK_OPTION_NONE;
 
     /* adjust host check attempt */
-    adjust_host_check_attempt_3x(hst,TRUE);
+    adjust_host_check_attempt(hst,TRUE);
 
     temp_buffer[0]='\x0';
 
@@ -545,7 +517,7 @@ static int handle_host_check( int event_type, void *data ) {
         chk_result->scheduled_check     = TRUE;
         chk_result->reschedule_check    = TRUE;
         chk_result->output_file         = 0;
-        chk_result->output_file_fd      = -1;
+        chk_result->output_file_fp      = -1;
         chk_result->output              = strdup(temp_buffer);
         chk_result->return_code         = 2;
         chk_result->check_options       = CHECK_OPTION_NONE;
@@ -564,7 +536,7 @@ static int handle_host_check( int event_type, void *data ) {
     grab_host_macros(hst);
 
     /* get the raw command line */
-    get_raw_command_line(hst->check_command_ptr,hst->host_check_command,&raw_command,0);
+    get_raw_command_line(hst->check_command_ptr,hst->check_command,&raw_command,0);
     if(raw_command==NULL){
         gm_log( GM_LOG_ERROR, "Raw check command for host '%s' was NULL - aborting.\n",hst->name );
         return NEBERROR_CALLBACKCANCEL;
@@ -704,7 +676,7 @@ static int handle_svc_check( int event_type, void *data ) {
         chk_result->scheduled_check     = TRUE;
         chk_result->reschedule_check    = TRUE;
         chk_result->output_file         = 0;
-        chk_result->output_file_fd      = -1;
+        chk_result->output_file_fp      = -1;
         chk_result->output              = strdup(temp_buffer);
         chk_result->return_code         = 2;
         chk_result->check_options       = CHECK_OPTION_NONE;
@@ -732,7 +704,7 @@ static int handle_svc_check( int event_type, void *data ) {
     grab_service_macros(svc);
 
     /* get the raw command line */
-    get_raw_command_line(svc->check_command_ptr,svc->service_check_command,&raw_command,0);
+    get_raw_command_line(svc->check_command_ptr,svc->check_command,&raw_command,0);
     if(raw_command==NULL){
         gm_log( GM_LOG_ERROR, "Raw check command for service '%s' on host '%s' was NULL - aborting.\n", svc->description, svc->host_name );
         return NEBERROR_CALLBACKCANCEL;
@@ -777,8 +749,8 @@ static int handle_svc_check( int event_type, void *data ) {
     snprintf( uniq,GM_BUFFERSIZE-1,"%s-%s", svcdata->host_name, svcdata->service_description);
 
     /* execute forced checks with high prio as they are propably user requested */
-    if(check_result_info.check_options & CHECK_OPTION_FORCE_EXECUTION)
-        prio = GM_JOB_PRIO_HIGH;
+    //if(check_result_info.check_options & CHECK_OPTION_FORCE_EXECUTION)
+    //    prio = GM_JOB_PRIO_HIGH;
 
     if(add_job_to_queue( &client,
                          mod_gm_opt->server_list,
@@ -1090,7 +1062,7 @@ int handle_perfdata(int event_type, void *data) {
                             "SERVICESTATETYPE::%d\n\n\n",
                             (int)srvchkdata->timestamp.tv_sec,
                             srvchkdata->host_name, srvchkdata->service_description,
-                            srvchkdata->perf_data, svc->service_check_command,
+                            srvchkdata->perf_data, svc->check_command,
                             srvchkdata->state, srvchkdata->state_type);
                 temp_buffer[GM_BUFFERSIZE-1]='\x0';
                 has_perfdata = TRUE;
@@ -1141,20 +1113,6 @@ int handle_export(int callback_type, void *data) {
 
     /* what type of event/data do we have? */
     switch (callback_type) {
-        case NEBCALLBACK_RESERVED0:                         /*  0 */
-            break;
-        case NEBCALLBACK_RESERVED1:                         /*  1 */
-            break;
-        case NEBCALLBACK_RESERVED2:                         /*  2 */
-            break;
-        case NEBCALLBACK_RESERVED3:                         /*  3 */
-            break;
-        case NEBCALLBACK_RESERVED4:                         /*  4 */
-            break;
-        case NEBCALLBACK_RAW_DATA:                          /*  5 */
-            break;
-        case NEBCALLBACK_NEB_DATA:                          /*  6 */
-            break;
         case NEBCALLBACK_PROCESS_DATA:                      /*  7 */
             npd    = (nebstruct_process_data *)data;
             type   = nebtype2str(npd->type);

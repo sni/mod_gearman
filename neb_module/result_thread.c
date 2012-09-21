@@ -28,6 +28,19 @@
 #include "mod_gearman.h"
 #include "gearman_utils.h"
 
+static const char *gearman_worker_source_name(void *source) {
+    if(!source)
+        return "unknown internal source (voodoo, perhaps?)";
+
+    return (char*) source;
+}
+
+struct check_engine mod_gearman_check_engine = {
+    "Mod-Gearman",
+    gearman_worker_source_name,
+    NULL
+};
+
 /* cleanup and exit this thread */
 static void cancel_worker_thread (void * data) {
 
@@ -157,7 +170,9 @@ void *get_results( gearman_job_st *job, void *context, size_t *result_size, gear
     chk_result->scheduled_check     = TRUE;
     chk_result->reschedule_check    = TRUE;
     chk_result->output_file         = 0;
-    chk_result->output_file_fd      = -1;
+    chk_result->output_file_fp      = -1;
+
+    chk_result->engine              = &mod_gearman_check_engine;
 
     core_start_time.tv_sec          = 0;
     core_start_time.tv_usec         = 0;
@@ -185,6 +200,8 @@ void *get_results( gearman_job_st *job, void *context, size_t *result_size, gear
             chk_result->host_name = strdup( value );
         } else if ( !strcmp( key, "service_description" ) ) {
             chk_result->service_description = strdup( value );
+        } else if ( !strcmp( key, "source" ) ) {
+            chk_result->source = strdup( value );
         } else if ( !strcmp( key, "check_options" ) ) {
             chk_result->check_options = atoi( value );
         } else if ( !strcmp( key, "scheduled_check" ) ) {
@@ -276,6 +293,7 @@ void *get_results( gearman_job_st *job, void *context, size_t *result_size, gear
     } else {
 #ifdef GM_DEBUG
         /* does this host exist */
+/* TODO: this is done by core already! no need to do this twice */
         host * hst = find_host( chk_result->host_name );
         if(hst == NULL) {
             write_debug_file(&decrypted_orig);

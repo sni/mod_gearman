@@ -225,13 +225,17 @@ int execute_safe_command(gm_job_t * exec_job, int fork_exec, char * identifier) 
     int pclose_result;
     char *plugin_output, *plugin_error;
     char *bufdup;
-    char buffer[GM_BUFFERSIZE], buf_error[GM_BUFFERSIZE];
+    char buffer[GM_BUFFERSIZE], buf_error[GM_BUFFERSIZE], source[GM_BUFFERSIZE];
     struct timeval start_time,end_time;
     pid_t pid    = 0;
     buffer[0]    = '\x0';
     buf_error[0] = '\x0';
+    source[0]    = '\x0';
 
     gm_log( GM_LOG_TRACE, "execute_safe_command()\n" );
+
+    snprintf( source, sizeof( source )-1, "Mod-Gearman Worker @ %s", identifier);
+    exec_job->source = strdup(source);
 
     if(exec_job->start_time.tv_sec == 0) {
         gettimeofday(&start_time,NULL);

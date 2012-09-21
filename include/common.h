@@ -258,6 +258,7 @@ typedef struct gm_job_struct {
     char         * result_queue;        /**< name of the result queue */
     char         * output;              /**< output from the executed command line (stdout) */
     char         * error;               /**< errors from the executed command line (stderr) */
+    char         * source;              /**< source of this check */
     int            return_code;         /**< return code for this job */
     int            early_timeout;       /**< did the check run into a timeout */
     int            check_options;       /**< check_options given from the core */
