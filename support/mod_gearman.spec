@@ -1,5 +1,5 @@
 Name:          mod_gearman
-Version:       1.3.8
+Version:       1.4_nagios4
 Release:       1%{?dist}
 License:       GNU Public License version 2
 Packager:      Sven Nierlein <sven.nierlein@consol.de>
