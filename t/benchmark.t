@@ -6,6 +6,8 @@ use Test::More tests => 8;
 use Data::Dumper;
 use Time::HiRes qw( gettimeofday tv_interval sleep );
 
+alarm(120);
+
 my $TESTPORT    = 54730;
 my $NR_TST_JOBS = 2000;
 
