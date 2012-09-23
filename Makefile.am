@@ -103,7 +103,7 @@ replace_vars = sed -e 's:%CONFIG_WORKER%:$(sysconfdir)/mod_gearman_worker.conf:g
                -e 's:%WORKERBIN%:$(bindir)/mod_gearman_worker:g' \
                -e 's:%USER%:$(user):g'
 
-EXTRA_DIST = COPYING etc/*.in extras include \
+EXTRA_DIST = COPYING etc/*.in extras include lib \
              THANKS README docs/README.html Changes worker/initscript.in \
              docs/QUICKSTART docs/QUICKSTART.html support/mod_gearman.spec \
              t/data/* t/rc t/both t/killer t/sleep t/*.pl t/*.t \
