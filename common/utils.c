@@ -1142,6 +1142,7 @@ int set_default_job(gm_job_t *job, mod_gm_opt_t *opt) {
     job->service_description = NULL;
     job->result_queue        = NULL;
     job->command_line        = NULL;
+    job->source              = NULL;
     job->output              = NULL;
     job->error               = NULL;
     job->exited_ok           = TRUE;
@@ -1167,7 +1168,8 @@ int free_job(gm_job_t *job) {
     free(job->result_queue);
     free(job->command_line);
     free(job->output);
-    free(job->source);
+    if(job->source != NULL)
+        free(job->source);
     if(job->error != NULL)
         free(job->error);
     free(job);
