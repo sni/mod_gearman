@@ -234,9 +234,6 @@ int execute_safe_command(gm_job_t * exec_job, int fork_exec, char * identifier) 
 
     gm_log( GM_LOG_TRACE, "execute_safe_command()\n" );
 
-    snprintf( source, sizeof( source )-1, "Mod-Gearman Worker @ %s", identifier);
-    exec_job->source = strdup(source);
-
     if(exec_job->start_time.tv_sec == 0) {
         gettimeofday(&start_time,NULL);
         exec_job->start_time = start_time;
@@ -380,6 +377,9 @@ int execute_safe_command(gm_job_t * exec_job, int fork_exec, char * identifier) 
         free(exec_job->output);
         exec_job->output = strdup( buffer );
     }
+
+    snprintf( source, sizeof( source )-1, "Mod-Gearman Worker @ %s", identifier);
+    exec_job->source = strdup(source);
 
     return(GM_OK);
 }
