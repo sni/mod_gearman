@@ -778,10 +778,11 @@ static int handle_svc_check( int event_type, void *data ) {
         chk_result->latency             = 0;
         mod_gm_add_result_to_list( chk_result );
         chk_result = NULL;
-        return NEBERROR_CALLBACKCANCEL;
     }
 
     /* tell nagios to not execute */
+    gm_log( GM_LOG_TRACE, "handle_svc_check() finished successfully -> %d\n", NEBERROR_CALLBACKOVERRIDE );
+
     return NEBERROR_CALLBACKOVERRIDE;
 }
 
