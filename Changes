@@ -1,5 +1,8 @@
 This file documents the revision history for mod_gearman.
 
+1.4.0 not yet released
+          - force check on orphaned events
+
 1.3.8 Sun Aug 19 16:52:13 CEST 2012
           - fixed sending 2 results back when hit timeout
 
