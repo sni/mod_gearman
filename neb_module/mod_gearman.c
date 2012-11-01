@@ -506,31 +506,6 @@ static int handle_host_check( int event_type, void *data ) {
 
     temp_buffer[0]='\x0';
 
-    /* orphanded check? */
-    if(mod_gm_opt->orphan_host_checks == GM_ENABLED && check_options & CHECK_OPTION_ORPHAN_CHECK) {
-        gm_log( GM_LOG_DEBUG, "host check for %s orphanded\n", hst->name );
-        if ( ( chk_result = ( check_result * )malloc( sizeof *chk_result ) ) == 0 )
-            return NEBERROR_CALLBACKCANCEL;
-        snprintf( temp_buffer,GM_BUFFERSIZE-1,"(host check orphaned, is the mod-gearman worker on queue '%s' running?)\n", target_queue);
-        init_check_result(chk_result);
-        chk_result->host_name           = strdup( hst->name );
-        chk_result->scheduled_check     = TRUE;
-        chk_result->reschedule_check    = TRUE;
-        chk_result->output_file         = 0;
-        chk_result->output_file_fp      = -1;
-        chk_result->output              = strdup(temp_buffer);
-        chk_result->return_code         = 2;
-        chk_result->check_options       = CHECK_OPTION_NONE;
-        chk_result->object_check_type   = HOST_CHECK;
-        chk_result->check_type          = HOST_CHECK_ACTIVE;
-        chk_result->start_time.tv_sec   = (unsigned long)time(NULL);
-        chk_result->finish_time.tv_sec  = (unsigned long)time(NULL);
-        chk_result->latency             = 0;
-        mod_gm_add_result_to_list( chk_result );
-        chk_result = NULL;
-        return NEBERROR_CALLBACKCANCEL;
-    }
-
     /* grab the host macro variables */
     clear_volatile_macros();
     grab_host_macros(hst);
@@ -604,6 +579,30 @@ static int handle_host_check( int event_type, void *data ) {
     my_free(raw_command);
     my_free(processed_command);
 
+    /* orphanded check - submit fake result to mark host as orphaned */
+    if(mod_gm_opt->orphan_host_checks == GM_ENABLED && check_options & CHECK_OPTION_ORPHAN_CHECK) {
+        gm_log( GM_LOG_DEBUG, "host check for %s orphanded\n", hst->name );
+        if ( ( chk_result = ( check_result * )malloc( sizeof *chk_result ) ) == 0 )
+            return NEBERROR_CALLBACKCANCEL;
+        snprintf( temp_buffer,GM_BUFFERSIZE-1,"(host check orphaned, is the mod-gearman worker on queue '%s' running?)\n", target_queue);
+        init_check_result(chk_result);
+        chk_result->host_name           = strdup( hst->name );
+        chk_result->scheduled_check     = TRUE;
+        chk_result->reschedule_check    = TRUE;
+        chk_result->output_file         = 0;
+        chk_result->output_file_fd      = -1;
+        chk_result->output              = strdup(temp_buffer);
+        chk_result->return_code         = 2;
+        chk_result->check_options       = CHECK_OPTION_NONE;
+        chk_result->object_check_type   = HOST_CHECK;
+        chk_result->check_type          = HOST_CHECK_ACTIVE;
+        chk_result->start_time.tv_sec   = (unsigned long)time(NULL);
+        chk_result->finish_time.tv_sec  = (unsigned long)time(NULL);
+        chk_result->latency             = 0;
+        mod_gm_add_result_to_list( chk_result );
+        chk_result = NULL;
+    }
+
     /* tell nagios to not execute */
     gm_log( GM_LOG_TRACE, "handle_host_check() finished successfully -> %d\n", NEBERROR_CALLBACKOVERRIDE );
     return NEBERROR_CALLBACKOVERRIDE;
@@ -663,32 +662,6 @@ static int handle_svc_check( int event_type, void *data ) {
     gm_log( GM_LOG_DEBUG, "received job for queue %s: %s - %s\n", target_queue, svcdata->host_name, svcdata->service_description );
 
     temp_buffer[0]='\x0';
-
-    /* orphanded check? */
-    if(mod_gm_opt->orphan_service_checks == GM_ENABLED && svc->check_options & CHECK_OPTION_ORPHAN_CHECK) {
-        gm_log( GM_LOG_DEBUG, "service check for %s - %s orphanded\n", svc->host_name, svc->description );
-        if ( ( chk_result = ( check_result * )malloc( sizeof *chk_result ) ) == 0 )
-            return NEBERROR_CALLBACKCANCEL;
-        snprintf( temp_buffer,GM_BUFFERSIZE-1,"(service check orphaned, is the mod-gearman worker on queue '%s' running?)\n", target_queue);
-        init_check_result(chk_result);
-        chk_result->host_name           = strdup( svc->host_name );
-        chk_result->service_description = strdup( svc->description );
-        chk_result->scheduled_check     = TRUE;
-        chk_result->reschedule_check    = TRUE;
-        chk_result->output_file         = 0;
-        chk_result->output_file_fp      = -1;
-        chk_result->output              = strdup(temp_buffer);
-        chk_result->return_code         = 2;
-        chk_result->check_options       = CHECK_OPTION_NONE;
-        chk_result->object_check_type   = SERVICE_CHECK;
-        chk_result->check_type          = SERVICE_CHECK_ACTIVE;
-        chk_result->start_time.tv_sec   = (unsigned long)time(NULL);
-        chk_result->finish_time.tv_sec  = (unsigned long)time(NULL);
-        chk_result->latency             = 0;
-        mod_gm_add_result_to_list( chk_result );
-        chk_result = NULL;
-        return NEBERROR_CALLBACKCANCEL;
-    }
 
     /* as we have to intercept service checks so early
      * (we cannot cancel checks otherwise)
@@ -781,6 +754,32 @@ static int handle_svc_check( int event_type, void *data ) {
     /* clean up */
     my_free(raw_command);
     my_free(processed_command);
+
+    /* orphanded check - submit fake result to mark service as orphaned */
+    if(mod_gm_opt->orphan_service_checks == GM_ENABLED && svc->check_options & CHECK_OPTION_ORPHAN_CHECK) {
+        gm_log( GM_LOG_DEBUG, "service check for %s - %s orphanded\n", svc->host_name, svc->description );
+        if ( ( chk_result = ( check_result * )malloc( sizeof *chk_result ) ) == 0 )
+            return NEBERROR_CALLBACKCANCEL;
+        snprintf( temp_buffer,GM_BUFFERSIZE-1,"(service check orphaned, is the mod-gearman worker on queue '%s' running?)\n", target_queue);
+        init_check_result(chk_result);
+        chk_result->host_name           = strdup( svc->host_name );
+        chk_result->service_description = strdup( svc->description );
+        chk_result->scheduled_check     = TRUE;
+        chk_result->reschedule_check    = TRUE;
+        chk_result->output_file         = 0;
+        chk_result->output_file_fd      = -1;
+        chk_result->output              = strdup(temp_buffer);
+        chk_result->return_code         = 2;
+        chk_result->check_options       = CHECK_OPTION_NONE;
+        chk_result->object_check_type   = SERVICE_CHECK;
+        chk_result->check_type          = SERVICE_CHECK_ACTIVE;
+        chk_result->start_time.tv_sec   = (unsigned long)time(NULL);
+        chk_result->finish_time.tv_sec  = (unsigned long)time(NULL);
+        chk_result->latency             = 0;
+        mod_gm_add_result_to_list( chk_result );
+        chk_result = NULL;
+        return NEBERROR_CALLBACKCANCEL;
+    }
 
     /* tell nagios to not execute */
     return NEBERROR_CALLBACKOVERRIDE;
