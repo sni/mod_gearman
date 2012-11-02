@@ -509,6 +509,7 @@ int main (int argc, char **argv, char **env) {
         kill(gearmand_pid, SIGTERM);
         waitpid(gearmand_pid, &status, 0);
         ok(status == 0, "gearmand exited with exit code %d", real_exit_code(status));
+        status = 0;
         ok(false, "gearmand had to be killed!");
     }
     todo();
@@ -519,7 +520,7 @@ int main (int argc, char **argv, char **env) {
     kill(worker_pid, SIGTERM);
     waitpid(worker_pid, &status, 0);
     ok(status == 0, "worker exited with exit code %d", real_exit_code(status));
-    check_logfile(worker_logfile, status != 0 ? 3 : 0);
+    check_logfile(worker_logfile, 2);
     status = 0;
 
 #ifdef EMBEDDEDPERL
