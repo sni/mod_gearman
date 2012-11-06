@@ -170,7 +170,7 @@ void *get_results( gearman_job_st *job, void *context, size_t *result_size, gear
     chk_result->scheduled_check     = TRUE;
     chk_result->reschedule_check    = TRUE;
     chk_result->output_file         = 0;
-    chk_result->output_file_fp      = -1;
+    chk_result->output_file_fp      = NULL;
 
     chk_result->engine              = &mod_gearman_check_engine;
 
