@@ -590,7 +590,7 @@ static int handle_host_check( int event_type, void *data ) {
         chk_result->scheduled_check     = TRUE;
         chk_result->reschedule_check    = TRUE;
         chk_result->output_file         = 0;
-        chk_result->output_file_fd      = -1;
+        chk_result->output_file_fp      = NULL;
         chk_result->output              = strdup(temp_buffer);
         chk_result->return_code         = 2;
         chk_result->check_options       = CHECK_OPTION_NONE;
@@ -767,7 +767,7 @@ static int handle_svc_check( int event_type, void *data ) {
         chk_result->scheduled_check     = TRUE;
         chk_result->reschedule_check    = TRUE;
         chk_result->output_file         = 0;
-        chk_result->output_file_fd      = -1;
+        chk_result->output_file_fp      = NULL;
         chk_result->output              = strdup(temp_buffer);
         chk_result->return_code         = 2;
         chk_result->check_options       = CHECK_OPTION_NONE;
