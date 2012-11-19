@@ -22,6 +22,7 @@ CONFIG=%CONFIG_WORKER%
 PIDFILE=%PIDFILE%
 USER=%USER%
 USERID=`id -u`
+MAXTRIES=3
 
 # load extra environment variables
 if [ -f /etc/sysconfig/mod_gearman_worker ]; then
@@ -30,8 +31,8 @@ fi
 
 # create state dir
 if [ "$USERID" -eq 0 ]; then
-  mkdir -p $(dirname $PIDFILE)
-  chown $USER: $(dirname $PIDFILE)
+    mkdir -p $(dirname $PIDFILE)
+    chown $USER: $(dirname $PIDFILE)
 fi
 
 case "$1" in
@@ -56,7 +57,7 @@ case "$1" in
             echo ". Not running."
         else
             kill $pid
-            for x in 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5; do
+            for x in `seq 20`; do
                 echo -n "."
                 ps -p $pid > /dev/null 2>&1 && sleep 1;
             done
@@ -90,9 +91,24 @@ case "$1" in
         exit 1;
     ;;
     restart)
-        $0 stop && sleep 1 && $0 start
+        tries=1
+        echo -n "[$tries/$MAXTRIES] "
+        $0 stop
+        while [ $tries -lt $MAXTRIES -a $? -ne 0 ]; do
+            (( tries++ ))
+            echo -n "[$tries/$MAXTRIES] "
+            $0 stop
+        done
+
+        if [ $tries -eq $MAXTRIES ]; then
+            echo "$NAME is taking too long to stop, restart failed"
+            exit 1;
+        fi
+
+        sleep 1
+        $0 start
         exit $?
-        ;;
+    ;;
     *)
         echo "Usage: $NAME {start|stop|status|restart}"
         exit 1

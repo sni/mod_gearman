@@ -245,6 +245,7 @@ install-data-local: install-local-state-dir $(install_p1file)
 install-config:
 	$(install_sh_PROGRAM) etc/mod_gearman_neb.conf $(DESTDIR)$(sysconfdir)/mod_gearman_neb.conf
 	$(install_sh_PROGRAM) etc/mod_gearman_worker.conf $(DESTDIR)$(sysconfdir)/mod_gearman_worker.conf
+	$(install_sh_PROGRAM) etc/mod_gearman_worker_logrotate $(DESTDIR)$(sysconfdir)/../logrotate.d/mod_gearman_worker
 	@echo "################################################################"
 	@echo ""
 	@echo " configuration:"
