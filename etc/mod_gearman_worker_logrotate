@@ -1,0 +1,8 @@
+/var/log/mod_gearman/*log {
+    missingok
+    notifempty
+    sharedscripts
+    postrotate
+        /sbin/service mod_gearman_worker restart > /dev/null 2>/dev/null || true
+    endscript
+}
