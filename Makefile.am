@@ -26,11 +26,13 @@ EXTRA_02_full_SOURCES=common/perlxsi.c common/epn_utils.c
 EXTRA_03_exec_SOURCES=common/perlxsi.c common/epn_utils.c
 EXTRA_06_exec_SOURCES=common/perlxsi.c common/epn_utils.c
 EXTRA_07_epn_SOURCES=common/perlxsi.c common/epn_utils.c
+EPN_BIN = mod_gearman_mini_epn
 else
 PERLLIB        =
 P1FILE         =
 install_p1file =
 perl_objects   =
+EPN_BIN        =
 endif
 
 # source definitions
@@ -109,6 +111,8 @@ EXTRA_DIST = COPYING etc/*.in extras include lib \
              t/data/* t/rc t/both t/killer t/sleep t/*.pl t/*.t \
              worker/mod_gearman_p1.pl t/test_all.pl t/valgrind_suppress.cfg contrib
 
+include contrib/Makefile.am
+
 # other targets
 mod_gearman.o: $(mod_gearman_so_OBJECTS) $(mod_gearman_so_DEPENDENCIES)
 	@echo '    $$(CC) $<'
@@ -151,7 +155,7 @@ gearmand-init-local:
 	@sed -i -e 's:%GEARMAND%:/usr/sbin/gearmand:g' extras/gearmand-init
 	@chmod 755 extras/gearmand-init
 
-all-local: mod_gearman.o initscript-local mod_gearman_neb.conf-local mod_gearman_worker.conf-local gearmand-init-local
+all-local: mod_gearman.o initscript-local mod_gearman_neb.conf-local mod_gearman_worker.conf-local gearmand-init-local $(EPN_BIN)
 	@echo ""
 	@echo "################################################################"
 	@echo ""
@@ -162,7 +166,8 @@ all-local: mod_gearman.o initscript-local mod_gearman_neb.conf-local mod_gearman
 	@echo "  worker/initscript"
 	@echo "  etc/mod_gearman_neb.conf"
 	@echo "  etc/mod_gearman_worker.conf"
-	@echo "  $(P1FILE)"
+	@[ "$(P1FILE)"  != "" ] && echo "  $(P1FILE)"
+	@[ "$(EPN_BIN)" != "" ] && echo "  $(EPN_BIN)"
 	@echo ""
 	@echo "  read the README for configuration details"
 	@echo ""
@@ -172,10 +177,10 @@ all-local: mod_gearman.o initscript-local mod_gearman_neb.conf-local mod_gearman
 	@echo "################################################################"
 
 distclean-local: clean
-	$(RM) -rf .deps/ Makefile.in aclocal.m4 autom4te.cache config.* configure depcomp install-sh missing *.gz
+	$(RM) -rf .deps/ Makefile.in aclocal.m4 autom4te.cache config.* configure depcomp install-sh missing *.gz contrib/.deps/ contrib/.dirstamp
 
 clean-local:
-	$(RM) -f worker.static worker/initscript etc/mod_gearman.conf rpm.topdir *.o */*.o extras/gearmand-init etc/mod_gearman_neb.conf etc/mod_gearman_worker.conf
+	$(RM) -f worker.static worker/initscript etc/mod_gearman.conf rpm.topdir *.o */*.o extras/gearmand-init etc/mod_gearman_neb.conf etc/mod_gearman_worker.conf mod_gearman_mini_epn perlxsi.c
 
 worker.static: worker
 	@echo "################################################################"
@@ -245,6 +250,7 @@ install-data-local: install-local-state-dir $(install_p1file)
 install-config:
 	$(install_sh_PROGRAM) etc/mod_gearman_neb.conf $(DESTDIR)$(sysconfdir)/mod_gearman_neb.conf
 	$(install_sh_PROGRAM) etc/mod_gearman_worker.conf $(DESTDIR)$(sysconfdir)/mod_gearman_worker.conf
+	$(install_sh_PROGRAM) etc/mod_gearman_worker_logrotate $(DESTDIR)$(sysconfdir)/../logrotate.d/mod_gearman_worker
 	@echo "################################################################"
 	@echo ""
 	@echo " configuration:"

@@ -33,3 +33,9 @@ common/perlxsi.c
 etc/mod_gearman_neb.conf
 etc/mod_gearman_worker.conf
 worker.log
+contrib/.deps
+contrib/.dirstamp
+mod_gearman_mini_epn
+mod_gearman_mini_epn.o
+perlxsi.c
+perlxsi.o

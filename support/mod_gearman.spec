@@ -14,7 +14,7 @@ BuildRequires: gearmand-devel
 Summary:       Gearman module for Icinga/Nagios
 Requires(pre,post): /sbin/ldconfig
 Requires(pre): shadow-utils
-Requires:      gearmand, perl
+Requires:      gearmand, perl, logrotate
 
 Provides:      mod_gearman
 
@@ -71,6 +71,7 @@ exit 0
 %attr(755,root,root) %{_initrddir}/mod_gearman_worker
 %config(noreplace) %{_sysconfdir}/mod_gearman/mod_gearman_neb.conf
 %config(noreplace) %{_sysconfdir}/mod_gearman/mod_gearman_worker.conf
+%config(noreplace) %{_sysconfdir}/logrotate.d/mod_gearman_worker
 
 %{_datadir}/mod_gearman/standalone_worker.conf
 %{_datadir}/mod_gearman/shared.conf
@@ -92,6 +93,9 @@ exit 0
 %docdir %{_defaultdocdir}
 
 %changelog
+* Mon Nov 19 2012 Ricardo Maraschini <ricardo.maraschini@opservices.com.br>
+- added logrotate configuration file
+
 * Fri Apr 06 2012 Sven Nierlein <sven@consol.de>
 - added gearman_proxy to package
 
