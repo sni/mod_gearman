@@ -109,7 +109,8 @@ EXTRA_DIST = COPYING etc/*.in extras include \
              THANKS README docs/README.html Changes worker/initscript.in \
              docs/QUICKSTART docs/QUICKSTART.html support/mod_gearman.spec \
              t/data/* t/rc t/both t/killer t/sleep t/*.pl t/*.t \
-             worker/mod_gearman_p1.pl t/test_all.pl t/valgrind_suppress.cfg contrib
+             worker/mod_gearman_p1.pl t/test_all.pl t/valgrind_suppress.cfg contrib \
+             etc/mod_gearman_worker_logrotate
 
 include contrib/Makefile.am
 
