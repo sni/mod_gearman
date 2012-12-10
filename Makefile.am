@@ -289,10 +289,12 @@ docs:
 	cp -p README.asciidoc docs/README && cd docs && asciidoc --unsafe -a toc -a toclevels=2 -a max-width=800 README
 	chmod 644 docs/README.html
 	$(DOS2UNIX) docs/README.html
+	./replace_doc_toc.pl docs/README.html
 	$(RM) -f docs/README
 	cd docs && asciidoc --unsafe -a toc -a toclevels=2 -a max-width=800 QUICKSTART
 	chmod 644 docs/QUICKSTART.html
 	$(DOS2UNIX) docs/QUICKSTART.html
+	./replace_doc_toc.pl docs/QUICKSTART.html
 
 rpm: dist
 	mkdir -p $(RPM_TOPDIR)/{SOURCES,BUILD,RPMS,SRPMS,SPECS}
