@@ -109,7 +109,8 @@ EXTRA_DIST = COPYING etc/*.in extras include lib \
              THANKS README docs/README.html Changes worker/initscript.in \
              docs/QUICKSTART docs/QUICKSTART.html support/mod_gearman.spec \
              t/data/* t/rc t/both t/killer t/sleep t/*.pl t/*.t \
-             worker/mod_gearman_p1.pl t/test_all.pl t/valgrind_suppress.cfg contrib
+             worker/mod_gearman_p1.pl t/test_all.pl t/valgrind_suppress.cfg contrib \
+             etc/mod_gearman_worker_logrotate
 
 include contrib/Makefile.am
 
@@ -166,8 +167,8 @@ all-local: mod_gearman.o initscript-local mod_gearman_neb.conf-local mod_gearman
 	@echo "  worker/initscript"
 	@echo "  etc/mod_gearman_neb.conf"
 	@echo "  etc/mod_gearman_worker.conf"
-	@[ "$(P1FILE)"  != "" ] && echo "  $(P1FILE)"
-	@[ "$(EPN_BIN)" != "" ] && echo "  $(EPN_BIN)"
+	@[ "$(P1FILE)"  = "" ] || echo "  $(P1FILE)"
+	@[ "$(EPN_BIN)" = "" ] || echo "  $(EPN_BIN)"
 	@echo ""
 	@echo "  read the README for configuration details"
 	@echo ""
@@ -289,10 +290,12 @@ docs:
 	cp -p README.asciidoc docs/README && cd docs && asciidoc --unsafe -a toc -a toclevels=2 -a max-width=800 README
 	chmod 644 docs/README.html
 	$(DOS2UNIX) docs/README.html
+	./replace_doc_toc.pl docs/README.html
 	$(RM) -f docs/README
 	cd docs && asciidoc --unsafe -a toc -a toclevels=2 -a max-width=800 QUICKSTART
 	chmod 644 docs/QUICKSTART.html
 	$(DOS2UNIX) docs/QUICKSTART.html
+	./replace_doc_toc.pl docs/QUICKSTART.html
 
 rpm: dist
 	mkdir -p $(RPM_TOPDIR)/{SOURCES,BUILD,RPMS,SRPMS,SPECS}

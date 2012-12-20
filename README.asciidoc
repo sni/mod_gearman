@@ -507,7 +507,7 @@ logmode::
 Default is automatic.
 +
 ====
-    debug=1
+    logmode=automatic
 ====
 
 

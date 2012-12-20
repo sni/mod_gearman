@@ -156,13 +156,13 @@ void print_usage() {
     printf(" - Thresholds are only for server checks, worker checks are availability only\n");
     printf("\n");
     printf("perfdata format when checking job server:\n");
-    printf(" |'queue waiting'=current waiting jobs;warn;crit;0 'queue running'=current running jobs 'queue worker'=current num worker;warn;crit;0\n");
+    printf(" 'queue waiting'=current waiting jobs;warn;crit;0 'queue running'=current running jobs 'queue worker'=current num worker;warn;crit;0\n");
     printf("\n");
     printf("Note: set your pnp RRD_STORAGE_TYPE to MULTIPLE to support changeing numbers of queues.\n");
     printf("      see http://docs.pnp4nagios.org/de/pnp-0.6/tpl_custom for detailed information\n");
     printf("\n");
     printf("perfdata format when checking mod gearman worker:\n");
-    printf(" |worker=10 jobs=1508c\n");
+    printf(" worker=10 jobs=1508c\n");
     printf("\n");
     printf("Note: Job thresholds are per queue not totals.\n");
     printf("\n");
@@ -171,12 +171,12 @@ void print_usage() {
     printf("Check job server:\n");
     printf("\n");
     printf("%%>./check_gearman -H localhost -q host\n");
-    printf("check_gearman OK - 0 jobs running and 0 jobs waiting. Version: 0.14|'host_waiting'=0;10;15;0 'host_running'=0 'host_worker'=3;5;10;0\n");
+    printf("check_gearman OK - 0 jobs running and 0 jobs waiting. Version: 0.14\n");
     printf("\n");
     printf("Check worker:\n");
     printf("\n");
     printf("%%> ./check_gearman -H <job server hostname> -q worker_<worker hostname> -t 10 -s check\n");
-    printf("check_gearman OK - host has 5 worker and is working on 0 jobs|worker=5 jobs=96132c\n");
+    printf("check_gearman OK - host has 5 worker and is working on 0 jobs\n");
     printf("\n");
 
     exit( STATE_UNKNOWN );

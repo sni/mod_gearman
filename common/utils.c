@@ -688,6 +688,22 @@ int parse_args_line(mod_gm_opt_t *opt, char * arg, int recursion_level) {
         if(opt->spawn_rate < 0) { opt->spawn_rate = GM_DEFAULT_SPAWN_RATE; }
     }
 
+    /* load limit 1min */
+    else if ( !strcmp( key, "load_limit1" ) ) {
+        opt->load_limit1 = atof( value );
+        if(opt->load_limit1 < 0) { opt->load_limit1 = 0; }
+    }
+    /* load limit 5min */
+    else if ( !strcmp( key, "load_limit5" ) ) {
+        opt->load_limit5 = atof( value );
+        if(opt->load_limit5 < 0) { opt->load_limit5 = 0; }
+    }
+    /* load limit 15min */
+    else if ( !strcmp( key, "load_limit15" ) ) {
+        opt->load_limit15 = atof( value );
+        if(opt->load_limit15 < 0) { opt->load_limit15 = 0; }
+    }
+
     /* timeout_return */
     else if ( !strcmp( key, "timeout_return" ) ) {
         opt->timeout_return = atoi( value );

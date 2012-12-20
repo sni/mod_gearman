@@ -225,6 +225,9 @@ typedef struct mod_gm_opt_struct {
     int            show_error_output;                       /**< optional display the stderr output of plugins */
     int            timeout_return;                          /**< timeout return code */
     int            dup_results_are_passive;                 /**< send duplicate results as passive checks */
+    double         load_limit1;                             /**< load limit 1min for new worker */
+    double         load_limit5;                             /**< load limit 5min for new worker */
+    double         load_limit15;                            /**< load limit 15min for new worker */
 #ifdef EMBEDDEDPERL
     int            enable_embedded_perl;                    /**< enabled embedded perl */
     int            use_embedded_perl_implicitly;            /**< use embedded perl implicitly */

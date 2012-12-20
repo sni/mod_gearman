@@ -5,6 +5,7 @@ This file documents the revision history for mod_gearman.
           - force check on orphaned events
           - added mini epn
           - added logrotate config (Ricardo Maraschini)
+          - added new option load_limit1,5,15 to prevent new workers from spawning under heavy load. (sponsored by Ovido GmbH)
 
 1.4.0 Fri Sep 21 19:53:07 CEST 2012
           - special release for nagios4 preview
