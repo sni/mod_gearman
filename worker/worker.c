@@ -462,49 +462,56 @@ int verify_options(mod_gm_opt_t *opt) {
 
 /* print usage */
 void print_usage() {
-    printf("usage:\n");
+    printf("Usage: worker [OPTION]...\n");
     printf("\n");
-    printf("worker [ --debug=<lvl>                            ]\n");
-    printf("       [ --logmode=<automatic|stdout|syslog|file> ]\n");
-    printf("       [ --logfile=<path>                         ]\n");
-    printf("       [ --debug-result                           ]\n");
-    printf("       [ --help|-h                                ]\n");
-    printf("       [ --daemon|-d                              ]\n");
-    printf("       [ --config=<configfile>                    ]\n");
-    printf("       [ --server=<server>                        ]\n");
-    printf("       [ --dupserver=<server>                     ]\n");
+    printf("Mod-Gearman worker executes host- and servicechecks.\n");
     printf("\n");
-    printf("       [ --hosts               ]\n");
-    printf("       [ --services            ]\n");
-    printf("       [ --eventhandler        ]\n");
-    printf("       [ --hostgroup=<name>    ]\n");
-    printf("       [ --servicegroup=<name> ]\n");
-    printf("       [ --do_hostchecks       ]\n");
+    printf("Basic Settings:\n");
+    printf("       --debug=<lvl>                                \n");
+    printf("       --logmode=<automatic|stdout|syslog|file>     \n");
+    printf("       --logfile=<path>                             \n");
+    printf("       --debug-result                               \n");
+    printf("       --help|-h                                    \n");
+    printf("       --daemon|-d                                  \n");
+    printf("       --config=<configfile>                        \n");
+    printf("       --server=<server>                            \n");
+    printf("       --dupserver=<server>                         \n");
     printf("\n");
-    printf("       [ --min-worker=<nr>     ]\n");
-    printf("       [ --max-worker=<nr>     ]\n");
+    printf("Encryption:\n");
+    printf("       --encryption=<yes|no>                        \n");
+    printf("       --key=<string>                               \n");
+    printf("       --keyfile=<file>                             \n");
     printf("\n");
-    printf("       [ --max-age=<sec>       ]\n");
-    printf("       [ --timeout             ]\n");
+    printf("Job Control:\n");
+    printf("       --hosts                                      \n");
+    printf("       --services                                   \n");
+    printf("       --eventhandler                               \n");
+    printf("       --hostgroup=<name>                           \n");
+    printf("       --servicegroup=<name>                        \n");
+    printf("       --do_hostchecks                              \n");
+    printf("       --max-age=<sec>                              \n");
+    printf("       --timeout                                    \n");
     printf("\n");
-    printf("       [ --encryption=<yes|no> ]\n");
-    printf("       [ --key=<string>        ]\n");
-    printf("       [ --keyfile=<file>      ]\n");
+    printf("Worker Control:\n");
+    printf("       --min-worker=<nr>                            \n");
+    printf("       --max-worker=<nr>                            \n");
+    printf("       --idle-timeout=<nr>                          \n");
+    printf("       --max-jobs=<nr>                              \n");
+    printf("       --spawn-rate=<nr>                            \n");
+    printf("       --fork_on_exec                               \n");
+    printf("       --load_limit1=load1                          \n");
+    printf("       --load_limit5=load5                          \n");
+    printf("       --load_limit15=load15                        \n");
+    printf("       --show_error_output                          \n");
     printf("\n");
-    printf("       [ --min-worker=<nr>     ]\n");
-    printf("       [ --max-worker=<nr>     ]\n");
-    printf("       [ --idle-timeout=<nr>   ]\n");
-    printf("       [ --max-jobs=<nr>       ]\n");
-    printf("       [ --spawn-rate=<nr>     ]\n");
-    printf("       [ --fork_on_exec        ]\n");
-    printf("       [ --show_error_output   ]\n");
+    printf("Embedded Perl:\n");
+    printf("       --enable_embedded_perl                      \n");
+    printf("       --use_embedded_perl_implicitly              \n");
+    printf("       --use_perl_cache                            \n");
+    printf("       --p1_file                                   \n");
     printf("\n");
-    printf("       [ --enable_embedded_perl         ]\n");
-    printf("       [ --use_embedded_perl_implicitly ]\n");
-    printf("       [ --use_perl_cache               ]\n");
-    printf("       [ --p1_file                      ]\n");
-    printf("\n");
-    printf("       [ --workaround_rc_25    ]\n");
+    printf("Miscellaneous:\n");
+    printf("       --workaround_rc_25\n");
     printf("\n");
     printf("see README for a detailed explaination of all options.\n");
     printf("\n");
@@ -548,6 +555,7 @@ int adjust_number_of_worker(int min, int max, int cur_workers, int cur_jobs) {
     int perc_running;
     int idle;
     int target = min;
+    double load[3];
 
     if(cur_workers == 0) {
         gm_log( GM_LOG_TRACE3, "adjust_number_of_worker(min %d, max %d, worker %d, jobs %d) -> %d\n", min, max, cur_workers, cur_jobs, mod_gm_opt->min_worker);
@@ -564,7 +572,24 @@ int adjust_number_of_worker(int min, int max, int cur_workers, int cur_jobs) {
 
     /* > 90% workers running */
     if(cur_jobs > 0 && ( perc_running > 90 || idle <= 2 )) {
-        /* increase target number by 2 */
+        if (getloadavg(load, 3) == -1) {
+            gm_log( GM_LOG_ERROR, "failed to get current load\n");
+            perror("getloadavg");
+        }
+        if(mod_gm_opt->load_limit1 > 0 && load[0] >= mod_gm_opt->load_limit1) {
+            gm_log( GM_LOG_TRACE, "load limit 1min hit, not starting any more workers: %1.2f > %1.2f\n", load[0], mod_gm_opt->load_limit1);
+            return cur_workers;
+        }
+        if(mod_gm_opt->load_limit5 > 0 && load[1] >= mod_gm_opt->load_limit5) {
+            gm_log( GM_LOG_TRACE, "load limit 5min hit, not starting any more workers: %1.2f > %1.2f\n", load[1], mod_gm_opt->load_limit5);
+            return cur_workers;
+        }
+        if(mod_gm_opt->load_limit15 > 0 && load[2] >= mod_gm_opt->load_limit15) {
+            gm_log( GM_LOG_TRACE, "load limit 15min hit, not starting any more workers: %1.2f > %1.2f\n", load[2], mod_gm_opt->load_limit15);
+            return cur_workers;
+        }
+
+        /* increase target number by spawn rate */
         gm_log( GM_LOG_TRACE, "starting %d new workers\n", mod_gm_opt->spawn_rate);
         target = cur_workers + mod_gm_opt->spawn_rate;
     }
