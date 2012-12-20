@@ -829,6 +829,35 @@ waiting. Default: 1
 ====
 
 
+load_limit1::
+Set a limit based on the 1min load average. When exceding the load limit,
+no new worker will be started until the current load is below the limit.
+No limit will be used when set to 0.
+Default: no limit
++
+====
+    load_limit1=0
+====
+
+
+load_limit5::
+Set a limit based on the 5min load average. See 'load_limit1' for details.
+Default: no limit
++
+====
+    load_limit5=0
+====
+
+
+load_limit15::
+Set a limit based on the 15min load average. See 'load_limit1' for details.
+Default: no limit
++
+====
+    load_limit15=0
+====
+
+
 idle-timeout::
 Time in seconds after which an idling worker exits. This parameter
 controls how fast your waiting workers will exit if there are no jobs
