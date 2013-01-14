@@ -1,14 +1,16 @@
 This file documents the revision history for mod_gearman.
 
+next:
+          - fixed leaking FDs on reloading neb
 
-1.4.2 not yet released
+1.4.2 Thu Jan 10 10:56:37 CET 2013
           - force check on orphaned events
           - added mini epn
           - added logrotate config (Ricardo Maraschini)
           - added new option load_limit1,5,15 to prevent new workers from spawning under heavy load. (sponsored by Ovido GmbH)
 
-1.4.0 Fri Sep 21 19:53:07 CEST 2012
-          - special release for nagios4 preview
+1.4.0 Thu Sep 25 22:14:31 CEST 2012
+          - implemented support for nagios 4
 
 1.3.8 Sun Aug 19 16:52:13 CEST 2012
           - fixed sending 2 results back when hit timeout

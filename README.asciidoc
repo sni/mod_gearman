@@ -38,8 +38,8 @@ Features
 
 Download
 --------
- * Latest stable http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.3.8.tar.gz[version 1.3.8], released August 19 2012
- * Mod Gearman is available for download at: http://labs.consol.de/nagios/mod-gearman
+ * Latest stable http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.4.2.tar.gz[version 1.4.2], released January 10 2013
+ * Mod Gearman is available for download at: http://mod-gearman.org/download.html
  * Source is available on GitHub: http://github.com/sni/mod_gearman
  * Older versions are available in the <<_archive,download archive>>.
  * Mod-Gearman is also included in http://omdistro.org[OMD].
@@ -829,6 +829,35 @@ waiting. Default: 1
 ====
 
 
+load_limit1::
+Set a limit based on the 1min load average. When exceding the load limit,
+no new worker will be started until the current load is below the limit.
+No limit will be used when set to 0.
+Default: no limit
++
+====
+    load_limit1=0
+====
+
+
+load_limit5::
+Set a limit based on the 5min load average. See 'load_limit1' for details.
+Default: no limit
++
+====
+    load_limit5=0
+====
+
+
+load_limit15::
+Set a limit based on the 15min load average. See 'load_limit1' for details.
+Default: no limit
++
+====
+    load_limit15=0
+====
+
+
 idle-timeout::
 Time in seconds after which an idling worker exits. This parameter
 controls how fast your waiting workers will exit if there are no jobs
@@ -1267,6 +1296,7 @@ Hints
 Archive
 -------
 
+* http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.4.2.tar.gz[version 1.4.2 - January 10 2013]
 * http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.3.8.tar.gz[version 1.3.8 - August 19 2012]
 * http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.3.6.tar.gz[version 1.3.6 - July 19 2012]
 * http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.3.4.tar.gz[version 1.3.4 - June 19 2012]
