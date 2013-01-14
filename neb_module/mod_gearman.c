@@ -246,6 +246,11 @@ int nebmodule_deinit( int flags, int reason ) {
     /* cleanup */
     free_client(&client);
 
+    /* close old logfile */
+    if(mod_gm_opt->logfile_fp != NULL) {
+        fclose(mod_gm_opt->logfile_fp);
+    }
+
     mod_gm_free_opt(mod_gm_opt);
 
     return NEB_OK;
