@@ -87,7 +87,7 @@ if USEBSD
 else
 05_neb_LDADD=-ldl
 endif
-05_neb_LDFLAGS   = --export-dynamic -rdynamic
+05_neb_LDFLAGS   = -Wl,--export-dynamic -rdynamic
 07_epn_SOURCES   = $(common_SOURCES) t/tap.h t/tap.c t/07-epn.c $(common_check_SOURCES)
 # only used for performance tests
 06_exec_SOURCES  = $(common_SOURCES) t/06-execvp_vs_popen.c $(common_check_SOURCES)
