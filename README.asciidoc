@@ -1,11 +1,11 @@
-Gearman Module for Nagios / Icinga
-==================================
+Nagios Gearman Module
+=====================
 
 What is Mod-Gearman
 -------------------
 
 http://labs.consol.de/nagios/mod-gearman[Mod_Gearman] is an easy way
-of distributing active Nagios/Icinga checks across your network and
+of distributing active Nagios checks across your network and
 increasing Nagios scalability. Mod-Gearman can even help to reduce the
 load on a single Nagios host, because its much smaller and more
 efficient in executing checks.
@@ -45,19 +45,18 @@ Download
  * Mod-Gearman is also included in http://omdistro.org[OMD].
  * Debian users should use the http://packages.debian.org/source/wheezy/mod-gearman[official packages]
  * SLES/RHEL/Centos users should use the http://mod-gearman.org/download/[prebuild packages]
+ * Debian/Ubuntu users might also want to check out the http://mod-gearman.org/download/[unoffical packages]
 
 
 
 Support
 -------
  * Professional support and consulting is available via http://www.consol.de/open-source-monitoring/support/[www.consol.de]
- * http://labs.consol.de/lang/de/forum/#/categories/mod-gearman[support forum]
  * https://groups.google.com/group/mod_gearman[google groups mailinglist]
  * http://www.monitoring-portal.org[german monitoring portal]
- * Debian users may be interested in the http://labs.consol.de/nagios/mod-gearman/mod-gearman-quickstart-guide/[quickstart guide].
- * Mod-Gearman has been succesfully tested with latest Nagios/Icinga.
+ * Mod-Gearman has been succesfully tested with latest Nagios.
    See <<_supported_dependencies,Supported Dependencies>> for details.
- * There are no known bugs at the moment.  Let me know if you find one.
+ * There are no known bugs at the moment. Let me know if you find one.
 
 
 Changelog
@@ -324,7 +323,9 @@ Debian / Ubuntu
 ~~~~~~~~~~~~~~~
 It is strongly recommended to use the
 http://packages.debian.org/source/wheezy/mod-gearman[official
-packages].
+packages] or the http://mod-gearman.org/download/[unoffical packages] which
+contains Debian Squeeze and various Ubuntu packages.
+
 
 
 Centos/Redhat
@@ -376,6 +377,8 @@ Finally start and check your installation
 
 From Source
 ~~~~~~~~~~~
+
+NOTE: source installation should be avoided if possible. Prebuild packages are way easier to maintain.
 
 Pre Requirements:
 
@@ -1075,6 +1078,8 @@ Nagios box. The amount of worker boxes depends on your check types.
 <a title="mod gearman performance" rel="lightbox[mod_gm]" href="http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman_performance_1.png"><img src="http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman_performance_1.png" alt="mod_gearman performance" width="424" height="176" style="float:none" /></a>
 ++++
 
+See this article about benchmarks with https://labs.consol.de/blog/nagios/monitoring-core-benchmarks/[Nagios3, Nagios4 and Mod-Gearman].
+
 
 Exports
 -------
@@ -1243,6 +1248,9 @@ to be implemented in the near future.
 Supported Dependencies
 ----------------------
 
+NOTE: Mod-Gearman works best with libgearman/gearmand 0.25 and Nagios 3.2.3. If in
+doubt, use these versions.
+
 Lib-Gearman
 ~~~~~~~~~~~
 Mod-Gearman has successfully been tested on the following Gearmand
@@ -1256,18 +1264,18 @@ libgearman.
 
 Nagios
 ~~~~~~
-Mod-Gearman works perfect with the latest stable nagios 3.2.3. Version
+Mod-Gearman works perfect with the latest stable Nagios 3.2.3. Version
 3.3.1 has some serious bugs and is not recommended for use in
 production.
 
- * http://sourceforge.net/projects/nagios/files/nagios-3.x/nagios-3.2.3/[Nagios 3.2.3]
+ * http://nagios.org[Nagios]
 
 Icinga
 ~~~~~~
 Mod-Gearman has succesfully been tested on Icinga 1.2.0 and is running
-perfectly on up to the current version 1.6.1.
+perfectly on up to the version 1.8.
 
- * http://sourceforge.net/projects/icinga/files/icinga/1.6.1/[Icinga 1.6.1]
+ * http://icinga.org[Icinga]
 
 
 
