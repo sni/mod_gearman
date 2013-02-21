@@ -22,7 +22,12 @@ It consists of three parts:
  * See the <<_common_scenarios,common scenarios>> for some examples.
 
 
-http://labs.consol.de/wp-content/uploads/2010/09/Mod-Gearman.pdf[Have a look at the slides of the last Mod-Gearman presentation on the Nagios Workshop 2011 in Hannover]
+Presentations
+-------------
+
+ * http://mod-gearman.org/slides/Mod-Gearman-2012-10-18.pdf[Monitoring Conference 2012 in Nürnberg]
+ * http://mod-gearman.org/slides/Mod-Gearman-2011-05-24.pdf[Nagios Workshop 2011 in Hannover]
+
 
 Features
 --------

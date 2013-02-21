@@ -107,7 +107,7 @@ replace_vars = sed -e 's:%CONFIG_WORKER%:$(sysconfdir)/mod_gearman_worker.conf:g
 
 EXTRA_DIST = COPYING etc/*.in extras include \
              THANKS README docs/README.html Changes worker/initscript.in \
-             docs/QUICKSTART docs/QUICKSTART.html support/mod_gearman.spec \
+             support/mod_gearman.spec \
              t/data/* t/rc t/both t/killer t/sleep t/*.pl t/*.t \
              worker/mod_gearman_p1.pl t/test_all.pl t/valgrind_suppress.cfg contrib \
              etc/mod_gearman_worker_logrotate
@@ -292,10 +292,6 @@ docs:
 	$(DOS2UNIX) docs/README.html
 	./replace_doc_toc.pl docs/README.html
 	$(RM) -f docs/README
-	cd docs && asciidoc --unsafe -a toc -a toclevels=2 -a max-width=800 QUICKSTART
-	chmod 644 docs/QUICKSTART.html
-	$(DOS2UNIX) docs/QUICKSTART.html
-	./replace_doc_toc.pl docs/QUICKSTART.html
 
 rpm: dist
 	mkdir -p $(RPM_TOPDIR)/{SOURCES,BUILD,RPMS,SRPMS,SPECS}
@@ -315,7 +311,7 @@ mrproper:
 version:
 	if [ -z "$$NEWVERSION" ]; then NEWVERSION=$$(dialog --stdout --inputbox "New Version:" 0 0 "$(VERSION)"); fi; \
 	if [ -n "$$NEWVERSION" ] && [ "$$NEWVERSION" != "$(VERSION)" ]; then \
-		sed -ri "s/$(VERSION)/$$NEWVERSION/" include/common.h configure.ac docs/QUICKSTART support/mod_gearman.spec; \
+		sed -ri "s/$(VERSION)/$$NEWVERSION/" include/common.h configure.ac support/mod_gearman.spec; \
 		sed -i Changes -e "s/$(VERSION)/$$NEWVERSION $(shell date)\n          - ...\n\n$(VERSION)/"; \
 		$(MAKE) docs; \
 	fi;
