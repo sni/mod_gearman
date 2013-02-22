@@ -4,7 +4,7 @@
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 <meta name="generator" content="AsciiDoc 8.5.2" />
-<title>Gearman Module for Nagios / Icinga</title>
+<title>Nagios Gearman Module</title>
 <style type="text/css">
 /* Debug borders */
 p, li, dt, dd, div, pre, h1, h2, h3, h4, h5, h6 {
@@ -419,9 +419,10 @@ div#toc a:visited { color: blue; }
 </head>
 <body style="max-width:800">
 <div id="header">
-<h1>Gearman Module for Nagios / Icinga</h1>
+<h1>Nagios Gearman Module</h1>
 <div id="toc"><div id="toctitle">Table of Contents</div>
 <div class='toclevel1'><a href='#_what_is_mod_gearman'>What is Mod-Gearman</a></div>
+<div class='toclevel1'><a href='#_presentations'>Presentations</a></div>
 <div class='toclevel1'><a href='#_features'>Features</a></div>
 <div class='toclevel1'><a href='#_download'>Download</a></div>
 <div class='toclevel1'><a href='#_support'>Support</a></div>
@@ -468,7 +469,7 @@ div#toc a:visited { color: blue; }
 <h2 id="_what_is_mod_gearman">What is Mod-Gearman</h2>
 <div class="sectionbody">
 <div class="paragraph"><p><a href="http://labs.consol.de/nagios/mod-gearman">Mod_Gearman</a> is an easy way
-of distributing active Nagios/Icinga checks across your network and
+of distributing active Nagios checks across your network and
 increasing Nagios scalability. Mod-Gearman can even help to reduce the
 load on a single Nagios host, because its much smaller and more
 efficient in executing checks.</p></div>
@@ -499,7 +500,21 @@ See the <a href="#_common_scenarios">common scenarios</a> for some examples.
 </p>
 </li>
 </ul></div>
-<div class="paragraph"><p><a href="http://labs.consol.de/wp-content/uploads/2010/09/Mod-Gearman.pdf">Have a look at the slides of the last Mod-Gearman presentation on the Nagios Workshop 2011 in Hannover</a></p></div>
+</div>
+<h2 id="_presentations">Presentations</h2>
+<div class="sectionbody">
+<div class="ulist"><ul>
+<li>
+<p>
+<a href="http://mod-gearman.org/slides/Mod-Gearman-2012-10-18.pdf">Monitoring Conference 2012 in Nürnberg</a>
+</p>
+</li>
+<li>
+<p>
+<a href="http://mod-gearman.org/slides/Mod-Gearman-2011-05-24.pdf">Nagios Workshop 2011 in Hannover</a>
+</p>
+</li>
+</ul></div>
 </div>
 <h2 id="_features">Features</h2>
 <div class="sectionbody">
@@ -580,6 +595,11 @@ Debian users should use the <a href="http://packages.debian.org/source/wheezy/mo
 SLES/RHEL/Centos users should use the <a href="http://mod-gearman.org/download/">prebuild packages</a>
 </p>
 </li>
+<li>
+<p>
+Debian/Ubuntu users might also want to check out the <a href="http://mod-gearman.org/download/">unoffical packages</a>
+</p>
+</li>
 </ul></div>
 </div>
 <h2 id="_support">Support</h2>
@@ -588,11 +608,6 @@ SLES/RHEL/Centos users should use the <a href="http://mod-gearman.org/download/"
 <li>
 <p>
 Professional support and consulting is available via <a href="http://www.consol.de/open-source-monitoring/support/">www.consol.de</a>
-</p>
-</li>
-<li>
-<p>
-<a href="http://labs.consol.de/lang/de/forum/#/categories/mod-gearman">support forum</a>
 </p>
 </li>
 <li>
@@ -607,18 +622,13 @@ Professional support and consulting is available via <a href="http://www.consol.
 </li>
 <li>
 <p>
-Debian users may be interested in the <a href="http://labs.consol.de/nagios/mod-gearman/mod-gearman-quickstart-guide/">quickstart guide</a>.
-</p>
-</li>
-<li>
-<p>
-Mod-Gearman has been succesfully tested with latest Nagios/Icinga.
+Mod-Gearman has been succesfully tested with latest Nagios.
    See <a href="#_supported_dependencies">Supported Dependencies</a> for details.
 </p>
 </li>
 <li>
 <p>
-There are no known bugs at the moment.  Let me know if you find one.
+There are no known bugs at the moment. Let me know if you find one.
 </p>
 </li>
 </ul></div>
@@ -910,7 +920,8 @@ to <em>on</em>.</p></div>
 <h3 id="_debian_ubuntu">Debian / Ubuntu</h3><div style="clear:left"></div>
 <div class="paragraph"><p>It is strongly recommended to use the
 <a href="http://packages.debian.org/source/wheezy/mod-gearman">official
-packages</a>.</p></div>
+packages</a> or the <a href="http://mod-gearman.org/download/">unoffical packages</a> which
+contains Debian Squeeze and various Ubuntu packages.</p></div>
 <h3 id="_centos_redhat">Centos/Redhat</h3><div style="clear:left"></div>
 <div class="paragraph"><p>The easy and proper way is to build RPM packages. The following steps
 assume a Centos 5.7. Other releases may have different versions but
@@ -968,6 +979,14 @@ will fail. It may not be necessary for future gearman versions.</td>
 #&gt; gearman_top</tt></pre>
 </div></div>
 <h3 id="_from_source">From Source</h3><div style="clear:left"></div>
+<div class="admonitionblock">
+<table><tr>
+<td class="icon">
+<div class="title">Note</div>
+</td>
+<td class="content">source installation should be avoided if possible. Prebuild packages are way easier to maintain.</td>
+</tr></table>
+</div>
 <div class="paragraph"><p>Pre Requirements:</p></div>
 <div class="ulist"><ul>
 <li>
@@ -2068,6 +2087,7 @@ easily setup 100.000 services at a 5 minute interval with a single
 Nagios box. The amount of worker boxes depends on your check types.</p></div>
 <a title="mod gearman performance" rel="lightbox[mod_gm]" href="http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman_performance_2.png"><img src="http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman_performance_2.png" alt="mod_gearman performance" width="473" height="122" style="float:none" /></a>
 <a title="mod gearman performance" rel="lightbox[mod_gm]" href="http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman_performance_1.png"><img src="http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman_performance_1.png" alt="mod_gearman performance" width="424" height="176" style="float:none" /></a>
+<div class="paragraph"><p>See this article about benchmarks with <a href="https://labs.consol.de/blog/nagios/monitoring-core-benchmarks/">Nagios3, Nagios4 and Mod-Gearman</a>.</p></div>
 </div>
 <h2 id="_exports">Exports</h2>
 <div class="sectionbody">
@@ -2241,6 +2261,15 @@ to be implemented in the near future.</p></div>
 </div>
 <h2 id="_supported_dependencies">Supported Dependencies</h2>
 <div class="sectionbody">
+<div class="admonitionblock">
+<table><tr>
+<td class="icon">
+<div class="title">Note</div>
+</td>
+<td class="content">Mod-Gearman works best with libgearman/gearmand 0.25 and Nagios 3.2.3. If in
+doubt, use these versions.</td>
+</tr></table>
+</div>
 <h3 id="_lib_gearman">Lib-Gearman</h3><div style="clear:left"></div>
 <div class="paragraph"><p>Mod-Gearman has successfully been tested on the following Gearmand
 Versions. It is recommended to always use the latest listed version of
@@ -2268,23 +2297,23 @@ libgearman.</p></div>
 </li>
 </ul></div>
 <h3 id="_nagios">Nagios</h3><div style="clear:left"></div>
-<div class="paragraph"><p>Mod-Gearman works perfect with the latest stable nagios 3.2.3. Version
+<div class="paragraph"><p>Mod-Gearman works perfect with the latest stable Nagios 3.2.3. Version
 3.3.1 has some serious bugs and is not recommended for use in
 production.</p></div>
 <div class="ulist"><ul>
 <li>
 <p>
-<a href="http://sourceforge.net/projects/nagios/files/nagios-3.x/nagios-3.2.3/">Nagios 3.2.3</a>
+<a href="http://nagios.org">Nagios</a>
 </p>
 </li>
 </ul></div>
 <h3 id="_icinga">Icinga</h3><div style="clear:left"></div>
 <div class="paragraph"><p>Mod-Gearman has succesfully been tested on Icinga 1.2.0 and is running
-perfectly on up to the current version 1.6.1.</p></div>
+perfectly on up to the version 1.8.</p></div>
 <div class="ulist"><ul>
 <li>
 <p>
-<a href="http://sourceforge.net/projects/icinga/files/icinga/1.6.1/">Icinga 1.6.1</a>
+<a href="http://icinga.org">Icinga</a>
 </p>
 </li>
 </ul></div>
@@ -2496,7 +2525,7 @@ Make sure all your worker have the Nagios-Plugins available under
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2013-01-10 18:45:03 CEST
+Last updated 2013-02-21 10:43:31 CEST
 </div>
 </div>
 </body>

@@ -1,6 +1,13 @@
 Installation
 ============
 
+Use Packages
+------------
+There are packages for Debian, Ubuntu, SLES, Redhat and Centos. Use them if
+possible.
+
+ - https://labs.consol.de/repo/
+
 Prerequirements
 ---------------
 
@@ -17,5 +24,4 @@ Building
  %> make test
  %> make install
 
-see the README for configuration examples and docs/QUICKSTART for detailed
-installation instructions for debian.
+see the README for configuration examples.
