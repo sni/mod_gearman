@@ -237,6 +237,7 @@ int set_default_options(mod_gm_opt_t *opt) {
     opt->perfdata_mode      = GM_PERFDATA_OVERWRITE;
     opt->use_uniq_jobs      = GM_ENABLED;
     opt->do_hostchecks      = GM_ENABLED;
+    opt->route_eventhandler_like_checks = GM_DISABLED;
     opt->hosts              = GM_DISABLED;
     opt->services           = GM_DISABLED;
     opt->events             = GM_DISABLED;
@@ -424,6 +425,12 @@ int parse_args_line(mod_gm_opt_t *opt, char * arg, int recursion_level) {
     /* do_hostchecks */
     else if ( !strcmp( key, "do_hostchecks" ) ) {
         opt->do_hostchecks = parse_yes_or_no(value, GM_ENABLED);
+        return(GM_OK);
+    }
+
+    /* route_eventhandler_like_checks */
+    else if ( !strcmp( key, "route_eventhandler_like_checks" ) ) {
+        opt->route_eventhandler_like_checks = parse_yes_or_no(value, GM_ENABLED);
         return(GM_OK);
     }
 
@@ -915,105 +922,106 @@ void dumpconfig(mod_gm_opt_t *opt, int mode) {
     int j=0;
     gm_log( GM_LOG_DEBUG, "--------------------------------\n" );
     gm_log( GM_LOG_DEBUG, "configuration:\n" );
-    gm_log( GM_LOG_DEBUG, "log level:           %d\n", opt->debug_level);
+    gm_log( GM_LOG_DEBUG, "log level:                       %d\n", opt->debug_level);
 
     if(opt->logmode == GM_LOG_MODE_AUTO)
-        gm_log( GM_LOG_DEBUG, "log mode:            auto (%d)\n", opt->logmode);
+        gm_log( GM_LOG_DEBUG, "log mode:                        auto (%d)\n", opt->logmode);
     if(opt->logmode == GM_LOG_MODE_FILE)
-        gm_log( GM_LOG_DEBUG, "log mode:            file (%d)\n", opt->logmode);
+        gm_log( GM_LOG_DEBUG, "log mode:                        file (%d)\n", opt->logmode);
     if(opt->logmode == GM_LOG_MODE_STDOUT)
-        gm_log( GM_LOG_DEBUG, "log mode:            stdout (%d)\n", opt->logmode);
+        gm_log( GM_LOG_DEBUG, "log mode:                        stdout (%d)\n", opt->logmode);
     if(opt->logmode == GM_LOG_MODE_CORE)
-        gm_log( GM_LOG_DEBUG, "log mode:            core (%d)\n", opt->logmode);
+        gm_log( GM_LOG_DEBUG, "log mode:                        core (%d)\n", opt->logmode);
     if(opt->logmode == GM_LOG_MODE_SYSLOG)
-        gm_log( GM_LOG_DEBUG, "log mode:            syslog (%d)\n", opt->logmode);
+        gm_log( GM_LOG_DEBUG, "log mode:                        syslog (%d)\n", opt->logmode);
     if(opt->logmode == GM_LOG_MODE_TOOLS)
-        gm_log( GM_LOG_DEBUG, "log mode:            tools (%d)\n", opt->logmode);
+        gm_log( GM_LOG_DEBUG, "log mode:                        tools (%d)\n", opt->logmode);
 
     if(mode == GM_WORKER_MODE) {
-        gm_log( GM_LOG_DEBUG, "identifier:          %s\n", opt->identifier);
-        gm_log( GM_LOG_DEBUG, "pidfile:             %s\n", opt->pidfile == NULL ? "no" : opt->pidfile);
-        gm_log( GM_LOG_DEBUG, "logfile:             %s\n", opt->logfile == NULL ? "no" : opt->logfile);
-        gm_log( GM_LOG_DEBUG, "job max num:         %d\n", opt->max_jobs);
-        gm_log( GM_LOG_DEBUG, "job max age:         %d\n", opt->max_age);
-        gm_log( GM_LOG_DEBUG, "job timeout:         %d\n", opt->job_timeout);
-        gm_log( GM_LOG_DEBUG, "min worker:          %d\n", opt->min_worker);
-        gm_log( GM_LOG_DEBUG, "max worker:          %d\n", opt->max_worker);
-        gm_log( GM_LOG_DEBUG, "spawn rate:          %d\n", opt->spawn_rate);
-        gm_log( GM_LOG_DEBUG, "fork on exec:        %s\n", opt->fork_on_exec == GM_ENABLED ? "yes" : "no");
+        gm_log( GM_LOG_DEBUG, "identifier:                      %s\n", opt->identifier);
+        gm_log( GM_LOG_DEBUG, "pidfile:                         %s\n", opt->pidfile == NULL ? "no" : opt->pidfile);
+        gm_log( GM_LOG_DEBUG, "logfile:                         %s\n", opt->logfile == NULL ? "no" : opt->logfile);
+        gm_log( GM_LOG_DEBUG, "job max num:                     %d\n", opt->max_jobs);
+        gm_log( GM_LOG_DEBUG, "job max age:                     %d\n", opt->max_age);
+        gm_log( GM_LOG_DEBUG, "job timeout:                     %d\n", opt->job_timeout);
+        gm_log( GM_LOG_DEBUG, "min worker:                      %d\n", opt->min_worker);
+        gm_log( GM_LOG_DEBUG, "max worker:                      %d\n", opt->max_worker);
+        gm_log( GM_LOG_DEBUG, "spawn rate:                      %d\n", opt->spawn_rate);
+        gm_log( GM_LOG_DEBUG, "fork on exec:                    %s\n", opt->fork_on_exec == GM_ENABLED ? "yes" : "no");
 #ifndef EMBEDDEDPERL
-        gm_log( GM_LOG_DEBUG, "embedded perl:       not compiled\n");
+        gm_log( GM_LOG_DEBUG, "embedded perl:                   not compiled\n");
 #endif
 #ifdef EMBEDDEDPERL
         gm_log( GM_LOG_DEBUG, "\n" );
-        gm_log( GM_LOG_DEBUG, "embedded perl:       %s\n", opt->enable_embedded_perl == GM_ENABLED ? "yes" : "no");
-        gm_log( GM_LOG_DEBUG, "use_epn_implicitly:  %s\n", opt->use_embedded_perl_implicitly == GM_ENABLED ? "yes" : "no");
-        gm_log( GM_LOG_DEBUG, "use_perl_cache:      %s\n", opt->use_perl_cache == GM_ENABLED ? "yes" : "no");
-        gm_log( GM_LOG_DEBUG, "p1_file:             %s\n", opt->p1_file == NULL ? "not set" : opt->p1_file );
+        gm_log( GM_LOG_DEBUG, "embedded perl:                   %s\n", opt->enable_embedded_perl == GM_ENABLED ? "yes" : "no");
+        gm_log( GM_LOG_DEBUG, "use_epn_implicitly:              %s\n", opt->use_embedded_perl_implicitly == GM_ENABLED ? "yes" : "no");
+        gm_log( GM_LOG_DEBUG, "use_perl_cache:                  %s\n", opt->use_perl_cache == GM_ENABLED ? "yes" : "no");
+        gm_log( GM_LOG_DEBUG, "p1_file:                         %s\n", opt->p1_file == NULL ? "not set" : opt->p1_file );
 #endif
     }
     if(mode == GM_NEB_MODE) {
-        gm_log( GM_LOG_DEBUG, "queue by cust var:   %s\n", opt->queue_cust_var == NULL ? "no" : opt->queue_cust_var);
-        gm_log( GM_LOG_DEBUG, "debug result:        %s\n", opt->debug_result == GM_ENABLED ? "yes" : "no");
-        gm_log( GM_LOG_DEBUG, "result_worker:       %d\n", opt->result_workers);
-        gm_log( GM_LOG_DEBUG, "do_hostchecks:       %s\n", opt->do_hostchecks == GM_ENABLED ? "yes" : "no");
+        gm_log( GM_LOG_DEBUG, "queue by cust var:               %s\n", opt->queue_cust_var == NULL ? "no" : opt->queue_cust_var);
+        gm_log( GM_LOG_DEBUG, "debug result:                    %s\n", opt->debug_result == GM_ENABLED ? "yes" : "no");
+        gm_log( GM_LOG_DEBUG, "result_worker:                   %d\n", opt->result_workers);
+        gm_log( GM_LOG_DEBUG, "do_hostchecks:                   %s\n", opt->do_hostchecks == GM_ENABLED ? "yes" : "no");
+        gm_log( GM_LOG_DEBUG, "route_eventhandler_like_checks:  %s\n", opt->route_eventhandler_like_checks == GM_ENABLED ? "yes" : "no");
     }
     if(mode == GM_NEB_MODE || mode == GM_SEND_GEARMAN_MODE) {
-        gm_log( GM_LOG_DEBUG, "result_queue:        %s\n", opt->result_queue);
+        gm_log( GM_LOG_DEBUG, "result_queue:                    %s\n", opt->result_queue);
     }
     gm_log( GM_LOG_DEBUG, "\n" );
 
     /* server && queues */
     for(i=0;i<opt->server_num;i++)
-        gm_log( GM_LOG_DEBUG, "server:              %s:%i\n", opt->server_list[i]->host, opt->server_list[i]->port);
+        gm_log( GM_LOG_DEBUG, "server:                          %s:%i\n", opt->server_list[i]->host, opt->server_list[i]->port);
     gm_log( GM_LOG_DEBUG, "\n" );
     for(i=0;i<opt->dupserver_num;i++)
-        gm_log( GM_LOG_DEBUG, "dupserver:           %s:%i\n", opt->dupserver_list[i]->host, opt->dupserver_list[i]->port);
+        gm_log( GM_LOG_DEBUG, "dupserver:                       %s:%i\n", opt->dupserver_list[i]->host, opt->dupserver_list[i]->port);
     gm_log( GM_LOG_DEBUG, "\n" );
     if(mode == GM_NEB_MODE) {
-        gm_log( GM_LOG_DEBUG, "perfdata:            %s\n", opt->perfdata      == GM_ENABLED ? "yes" : "no");
-        gm_log( GM_LOG_DEBUG, "perfdata mode:       %s\n", opt->perfdata_mode == GM_PERFDATA_OVERWRITE ? "overwrite" : "append");
+        gm_log( GM_LOG_DEBUG, "perfdata:                        %s\n", opt->perfdata      == GM_ENABLED ? "yes" : "no");
+        gm_log( GM_LOG_DEBUG, "perfdata mode:                   %s\n", opt->perfdata_mode == GM_PERFDATA_OVERWRITE ? "overwrite" : "append");
     }
     if(mode == GM_NEB_MODE || mode == GM_WORKER_MODE) {
-        gm_log( GM_LOG_DEBUG, "hosts:               %s\n", opt->hosts        == GM_ENABLED ? "yes" : "no");
-        gm_log( GM_LOG_DEBUG, "services:            %s\n", opt->services     == GM_ENABLED ? "yes" : "no");
-        gm_log( GM_LOG_DEBUG, "eventhandler:        %s\n", opt->events       == GM_ENABLED ? "yes" : "no");
+        gm_log( GM_LOG_DEBUG, "hosts:                           %s\n", opt->hosts        == GM_ENABLED ? "yes" : "no");
+        gm_log( GM_LOG_DEBUG, "services:                        %s\n", opt->services     == GM_ENABLED ? "yes" : "no");
+        gm_log( GM_LOG_DEBUG, "eventhandler:                    %s\n", opt->events       == GM_ENABLED ? "yes" : "no");
         for(i=0;i<opt->hostgroups_num;i++)
-            gm_log( GM_LOG_DEBUG, "hostgroups:          %s\n", opt->hostgroups_list[i]);
+            gm_log( GM_LOG_DEBUG, "hostgroups:                      %s\n", opt->hostgroups_list[i]);
         for(i=0;i<opt->servicegroups_num;i++)
-            gm_log( GM_LOG_DEBUG, "servicegroups:       %s\n", opt->servicegroups_list[i]);
+            gm_log( GM_LOG_DEBUG, "servicegroups:                   %s\n", opt->servicegroups_list[i]);
     }
 
     if(mode == GM_NEB_MODE) {
         for(i=0;i<opt->local_hostgroups_num;i++)
-            gm_log( GM_LOG_DEBUG, "local_hostgroups: %s\n", opt->local_hostgroups_list[i]);
+            gm_log( GM_LOG_DEBUG, "local_hostgroups:                %s\n", opt->local_hostgroups_list[i]);
         for(i=0;i<opt->local_servicegroups_num;i++)
-            gm_log( GM_LOG_DEBUG, "local_servicegroups:      %s\n", opt->local_servicegroups_list[i]);
+            gm_log( GM_LOG_DEBUG, "local_servicegroups:             %s\n", opt->local_servicegroups_list[i]);
         /* export queues*/
         for(i=0;i<GM_NEBTYPESSIZE;i++) {
             char * type = nebcallback2str(i);
             for(j=0;j<opt->exports[i]->elem_number;j++)
-                gm_log( GM_LOG_DEBUG, "export:              %-45s -> %s\n", type, opt->exports[i]->name[j]);
+                gm_log( GM_LOG_DEBUG, "export:                          %-45s -> %s\n", type, opt->exports[i]->name[j]);
             free(type);
         }
     }
 
     /* encryption */
     gm_log( GM_LOG_DEBUG, "\n" );
-    gm_log( GM_LOG_DEBUG, "encryption:          %s\n", opt->encryption == GM_ENABLED ? "yes" : "no");
+    gm_log( GM_LOG_DEBUG, "encryption:                      %s\n", opt->encryption == GM_ENABLED ? "yes" : "no");
     if(opt->encryption == GM_ENABLED) {
-        gm_log( GM_LOG_DEBUG, "keyfile:             %s\n", opt->keyfile == NULL ? "no" : opt->keyfile);
+        gm_log( GM_LOG_DEBUG, "keyfile:                         %s\n", opt->keyfile == NULL ? "no" : opt->keyfile);
         if(opt->crypt_key != NULL) {
-            gm_log( GM_LOG_DEBUG, "encryption key:      set\n" );
+            gm_log( GM_LOG_DEBUG, "encryption key:                  set\n" );
         } else {
-            gm_log( GM_LOG_DEBUG, "encryption key:      not set\n" );
+            gm_log( GM_LOG_DEBUG, "encryption key:                  not set\n" );
         }
     }
     if(mode == GM_NEB_MODE) {
-        gm_log( GM_LOG_DEBUG, "accept clear result: %s\n", opt->accept_clear_results == GM_ENABLED ? "yes" : "no");
+        gm_log( GM_LOG_DEBUG, "accept clear result:             %s\n", opt->accept_clear_results == GM_ENABLED ? "yes" : "no");
     }
-    gm_log( GM_LOG_DEBUG, "transport mode:      %s\n", opt->encryption == GM_ENABLED ? "aes-256+base64" : "base64 only");
-    gm_log( GM_LOG_DEBUG, "use uniq jobs:       %s\n", opt->use_uniq_jobs == GM_ENABLED ? "overwrite" : "append");
+    gm_log( GM_LOG_DEBUG, "transport mode:                  %s\n", opt->encryption == GM_ENABLED ? "aes-256+base64" : "base64 only");
+    gm_log( GM_LOG_DEBUG, "use uniq jobs:                   %s\n", opt->use_uniq_jobs == GM_ENABLED ? "overwrite" : "append");
 
     gm_log( GM_LOG_DEBUG, "--------------------------------\n" );
     return;
