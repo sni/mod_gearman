@@ -255,9 +255,9 @@ install-config:
 	@echo "################################################################"
 	@echo ""
 	@echo " configuration:"
-	@echo "         neb module: $(DESTDIR)$(sysconfdir)/mod_gearman_neb.conf"
-	@echo "         worker:     $(DESTDIR)$(sysconfdir)/mod_gearman_worker.conf"
-	@echo "         logrotate.d:     $(DESTDIR)$(sysconfdir)/logrotate.d/mod_gearman_worker"
+	@echo "         neb module:  $(DESTDIR)$(sysconfdir)/mod_gearman_neb.conf"
+	@echo "         worker:      $(DESTDIR)$(sysconfdir)/mod_gearman_worker.conf"
+	@echo "         logrotate.d: $(DESTDIR)$(sysconfdir)/logrotate.d/mod_gearman_worker"
 	@echo ""
 	@echo "################################################################"
 
