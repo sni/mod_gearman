@@ -237,14 +237,8 @@ install-data-local: install-local-state-dir $(install_p1file)
 	    echo " make install-config"; \
 	    echo ""; \
 	else \
-	    $(install_sh_PROGRAM) -m 644 etc/mod_gearman_neb.conf $(DESTDIR)$(sysconfdir)/mod_gearman_neb.conf; \
-	    $(install_sh_PROGRAM) -m 644 etc/mod_gearman_worker.conf $(DESTDIR)$(sysconfdir)/mod_gearman_worker.conf; \
+            make install-config; \
 	fi
-	@echo " configuration:"
-	@echo "         neb module: $(DESTDIR)$(sysconfdir)/mod_gearman_neb.conf"
-	@echo "         worker:     $(DESTDIR)$(sysconfdir)/mod_gearman_worker.conf"
-	@echo ""
-	@echo "################################################################"
 	$(RM) $(DESTDIR)$(pkglibdir)/mod_gearman.so
 
 
