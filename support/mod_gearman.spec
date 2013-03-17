@@ -36,7 +36,7 @@ be bound to host and servicegroups.
      --datadir="%{_datadir}" \
      --datarootdir="%{_datadir}" \
      --localstatedir="%{_localstatedir}" \
-     --sysconfdir="%{_sysconfdir}/mod_gearman" \
+     --sysconfdir="%{_sysconfdir}" \
      --with-init-dir="%{_initrddir}" \
      --enable-embedded-perl
 

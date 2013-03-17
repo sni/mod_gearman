@@ -95,7 +95,7 @@ TESTS            = $(check_PROGRAMS) t/benchmark.t
 
 
 GEARMANDS=/usr/sbin/gearmand /opt/sbin/gearmand
-replace_vars = sed -e 's:%CONFIG_WORKER%:$(sysconfdir)/mod_gearman_worker.conf:g' \
+replace_vars = sed -e 's:%CONFIG_WORKER%:$(sysconfdir)/mod_gearman/mod_gearman_worker.conf:g' \
                -e 's:%PIDFILE%:$(localstatedir)/mod_gearman/mod_gearman_worker.pid:g' \
                -e 's:%LOGFILE_NEB%:$(localstatedir)/log/mod_gearman/mod_gearman_neb.log:g' \
                -e 's:%LOGFILE_WORKER%:$(localstatedir)/log/mod_gearman/mod_gearman_worker.log:g' \
@@ -229,9 +229,9 @@ install-data-local: install-local-state-dir $(install_p1file)
 	@echo " send multi bin: $(DESTDIR)$(bindir)/send_multi"
 	@echo ""
 	@echo "just add the broker line to your nagios.cfg:"
-	@echo "broker_module=$(DESTDIR)$(pkglibdir)/mod_gearman.o config=$(DESTDIR)$(sysconfdir)/mod_gearman_neb.conf"
+	@echo "broker_module=$(DESTDIR)$(pkglibdir)/mod_gearman.o config=$(DESTDIR)$(sysconfdir)/mod_gearman/mod_gearman_neb.conf"
 	@echo ""
-	@if [ -e $(DESTDIR)$(sysconfdir)/mod_gearman_neb.conf -o -e $(DESTDIR)$(sysconfdir)/mod_gearman_worker.conf ]; then \
+	@if [ -e $(DESTDIR)$(sysconfdir)/mod_gearman/mod_gearman_neb.conf -o -e $(DESTDIR)$(sysconfdir)/mod_gearman/mod_gearman_worker.conf ]; then \
 	    echo " install default config with"; \
 	    echo ""; \
 	    echo " make install-config"; \
@@ -243,14 +243,14 @@ install-data-local: install-local-state-dir $(install_p1file)
 
 
 install-config:
-	$(install_sh_PROGRAM) etc/mod_gearman_neb.conf $(DESTDIR)$(sysconfdir)/mod_gearman_neb.conf
-	$(install_sh_PROGRAM) etc/mod_gearman_worker.conf $(DESTDIR)$(sysconfdir)/mod_gearman_worker.conf
+	$(install_sh_PROGRAM) etc/mod_gearman_neb.conf $(DESTDIR)$(sysconfdir)/mod_gearman/mod_gearman_neb.conf
+	$(install_sh_PROGRAM) etc/mod_gearman_worker.conf $(DESTDIR)$(sysconfdir)/mod_gearman/mod_gearman_worker.conf
 	$(install_sh_PROGRAM) etc/mod_gearman_worker_logrotate $(DESTDIR)$(sysconfdir)/logrotate.d/mod_gearman_worker
 	@echo "################################################################"
 	@echo ""
 	@echo " configuration:"
-	@echo "         neb module:  $(DESTDIR)$(sysconfdir)/mod_gearman_neb.conf"
-	@echo "         worker:      $(DESTDIR)$(sysconfdir)/mod_gearman_worker.conf"
+	@echo "         neb module:  $(DESTDIR)$(sysconfdir)/mod_gearman/mod_gearman_neb.conf"
+	@echo "         worker:      $(DESTDIR)$(sysconfdir)/mod_gearman/mod_gearman_worker.conf"
 	@echo "         logrotate.d: $(DESTDIR)$(sysconfdir)/logrotate.d/mod_gearman_worker"
 	@echo ""
 	@echo "################################################################"
