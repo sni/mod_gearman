@@ -405,7 +405,9 @@ int parse_args_line(mod_gm_opt_t *opt, char * arg, int recursion_level) {
     }
 
     /* debug-result */
-    else if ( !strcmp( key, "debug-result" ) ) {
+    else if (   !strcmp( key, "debug-result" )
+             || !strcmp( key, "debug_result" )
+            ) {
         opt->debug_result = parse_yes_or_no(value, GM_ENABLED);
         return(GM_OK);
     }
