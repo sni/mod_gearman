@@ -36,6 +36,7 @@ char * server_list[GM_LISTSIZE];
 int server_list_num = 0;
 WINDOW *w;
 
+void catcher( int );
 void catcher( int sig ) {
     gm_log( GM_LOG_DEBUG, "catcher(%d)\n", sig );
     return;
@@ -179,6 +180,7 @@ void print_stats(char * hostnam) {
     char * port_c = NULL;
     char * message = NULL;
     char * version = NULL;
+    char * version_saved = NULL;
     char format1[GM_BUFFERSIZE];
     char format2[GM_BUFFERSIZE];
     char cur_time[GM_BUFFERSIZE];
@@ -210,7 +212,10 @@ void print_stats(char * hostnam) {
 
     my_printf("%s  -  %s:%i ", cur_time, server, port );
     if(version != NULL && strcmp(version, "") != 0)
-        my_printf("  -  v%s", version );
+        version_saved = strdup(version);
+
+    if(version_saved != NULL && strcmp(version_saved, "") != 0)
+        my_printf("  -  v%s", version_saved );
     my_printf("\n\n");
 
     if( rc == STATE_OK ) {
