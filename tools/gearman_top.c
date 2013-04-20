@@ -29,12 +29,17 @@
 int opt_verbose     = GM_DISABLED;
 int opt_quiet       = GM_DISABLED;
 int opt_batch       = GM_DISABLED;
+int con_timeout     = 10;
 double opt_interval = 0;
 
 char * server_list[GM_LISTSIZE];
 int server_list_num = 0;
 WINDOW *w;
 
+void catcher( int sig ) {
+    gm_log( GM_LOG_DEBUG, "catcher(%d)\n", sig );
+    return;
+}
 
 /* work starts here */
 int main (int argc, char **argv) {
@@ -43,6 +48,12 @@ int main (int argc, char **argv) {
 
     mod_gm_opt = malloc(sizeof(mod_gm_opt_t));
     set_default_options(mod_gm_opt);
+
+    struct sigaction sact;
+    sigemptyset( &sact.sa_mask );
+    sact.sa_flags = 0;
+    sact.sa_handler = catcher;
+    sigaction( SIGALRM, &sact, NULL );
 
     /*
      * and parse command line
@@ -83,13 +94,17 @@ int main (int argc, char **argv) {
         if(opt_interval > 0) {
             while(1) {
                 for(i=0;i<server_list_num;i++) {
+                    alarm(con_timeout);
                     print_stats(server_list[i]);
+                    alarm(0);
                 }
                 usleep(opt_interval);
             }
         } else {
             for(i=0;i<server_list_num;i++) {
+                alarm(con_timeout);
                 print_stats(server_list[i]);
+                alarm(0);
             }
         }
         clean_exit(0);
@@ -111,7 +126,9 @@ int main (int argc, char **argv) {
         if(opt_batch == GM_DISABLED)
             erase(); /* clear screen */
         for(i=0;i<server_list_num;i++) {
+            alarm(con_timeout);
             print_stats(server_list[i]);
+            alarm(0);
         }
         usleep(opt_interval);
     }
