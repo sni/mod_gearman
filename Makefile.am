@@ -16,10 +16,10 @@ AM_CPPFLAGS=-Iinclude
 OS=$(shell uname)
 
 if USEPERL
-P1FILE         = worker/mod_gearman_p1.pl
-PERLLIB        = @PERLLIBS@
-perl_objects   = common/perlxsi.o common/epn_utils.o
-install_p1file = install_p1file
+P1FILE           = worker/mod_gearman_p1.pl
+PERLLIB          = @PERLLIBS@
+perl_objects     = common/perlxsi.o common/epn_utils.o
+install_epnfiles = install_epnfiles
 EXTRA_mod_gearman_worker_SOURCES=common/perlxsi.c common/epn_utils.c
 EXTRA_01_utils_SOURCES=common/perlxsi.c common/epn_utils.c
 EXTRA_02_full_SOURCES=common/perlxsi.c common/epn_utils.c
@@ -28,11 +28,11 @@ EXTRA_06_exec_SOURCES=common/perlxsi.c common/epn_utils.c
 EXTRA_07_epn_SOURCES=common/perlxsi.c common/epn_utils.c
 EPN_BIN = mod_gearman_mini_epn
 else
-PERLLIB        =
-P1FILE         =
-install_p1file =
-perl_objects   =
-EPN_BIN        =
+PERLLIB          =
+P1FILE           =
+install_epnfiles =
+perl_objects     =
+EPN_BIN          =
 endif
 
 # source definitions
@@ -203,14 +203,15 @@ install-exec-local: install-local-state-dir
 install-local-state-dir:
 	$(install_sh_PROGRAM) -d $(DESTDIR)$(localstatedir)/mod_gearman/
 
-install_p1file:
+install_epnfiles:
 	$(install_sh_PROGRAM) -m 755 $(P1FILE)  $(DESTDIR)$(datadir)/mod_gearman/mod_gearman_p1.pl
+	$(install_sh_PROGRAM) -m 755 $(EPN_BIN) $(DESTDIR)$(bindir)/mod_gearman_mini_epn
 	@echo "################################################################"
 	@echo " Installation completed:"
 	@echo " p1file:         $(DESTDIR)$(datadir)/mod_gearman/mod_gearman_p1.pl"
 	@echo "################################################################"
 
-install-data-local: install-local-state-dir $(install_p1file)
+install-data-local: install-local-state-dir $(install_epnfiles)
 	$(install_sh_PROGRAM) -d $(DESTDIR)$(localstatedir)/log/mod_gearman
 	$(install_sh_PROGRAM) -m 644 extras/shared.conf            $(DESTDIR)$(datadir)/mod_gearman/shared.conf
 	$(install_sh_PROGRAM) -m 644 extras/standalone_worker.conf $(DESTDIR)$(datadir)/mod_gearman/standalone_worker.conf
@@ -223,6 +224,7 @@ install-data-local: install-local-state-dir $(install_p1file)
 	@echo ""
 	@echo " worker:         $(DESTDIR)$(bindir)/mod_gearman_worker"
 	@echo " init script:    $(DESTDIR)$(initrddir)/mod_gearman_worker"
+	@[ "$(EPN_BIN)" = "" ] || echo " mini-epn:       $(DESTDIR)$(bindir)/mod_gearman_mini_epn"
 	@echo ""
 	@echo " check bin:      $(DESTDIR)$(bindir)/check_gearman"
 	@echo " send bin:       $(DESTDIR)$(bindir)/send_gearman"

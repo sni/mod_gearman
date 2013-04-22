@@ -83,6 +83,7 @@ exit 0
 %{_bindir}/mod_gearman_worker
 %{_bindir}/send_gearman
 %{_bindir}/send_multi
+%{_bindir}/mod_gearman_mini_epn
 
 %{_libdir}/mod_gearman/mod_gearman.o
 
