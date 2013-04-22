@@ -40,7 +40,6 @@ extern char *p1_file;
 char **start_env;
 #endif
 
-
 /* work starts here */
 #ifdef EMBEDDEDPERL
 int main (int argc, char **argv, char **env) {
@@ -196,7 +195,7 @@ void count_current_worker(int restart) {
     int x;
 
     gm_log( GM_LOG_TRACE3, "count_current_worker()\n");
-    gm_log( GM_LOG_TRACE3, "done jobs:     shm[0] = %d\n", shm[0]);
+    gm_log( GM_LOG_TRACE3, "done jobs:     shm[SHM_JOBS_DONE] = %d\n", shm[SHM_JOBS_DONE]);
 
     /* shm states:
      *   0 -> undefined
@@ -206,16 +205,16 @@ void count_current_worker(int restart) {
      */
 
     /* check if status worker died */
-    if( shm[3] != -1 && pid_alive(shm[3]) == FALSE ) {
-        gm_log( GM_LOG_TRACE, "removed stale status worker, old pid: %d\n", shm[3] );
-        shm[3] = -1;
+    if( shm[SHM_STATUS_WORKER_PID] != -1 && pid_alive(shm[SHM_STATUS_WORKER_PID]) == FALSE ) {
+        gm_log( GM_LOG_TRACE, "removed stale status worker, old pid: %d\n", shm[SHM_STATUS_WORKER_PID] );
+        shm[SHM_STATUS_WORKER_PID] = -1;
     }
-    gm_log( GM_LOG_TRACE3, "status worker: shm[3] = %d\n", shm[3]);
+    gm_log( GM_LOG_TRACE3, "status worker: shm[SHM_STATUS_WORKER_PID] = %d\n", shm[SHM_STATUS_WORKER_PID]);
 
     /* check all known worker */
     current_number_of_workers = 0;
     current_number_of_jobs    = 0;
-    for(x=4; x < mod_gm_opt->max_worker+4; x++) {
+    for(x=SHM_SHIFT; x < mod_gm_opt->max_worker+SHM_SHIFT; x++) {
         /* verify worker is alive */
         gm_log( GM_LOG_TRACE3, "worker slot:   shm[%d] = %d\n", x, shm[x]);
         if( shm[x] != -1 && pid_alive(shm[x]) == FALSE ) {
@@ -235,8 +234,8 @@ void count_current_worker(int restart) {
         }
     }
 
-    shm[1] = current_number_of_workers; /* total worker   */
-    shm[2] = current_number_of_jobs;    /* running worker */
+    shm[SHM_WORKER_TOTAL]   = current_number_of_workers; /* total worker   */
+    shm[SHM_WORKER_RUNNING] = current_number_of_jobs;    /* running worker */
 
     gm_log( GM_LOG_TRACE3, "worker: %d  -  running: %d\n", current_number_of_workers, current_number_of_jobs);
 
@@ -253,7 +252,7 @@ void check_worker_population() {
     count_current_worker(GM_ENABLED);
 
     /* check if status worker died */
-    if( shm[3] == -1 ) {
+    if( shm[SHM_STATUS_WORKER_PID] == -1 ) {
         make_new_child(GM_WORKER_STATUS);
     }
 
@@ -538,12 +537,13 @@ void setup_child_communicator() {
         perror("shmat");
         exit( EXIT_FAILURE );
     }
-    shm[0] = 0;  /* done jobs         */
-    shm[1] = 0;  /* total worker      */
-    shm[2] = 0;  /* running worker    */
-    shm[3] = -1; /* status worker pid */
+    /* change SHM_SHIFT if more global counters are added */
+    shm[SHM_JOBS_DONE]         = 0;  /* done jobs         */
+    shm[SHM_WORKER_TOTAL]      = 0;  /* total worker      */
+    shm[SHM_WORKER_RUNNING]    = 0;  /* running worker    */
+    shm[SHM_STATUS_WORKER_PID] = -1; /* status worker pid */
     for(x = 0; x < mod_gm_opt->max_worker; x++) {
-        shm[x+4] = -1; /* normal worker   */
+        shm[x+SHM_SHIFT] = -1; /* normal worker   */
     }
 
     return;
@@ -653,7 +653,7 @@ void stop_children(int mode) {
     killpg(0, SIGTERM);
     while(current_number_of_workers > 0) {
         gm_log( GM_LOG_TRACE, "send SIGTERM\n");
-        for(x=3; x < mod_gm_opt->max_worker+4; x++) {
+        for(x=SHM_SHIFT-1; x < mod_gm_opt->max_worker+SHM_SHIFT; x++) {
             curpid = shm[x];
             if(curpid < 0) { curpid = -curpid; }
             if( curpid != 0 && curpid != 1 ) {
@@ -681,7 +681,7 @@ void stop_children(int mode) {
             return;
 
         gm_log( GM_LOG_TRACE, "sending SIGINT...\n");
-        for(x=3; x < mod_gm_opt->max_worker+4; x++) {
+        for(x=SHM_SHIFT-1; x < mod_gm_opt->max_worker+SHM_SHIFT; x++) {
             curpid = shm[x];
             if(curpid < 0) { curpid = -curpid; }
             if( curpid != 0 && curpid != 1 ) {
@@ -701,7 +701,7 @@ void stop_children(int mode) {
         count_current_worker(GM_DISABLED);
         if(current_number_of_workers == 0)
             return;
-        for(x=3; x < mod_gm_opt->max_worker+4; x++) {
+        for(x=SHM_SHIFT-1; x < mod_gm_opt->max_worker+SHM_SHIFT; x++) {
             if( shm[x] != 0 ) {
                 curpid = shm[x];
                 if(curpid < 0) { curpid = -curpid; }
@@ -816,7 +816,7 @@ int get_next_shm_index() {
 
     gm_log( GM_LOG_TRACE, "get_next_shm_index()\n" );
 
-    for(x = 4; x < mod_gm_opt->max_worker+4; x++) {
+    for(x = SHM_SHIFT; x < mod_gm_opt->max_worker+SHM_SHIFT; x++) {
         if(shm[x] == -1) {
             next_index      = x;
             shm[next_index] = 1;

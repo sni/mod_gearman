@@ -12,7 +12,7 @@ static PerlInterpreter *my_perl = NULL;
 
 int run_epn(char *command_line);
 
-int main(int argc, char **argv, char **env) {
+int main(int argc, char **argv) {
 	char *embedding[] = { "", "worker/mod_gearman_p1.pl" };
 	char command_line[MAX_INPUT_CHARS];
 	int exitstatus;

@@ -443,7 +443,7 @@ void set_state(int status) {
     if(status == GM_JOB_START)
         shm[shm_index] = current_pid;
     if(status == GM_JOB_END) {
-        shm[0]++; /* increase jobs done */
+        shm[SHM_JOBS_DONE]++; /* increase jobs done */
 
         /* status slot changed to -1 -> exit */
         if( shm[shm_index] == -1 ) {
@@ -552,10 +552,10 @@ void *return_status( gearman_job_st *job, void *context, size_t *result_size, ge
         return NULL;
     }
 
-    snprintf(result, GM_BUFFERSIZE, "%s has %i worker and is working on %i jobs. Version: %s|worker=%i;;;%i;%i jobs=%ic", hostname, shm[1], shm[2], GM_VERSION, shm[1], mod_gm_opt->min_worker, mod_gm_opt->max_worker, shm[0] );
+    snprintf(result, GM_BUFFERSIZE, "%s has %i worker and is working on %i jobs. Version: %s|worker=%i;;;%i;%i jobs=%ic", hostname, shm[SHM_WORKER_TOTAL], shm[SHM_WORKER_RUNNING], GM_VERSION, shm[SHM_WORKER_TOTAL], mod_gm_opt->min_worker, mod_gm_opt->max_worker, shm[SHM_JOBS_DONE] );
 
     /* and increase job counter */
-    shm[0]++;
+    shm[SHM_JOBS_DONE]++;
 
     /* detach from shared memory */
     if(shmdt(shm) < 0)
