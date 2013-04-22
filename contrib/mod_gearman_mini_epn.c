@@ -17,6 +17,16 @@ int main(int argc, char **argv) {
 	char command_line[MAX_INPUT_CHARS];
 	int exitstatus;
 
+	/* usage? */
+	if(argc > 1 && (!strcmp(argv[1], "-h") || !strcmp(argv[1], "--help"))) {
+		printf("Mod-Gearman Mini-ePN:\n");
+		printf("\n");
+		printf("Usage: %s [perl_plugin [arguments]]\n", argv[0]);
+		printf("\n");
+		printf("test perl plugins as if they were run by ePN.\n");
+		exit(3);
+	}
+
 	if((my_perl = perl_alloc()) == NULL) {
 		printf("%s\n", "Error: Could not allocate memory for embedded Perl interpreter!");
 		exit(1);
