@@ -46,11 +46,11 @@ void catcher( int sig ) {
 int main (int argc, char **argv) {
     int opt;
     int i;
+    struct sigaction sact;
 
     mod_gm_opt = malloc(sizeof(mod_gm_opt_t));
     set_default_options(mod_gm_opt);
 
-    struct sigaction sact;
     sigemptyset( &sact.sa_mask );
     sact.sa_flags = 0;
     sact.sa_handler = catcher;
@@ -211,8 +211,11 @@ void print_stats(char * hostnam) {
     strftime(cur_time, sizeof(cur_time), "%Y-%m-%d %H:%M:%S", &now );
 
     my_printf("%s  -  %s:%i ", cur_time, server, port );
-    if(version != NULL && strcmp(version, "") != 0)
+    if(version != NULL && strcmp(version, "") != 0) {
+        if(version_saved != NULL)
+            free(version_saved);
         version_saved = strdup(version);
+    }
 
     if(version_saved != NULL && strcmp(version_saved, "") != 0)
         my_printf("  -  v%s", version_saved );
