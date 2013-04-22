@@ -8,12 +8,20 @@
 
 #define MAX_INPUT_CHARS 1024
 
+#define P1FILE DATADIR"/mod_gearman/mod_gearman_p1.pl"
+
 static PerlInterpreter *my_perl = NULL;
 
 int run_epn(char *command_line);
 
 int main(int argc, char **argv) {
-	char *embedding[] = { "", "worker/mod_gearman_p1.pl" };
+    struct stat stat_buf;
+    char *p1 = P1FILE;
+    // try fallback p1 file
+    if(stat(P1FILE, &stat_buf) != 0 && stat("worker/mod_gearman_p1.pl", &stat_buf) == 0 ) {
+	    p1 = "worker/mod_gearman_p1.pl";
+    }
+	char *embedding[] = { "", p1 };
 	char command_line[MAX_INPUT_CHARS];
 	int exitstatus;
 

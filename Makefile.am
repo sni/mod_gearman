@@ -13,6 +13,7 @@ DOS2UNIX=$(shell which dos2unix || which fromdos)
 .PHONY: docs
 
 AM_CPPFLAGS=-Iinclude
+CFLAGS +=-DDATADIR='"$(datadir)"'
 OS=$(shell uname)
 
 if USEPERL
