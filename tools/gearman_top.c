@@ -34,6 +34,7 @@ double opt_interval = 0;
 
 char * server_list[GM_LISTSIZE];
 int server_list_num = 0;
+char * version_saved = NULL;
 WINDOW *w;
 
 void catcher( int );
@@ -180,7 +181,6 @@ void print_stats(char * hostnam) {
     char * port_c = NULL;
     char * message = NULL;
     char * version = NULL;
-    char * version_saved = NULL;
     char format1[GM_BUFFERSIZE];
     char format2[GM_BUFFERSIZE];
     char cur_time[GM_BUFFERSIZE];
@@ -210,7 +210,7 @@ void print_stats(char * hostnam) {
     now = *(localtime(&t));
     strftime(cur_time, sizeof(cur_time), "%Y-%m-%d %H:%M:%S", &now );
 
-    my_printf("%s  -  %s:%i ", cur_time, server, port );
+    my_printf("%s  -  %s:%i", cur_time, server, port );
     if(version != NULL && strcmp(version, "") != 0) {
         if(version_saved != NULL)
             free(version_saved);
