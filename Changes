@@ -4,6 +4,7 @@ next:
           - added 'route_eventhandler_like_checks' option
           - fixed leaking FDs on reloading neb
           - install mini-epn when epn is enabled
+          - fixed executing only the first freshness check
 
 1.4.2 Thu Jan 10 10:56:37 CET 2013
           - force check on orphaned events

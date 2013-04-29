@@ -541,6 +541,9 @@ static int handle_host_check( int event_type, void *data ) {
     check_options = hst->check_options;
     hst->check_options = CHECK_OPTION_NONE;
 
+    /* unset the freshening flag, otherwise only the first freshness check would be run */
+    hst->is_being_freshened=FALSE;
+
     /* adjust host check attempt */
     adjust_host_check_attempt_3x(hst,TRUE);
 
@@ -710,6 +713,9 @@ static int handle_svc_check( int event_type, void *data ) {
      */
     /* clear check options - we don't want old check options retained */
     svc->check_options=CHECK_OPTION_NONE;
+
+    /* unset the freshening flag, otherwise only the first freshness check would be run */
+    svc->is_being_freshened=FALSE;
 
     /* grab the host and service macro variables */
     clear_volatile_macros();
