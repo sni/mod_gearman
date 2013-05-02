@@ -203,5 +203,15 @@ int get_next_shm_index(void);
 void count_current_worker(int restart);
 
 /**
+ * save kill pid from shm index
+ *
+ * @param[in] pid - pid to kill
+ * @param[in] signal - signal to use
+ *
+ * @return nothing
+ */
+void save_kill(int pid, int sig);
+
+/**
  * @}
  */

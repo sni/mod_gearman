@@ -638,7 +638,7 @@ void clean_exit(int sig) {
 void stop_children(int mode) {
     int status, chld;
     int waited = 0;
-    int x, curpid;
+    int x;
 
     gm_log( GM_LOG_TRACE, "stop_children(%d)\n", mode);
 
@@ -652,13 +652,11 @@ void stop_children(int mode) {
      */
     killpg(0, SIGTERM);
     while(current_number_of_workers > 0) {
+
         gm_log( GM_LOG_TRACE, "send SIGTERM\n");
-        for(x=SHM_SHIFT-1; x < mod_gm_opt->max_worker+SHM_SHIFT; x++) {
-            curpid = shm[x];
-            if(curpid < 0) { curpid = -curpid; }
-            if( curpid != 0 && curpid != 1 ) {
-                kill(curpid, SIGTERM);
-            }
+        save_kill(shm[SHM_STATUS_WORKER_PID], SIGTERM);
+        for(x=SHM_SHIFT; x < mod_gm_opt->max_worker+SHM_SHIFT; x++) {
+            save_kill(shm[x], SIGTERM);
         }
         while((chld = waitpid(-1, &status, WNOHANG)) != -1 && chld > 0) {
             gm_log( GM_LOG_TRACE, "wait() %d exited with %d\n", chld, status);
@@ -681,12 +679,9 @@ void stop_children(int mode) {
             return;
 
         gm_log( GM_LOG_TRACE, "sending SIGINT...\n");
-        for(x=SHM_SHIFT-1; x < mod_gm_opt->max_worker+SHM_SHIFT; x++) {
-            curpid = shm[x];
-            if(curpid < 0) { curpid = -curpid; }
-            if( curpid != 0 && curpid != 1 ) {
-                kill(curpid, SIGINT);
-            }
+        save_kill(shm[SHM_STATUS_WORKER_PID], SIGINT);
+        for(x=SHM_SHIFT; x < mod_gm_opt->max_worker+SHM_SHIFT; x++) {
+            save_kill(shm[x], SIGINT);
         }
 
         /* wait 3 more seconds*/
@@ -701,14 +696,9 @@ void stop_children(int mode) {
         count_current_worker(GM_DISABLED);
         if(current_number_of_workers == 0)
             return;
-        for(x=SHM_SHIFT-1; x < mod_gm_opt->max_worker+SHM_SHIFT; x++) {
-            if( shm[x] != 0 ) {
-                curpid = shm[x];
-                if(curpid < 0) { curpid = -curpid; }
-                if( curpid != 0 ) {
-                    kill(curpid, SIGKILL);
-                }
-            }
+        save_kill(shm[SHM_STATUS_WORKER_PID], SIGKILL);
+        for(x=SHM_SHIFT; x < mod_gm_opt->max_worker+SHM_SHIFT; x++) {
+            save_kill(shm[x], SIGKILL);
         }
 
         /* count children a last time */
@@ -832,6 +822,15 @@ int get_next_shm_index() {
     gm_log( GM_LOG_TRACE, "get_next_shm_index() -> %d\n", next_index );
 
     return next_index;
+}
+
+/* kill child */
+void save_kill(int pid, int sig) {
+    if(pid < 0) { pid = -pid; }
+    if( pid != 0 && pid != 1 ) {
+        kill(pid, sig);
+    }
+    return;
 }
 
 
