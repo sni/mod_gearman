@@ -428,7 +428,7 @@ void kill_child_checks(void) {
         gm_log( GM_LOG_TRACE, "kill_child_checks(): send SIGINT to %d\n", current_child_pid);
         kill(current_child_pid, SIGINT);
         sleep(1);
-        if(waitpid(pid,&retval,0)!=pid) {
+        if(waitpid(current_child_pid,&retval,WNOHANG)!=0) {
             signal(SIGINT, SIG_DFL);
             return;
         }

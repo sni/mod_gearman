@@ -477,7 +477,7 @@ void clean_worker_exit(int sig) {
 
     /* clear gearmans job, otherwise it would be retried and retried */
     if(current_gearman_job != NULL) {
-        if(sig == 2) {
+        if(sig == SIGINT) {
             /* if worker stopped with sigint, let the job retry */
         } else {
             send_failed_result(current_job, sig);
@@ -507,6 +507,7 @@ void clean_worker_exit(int sig) {
         gm_log( GM_LOG_TRACE, "worker finished: %d\n", getpid() );
         _exit( EXIT_FAILURE );
     }
+    /* clean our pid from worker list */
     if( shm[shm_index] == current_pid || shm[shm_index] == -current_pid ) {
         shm[shm_index] = -1;
     }

@@ -166,6 +166,7 @@ int main (int argc, char **argv) {
     /* maintain worker population */
     monitor_loop();
 
+    gm_log( GM_LOG_ERROR, "worker exited from main loop\n");
     clean_exit(15);
     exit( EXIT_SUCCESS );
 }
@@ -661,6 +662,10 @@ void stop_children(int mode) {
         while((chld = waitpid(-1, &status, WNOHANG)) != -1 && chld > 0) {
             gm_log( GM_LOG_TRACE, "wait() %d exited with %d\n", chld, status);
         }
+
+        if(mode == GM_WORKER_RESTART)
+            break;
+
         sleep(1);
         waited++;
         if(waited > GM_CHILD_SHUTDOWN_TIMEOUT) {
@@ -668,7 +673,7 @@ void stop_children(int mode) {
         }
         count_current_worker(GM_DISABLED);
         if(current_number_of_workers == 0)
-            return;
+            break;
         gm_log( GM_LOG_TRACE, "still waiting (%d) %d children missing...\n", waited, current_number_of_workers);
     }
 
@@ -792,6 +797,9 @@ void reload_config(int sig) {
 
     /* start status worker */
     make_new_child(GM_WORKER_STATUS);
+
+    /* start normal worker */
+    check_worker_population();
 
     gm_log( GM_LOG_INFO, "reloading config was successful\n");
 
