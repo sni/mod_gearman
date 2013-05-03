@@ -65,6 +65,11 @@ hosts=yes
 # Default is Yes.
 do_hostchecks=yes
 
+# This settings determines if all eventhandlers go into a single
+# 'eventhandlers' queue or into the same queue like normal checks
+# would do.
+route_eventhandler_like_checks=no
+
 # enables or disables encryption. It is strongly
 # advised to not disable encryption. Anybody will be
 # able to inject packages to your worker.

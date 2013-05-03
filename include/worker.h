@@ -46,6 +46,12 @@
 
 int mod_gm_shm_key;        /**< key for the shared memory segment */
 
+#define SHM_SHIFT             4 /**< nr of global counter              */
+#define SHM_JOBS_DONE         0 /**< shm id for jobs done counter      */
+#define SHM_WORKER_TOTAL      1 /**< shm id for total worker counter   */
+#define SHM_WORKER_RUNNING    2 /**< shm id for running worker counter */
+#define SHM_STATUS_WORKER_PID 3 /**< shm id for status worker pid      */
+
 /** Mod-Gearman Worker
  *
  * main function of the worker
@@ -195,6 +201,16 @@ int get_next_shm_index(void);
  * @return nothing
  */
 void count_current_worker(int restart);
+
+/**
+ * save kill pid from shm index
+ *
+ * @param[in] pid - pid to kill
+ * @param[in] signal - signal to use
+ *
+ * @return nothing
+ */
+void save_kill(int pid, int sig);
 
 /**
  * @}

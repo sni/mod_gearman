@@ -415,6 +415,13 @@ static int handle_eventhandler( int event_type, void *data ) {
         return NEB_OK;
     }
 
+    if(mod_gm_opt->route_eventhandler_like_checks != GM_ENABLED || !strcmp( target_queue, "host" ) || !strcmp( target_queue, "service" )) {
+        target_queue[0] = '\x0';
+        snprintf( target_queue, GM_BUFFERSIZE-1, "eventhandler" );
+    }
+
+    gm_log( GM_LOG_DEBUG, "eventhandler for queue %s\n", target_queue );
+
     temp_buffer[0]='\x0';
     snprintf( temp_buffer,GM_BUFFERSIZE-1,
                 "type=eventhandler\nstart_time=%i.0\ncore_time=%i.%i\ncommand_line=%s\n\n\n",
@@ -426,7 +433,7 @@ static int handle_eventhandler( int event_type, void *data ) {
 
     if(add_job_to_queue( &client,
                          mod_gm_opt->server_list,
-                         "eventhandler",
+                         target_queue,
                          NULL,
                          temp_buffer,
                          GM_JOB_PRIO_NORMAL,
@@ -505,6 +512,9 @@ static int handle_host_check( int event_type, void *data ) {
     /* clear check options - we don't want old check options retained */
     check_options = hst->check_options;
     hst->check_options = CHECK_OPTION_NONE;
+
+    /* unset the freshening flag, otherwise only the first freshness check would be run */
+    hst->is_being_freshened=FALSE;
 
     /* adjust host check attempt */
     adjust_host_check_attempt(hst,TRUE);
@@ -675,6 +685,9 @@ static int handle_svc_check( int event_type, void *data ) {
      */
     /* clear check options - we don't want old check options retained */
     svc->check_options=CHECK_OPTION_NONE;
+
+    /* unset the freshening flag, otherwise only the first freshness check would be run */
+    svc->is_being_freshened=FALSE;
 
     /* grab the host and service macro variables */
     clear_volatile_macros();

@@ -30,7 +30,7 @@ int main (int argc, char **argv, char **env) {
     char *result, *error;
     char cmd[120];
 
-    plan(17);
+    plan(21);
 
     /* create options structure and set debug level */
     mod_gm_opt = malloc(sizeof(mod_gm_opt_t));
@@ -92,6 +92,17 @@ int main (int argc, char **argv, char **env) {
     like(error, "^$", "returned error string");
     free(result);
     free(error);
+
+    /* test mini epn */
+    strcpy(cmd, "./mod_gearman_mini_epn ./t/ok.pl");
+    rrc = real_exit_code(run_check(cmd, &result, &error));
+    cmp_ok(rrc, "==", 0, "cmd '%s' returned rc %d", cmd, rrc);
+    like(result, "plugin return code: 0", "contains return code");
+    like(result, "perl plugin output: 'test plugin OK", "contains plugin output");
+    like(error, "^$", "returned error string");
+    free(result);
+    free(error);
+
 
     /*****************************************
      * clean up

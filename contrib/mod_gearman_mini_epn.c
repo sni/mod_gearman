@@ -8,14 +8,32 @@
 
 #define MAX_INPUT_CHARS 1024
 
+#define P1FILE DATADIR"/mod_gearman/mod_gearman_p1.pl"
+
 static PerlInterpreter *my_perl = NULL;
 
 int run_epn(char *command_line);
 
-int main(int argc, char **argv, char **env) {
-	char *embedding[] = { "", "worker/mod_gearman_p1.pl" };
+int main(int argc, char **argv) {
+    struct stat stat_buf;
+    char *p1 = P1FILE;
+    // try fallback p1 file
+    if(stat(P1FILE, &stat_buf) != 0 && stat("worker/mod_gearman_p1.pl", &stat_buf) == 0 ) {
+	    p1 = "worker/mod_gearman_p1.pl";
+    }
+	char *embedding[] = { "", p1 };
 	char command_line[MAX_INPUT_CHARS];
 	int exitstatus;
+
+	/* usage? */
+	if(argc > 1 && (!strcmp(argv[1], "-h") || !strcmp(argv[1], "--help"))) {
+		printf("Mod-Gearman Mini-ePN:\n");
+		printf("\n");
+		printf("Usage: %s [perl_plugin [arguments]]\n", argv[0]);
+		printf("\n");
+		printf("test perl plugins as if they were run by ePN.\n");
+		exit(3);
+	}
 
 	if((my_perl = perl_alloc()) == NULL) {
 		printf("%s\n", "Error: Could not allocate memory for embedded Perl interpreter!");

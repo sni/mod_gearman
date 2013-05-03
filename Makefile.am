@@ -13,13 +13,14 @@ DOS2UNIX=$(shell which dos2unix || which fromdos)
 .PHONY: docs
 
 AM_CPPFLAGS=-Iinclude
+CFLAGS +=-DDATADIR='"$(datadir)"'
 OS=$(shell uname)
 
 if USEPERL
-P1FILE         = worker/mod_gearman_p1.pl
-PERLLIB        = @PERLLIBS@
-perl_objects   = common/perlxsi.o common/epn_utils.o
-install_p1file = install_p1file
+P1FILE           = worker/mod_gearman_p1.pl
+PERLLIB          = @PERLLIBS@
+perl_objects     = common/perlxsi.o common/epn_utils.o
+install_epnfiles = install_epnfiles
 EXTRA_mod_gearman_worker_SOURCES=common/perlxsi.c common/epn_utils.c
 EXTRA_01_utils_SOURCES=common/perlxsi.c common/epn_utils.c
 EXTRA_02_full_SOURCES=common/perlxsi.c common/epn_utils.c
@@ -28,11 +29,11 @@ EXTRA_06_exec_SOURCES=common/perlxsi.c common/epn_utils.c
 EXTRA_07_epn_SOURCES=common/perlxsi.c common/epn_utils.c
 EPN_BIN = mod_gearman_mini_epn
 else
-PERLLIB        =
-P1FILE         =
-install_p1file =
-perl_objects   =
-EPN_BIN        =
+PERLLIB          =
+P1FILE           =
+install_epnfiles =
+perl_objects     =
+EPN_BIN          =
 endif
 
 # source definitions
@@ -95,7 +96,7 @@ TESTS            = $(check_PROGRAMS) t/benchmark.t
 
 
 GEARMANDS=/usr/sbin/gearmand /opt/sbin/gearmand
-replace_vars = sed -e 's:%CONFIG_WORKER%:$(sysconfdir)/mod_gearman_worker.conf:g' \
+replace_vars = sed -e 's:%CONFIG_WORKER%:$(sysconfdir)/mod_gearman/mod_gearman_worker.conf:g' \
                -e 's:%PIDFILE%:$(localstatedir)/mod_gearman/mod_gearman_worker.pid:g' \
                -e 's:%LOGFILE_NEB%:$(localstatedir)/log/mod_gearman/mod_gearman_neb.log:g' \
                -e 's:%LOGFILE_WORKER%:$(localstatedir)/log/mod_gearman/mod_gearman_worker.log:g' \
@@ -203,14 +204,15 @@ install-exec-local: install-local-state-dir
 install-local-state-dir:
 	$(install_sh_PROGRAM) -d $(DESTDIR)$(localstatedir)/mod_gearman/
 
-install_p1file:
+install_epnfiles:
 	$(install_sh_PROGRAM) -m 755 $(P1FILE)  $(DESTDIR)$(datadir)/mod_gearman/mod_gearman_p1.pl
+	$(install_sh_PROGRAM) -m 755 $(EPN_BIN) $(DESTDIR)$(bindir)/mod_gearman_mini_epn
 	@echo "################################################################"
 	@echo " Installation completed:"
 	@echo " p1file:         $(DESTDIR)$(datadir)/mod_gearman/mod_gearman_p1.pl"
 	@echo "################################################################"
 
-install-data-local: install-local-state-dir $(install_p1file)
+install-data-local: install-local-state-dir $(install_epnfiles)
 	$(install_sh_PROGRAM) -d $(DESTDIR)$(localstatedir)/log/mod_gearman
 	$(install_sh_PROGRAM) -m 644 extras/shared.conf            $(DESTDIR)$(datadir)/mod_gearman/shared.conf
 	$(install_sh_PROGRAM) -m 644 extras/standalone_worker.conf $(DESTDIR)$(datadir)/mod_gearman/standalone_worker.conf
@@ -223,40 +225,36 @@ install-data-local: install-local-state-dir $(install_p1file)
 	@echo ""
 	@echo " worker:         $(DESTDIR)$(bindir)/mod_gearman_worker"
 	@echo " init script:    $(DESTDIR)$(initrddir)/mod_gearman_worker"
+	@[ "$(EPN_BIN)" = "" ] || echo " mini-epn:       $(DESTDIR)$(bindir)/mod_gearman_mini_epn"
 	@echo ""
 	@echo " check bin:      $(DESTDIR)$(bindir)/check_gearman"
 	@echo " send bin:       $(DESTDIR)$(bindir)/send_gearman"
 	@echo " send multi bin: $(DESTDIR)$(bindir)/send_multi"
 	@echo ""
 	@echo "just add the broker line to your nagios.cfg:"
-	@echo "broker_module=$(DESTDIR)$(pkglibdir)/mod_gearman.o config=$(DESTDIR)$(sysconfdir)/mod_gearman_neb.conf"
+	@echo "broker_module=$(DESTDIR)$(pkglibdir)/mod_gearman.o config=$(DESTDIR)$(sysconfdir)/mod_gearman/mod_gearman_neb.conf"
 	@echo ""
-	@if [ -e $(DESTDIR)$(sysconfdir)/mod_gearman_neb.conf -o -e $(DESTDIR)$(sysconfdir)/mod_gearman_worker.conf ]; then \
+	@if [ -e $(DESTDIR)$(sysconfdir)/mod_gearman/mod_gearman_neb.conf -o -e $(DESTDIR)$(sysconfdir)/mod_gearman/mod_gearman_worker.conf ]; then \
 	    echo " install default config with"; \
 	    echo ""; \
 	    echo " make install-config"; \
 	    echo ""; \
 	else \
-	    $(install_sh_PROGRAM) -m 644 etc/mod_gearman_neb.conf $(DESTDIR)$(sysconfdir)/mod_gearman_neb.conf; \
-	    $(install_sh_PROGRAM) -m 644 etc/mod_gearman_worker.conf $(DESTDIR)$(sysconfdir)/mod_gearman_worker.conf; \
+            make install-config; \
 	fi
-	@echo " configuration:"
-	@echo "         neb module: $(DESTDIR)$(sysconfdir)/mod_gearman_neb.conf"
-	@echo "         worker:     $(DESTDIR)$(sysconfdir)/mod_gearman_worker.conf"
-	@echo ""
-	@echo "################################################################"
 	$(RM) $(DESTDIR)$(pkglibdir)/mod_gearman.so
 
 
 install-config:
-	$(install_sh_PROGRAM) etc/mod_gearman_neb.conf $(DESTDIR)$(sysconfdir)/mod_gearman_neb.conf
-	$(install_sh_PROGRAM) etc/mod_gearman_worker.conf $(DESTDIR)$(sysconfdir)/mod_gearman_worker.conf
-	$(install_sh_PROGRAM) etc/mod_gearman_worker_logrotate $(DESTDIR)$(sysconfdir)/../logrotate.d/mod_gearman_worker
+	$(install_sh_PROGRAM) etc/mod_gearman_neb.conf $(DESTDIR)$(sysconfdir)/mod_gearman/mod_gearman_neb.conf
+	$(install_sh_PROGRAM) etc/mod_gearman_worker.conf $(DESTDIR)$(sysconfdir)/mod_gearman/mod_gearman_worker.conf
+	$(install_sh_PROGRAM) etc/mod_gearman_worker_logrotate $(DESTDIR)$(sysconfdir)/logrotate.d/mod_gearman_worker
 	@echo "################################################################"
 	@echo ""
 	@echo " configuration:"
-	@echo "         neb module: $(DESTDIR)$(sysconfdir)/mod_gearman_neb.conf"
-	@echo "         worker:     $(DESTDIR)$(sysconfdir)/mod_gearman_worker.conf"
+	@echo "         neb module:  $(DESTDIR)$(sysconfdir)/mod_gearman/mod_gearman_neb.conf"
+	@echo "         worker:      $(DESTDIR)$(sysconfdir)/mod_gearman/mod_gearman_worker.conf"
+	@echo "         logrotate.d: $(DESTDIR)$(sysconfdir)/logrotate.d/mod_gearman_worker"
 	@echo ""
 	@echo "################################################################"
 
