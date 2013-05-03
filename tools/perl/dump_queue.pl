@@ -115,6 +115,7 @@ if(defined $opt_p) {
 ################################################################################
 # create gearman worker
 my $worker = Gearman::Worker->new;
+print "connecting to $opt_H\n" if $opt_v;
 $worker->job_servers($opt_H);
 for my $queue (@opt_q) {
     $worker->register_function($queue, 2, sub { return dump_job(@_); });
@@ -134,8 +135,10 @@ sub dump_job {
         $data = $cypher->decrypt($data);
     }
     print "###################\n";
-    #print Dumper($data);
-    $data = decode_json($data);
+    eval {
+        # try to decode if its json data
+        $data = decode_json($data);
+    };
     print Dumper($data);
     return 1;
 }
