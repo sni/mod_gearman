@@ -231,6 +231,11 @@ int execute_safe_command(gm_job_t * exec_job, int fork_exec, char * identifier) 
     buffer[0]    = '\x0';
     buf_error[0] = '\x0';
 
+    // mark all filehandles to close on exec
+    int x;
+    for(x = 0; x<=64; x++)
+        fcntl(x, F_SETFD, FD_CLOEXEC);
+
     gm_log( GM_LOG_TRACE, "execute_safe_command()\n" );
 
     if(exec_job->start_time.tv_sec == 0) {
@@ -474,7 +479,6 @@ void send_failed_result(gm_job_t * exec_job, int sig) {
     struct timeval end_time;
     char buffer[GM_BUFFERSIZE];
     char * signame;
-    char * buf_dup;
     buffer[0] = '\x0';
 
     gm_log( GM_LOG_TRACE, "send_failed_result()\n");
