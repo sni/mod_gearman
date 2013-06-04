@@ -225,6 +225,7 @@ typedef struct mod_gm_opt_struct {
     int            spawn_rate;                              /**< number of spawned new worker */
     int            show_error_output;                       /**< optional display the stderr output of plugins */
     int            timeout_return;                          /**< timeout return code */
+    int            orphan_return;                           /**< orphan return code */
     int            dup_results_are_passive;                 /**< send duplicate results as passive checks */
     double         load_limit1;                             /**< load limit 1min for new worker */
     double         load_limit5;                             /**< load limit 5min for new worker */
