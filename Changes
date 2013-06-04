@@ -1,6 +1,7 @@
 This file documents the revision history for mod_gearman.
 
 next:
+          - kill complete process group on timeout
           - close open filehandles before running check
 
 1.4.4 Thu May  3 15:48:34 CEST 2013

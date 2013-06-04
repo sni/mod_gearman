@@ -413,10 +413,12 @@ void check_alarm_handler(int sig) {
         signal(SIGINT, SIG_IGN);
         gm_log( GM_LOG_TRACE, "send SIGINT to %d\n", pid);
         kill(-pid, SIGINT);
+        kill(pid, SIGINT);
         signal(SIGINT, SIG_DFL);
         sleep(1);
         gm_log( GM_LOG_TRACE, "send SIGKILL to %d\n", pid);
         kill(-pid, SIGKILL);
+        kill(pid, SIGKILL);
     }
 
     return;
@@ -431,6 +433,7 @@ void kill_child_checks(void) {
     pid = getpid();
     if(current_child_pid > 0 && current_child_pid != pid) {
         gm_log( GM_LOG_TRACE, "kill_child_checks(): send SIGINT to %d\n", current_child_pid);
+        kill(-current_child_pid, SIGINT);
         kill(current_child_pid, SIGINT);
         sleep(1);
         if(waitpid(current_child_pid,&retval,WNOHANG)!=0) {
