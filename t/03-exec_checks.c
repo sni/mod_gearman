@@ -288,6 +288,10 @@ int main (int argc, char **argv, char **env) {
     exec_job->timeout      = 1;
     fork_on_exec           = 1;
 
+    signal(SIGTERM, SIG_IGN);
+    signal(SIGINT, SIG_IGN);
+    setenv("MODGEARMANTEST", "1", TRUE);
+
     execute_safe_command(exec_job, fork_on_exec, hostname);
     cmp_ok(exec_job->return_code, "==", 2, "cmd '%s' returns rc 2", exec_job->command_line);
     like(exec_job->output, "\\(Service Check Timed Out On Worker: ", "returned result string");
@@ -303,6 +307,9 @@ int main (int argc, char **argv, char **env) {
     like(exec_job->output, "\\(Service Check Timed Out On Worker: ", "returned result string");
     free(exec_job->output);
     free(exec_job->error);
+
+    signal(SIGTERM, SIG_DFL);
+    signal(SIGINT, SIG_DFL);
 
     /* reset timeout */
     exec_job->timeout      = 30;

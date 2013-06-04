@@ -231,12 +231,15 @@ int execute_safe_command(gm_job_t * exec_job, int fork_exec, char * identifier) 
     buffer[0]    = '\x0';
     buf_error[0] = '\x0';
 
+    gm_log( GM_LOG_TRACE, "execute_safe_command()\n" );
+
     // mark all filehandles to close on exec
     int x;
     for(x = 0; x<=64; x++)
         fcntl(x, F_SETFD, FD_CLOEXEC);
 
-    gm_log( GM_LOG_TRACE, "execute_safe_command()\n" );
+    signal(SIGTERM, SIG_DFL);
+    signal(SIGINT, SIG_DFL);
 
     if(exec_job->start_time.tv_sec == 0) {
         gettimeofday(&start_time,NULL);
@@ -389,6 +392,7 @@ int execute_safe_command(gm_job_t * exec_job, int fork_exec, char * identifier) 
 /* called when check runs into timeout */
 void check_alarm_handler(int sig) {
     pid_t pid;
+    int retval;
 
     gm_log( GM_LOG_TRACE, "check_alarm_handler(%i)\n", sig );
     pid = getpid();
@@ -407,15 +411,22 @@ void check_alarm_handler(int sig) {
         gearman_job_send_complete(current_gearman_job, NULL, 0);
     }
 
-    if(current_child_pid > 0) {
-        kill_child_checks();
-    } else {
-        signal(SIGINT, SIG_IGN);
-        gm_log( GM_LOG_TRACE, "send SIGINT to %d\n", pid);
-        kill(-pid, SIGINT);
-        kill(pid, SIGINT);
-        signal(SIGINT, SIG_DFL);
-        sleep(1);
+    signal(SIGTERM, SIG_IGN);
+    gm_log( GM_LOG_TRACE, "send SIGTERM to %d\n", pid);
+    kill(-pid, SIGTERM);
+    kill(pid, SIGTERM);
+    signal(SIGTERM, SIG_DFL);
+    sleep(1);
+
+    signal(SIGINT, SIG_IGN);
+    gm_log( GM_LOG_TRACE, "send SIGINT to %d\n", pid);
+    kill(-pid, SIGINT);
+    kill(pid, SIGINT);
+    signal(SIGINT, SIG_DFL);
+    sleep(1);
+
+    // skip sigkill in test mode
+    if(getenv("MODGEARMANTEST") == NULL) {
         gm_log( GM_LOG_TRACE, "send SIGKILL to %d\n", pid);
         kill(-pid, SIGKILL);
         kill(pid, SIGKILL);
