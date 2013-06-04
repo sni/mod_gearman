@@ -1262,6 +1262,7 @@ Mod-Gearman has successfully been tested on the following Gearmand
 Versions. It is recommended to always use the latest listed version of
 libgearman.
 
+ * https://launchpad.net/gearmand/trunk/0.33[libgearman 0.33]
  * https://launchpad.net/gearmand/trunk/0.32[libgearman 0.32]
  * https://launchpad.net/gearmand/trunk/0.25[libgearman 0.25]
  * https://launchpad.net/gearmand/trunk/0.23[libgearman 0.23]
