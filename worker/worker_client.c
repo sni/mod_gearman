@@ -414,6 +414,11 @@ int set_worker( gearman_worker_st *w ) {
     return GM_OK;
 }
 
+/* called when worker runs into exit timeout */
+void exit_sighandler(int sig) {
+    gm_log( GM_LOG_TRACE, "exit_sighandler(%i)\n", sig );
+    _exit( EXIT_SUCCESS );
+}
 
 /* called when worker runs into idle timeout */
 void idle_sighandler(int sig) {
@@ -472,6 +477,10 @@ void set_state(int status) {
 /* do a clean exit */
 void clean_worker_exit(int sig) {
     int *shm;
+
+    /* give us 30 seconds to stop */
+    signal(SIGALRM, exit_sighandler);
+    alarm(30);
 
     gm_log( GM_LOG_TRACE, "clean_worker_exit(%d)\n", sig);
 
