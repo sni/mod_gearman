@@ -491,6 +491,7 @@ static int handle_host_check( int event_type, void *data ) {
     struct timeval core_time;
     struct tm next_check;
     char buffer1[GM_BUFFERSIZE];
+    int macro_options = STRIP_ILLEGAL_MACRO_CHARS | ESCAPE_MACRO_CHARS;
 
     gettimeofday(&core_time,NULL);
 
@@ -554,14 +555,14 @@ static int handle_host_check( int event_type, void *data ) {
     grab_host_macros(hst);
 
     /* get the raw command line */
-    get_raw_command_line(hst->check_command_ptr,hst->host_check_command,&raw_command,0);
+    get_raw_command_line(hst->check_command_ptr,hst->host_check_command,&raw_command,macro_options);
     if(raw_command==NULL){
         gm_log( GM_LOG_ERROR, "Raw check command for host '%s' was NULL - aborting.\n",hst->name );
         return NEBERROR_CALLBACKCANCEL;
     }
 
     /* process any macros contained in the argument */
-    process_macros(raw_command,&processed_command,0);
+    process_macros(raw_command,&processed_command,macro_options);
     if(processed_command==NULL){
         gm_log( GM_LOG_ERROR, "Processed check command for host '%s' was NULL - aborting.\n",hst->name);
         return NEBERROR_CALLBACKCANCEL;
@@ -664,6 +665,7 @@ static int handle_svc_check( int event_type, void *data ) {
     struct timeval core_time;
     struct tm next_check;
     char buffer1[GM_BUFFERSIZE];
+    int macro_options = STRIP_ILLEGAL_MACRO_CHARS | ESCAPE_MACRO_CHARS;
 
     gettimeofday(&core_time,NULL);
 
@@ -723,14 +725,14 @@ static int handle_svc_check( int event_type, void *data ) {
     grab_service_macros(svc);
 
     /* get the raw command line */
-    get_raw_command_line(svc->check_command_ptr,svc->service_check_command,&raw_command,0);
+    get_raw_command_line(svc->check_command_ptr,svc->service_check_command,&raw_command,macro_options);
     if(raw_command==NULL){
         gm_log( GM_LOG_ERROR, "Raw check command for service '%s' on host '%s' was NULL - aborting.\n", svc->description, svc->host_name );
         return NEBERROR_CALLBACKCANCEL;
     }
 
     /* process any macros contained in the argument */
-    process_macros(raw_command, &processed_command, 0);
+    process_macros(raw_command, &processed_command, macro_options);
     if(processed_command==NULL) {
         gm_log( GM_LOG_ERROR, "Processed check command for service '%s' on host '%s' was NULL - aborting.\n", svc->description, svc->host_name);
         my_free(raw_command);
