@@ -2,6 +2,7 @@ This file documents the revision history for mod_gearman.
 
 next:
           - ensure worker exits, even if shm blocks
+          - request proper macro escaping for nagios 4
 
 1.4.6 Tue Jun  4 17:03:57 CEST 2013
           - kill complete process group on timeout
