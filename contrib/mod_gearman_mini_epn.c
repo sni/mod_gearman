@@ -64,6 +64,7 @@ int main(int argc, char **argv) {
 		perl_free(my_perl);
 		exit(exitstatus);
 	}
+	return 0;
 }
 
 int run_epn(char *command_line) {
