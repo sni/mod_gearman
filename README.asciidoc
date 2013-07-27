@@ -43,7 +43,7 @@ Features
 
 Download
 --------
- * Latest stable http://www.mod-gearman.org/download/v1.4.6/src/mod_gearman-1.4.6.tar.gz[version 1.4.6], released June 04 2013
+ * Latest stable http://www.mod-gearman.org/download/v1.4.8/src/mod_gearman-1.4.8.tar.gz[version 1.4.8], released July 27 2013
  * Mod Gearman is available for download at: http://mod-gearman.org/download.html
  * Source is available on GitHub: http://github.com/sni/mod_gearman
  * Older versions are available in the <<_archive,download archive>>.
@@ -1310,6 +1310,7 @@ Hints
 Archive
 -------
 
+* http://www.mod-gearman.org/download/v1.4.8/src/mod_gearman-1.4.8.tar.gz[version 1.4.8 - July 27 2013]
 * http://www.mod-gearman.org/download/v1.4.6/src/mod_gearman-1.4.6.tar.gz[version 1.4.6 - June 04 2013]
 * http://www.mod-gearman.org/download/v1.4.4/src/mod_gearman-1.4.4.tar.gz[version 1.4.4 - May 03 2013]
 * http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.4.2.tar.gz[version 1.4.2 - January 10 2013]
