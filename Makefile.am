@@ -123,6 +123,7 @@ mod_gearman.o: $(mod_gearman_so_OBJECTS) $(mod_gearman_so_DEPENDENCIES)
 	else \
 	    $(CXX) $(LDFLAGS) -fPIC -shared $(mod_gearman_so_OBJECTS) -o $@ -lpthread -lgearman; \
 	fi
+	chmod 644 mod_gearman.o
 	@$(RM) mod_gearman.so
 
 common/perlxsi.o:
@@ -197,7 +198,7 @@ worker.static: worker
 	@echo ""
 
 install-exec-local: install-local-state-dir
-	$(install_sh_PROGRAM) mod_gearman.o $(DESTDIR)$(pkglibdir)/mod_gearman.o
+	$(install_sh_PROGRAM) -m 644 mod_gearman.o $(DESTDIR)$(pkglibdir)/mod_gearman.o
 	$(install_sh_PROGRAM) -m 755 worker/initscript $(DESTDIR)$(initrddir)/mod_gearman_worker
 	$(install_sh_PROGRAM) -m 755 extras/gearmand-init $(DESTDIR)$(initrddir)/gearmand
 
