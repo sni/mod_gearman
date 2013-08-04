@@ -840,8 +840,17 @@ static int read_arguments( const char *args_orig ) {
     int verify;
     int errors = 0;
     char *ptr;
-    char *args   = strdup(args_orig);
-    char *args_c = args;
+    char *args;
+    char *args_c;
+
+    if (args_orig == NULL) {
+        gm_log( GM_LOG_ERROR, "error parsing arguments: none provided.\n" );
+        return GM_ERROR;
+    }
+
+    args = strdup(args_orig);
+    args_c = args;
+
     while ( (ptr = strsep( &args, " " )) != NULL ) {
         if(parse_args_line(mod_gm_opt, ptr, 0) != GM_OK) {
             errors++;
