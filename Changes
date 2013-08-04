@@ -1,5 +1,8 @@
 This file documents the revision history for mod_gearman.
 
+next
+          - fixed segfault on empty arguments (Michael Friedrich)
+
 1.4.8 Sat Jul 27 13:42:11 CEST 2013
           - ensure worker exits, even if shm blocks
           - request proper macro escaping for nagios 4
