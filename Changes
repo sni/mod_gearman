@@ -1,6 +1,6 @@
 This file documents the revision history for mod_gearman.
 
-next
+1.4.10 Mon Aug  5 11:38:53 CEST 2013
           - fixed segfault on empty arguments (Michael Friedrich)
           - fixed commands containing quotes
 
