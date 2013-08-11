@@ -249,13 +249,13 @@ install-data-local: install-local-state-dir $(install_epnfiles)
 install-config:
 	$(install_sh_PROGRAM) etc/mod_gearman_neb.conf $(DESTDIR)$(sysconfdir)/mod_gearman/mod_gearman_neb.conf
 	$(install_sh_PROGRAM) etc/mod_gearman_worker.conf $(DESTDIR)$(sysconfdir)/mod_gearman/mod_gearman_worker.conf
-	$(install_sh_PROGRAM) etc/mod_gearman_worker_logrotate $(DESTDIR)$(sysconfdir)/logrotate.d/mod_gearman_worker
+	$(install_sh_PROGRAM) etc/mod_gearman_worker $(DESTDIR)$(sysconfdir)/logrotate.d/mod_gearman
 	@echo "################################################################"
 	@echo ""
 	@echo " configuration:"
 	@echo "         neb module:  $(DESTDIR)$(sysconfdir)/mod_gearman/mod_gearman_neb.conf"
 	@echo "         worker:      $(DESTDIR)$(sysconfdir)/mod_gearman/mod_gearman_worker.conf"
-	@echo "         logrotate.d: $(DESTDIR)$(sysconfdir)/logrotate.d/mod_gearman_worker"
+	@echo "         logrotate.d: $(DESTDIR)$(sysconfdir)/logrotate.d/mod_gearman"
 	@echo ""
 	@echo "################################################################"
 
