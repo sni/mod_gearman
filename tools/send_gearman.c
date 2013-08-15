@@ -363,7 +363,7 @@ int submit_result() {
         gm_log( GM_LOG_TRACE, "send_result_back() finished successfully\n" );
 
         if( mod_gm_opt->dupserver_num ) {
-            if(add_job_to_queue( &client,
+            if(add_job_to_queue( &client_dup,
                                  mod_gm_opt->dupserver_list,
                                  mod_gm_opt->result_queue,
                                  NULL,
