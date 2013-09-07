@@ -54,7 +54,7 @@
 #define MOD_GM_COMMON_H
 
 /* constants */
-#define GM_VERSION                 "1.4.2"
+#define GM_VERSION                 "1.4.10"
 #define GM_ENABLED                      1
 #define GM_DISABLED                     0
 #define GM_BUFFERSIZE               98304
@@ -225,6 +225,7 @@ typedef struct mod_gm_opt_struct {
     int            spawn_rate;                              /**< number of spawned new worker */
     int            show_error_output;                       /**< optional display the stderr output of plugins */
     int            timeout_return;                          /**< timeout return code */
+    int            orphan_return;                           /**< orphan return code */
     int            dup_results_are_passive;                 /**< send duplicate results as passive checks */
     double         load_limit1;                             /**< load limit 1min for new worker */
     double         load_limit5;                             /**< load limit 5min for new worker */

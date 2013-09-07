@@ -43,7 +43,7 @@ Features
 
 Download
 --------
- * Latest stable http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.4.2.tar.gz[version 1.4.2], released January 10 2013
+ * Latest stable http://www.mod-gearman.org/download/v1.4.10/src/mod_gearman-1.4.10.tar.gz[version 1.4.10], released August 05 2013
  * Mod Gearman is available for download at: http://mod-gearman.org/download.html
  * Source is available on GitHub: http://github.com/sni/mod_gearman
  * Older versions are available in the <<_archive,download archive>>.
@@ -1262,6 +1262,7 @@ Mod-Gearman has successfully been tested on the following Gearmand
 Versions. It is recommended to always use the latest listed version of
 libgearman.
 
+ * https://launchpad.net/gearmand/trunk/0.33[libgearman 0.33]
  * https://launchpad.net/gearmand/trunk/0.32[libgearman 0.32]
  * https://launchpad.net/gearmand/trunk/0.25[libgearman 0.25]
  * https://launchpad.net/gearmand/trunk/0.23[libgearman 0.23]
@@ -1309,6 +1310,10 @@ Hints
 Archive
 -------
 
+* http://www.mod-gearman.org/download/v1.4.10/src/mod_gearman-1.4.10.tar.gz[version 1.4.10 - August 05 2013]
+* http://www.mod-gearman.org/download/v1.4.8/src/mod_gearman-1.4.8.tar.gz[version 1.4.8 - July 27 2013]
+* http://www.mod-gearman.org/download/v1.4.6/src/mod_gearman-1.4.6.tar.gz[version 1.4.6 - June 04 2013]
+* http://www.mod-gearman.org/download/v1.4.4/src/mod_gearman-1.4.4.tar.gz[version 1.4.4 - May 03 2013]
 * http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.4.2.tar.gz[version 1.4.2 - January 10 2013]
 * http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.3.8.tar.gz[version 1.3.8 - August 19 2012]
 * http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.3.6.tar.gz[version 1.3.6 - July 19 2012]

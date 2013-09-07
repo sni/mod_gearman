@@ -234,6 +234,14 @@ int execute_safe_command(gm_job_t * exec_job, int fork_exec, char * identifier) 
 
     gm_log( GM_LOG_TRACE, "execute_safe_command()\n" );
 
+    // mark all filehandles to close on exec
+    int x;
+    for(x = 0; x<=64; x++)
+        fcntl(x, F_SETFD, FD_CLOEXEC);
+
+    signal(SIGTERM, SIG_DFL);
+    signal(SIGINT, SIG_DFL);
+
     if(exec_job->start_time.tv_sec == 0) {
         gettimeofday(&start_time,NULL);
         exec_job->start_time = start_time;
@@ -388,6 +396,7 @@ int execute_safe_command(gm_job_t * exec_job, int fork_exec, char * identifier) 
 /* called when check runs into timeout */
 void check_alarm_handler(int sig) {
     pid_t pid;
+    int retval;
 
     gm_log( GM_LOG_TRACE, "check_alarm_handler(%i)\n", sig );
     pid = getpid();
@@ -406,16 +415,25 @@ void check_alarm_handler(int sig) {
         gearman_job_send_complete(current_gearman_job, NULL, 0);
     }
 
-    if(current_child_pid > 0) {
-        kill_child_checks();
-    } else {
-        signal(SIGINT, SIG_IGN);
-        gm_log( GM_LOG_TRACE, "send SIGINT to %d\n", pid);
-        kill(-pid, SIGINT);
-        signal(SIGINT, SIG_DFL);
-        sleep(1);
+    signal(SIGTERM, SIG_IGN);
+    gm_log( GM_LOG_TRACE, "send SIGTERM to %d\n", pid);
+    kill(-pid, SIGTERM);
+    kill(pid, SIGTERM);
+    signal(SIGTERM, SIG_DFL);
+    sleep(1);
+
+    signal(SIGINT, SIG_IGN);
+    gm_log( GM_LOG_TRACE, "send SIGINT to %d\n", pid);
+    kill(-pid, SIGINT);
+    kill(pid, SIGINT);
+    signal(SIGINT, SIG_DFL);
+    sleep(1);
+
+    // skip sigkill in test mode
+    if(getenv("MODGEARMANTEST") == NULL) {
         gm_log( GM_LOG_TRACE, "send SIGKILL to %d\n", pid);
         kill(-pid, SIGKILL);
+        kill(pid, SIGKILL);
     }
 
     return;
@@ -430,6 +448,7 @@ void kill_child_checks(void) {
     pid = getpid();
     if(current_child_pid > 0 && current_child_pid != pid) {
         gm_log( GM_LOG_TRACE, "kill_child_checks(): send SIGINT to %d\n", current_child_pid);
+        kill(-current_child_pid, SIGINT);
         kill(current_child_pid, SIGINT);
         sleep(1);
         if(waitpid(current_child_pid,&retval,WNOHANG)!=0) {
@@ -478,7 +497,6 @@ void send_failed_result(gm_job_t * exec_job, int sig) {
     struct timeval end_time;
     char buffer[GM_BUFFERSIZE];
     char * signame;
-    char * buf_dup;
     buffer[0] = '\x0';
 
     gm_log( GM_LOG_TRACE, "send_failed_result()\n");

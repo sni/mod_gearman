@@ -261,6 +261,7 @@ int set_default_options(mod_gm_opt_t *opt) {
     opt->dup_results_are_passive = GM_ENABLED;
     opt->orphan_host_checks      = GM_ENABLED;
     opt->orphan_service_checks   = GM_ENABLED;
+    opt->orphan_return           = 2;
     opt->accept_clear_results    = GM_DISABLED;
     opt->has_starttime      = FALSE;
     opt->has_finishtime     = FALSE;
@@ -716,8 +717,19 @@ int parse_args_line(mod_gm_opt_t *opt, char * arg, int recursion_level) {
     /* timeout_return */
     else if ( !strcmp( key, "timeout_return" ) ) {
         opt->timeout_return = atoi( value );
-        if(opt->timeout_return < 0) { opt->timeout_return = 2; }
-        if(opt->timeout_return > 3) { opt->timeout_return = 2; }
+        if(opt->timeout_return < 0 || opt->timeout_return > 3) {
+            gm_log( GM_LOG_INFO, "Warning: unknown timeout_return: %d\n", opt->timeout_return );
+            opt->timeout_return = 2;
+        }
+    }
+
+    /* orphan_return */
+    else if ( !strcmp( key, "orphan_return" ) ) {
+        opt->orphan_return = atoi( value );
+        if(opt->orphan_return < 0 || opt->orphan_return > 3) {
+            gm_log( GM_LOG_INFO, "Warning: unknown orphan_return: %d\n", opt->orphan_return );
+            opt->orphan_return = 2;
+        }
     }
 
     /* perfdata_mode */

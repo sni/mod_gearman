@@ -2,15 +2,25 @@
     "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
 <head>
-<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-<meta name="generator" content="AsciiDoc 8.5.2" />
+<meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
+<meta name="generator" content="AsciiDoc 8.6.6" />
 <title>Nagios Gearman Module</title>
 <style type="text/css">
-/* Debug borders */
-p, li, dt, dd, div, pre, h1, h2, h3, h4, h5, h6 {
-/*
-  border: 1px solid red;
-*/
+/* Shared CSS for AsciiDoc xhtml11 and html5 backends */
+
+/* Default font. */
+body {
+  font-family: Georgia,serif;
+}
+
+/* Title font. */
+h1, h2, h3, h4, h5, h6,
+div.title, caption.title,
+thead, p.table.header,
+#toctitle,
+#author, #revnumber, #revdate, #revremark,
+#footer {
+  font-family: Arial,Helvetica,sans-serif;
 }
 
 body {
@@ -35,13 +45,8 @@ strong {
   color: #083194;
 }
 
-tt {
-  color: navy;
-}
-
 h1, h2, h3, h4, h5, h6 {
   color: #527bbd;
-  font-family: sans-serif;
   margin-top: 1.2em;
   margin-bottom: 0.5em;
   line-height: 1.3;
@@ -59,9 +64,11 @@ h3 {
 h3 + * {
   clear: left;
 }
+h5 {
+  font-size: 1.0em;
+}
 
 div.sectionbody {
-  font-family: serif;
   margin-left: 0;
 }
 
@@ -77,45 +84,44 @@ p {
 ul, ol, li > p {
   margin-top: 0;
 }
+ul > li     { color: #aaa; }
+ul > li > * { color: black; }
 
 pre {
   padding: 0;
   margin: 0;
 }
 
-span#author {
+#author {
   color: #527bbd;
-  font-family: sans-serif;
   font-weight: bold;
   font-size: 1.1em;
 }
-span#email {
+#email {
 }
-span#revnumber, span#revdate, span#revremark {
-  font-family: sans-serif;
+#revnumber, #revdate, #revremark {
 }
 
-div#footer {
-  font-family: sans-serif;
+#footer {
   font-size: small;
   border-top: 2px solid silver;
   padding-top: 0.5em;
   margin-top: 4.0em;
 }
-div#footer-text {
+#footer-text {
   float: left;
   padding-bottom: 0.5em;
 }
-div#footer-badges {
+#footer-badges {
   float: right;
   padding-bottom: 0.5em;
 }
 
-div#preamble {
+#preamble {
   margin-top: 1.5em;
   margin-bottom: 1.5em;
 }
-div.tableblock, div.imageblock, div.exampleblock, div.verseblock,
+div.imageblock, div.exampleblock, div.verseblock,
 div.quoteblock, div.literalblock, div.listingblock, div.sidebarblock,
 div.admonitionblock {
   margin-top: 1.0em;
@@ -135,7 +141,6 @@ div.content { /* Block element content. */
 /* Block element titles. */
 div.title, caption.title {
   color: #527bbd;
-  font-family: sans-serif;
   font-weight: bold;
   text-align: left;
   margin-top: 1.0em;
@@ -157,13 +162,15 @@ div.content + div.title {
 
 div.sidebarblock > div.content {
   background: #ffffee;
-  border: 1px solid silver;
+  border: 1px solid #dddddd;
+  border-left: 4px solid #f0f0f0;
   padding: 0.5em;
 }
 
 div.listingblock > div.content {
-  border: 1px solid silver;
-  background: #f4f4f4;
+  border: 1px solid #dddddd;
+  border-left: 5px solid #f0f0f0;
+  background: #f8f8f8;
   padding: 0.5em;
 }
 
@@ -171,8 +178,8 @@ div.quoteblock, div.verseblock {
   padding-left: 1.0em;
   margin-left: 1.0em;
   margin-right: 10%;
-  border-left: 5px solid #dddddd;
-  color: #777777;
+  border-left: 5px solid #f0f0f0;
+  color: #888;
 }
 
 div.quoteblock > div.attribution {
@@ -180,8 +187,9 @@ div.quoteblock > div.attribution {
   text-align: right;
 }
 
-div.verseblock > div.content {
-  white-space: pre;
+div.verseblock > pre.content {
+  font-family: inherit;
+  font-size: inherit;
 }
 div.verseblock > div.attribution {
   padding-top: 0.75em;
@@ -254,35 +262,12 @@ div.compact div, div.compact div {
   margin-bottom: 0.1em;
 }
 
-div.tableblock > table {
-  border: 3px solid #527bbd;
-}
-thead, p.table.header {
-  font-family: sans-serif;
-  font-weight: bold;
-}
 tfoot {
   font-weight: bold;
 }
 td > div.verse {
   white-space: pre;
 }
-p.table {
-  margin-top: 0;
-}
-/* Because the table frame attribute is overriden by CSS in most browsers. */
-div.tableblock > table[frame="void"] {
-  border-style: none;
-}
-div.tableblock > table[frame="hsides"] {
-  border-left-style: none;
-  border-right-style: none;
-}
-div.tableblock > table[frame="vsides"] {
-  border-top-style: none;
-  border-bottom-style: none;
-}
-
 
 div.hdlist {
   margin-top: 0.8em;
@@ -339,18 +324,25 @@ span.footnote, span.footnoteref {
   min-width: 100px;
 }
 
-
-@media print {
-  div#footer-badges { display: none; }
+div.colist td {
+  padding-right: 0.5em;
+  padding-bottom: 0.3em;
+  vertical-align: top;
+}
+div.colist td img {
+  margin-top: 0.3em;
 }
 
-div#toc {
+@media print {
+  #footer-badges { display: none; }
+}
+
+#toc {
   margin-bottom: 2.5em;
 }
 
-div#toctitle {
+#toctitle {
   color: #527bbd;
-  font-family: sans-serif;
   font-size: 1.1em;
   font-weight: bold;
   margin-top: 1.0em;
@@ -373,51 +365,182 @@ div.toclevel4 {
   margin-left: 6em;
   font-size: 0.9em;
 }
-/* Workarounds for IE6's broken and incomplete CSS2. */
 
-div.sidebar-content {
-  background: #ffffee;
-  border: 1px solid silver;
-  padding: 0.5em;
+span.aqua { color: aqua; }
+span.black { color: black; }
+span.blue { color: blue; }
+span.fuchsia { color: fuchsia; }
+span.gray { color: gray; }
+span.green { color: green; }
+span.lime { color: lime; }
+span.maroon { color: maroon; }
+span.navy { color: navy; }
+span.olive { color: olive; }
+span.purple { color: purple; }
+span.red { color: red; }
+span.silver { color: silver; }
+span.teal { color: teal; }
+span.white { color: white; }
+span.yellow { color: yellow; }
+
+span.aqua-background { background: aqua; }
+span.black-background { background: black; }
+span.blue-background { background: blue; }
+span.fuchsia-background { background: fuchsia; }
+span.gray-background { background: gray; }
+span.green-background { background: green; }
+span.lime-background { background: lime; }
+span.maroon-background { background: maroon; }
+span.navy-background { background: navy; }
+span.olive-background { background: olive; }
+span.purple-background { background: purple; }
+span.red-background { background: red; }
+span.silver-background { background: silver; }
+span.teal-background { background: teal; }
+span.white-background { background: white; }
+span.yellow-background { background: yellow; }
+
+span.big { font-size: 2em; }
+span.small { font-size: 0.6em; }
+
+span.underline { text-decoration: underline; }
+span.overline { text-decoration: overline; }
+span.line-through { text-decoration: line-through; }
+
+
+/*
+ * xhtml11 specific
+ *
+ * */
+
+tt {
+  font-family: monospace;
+  font-size: inherit;
+  color: navy;
 }
-div.sidebar-title, div.image-title {
-  color: #527bbd;
-  font-family: sans-serif;
+
+div.tableblock {
+  margin-top: 1.0em;
+  margin-bottom: 1.5em;
+}
+div.tableblock > table {
+  border: 3px solid #527bbd;
+}
+thead, p.table.header {
   font-weight: bold;
-  margin-top: 0.0em;
-  margin-bottom: 0.5em;
+  color: #527bbd;
+}
+p.table {
+  margin-top: 0;
+}
+/* Because the table frame attribute is overriden by CSS in most browsers. */
+div.tableblock > table[frame="void"] {
+  border-style: none;
+}
+div.tableblock > table[frame="hsides"] {
+  border-left-style: none;
+  border-right-style: none;
+}
+div.tableblock > table[frame="vsides"] {
+  border-top-style: none;
+  border-bottom-style: none;
 }
 
-div.listingblock div.content {
-  border: 1px solid silver;
-  background: #f4f4f4;
-  padding: 0.5em;
+
+/*
+ * html5 specific
+ *
+ * */
+
+.monospaced {
+  font-family: monospace;
+  font-size: inherit;
+  color: navy;
 }
 
-div.quoteblock-attribution {
-  padding-top: 0.5em;
+table.tableblock {
+  margin-top: 1.0em;
+  margin-bottom: 1.5em;
+}
+thead, p.tableblock.header {
+  font-weight: bold;
+  color: #527bbd;
+}
+p.tableblock {
+  margin-top: 0;
+}
+table.tableblock {
+  border-width: 3px;
+  border-spacing: 0px;
+  border-style: solid;
+  border-color: #527bbd;
+  border-collapse: collapse;
+}
+th.tableblock, td.tableblock {
+  border-width: 1px;
+  padding: 4px;
+  border-style: solid;
+  border-color: #527bbd;
+}
+
+table.tableblock.frame-topbot {
+  border-left-style: hidden;
+  border-right-style: hidden;
+}
+table.tableblock.frame-sides {
+  border-top-style: hidden;
+  border-bottom-style: hidden;
+}
+table.tableblock.frame-none {
+  border-style: hidden;
+}
+
+th.tableblock.halign-left, td.tableblock.halign-left {
+  text-align: left;
+}
+th.tableblock.halign-center, td.tableblock.halign-center {
+  text-align: center;
+}
+th.tableblock.halign-right, td.tableblock.halign-right {
   text-align: right;
 }
 
-div.verseblock-content {
-  white-space: pre;
+th.tableblock.valign-top, td.tableblock.valign-top {
+  vertical-align: top;
 }
-div.verseblock-attribution {
-  padding-top: 0.75em;
-  text-align: left;
+th.tableblock.valign-middle, td.tableblock.valign-middle {
+  vertical-align: middle;
 }
-
-div.exampleblock-content {
-  border-left: 3px solid #dddddd;
-  padding-left: 0.5em;
+th.tableblock.valign-bottom, td.tableblock.valign-bottom {
+  vertical-align: bottom;
 }
 
-/* IE6 sets dynamically generated links as visited. */
-div#toc a:visited { color: blue; }
+
+/*
+ * manpage specific
+ *
+ * */
+
+body.manpage h1 {
+  padding-top: 0.5em;
+  padding-bottom: 0.5em;
+  border-top: 2px solid silver;
+  border-bottom: 2px solid silver;
+}
+body.manpage h2 {
+  border-style: none;
+}
+body.manpage div.sectionbody {
+  margin-left: 3em;
+}
+
+@media print {
+  body.manpage div#toc { display: none; }
+}
 </style>
 
 </head>
-<body style="max-width:800">
+<body class="article" style="max-width:800">
 <div id="header">
 <h1>Nagios Gearman Module</h1>
 <div id="toc"><div id="toctitle">Table of Contents</div>
@@ -466,6 +589,7 @@ div#toc a:visited { color: blue; }
 
 </div>
 <div id="content">
+<div class="sect1">
 <h2 id="_what_is_mod_gearman">What is Mod-Gearman</h2>
 <div class="sectionbody">
 <div class="paragraph"><p><a href="http://labs.consol.de/nagios/mod-gearman">Mod_Gearman</a> is an easy way
@@ -501,6 +625,8 @@ See the <a href="#_common_scenarios">common scenarios</a> for some examples.
 </li>
 </ul></div>
 </div>
+</div>
+<div class="sect1">
 <h2 id="_presentations">Presentations</h2>
 <div class="sectionbody">
 <div class="ulist"><ul>
@@ -516,6 +642,8 @@ See the <a href="#_common_scenarios">common scenarios</a> for some examples.
 </li>
 </ul></div>
 </div>
+</div>
+<div class="sect1">
 <h2 id="_features">Features</h2>
 <div class="sectionbody">
 <div class="ulist"><ul>
@@ -557,12 +685,14 @@ Fast transport of passive check results with included tools like
 </li>
 </ul></div>
 </div>
+</div>
+<div class="sect1">
 <h2 id="_download">Download</h2>
 <div class="sectionbody">
 <div class="ulist"><ul>
 <li>
 <p>
-Latest stable <a href="http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.4.2.tar.gz">version 1.4.2</a>, released January 10 2013
+Latest stable <a href="http://www.mod-gearman.org/download/v1.4.10/src/mod_gearman-1.4.10.tar.gz">version 1.4.10</a>, released August 05 2013
 </p>
 </li>
 <li>
@@ -602,6 +732,8 @@ Debian/Ubuntu users might also want to check out the <a href="http://mod-gearman
 </li>
 </ul></div>
 </div>
+</div>
+<div class="sect1">
 <h2 id="_support">Support</h2>
 <div class="sectionbody">
 <div class="ulist"><ul>
@@ -633,11 +765,15 @@ There are no known bugs at the moment. Let me know if you find one.
 </li>
 </ul></div>
 </div>
+</div>
+<div class="sect1">
 <h2 id="_changelog">Changelog</h2>
 <div class="sectionbody">
 <div class="paragraph"><p>The changelog is available on
 <a href="https://github.com/sni/mod_gearman/blob/master/Changes">github</a>.</p></div>
 </div>
+</div>
+<div class="sect1">
 <h2 id="_how_does_it_work">How does it work</h2>
 <div class="sectionbody">
 <div class="paragraph"><p>When the Mod-Gearman broker module is loaded, it intercepts all
@@ -729,9 +865,12 @@ worker which covers the other queues. There can be more than one
 worker on each queue to share the load.</p></div>
 <a title="mod gearman queues" rel="lightbox[mod_gm]" href="http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman_queues.png"><img src="http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman_queues.png" alt="mod_gearman architecture " width="360" height="270" style="float:none" /></a>
 </div>
+</div>
+<div class="sect1">
 <h2 id="_common_scenarios">Common Scenarios</h2>
 <div class="sectionbody">
-<h3 id="_load_balancing">Load Balancing</h3><div style="clear:left"></div>
+<div class="sect2">
+<h3 id="_load_balancing">Load Balancing</h3>
 <a title="Load Balancing" rel="lightbox[mod_gm]"
 href="http://labs.consol.de/wp-content/uploads/2010/09/sample_load_balancing.png"><img
 src="http://labs.consol.de/wp-content/uploads/2010/09/sample_load_balancing.png"
@@ -757,7 +896,9 @@ no failover
 </p>
 </li>
 </ul></div>
-<h3 id="_distributed_monitoring">Distributed Monitoring</h3><div style="clear:left"></div>
+</div>
+<div class="sect2">
+<h3 id="_distributed_monitoring">Distributed Monitoring</h3>
 <a title="Distributed Monitoring" rel="lightbox[mod_gm]" href="http://labs.consol.de/wp-content/uploads/2010/09/sample_distributed.png"><img src="http://labs.consol.de/wp-content/uploads/2010/09/sample_distributed.png" alt="Distributed Monitoring" width="350" height="125" style="float:none" /></a>
 <div class="paragraph"><p>If your checks have to be run from different network segments, then
 you can use the hostgroups (or servicegroups) to define a hostgroup
@@ -785,7 +926,9 @@ no failover
 </p>
 </li>
 </ul></div>
-<h3 id="_distributed_monitoring_with_load_balancing">Distributed Monitoring with Load Balancing</h3><div style="clear:left"></div>
+</div>
+<div class="sect2">
+<h3 id="_distributed_monitoring_with_load_balancing">Distributed Monitoring with Load Balancing</h3>
 <a title="Distributed Monitoring with Load Balancing" rel="lightbox[mod_gm]" href="http://labs.consol.de/wp-content/uploads/2010/09/sample_distributed_load_balanced.png"><img src="http://labs.consol.de/wp-content/uploads/2010/09/sample_distributed_load_balanced.png" alt="Distributed Monitoring with Load Balancing" width="350" height="225" style="float:none" /></a>
 <div class="paragraph"><p>Your distributed setup could easily be extended to a load balanced
 setup with just adding more worker of the same config.</p></div>
@@ -815,7 +958,9 @@ no failover for the master
 </p>
 </li>
 </ul></div>
-<h3 id="_nsca_replacement">NSCA Replacement</h3><div style="clear:left"></div>
+</div>
+<div class="sect2">
+<h3 id="_nsca_replacement">NSCA Replacement</h3>
 <a title="NSCA Replacement" rel="lightbox[mod_gm]" href="http://labs.consol.de/wp-content/uploads/2010/09/nsca_replacement.png"><img src="http://labs.consol.de/wp-content/uploads/2010/09/nsca_replacement.png" alt="NSCA Replacement" width="300" height="220" style="float:none" /></a>
 <div class="paragraph"><p>If you just want to replace a current NSCA solution, you could load
 the Mod-Gearman NEB module and disable all distribution features. You
@@ -831,7 +976,9 @@ easy to setup in existing environments
 </p>
 </li>
 </ul></div>
-<h3 id="_distributed_setup_with_remote_scheduler">Distributed Setup With Remote Scheduler</h3><div style="clear:left"></div>
+</div>
+<div class="sect2">
+<h3 id="_distributed_setup_with_remote_scheduler">Distributed Setup With Remote Scheduler</h3>
 <a title="Distributed Setup With Remote Scheduler" rel="lightbox[mod_gm]" href="http://labs.consol.de/wp-content/uploads/2010/09/advanced_distributed.png"><img src="http://labs.consol.de/wp-content/uploads/2010/09/advanced_distributed.png" alt="Distributed Setup With Remote Scheduler" width="360" height="270" style="float:none" /></a>
 <div class="paragraph"><p>In case your network is unstable or you need a gui view from the
 remote location or any other reason which makes a remote core
@@ -866,7 +1013,9 @@ requires configuration sync
 </p>
 </li>
 </ul></div>
-<h3 id="_gearman_proxy">Gearman Proxy</h3><div style="clear:left"></div>
+</div>
+<div class="sect2">
+<h3 id="_gearman_proxy">Gearman Proxy</h3>
 <a title="Gearman Proxy" rel="lightbox[mod_gm]" href="http://labs.consol.de/wp-content/uploads/2010/09/gearman_proxy.png"><img src="http://labs.consol.de/wp-content/uploads/2010/09/gearman_proxy.png" alt="Gearman Proxy" width="360" height="270" style="float:none" /></a>
 <div class="paragraph"><p>Sometimes you may need to reverse the direction of the initial
 connection attempt. Usually the worker and the neb module open the
@@ -898,9 +1047,13 @@ two more daemon to monitor and maintain
 </li>
 </ul></div>
 </div>
+</div>
+</div>
+<div class="sect1">
 <h2 id="_installation">Installation</h2>
 <div class="sectionbody">
-<h3 id="_omd">OMD</h3><div style="clear:left"></div>
+<div class="sect2">
+<h3 id="_omd">OMD</h3>
 <div class="paragraph"><p>Using OMD is propably the easiest way of installing and using
 Mod-Gearman. You just have to run <em>omd config</em> or set Mod-Gearman
 to <em>on</em>.</p></div>
@@ -917,12 +1070,16 @@ to <em>on</em>.</p></div>
 <td class="content">Mod-Gearman is included in <a href="http://omdistro.org">OMD</a> since version 0.48.</td>
 </tr></table>
 </div>
-<h3 id="_debian_ubuntu">Debian / Ubuntu</h3><div style="clear:left"></div>
+</div>
+<div class="sect2">
+<h3 id="_debian_ubuntu">Debian / Ubuntu</h3>
 <div class="paragraph"><p>It is strongly recommended to use the
 <a href="http://packages.debian.org/source/wheezy/mod-gearman">official
 packages</a> or the <a href="http://mod-gearman.org/download/">unoffical packages</a> which
 contains Debian Squeeze and various Ubuntu packages.</p></div>
-<h3 id="_centos_redhat">Centos/Redhat</h3><div style="clear:left"></div>
+</div>
+<div class="sect2">
+<h3 id="_centos_redhat">Centos/Redhat</h3>
 <div class="paragraph"><p>The easy and proper way is to build RPM packages. The following steps
 assume a Centos 5.7. Other releases may have different versions but
 should behave similar.</p></div>
@@ -978,7 +1135,9 @@ will fail. It may not be necessary for future gearman versions.</td>
 #&gt; /etc/init.d/mod_gearman_worker start
 #&gt; gearman_top</tt></pre>
 </div></div>
-<h3 id="_from_source">From Source</h3><div style="clear:left"></div>
+</div>
+<div class="sect2">
+<h3 id="_from_source">From Source</h3>
 <div class="admonitionblock">
 <table><tr>
 <td class="icon">
@@ -1051,6 +1210,7 @@ use something like:</p></div>
 <div class="content">
 <pre><tt>/usr/sbin/gearmand --threads=10 --job-retries=0</tt></pre>
 </div></div>
+<div class="sect3">
 <h4 id="_patch_nagios">Patch Nagios</h4>
 <div class="admonitionblock">
 <table><tr>
@@ -1068,9 +1228,14 @@ older version. You only need to replace the Nagios binary. Nothing
 else has changed. If you plan to distribute only Host/Servicechecks,
 no patch is needed.</p></div>
 </div>
+</div>
+</div>
+</div>
+<div class="sect1">
 <h2 id="_configuration">Configuration</h2>
 <div class="sectionbody">
-<h3 id="_nagios_core">Nagios Core</h3><div style="clear:left"></div>
+<div class="sect2">
+<h3 id="_nagios_core">Nagios Core</h3>
 <div class="paragraph"><p>A sample broker in your nagios.cfg could look like:</p></div>
 <div class="listingblock">
 <div class="content">
@@ -1078,7 +1243,9 @@ no patch is needed.</p></div>
 </div></div>
 <div class="paragraph"><p>See the following list for a detailed explanation of available
 options:</p></div>
-<h3 id="_common_options">Common Options</h3><div style="clear:left"></div>
+</div>
+<div class="sect2">
+<h3 id="_common_options">Common Options</h3>
 <div class="paragraph"><p>Shared options for worker and the NEB module:</p></div>
 <div class="dlist"><dl>
 <dt class="hdlist1">
@@ -1090,7 +1257,7 @@ config
     <em>include</em> is an alias for <em>config</em>.
 </p>
 <div class="exampleblock">
-<div class="exampleblock-content">
+<div class="content">
 <div class="literalblock">
 <div class="content">
 <pre><tt>config=/etc/nagios3/mod_gm_worker.conf</tt></pre>
@@ -1105,6 +1272,8 @@ debug
     use debug to increase the verbosity of the module.
     Possible values are:
 </p>
+<div class="openblock">
+<div class="content">
 <div class="ulist"><ul>
 <li>
 <p>
@@ -1122,9 +1291,10 @@ debug
 </p>
 </li>
 </ul></div>
+</div></div>
 <div class="paragraph"><p>Default is 0.</p></div>
 <div class="exampleblock">
-<div class="exampleblock-content">
+<div class="content">
 <div class="literalblock">
 <div class="content">
 <pre><tt>debug=1</tt></pre>
@@ -1139,6 +1309,8 @@ logmode
     set way of logging.
     Possible values are:
 </p>
+<div class="openblock">
+<div class="content">
 <div class="ulist"><ul>
 <li>
 <p>
@@ -1169,9 +1341,10 @@ logmode
 </p>
 </li>
 </ul></div>
+</div></div>
 <div class="paragraph"><p>Default is automatic.</p></div>
 <div class="exampleblock">
-<div class="exampleblock-content">
+<div class="content">
 <div class="literalblock">
 <div class="content">
 <pre><tt>logmode=automatic</tt></pre>
@@ -1186,7 +1359,7 @@ logfile
 Path to the logfile.
 </p>
 <div class="exampleblock">
-<div class="exampleblock-content">
+<div class="content">
 <div class="literalblock">
 <div class="content">
 <pre><tt>logfile=/path/to/log.file</tt></pre>
@@ -1203,7 +1376,7 @@ more than once to add more server. Mod-Gearman uses
 the first server available.
 </p>
 <div class="exampleblock">
-<div class="exampleblock-content">
+<div class="content">
 <div class="literalblock">
 <div class="content">
 <pre><tt>server=localhost:4730,remote_host:4730</tt></pre>
@@ -1219,7 +1392,7 @@ defines if the module should distribute execution of
 eventhandlers.
 </p>
 <div class="exampleblock">
-<div class="exampleblock-content">
+<div class="content">
 <div class="literalblock">
 <div class="content">
 <pre><tt>eventhandler=yes</tt></pre>
@@ -1234,7 +1407,7 @@ services
 defines if the module should distribute execution of service checks.
 </p>
 <div class="exampleblock">
-<div class="exampleblock-content">
+<div class="content">
 <div class="literalblock">
 <div class="content">
 <pre><tt>services=yes</tt></pre>
@@ -1249,7 +1422,7 @@ hosts
 defines if the module should distribute execution of host checks.
 </p>
 <div class="exampleblock">
-<div class="exampleblock-content">
+<div class="content">
 <div class="literalblock">
 <div class="content">
 <pre><tt>hosts=yes</tt></pre>
@@ -1264,7 +1437,7 @@ hostgroups
 sets a list of hostgroups which will go into seperate queues.
 </p>
 <div class="exampleblock">
-<div class="exampleblock-content">
+<div class="content">
 <div class="literalblock">
 <div class="content">
 <pre><tt>hostgroups=name1,name2,name3</tt></pre>
@@ -1279,7 +1452,7 @@ servicegroups
 sets a list of servicegroups which will go into seperate queues.
 </p>
 <div class="exampleblock">
-<div class="exampleblock-content">
+<div class="content">
 <div class="literalblock">
 <div class="content">
 <pre><tt>servicegroups=name1,name2,name3</tt></pre>
@@ -1299,7 +1472,7 @@ a keyfile with <tt>keyfile=...</tt>.
 Default is On.
 </p>
 <div class="exampleblock">
-<div class="exampleblock-content">
+<div class="content">
 <div class="literalblock">
 <div class="content">
 <pre><tt>encryption=yes</tt></pre>
@@ -1315,7 +1488,7 @@ A shared password which will be used for encryption of data pakets. Should be at
 least 8 bytes long. Maximum length is 32 characters.
 </p>
 <div class="exampleblock">
-<div class="exampleblock-content">
+<div class="content">
 <div class="literalblock">
 <div class="content">
 <pre><tt>key=secret</tt></pre>
@@ -1332,7 +1505,7 @@ Only the first 32 characters from the first line will be used.
 Whitespace to the right will be trimmed.
 </p>
 <div class="exampleblock">
-<div class="exampleblock-content">
+<div class="content">
 <div class="literalblock">
 <div class="content">
 <pre><tt>keyfile=/path/to/secret.file</tt></pre>
@@ -1355,13 +1528,15 @@ Default is On.
 </dl></div>
 <div class="paragraph"><p>+</p></div>
 <div class="exampleblock">
-<div class="exampleblock-content">
+<div class="content">
 <div class="literalblock">
 <div class="content">
 <pre><tt>use_uniq_jobs=on</tt></pre>
 </div></div>
 </div></div>
-<h3 id="_server_options">Server Options</h3><div style="clear:left"></div>
+</div>
+<div class="sect2">
+<h3 id="_server_options">Server Options</h3>
 <div class="paragraph"><p>Additional options for the NEB module only:</p></div>
 <div class="dlist"><dl>
 <dt class="hdlist1">
@@ -1373,7 +1548,7 @@ sets a list of hostgroups which will not be executed by gearman. They are just
 passed through.
 </p>
 <div class="exampleblock">
-<div class="exampleblock-content">
+<div class="content">
 <div class="literalblock">
 <div class="content">
 <pre><tt>localhostgroups=name1,name2,name3</tt></pre>
@@ -1389,7 +1564,7 @@ sets a list of servicegroups which will not be executed by gearman. They are
 just passed through.
 </p>
 <div class="exampleblock">
-<div class="exampleblock-content">
+<div class="content">
 <div class="literalblock">
 <div class="content">
 <pre><tt>localservicegroups=name1,name2,name3</tt></pre>
@@ -1410,7 +1585,7 @@ variable to <em>local</em> to bypass Mod-Gearman (Same behaviour as in
 localhostgroups/localservicegroups).
 </p>
 <div class="exampleblock">
-<div class="exampleblock-content">
+<div class="content">
 <div class="literalblock">
 <div class="content">
 <pre><tt>queue_custom_variable=WORKER</tt></pre>
@@ -1431,7 +1606,7 @@ processed by either using <em>hosts</em> or the <em>hostgroups</em> option.
 Default: <tt>yes</tt>
 </p>
 <div class="exampleblock">
-<div class="exampleblock-content">
+<div class="content">
 <div class="literalblock">
 <div class="content">
 <pre><tt>do_hostchecks=yes</tt></pre>
@@ -1447,7 +1622,7 @@ Number of result worker threads. Usually one is enough. You may increase the
 value if your result queue is not processed fast enough.
 </p>
 <div class="exampleblock">
-<div class="exampleblock-content">
+<div class="content">
 <div class="literalblock">
 <div class="content">
 <pre><tt>result_workers=3</tt></pre>
@@ -1462,7 +1637,7 @@ perfdata
 Defines if the module should distribute perfdata to gearman.
 </p>
 <div class="exampleblock">
-<div class="exampleblock-content">
+<div class="content">
 <div class="literalblock">
 <div class="content">
 <pre><tt>perfdata=yes</tt></pre>
@@ -1495,6 +1670,8 @@ perfdata_mode
     using the <em>append</em> mode.
     Possible values are:
 </p>
+<div class="openblock">
+<div class="content">
 <div class="ulist"><ul>
 <li>
 <p>
@@ -1507,9 +1684,10 @@ perfdata_mode
 </p>
 </li>
 </ul></div>
+</div></div>
 <div class="paragraph"><p>Default is 1.</p></div>
 <div class="exampleblock">
-<div class="exampleblock-content">
+<div class="content">
 <div class="literalblock">
 <div class="content">
 <pre><tt>perfdata_mode=1</tt></pre>
@@ -1525,7 +1703,7 @@ sets the result queue. Necessary when putting jobs from several Nagios instances
 onto the same gearman queues. Default: <tt>check_results</tt>
 </p>
 <div class="exampleblock">
-<div class="exampleblock-content">
+<div class="content">
 <div class="literalblock">
 <div class="content">
 <pre><tt>result_queue=check_results_nagios1</tt></pre>
@@ -1545,7 +1723,7 @@ running.
 Default is yes.
 </p>
 <div class="exampleblock">
-<div class="exampleblock-content">
+<div class="content">
 <div class="literalblock">
 <div class="content">
 <pre><tt>orphan_host_checks=yes</tt></pre>
@@ -1561,7 +1739,7 @@ Same like <em>orphan_host_checks</em> but for services.
 Default is yes.
 </p>
 <div class="exampleblock">
-<div class="exampleblock-content">
+<div class="content">
 <div class="literalblock">
 <div class="content">
 <pre><tt>orphan_service_checks=yes</tt></pre>
@@ -1580,7 +1758,7 @@ to all clients using these tools.
 Default is no.
 </p>
 <div class="exampleblock">
-<div class="exampleblock-content">
+<div class="content">
 <div class="literalblock">
 <div class="content">
 <pre><tt>accept_clear_results=yes</tt></pre>
@@ -1588,7 +1766,9 @@ Default is no.
 </div></div>
 </dd>
 </dl></div>
-<h3 id="_worker_options">Worker Options</h3><div style="clear:left"></div>
+</div>
+<div class="sect2">
+<h3 id="_worker_options">Worker Options</h3>
 <div class="paragraph"><p>Additional options for worker:</p></div>
 <div class="dlist"><dl>
 <dt class="hdlist1">
@@ -1601,7 +1781,7 @@ status requests. You may want to change it if you are using more than one worker
 on a single host.  Defaults to the current hostname.
 </p>
 <div class="exampleblock">
-<div class="exampleblock-content">
+<div class="content">
 <div class="literalblock">
 <div class="content">
 <pre><tt>identifier=hostname_test</tt></pre>
@@ -1616,7 +1796,7 @@ pidfile
 Path to the pidfile.
 </p>
 <div class="exampleblock">
-<div class="exampleblock-content">
+<div class="content">
 <div class="literalblock">
 <div class="content">
 <pre><tt>pidfile=/path/to/pid.file</tt></pre>
@@ -1634,7 +1814,7 @@ and service checks.
 Default: 60
 </p>
 <div class="exampleblock">
-<div class="exampleblock-content">
+<div class="content">
 <div class="literalblock">
 <div class="content">
 <pre><tt>job_timeout=60</tt></pre>
@@ -1655,7 +1835,7 @@ disabled. Set to zero to disable this check.
 Default: 0
 </p>
 <div class="exampleblock">
-<div class="exampleblock-content">
+<div class="content">
 <div class="literalblock">
 <div class="content">
 <pre><tt>max-age=600</tt></pre>
@@ -1670,7 +1850,7 @@ min-worker
 Minimum number of worker processes which should run at any time. Default: 1
 </p>
 <div class="exampleblock">
-<div class="exampleblock-content">
+<div class="content">
 <div class="literalblock">
 <div class="content">
 <pre><tt>min-worker=1</tt></pre>
@@ -1688,7 +1868,7 @@ setting this to 1, all services from this worker will be executed one after
 another. Default: 20
 </p>
 <div class="exampleblock">
-<div class="exampleblock-content">
+<div class="content">
 <div class="literalblock">
 <div class="content">
 <pre><tt>max-worker=20</tt></pre>
@@ -1704,7 +1884,7 @@ Defines the rate of spawned worker per second as long as there are jobs
 waiting. Default: 1
 </p>
 <div class="exampleblock">
-<div class="exampleblock-content">
+<div class="content">
 <div class="literalblock">
 <div class="content">
 <pre><tt>spawn-rate=1</tt></pre>
@@ -1722,7 +1902,7 @@ No limit will be used when set to 0.
 Default: no limit
 </p>
 <div class="exampleblock">
-<div class="exampleblock-content">
+<div class="content">
 <div class="literalblock">
 <div class="content">
 <pre><tt>load_limit1=0</tt></pre>
@@ -1738,7 +1918,7 @@ Set a limit based on the 5min load average. See <em>load_limit1</em> for details
 Default: no limit
 </p>
 <div class="exampleblock">
-<div class="exampleblock-content">
+<div class="content">
 <div class="literalblock">
 <div class="content">
 <pre><tt>load_limit5=0</tt></pre>
@@ -1754,7 +1934,7 @@ Set a limit based on the 15min load average. See <em>load_limit1</em> for detail
 Default: no limit
 </p>
 <div class="exampleblock">
-<div class="exampleblock-content">
+<div class="content">
 <div class="literalblock">
 <div class="content">
 <pre><tt>load_limit15=0</tt></pre>
@@ -1771,7 +1951,7 @@ controls how fast your waiting workers will exit if there are no jobs
 waiting. Set to 0 to disable the idle timeout. Default: 10
 </p>
 <div class="exampleblock">
-<div class="exampleblock-content">
+<div class="content">
 <div class="literalblock">
 <div class="content">
 <pre><tt>idle-timeout=30</tt></pre>
@@ -1788,7 +1968,7 @@ control how fast the amount of workers will go down after high load times.
 Disabled when set to 0. Default: 1000
 </p>
 <div class="exampleblock">
-<div class="exampleblock-content">
+<div class="content">
 <div class="literalblock">
 <div class="content">
 <pre><tt>max-jobs=500</tt></pre>
@@ -1805,7 +1985,7 @@ Disabling this option will reduce the load on the worker host, but may
 cause trouble with unclean plugins. Default: no
 </p>
 <div class="exampleblock">
-<div class="exampleblock-content">
+<div class="content">
 <div class="literalblock">
 <div class="content">
 <pre><tt>fork_on_exec=no</tt></pre>
@@ -1822,7 +2002,7 @@ Can be specified more than once to add more server. Useful for duplicating
 results for a reporting installation or remote gui.
 </p>
 <div class="exampleblock">
-<div class="exampleblock-content">
+<div class="content">
 <div class="literalblock">
 <div class="content">
 <pre><tt>dupserver=logserver:4730,logserver2:4730</tt></pre>
@@ -1839,7 +2019,7 @@ only stdout will be displayed.
 Default is yes.
 </p>
 <div class="exampleblock">
-<div class="exampleblock-content">
+<div class="content">
 <div class="literalblock">
 <div class="content">
 <pre><tt>show_error_output=yes</tt></pre>
@@ -1856,7 +2036,7 @@ are 0 (Ok), 1 (Warning), 2 (Critical) and 3 (Unknown)
 Default: 2
 </p>
 <div class="exampleblock">
-<div class="exampleblock-content">
+<div class="content">
 <div class="literalblock">
 <div class="content">
 <pre><tt>timeout_return=2</tt></pre>
@@ -1873,7 +2053,7 @@ will be passive or active.
 Default is yes (passive).
 </p>
 <div class="exampleblock">
-<div class="exampleblock-content">
+<div class="content">
 <div class="literalblock">
 <div class="content">
 <pre><tt>dup_results_are_passive=yes</tt></pre>
@@ -1891,7 +2071,7 @@ results.
 Default is off.
 </p>
 <div class="exampleblock">
-<div class="exampleblock-content">
+<div class="content">
 <div class="literalblock">
 <div class="content">
 <pre><tt>debug-result=yes</tt></pre>
@@ -1908,7 +2088,7 @@ switch to enable or disable the embedded perl interpreter.
 See <a href="#_embedded_perl">Embedded Perl</a> for details on EPN.
 </p>
 <div class="exampleblock">
-<div class="exampleblock-content">
+<div class="content">
 <div class="literalblock">
 <div class="content">
 <pre><tt>enable_embedded_perl=on</tt></pre>
@@ -1926,7 +2106,7 @@ Perl scripts not written for epn support usually fail with epn,
 so its better to set the default to off.
 </p>
 <div class="exampleblock">
-<div class="exampleblock-content">
+<div class="content">
 <div class="literalblock">
 <div class="content">
 <pre><tt>use_embedded_perl_implicitly=off</tt></pre>
@@ -1944,7 +2124,7 @@ When turned off, Mod-Gearman will still use the embedded perl
 interpreter, but will not cache the compiled script.
 </p>
 <div class="exampleblock">
-<div class="exampleblock-content">
+<div class="content">
 <div class="literalblock">
 <div class="content">
 <pre><tt>use_perl_cache=on</tt></pre>
@@ -1964,7 +2144,7 @@ Only needed if you experience problems with plugins exiting with exit
 code 25 randomly. Default is off.
 </p>
 <div class="exampleblock">
-<div class="exampleblock-content">
+<div class="content">
 <div class="literalblock">
 <div class="content">
 <pre><tt>workaround_rc_25=off</tt></pre>
@@ -1973,6 +2153,9 @@ code 25 randomly. Default is off.
 </dd>
 </dl></div>
 </div>
+</div>
+</div>
+<div class="sect1">
 <h2 id="_queue_names">Queue Names</h2>
 <div class="sectionbody">
 <div class="paragraph"><p>You may want to watch your gearman server job queue. The shipped
@@ -2071,6 +2254,8 @@ processed by the gearman worker itself. You will need
 </dd>
 </dl></div>
 </div>
+</div>
+<div class="sect1">
 <h2 id="_performance">Performance</h2>
 <div class="sectionbody">
 <div class="paragraph"><p>While the main motivation was to ease distributed configuration, this
@@ -2089,6 +2274,8 @@ Nagios box. The amount of worker boxes depends on your check types.</p></div>
 <a title="mod gearman performance" rel="lightbox[mod_gm]" href="http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman_performance_1.png"><img src="http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman_performance_1.png" alt="mod_gearman performance" width="424" height="176" style="float:none" /></a>
 <div class="paragraph"><p>See this article about benchmarks with <a href="https://labs.consol.de/blog/nagios/monitoring-core-benchmarks/">Nagios3, Nagios4 and Mod-Gearman</a>.</p></div>
 </div>
+</div>
+<div class="sect1">
 <h2 id="_exports">Exports</h2>
 <div class="sectionbody">
 <div class="paragraph"><p>Exports export data structures from the Nagios core as JSON data. For
@@ -2107,7 +2294,7 @@ back to the core (Not all callbacks support return codes). Callbacks
 are a list of callbacks for which you want to export json data.
 </p>
 <div class="exampleblock">
-<div class="exampleblock-content">
+<div class="content">
 <div class="literalblock">
 <div class="content">
 <pre><tt>export=&lt;queue&gt;:&lt;returncode&gt;:&lt;callback&gt;[,&lt;callback&gt;,...]</tt></pre>
@@ -2120,6 +2307,8 @@ are a list of callbacks for which you want to export json data.
 </dd>
 </dl></div>
 </div>
+</div>
+<div class="sect1">
 <h2 id="_embedded_perl">Embedded Perl</h2>
 <div class="sectionbody">
 <div class="paragraph"><p>Since 1.2.0 Mod-Gearman has builtin embedded Perl support which means
@@ -2175,9 +2364,12 @@ time to time (see <em>max-jobs</em>).</td>
 </tr></table>
 </div>
 </div>
+</div>
+<div class="sect1">
 <h2 id="_how_to">How To</h2>
 <div class="sectionbody">
-<h3 id="_how_to_monitor_job_server_and_worker">How to Monitor Job Server and Worker</h3><div style="clear:left"></div>
+<div class="sect2">
+<h3 id="_how_to_monitor_job_server_and_worker">How to Monitor Job Server and Worker</h3>
 <div class="paragraph"><p>Use the supplied check_gearman to monitor your worker and job server.
 Worker have a own queue for status requests.</p></div>
 <div class="listingblock">
@@ -2193,7 +2385,9 @@ respond with some statistical data.</p></div>
 <pre><tt>%&gt; ./check_gearman -H localhost -t 20
 check_gearman OK - 6 jobs running and 0 jobs waiting.|check_results=0;0;1;10;100 host=0;0;9;10;100 service=0;6;9;10;100</tt></pre>
 </div></div>
-<h3 id="_how_to_submit_passive_checks">How to Submit Passive Checks</h3><div style="clear:left"></div>
+</div>
+<div class="sect2">
+<h3 id="_how_to_submit_passive_checks">How to Submit Passive Checks</h3>
 <div class="paragraph"><p>You can use send_gearman to submit active and passive checks to a
 gearman job server where they will be processed just like a finished
 check would do.</p></div>
@@ -2201,7 +2395,9 @@ check would do.</p></div>
 <div class="content">
 <pre><tt>%&gt; ./send_gearman --server=&lt;job server&gt; --encryption=no --host="&lt;hostname&gt;" --service="&lt;service&gt;" --message="message"</tt></pre>
 </div></div>
-<h3 id="_how_to_build_send_gearman_exe">How to build send_gearman.exe</h3><div style="clear:left"></div>
+</div>
+<div class="sect2">
+<h3 id="_how_to_build_send_gearman_exe">How to build send_gearman.exe</h3>
 <div class="paragraph"><p>After installing strawberry perl, you need to install the
 <em>PAR::Packer</em> module and run pp:</p></div>
 <div class="listingblock">
@@ -2210,7 +2406,9 @@ check would do.</p></div>
 </div></div>
 <div class="paragraph"><p>Or just use the prebuild one from labs.consol.de:
 <a href="http://labs.consol.de/wp-content/uploads/2010/09/send_gearman.exe">send_gearman.exe</a>.</p></div>
-<h3 id="_how_to_submit_check_multi_results">How to Submit check_multi Results</h3><div style="clear:left"></div>
+</div>
+<div class="sect2">
+<h3 id="_how_to_submit_check_multi_results">How to Submit check_multi Results</h3>
 <div class="paragraph"><p>check_multi is a plugin which executes multiple child checks.
 See more details about the feed_passive mode at:
 <a href="http://www.my-plugin.de/wiki/projects/check_multi/feed_passive">www.my-plugin.de</a></p></div>
@@ -2235,7 +2433,9 @@ achieve this with the following neb module settings:</p></div>
 and the Nagios check_results queue on the same server.</td>
 </tr></table>
 </div>
-<h3 id="_how_to_set_queue_by_custom_variable">How to Set Queue by Custom Variable</h3><div style="clear:left"></div>
+</div>
+<div class="sect2">
+<h3 id="_how_to_set_queue_by_custom_variable">How to Set Queue by Custom Variable</h3>
 <div class="paragraph"><p>Set <em>queue_custom_variable=worker</em> in your Mod-Gearman NEB
 configuration. Then adjust your nagios host/service configuration and
 add the custom variable:</p></div>
@@ -2252,6 +2452,9 @@ which is used by the worker.</p></div>
 <em>hostgroups</em> attribute. From then on, the worker will work on all jobs
 in the <em>hostgroup_test</em> queue.</p></div>
 </div>
+</div>
+</div>
+<div class="sect1">
 <h2 id="_what_about_notifications">What About Notifications</h2>
 <div class="sectionbody">
 <div class="paragraph"><p>Notifications are currently not possible to distribute via
@@ -2259,6 +2462,8 @@ Mod-Gearman. The Nagios core would have to be patched to support this.
 And i think its not very useful at all. So don&#8217;t expect this feature
 to be implemented in the near future.</p></div>
 </div>
+</div>
+<div class="sect1">
 <h2 id="_supported_dependencies">Supported Dependencies</h2>
 <div class="sectionbody">
 <div class="admonitionblock">
@@ -2270,11 +2475,17 @@ to be implemented in the near future.</p></div>
 doubt, use these versions.</td>
 </tr></table>
 </div>
-<h3 id="_lib_gearman">Lib-Gearman</h3><div style="clear:left"></div>
+<div class="sect2">
+<h3 id="_lib_gearman">Lib-Gearman</h3>
 <div class="paragraph"><p>Mod-Gearman has successfully been tested on the following Gearmand
 Versions. It is recommended to always use the latest listed version of
 libgearman.</p></div>
 <div class="ulist"><ul>
+<li>
+<p>
+<a href="https://launchpad.net/gearmand/trunk/0.33">libgearman 0.33</a>
+</p>
+</li>
 <li>
 <p>
 <a href="https://launchpad.net/gearmand/trunk/0.32">libgearman 0.32</a>
@@ -2296,7 +2507,9 @@ libgearman.</p></div>
 </p>
 </li>
 </ul></div>
-<h3 id="_nagios">Nagios</h3><div style="clear:left"></div>
+</div>
+<div class="sect2">
+<h3 id="_nagios">Nagios</h3>
 <div class="paragraph"><p>Mod-Gearman works perfect with the latest stable Nagios 3.2.3. Version
 3.3.1 has some serious bugs and is not recommended for use in
 production.</p></div>
@@ -2307,7 +2520,9 @@ production.</p></div>
 </p>
 </li>
 </ul></div>
-<h3 id="_icinga">Icinga</h3><div style="clear:left"></div>
+</div>
+<div class="sect2">
+<h3 id="_icinga">Icinga</h3>
 <div class="paragraph"><p>Mod-Gearman has succesfully been tested on Icinga 1.2.0 and is running
 perfectly on up to the version 1.8.</p></div>
 <div class="ulist"><ul>
@@ -2318,6 +2533,9 @@ perfectly on up to the version 1.8.</p></div>
 </li>
 </ul></div>
 </div>
+</div>
+</div>
+<div class="sect1">
 <h2 id="_hints">Hints</h2>
 <div class="sectionbody">
 <div class="ulist"><ul>
@@ -2366,9 +2584,31 @@ Make sure all your worker have the Nagios-Plugins available under
 </li>
 </ul></div>
 </div>
+</div>
+<div class="sect1">
 <h2 id="_archive">Archive</h2>
 <div class="sectionbody">
 <div class="ulist"><ul>
+<li>
+<p>
+<a href="http://www.mod-gearman.org/download/v1.4.10/src/mod_gearman-1.4.10.tar.gz">version 1.4.10 - August 05 2013</a>
+</p>
+</li>
+<li>
+<p>
+<a href="http://www.mod-gearman.org/download/v1.4.8/src/mod_gearman-1.4.8.tar.gz">version 1.4.8 - July 27 2013</a>
+</p>
+</li>
+<li>
+<p>
+<a href="http://www.mod-gearman.org/download/v1.4.6/src/mod_gearman-1.4.6.tar.gz">version 1.4.6 - June 04 2013</a>
+</p>
+</li>
+<li>
+<p>
+<a href="http://www.mod-gearman.org/download/v1.4.4/src/mod_gearman-1.4.4.tar.gz">version 1.4.4 - May 03 2013</a>
+</p>
+</li>
 <li>
 <p>
 <a href="http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.4.2.tar.gz">version 1.4.2 - January 10 2013</a>
@@ -2522,10 +2762,11 @@ Make sure all your worker have the Nagios-Plugins available under
 </ul></div>
 </div>
 </div>
+</div>
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2013-02-21 10:43:31 CEST
+Last updated 2013-08-06 17:10:41 CEST
 </div>
 </div>
 </body>

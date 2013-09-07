@@ -1,5 +1,5 @@
 Name:          mod_gearman
-Version:       1.4.2
+Version:       1.4.10
 Release:       1%{?dist}
 License:       GNU Public License version 2
 Packager:      Sven Nierlein <sven.nierlein@consol.de>
@@ -71,7 +71,7 @@ exit 0
 %attr(755,root,root) %{_initrddir}/mod_gearman_worker
 %config(noreplace) %{_sysconfdir}/mod_gearman/mod_gearman_neb.conf
 %config(noreplace) %{_sysconfdir}/mod_gearman/mod_gearman_worker.conf
-%config(noreplace) %{_sysconfdir}/logrotate.d/mod_gearman_worker
+%config(noreplace) %{_sysconfdir}/logrotate.d/mod_gearman
 
 %{_datadir}/mod_gearman/standalone_worker.conf
 %{_datadir}/mod_gearman/shared.conf

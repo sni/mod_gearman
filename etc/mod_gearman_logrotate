@@ -1,8 +1,14 @@
-/var/log/mod_gearman/*log {
+/var/log/mod_gearman/mod_gearman_worker.log {
     missingok
     notifempty
     sharedscripts
     postrotate
         /etc/init.d/mod_gearman_worker reload > /dev/null 2>/dev/null || true
     endscript
+}
+
+/var/log/mod_gearman/mod_gearman_neb.log {
+    missingok
+    notifempty
+    copytruncate
 }

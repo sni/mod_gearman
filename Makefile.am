@@ -111,7 +111,7 @@ EXTRA_DIST = COPYING etc/*.in extras include lib \
              support/mod_gearman.spec \
              t/data/* t/rc t/both t/killer t/sleep t/*.pl t/*.t \
              worker/mod_gearman_p1.pl t/test_all.pl t/valgrind_suppress.cfg contrib \
-             etc/mod_gearman_worker_logrotate
+             etc/mod_gearman_logrotate
 
 include contrib/Makefile.am
 
@@ -123,6 +123,7 @@ mod_gearman.o: $(mod_gearman_so_OBJECTS) $(mod_gearman_so_DEPENDENCIES)
 	else \
 	    $(CXX) $(LDFLAGS) -fPIC -shared $(mod_gearman_so_OBJECTS) -o $@ -lpthread -lgearman; \
 	fi
+	chmod 644 mod_gearman.o
 	@$(RM) mod_gearman.so
 
 common/perlxsi.o:
@@ -197,7 +198,7 @@ worker.static: worker
 	@echo ""
 
 install-exec-local: install-local-state-dir
-	$(install_sh_PROGRAM) mod_gearman.o $(DESTDIR)$(pkglibdir)/mod_gearman.o
+	$(install_sh_PROGRAM) -m 644 mod_gearman.o $(DESTDIR)$(pkglibdir)/mod_gearman.o
 	$(install_sh_PROGRAM) -m 755 worker/initscript $(DESTDIR)$(initrddir)/mod_gearman_worker
 	$(install_sh_PROGRAM) -m 755 extras/gearmand-init $(DESTDIR)$(initrddir)/gearmand
 
@@ -246,15 +247,15 @@ install-data-local: install-local-state-dir $(install_epnfiles)
 
 
 install-config:
-	$(install_sh_PROGRAM) etc/mod_gearman_neb.conf $(DESTDIR)$(sysconfdir)/mod_gearman/mod_gearman_neb.conf
+	$(install_sh_PROGRAM) etc/mod_gearman_neb.conf    $(DESTDIR)$(sysconfdir)/mod_gearman/mod_gearman_neb.conf
 	$(install_sh_PROGRAM) etc/mod_gearman_worker.conf $(DESTDIR)$(sysconfdir)/mod_gearman/mod_gearman_worker.conf
-	$(install_sh_PROGRAM) etc/mod_gearman_worker_logrotate $(DESTDIR)$(sysconfdir)/logrotate.d/mod_gearman_worker
+	$(install_sh_PROGRAM) etc/mod_gearman_logrotate   $(DESTDIR)$(sysconfdir)/logrotate.d/mod_gearman
 	@echo "################################################################"
 	@echo ""
 	@echo " configuration:"
 	@echo "         neb module:  $(DESTDIR)$(sysconfdir)/mod_gearman/mod_gearman_neb.conf"
 	@echo "         worker:      $(DESTDIR)$(sysconfdir)/mod_gearman/mod_gearman_worker.conf"
-	@echo "         logrotate.d: $(DESTDIR)$(sysconfdir)/logrotate.d/mod_gearman_worker"
+	@echo "         logrotate.d: $(DESTDIR)$(sysconfdir)/logrotate.d/mod_gearman"
 	@echo ""
 	@echo "################################################################"
 

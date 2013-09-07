@@ -414,6 +414,11 @@ int set_worker( gearman_worker_st *w ) {
     return GM_OK;
 }
 
+/* called when worker runs into exit timeout */
+void exit_sighandler(int sig) {
+    gm_log( GM_LOG_TRACE, "exit_sighandler(%i)\n", sig );
+    _exit( EXIT_SUCCESS );
+}
 
 /* called when worker runs into idle timeout */
 void idle_sighandler(int sig) {
@@ -431,6 +436,10 @@ void set_state(int status) {
 
     if(worker_run_mode == GM_WORKER_STANDALONE)
         return;
+
+    /* give us 10 seconds to set state */
+    signal(SIGALRM, exit_sighandler);
+    alarm(10);
 
     /* Now we attach the segment to our data space. */
     if ((shm = shmat(shmid, NULL, 0)) == (int *) -1) {
@@ -465,6 +474,8 @@ void set_state(int status) {
     if(shmdt(shm) < 0)
         perror("shmdt");
 
+    alarm(0);
+
     return;
 }
 
@@ -472,6 +483,10 @@ void set_state(int status) {
 /* do a clean exit */
 void clean_worker_exit(int sig) {
     int *shm;
+
+    /* give us 30 seconds to stop */
+    signal(SIGALRM, exit_sighandler);
+    alarm(30);
 
     gm_log( GM_LOG_TRACE, "clean_worker_exit(%d)\n", sig);
 
@@ -546,10 +561,15 @@ void *return_status( gearman_job_st *job, void *context, size_t *result_size, ge
     result = malloc(GM_BUFFERSIZE);
     *result_size = GM_BUFFERSIZE;
 
+    /* give us 10 seconds to get state */
+    signal(SIGALRM, exit_sighandler);
+    alarm(10);
+
     /* Now we attach the segment to our data space. */
     if ((shm = shmat(shmid, NULL, 0)) == (int *) -1) {
         perror("shmat");
         *result_size = 0;
+        alarm(0);
         return NULL;
     }
 
@@ -561,6 +581,8 @@ void *return_status( gearman_job_st *job, void *context, size_t *result_size, ge
     /* detach from shared memory */
     if(shmdt(shm) < 0)
         perror("shmdt");
+
+    alarm(0);
 
     return((void*)result);
 }

@@ -54,6 +54,7 @@ void worker_loop(void);
 void *get_job( gearman_job_st *, void *, size_t *, gearman_return_t * );
 void do_exec_job(void);
 int set_worker( gearman_worker_st *worker );
+void exit_sighandler(int sig);
 void idle_sighandler(int sig);
 void set_state(int status);
 void clean_worker_exit(int sig);

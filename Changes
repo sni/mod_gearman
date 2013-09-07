@@ -1,6 +1,22 @@
 This file documents the revision history for mod_gearman.
 
 next:
+          - fixed send_gearman to send duplicate result to normal server (Brian Christiansen)
+
+1.4.10 Mon Aug  5 11:38:53 CEST 2013
+          - fixed segfault on empty arguments (Michael Friedrich)
+          - fixed commands containing quotes
+
+1.4.8 Sat Jul 27 13:42:11 CEST 2013
+          - ensure worker exits, even if shm blocks
+          - request proper macro escaping for nagios 4
+
+1.4.6 Tue Jun  4 17:03:57 CEST 2013
+          - kill complete process group on timeout
+          - close open filehandles before running check
+          - added new option 'orphan_return' to set return code of orphaned checks
+
+1.4.4 Thu May  3 15:48:34 CEST 2013
           - added 'route_eventhandler_like_checks' option
           - fixed leaking FDs on reloading neb
           - install mini-epn when epn is enabled

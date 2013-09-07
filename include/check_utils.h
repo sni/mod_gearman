@@ -29,6 +29,7 @@
 
 #include "popenRWE.h"
 #include "common.h"
+#include <fcntl.h>
 
 /**
  * nr2signal
