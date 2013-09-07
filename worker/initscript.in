@@ -21,6 +21,7 @@ NAME=mod_gearman_worker
 CONFIG=%CONFIG_WORKER%
 PIDFILE=%PIDFILE%
 USER=%USER%
+LOCKFILE=/var/lock/subsys/$NAME
 USERID=`id -u`
 
 # load extra environment variables
@@ -44,6 +45,7 @@ case "$1" in
             $CMD
         fi
         if [ $? -eq 0 ]; then
+            touch $LOCKFILE
             echo "OK"
         else
             echo "failed"
@@ -62,6 +64,7 @@ case "$1" in
             done
             ps -p $pid > /dev/null 2>&1;
             if [ $? -ne 0 ]; then
+                rm -f $LOCKFILE $PIDFILE
                 echo "OK"
                 exit 0;
             else
