@@ -66,8 +66,9 @@ case "$1" in
             done
             ps -p $pid > /dev/null 2>&1;
             if [ $? -ne 0 ]; then
+                rm -f $PIDFILE
                 if [ "$USERID" -eq 0 ]; then
-                    rm -f $LOCKFILE $PIDFILE
+                    rm -f $LOCKFILE
                 fi
                 echo "OK"
                 exit 0;
