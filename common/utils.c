@@ -1215,14 +1215,26 @@ int free_job(gm_job_t *job) {
 
 /* verify if a pid is alive */
 int pid_alive(int pid) {
+    int status;
+
     if(pid < 0) { pid = -pid; }
 
     /* 1/-1 are undefined pids in our case */
     if(pid == 1)
-        return TRUE;
+        return FALSE;
 
-    /* send kill 0 to verify the proc is alive */
+    /* send kill 0 to verify the process still exists */
     if(kill(pid, 0) == 0) {
+        if(waitpid(pid, &status, WNOHANG) == -1) {
+            perror("waitpid");
+        }
+        if(WIFEXITED(status)) {
+            return FALSE;
+        }
+        if(WIFSIGNALED(status) && (WTERMSIG(status) == SIGINT || WTERMSIG(status) == SIGQUIT)) {
+            return FALSE;
+        }
+
         return TRUE;
     }
 

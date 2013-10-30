@@ -174,17 +174,13 @@ int main (int argc, char **argv) {
 
 /* main loop for checking worker */
 void monitor_loop() {
-    int status;
 
     /* maintain the population */
     while (1) {
         /* check number of workers every second */
         sleep(GM_DEFAULT_WORKER_LOOP_SLEEP);
 
-        /* collect finished workers */
-        while(waitpid(-1, &status, WNOHANG) > 0)
-            gm_log( GM_LOG_TRACE, "waitpid() worker exited with: %d\n", status);
-
+        /* make sure our worker are running */
         check_worker_population();
     }
     return;
@@ -245,9 +241,14 @@ void count_current_worker(int restart) {
 
 /* start new worker if needed */
 void check_worker_population() {
-    int x, now, target_number_of_workers;
+    int x, now, status, target_number_of_workers;
 
     gm_log( GM_LOG_TRACE3, "check_worker_population()\n");
+
+    /* collect finished workers */
+    while(waitpid(-1, &status, WNOHANG) > 0)
+        gm_log( GM_LOG_TRACE, "waitpid() worker exited with: %d\n", status);
+
 
     /* set current worker number */
     count_current_worker(GM_ENABLED);
@@ -263,7 +264,7 @@ void check_worker_population() {
         current_number_of_workers++;
     }
 
-    /* check every second */
+    /* check every second if we need to increase worker population */
     now = (int)time(NULL);
     if(last_time_increased >= now)
         return;
