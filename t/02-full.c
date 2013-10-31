@@ -383,7 +383,7 @@ int main (int argc, char **argv, char **env) {
         diag("make sure gearmand is in your PATH. Common locations are /usr/sbin or /usr/local/sbin");
         exit( EXIT_FAILURE );
     }
-    if(!ok(pid_alive(gearmand_pid) == TRUE, "gearmand alive")) {
+    if(!ok(pid_alive(gearmand_pid, FALSE) == TRUE, "gearmand alive")) {
         check_logfile("/tmp/gearmand.log", 3);
         kill(gearmand_pid, SIGTERM);
         kill(worker_pid, SIGTERM);
@@ -391,7 +391,7 @@ int main (int argc, char **argv, char **env) {
     }
     if(!ok(worker_pid > 0, "worker started with pid: %d", worker_pid))
         diag("could not start worker");
-    if(!ok(pid_alive(worker_pid) == TRUE, "worker alive")) {
+    if(!ok(pid_alive(worker_pid, FALSE) == TRUE, "worker alive")) {
         check_logfile(worker_logfile, 3);
         kill(gearmand_pid, SIGTERM);
         kill(worker_pid, SIGTERM);
@@ -521,7 +521,7 @@ int main (int argc, char **argv, char **env) {
     /* wait 5 seconds to shutdown */
     for(i=0;i<=5;i++) {
         waitpid(gearmand_pid, &status, WNOHANG);
-        if(pid_alive(gearmand_pid) == FALSE) {
+        if(pid_alive(gearmand_pid, FALSE) == FALSE) {
             todo();
             ok(status == 0, "gearmand exited with: %d", real_exit_code(status));
             endtodo;
@@ -530,7 +530,7 @@ int main (int argc, char **argv, char **env) {
         sleep(1);
     }
 
-    if(pid_alive(gearmand_pid) == TRUE) {
+    if(pid_alive(gearmand_pid, FALSE) == TRUE) {
         /* kill it the hard way */
         kill(gearmand_pid, SIGTERM);
         waitpid(gearmand_pid, &status, 0);

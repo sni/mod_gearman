@@ -451,7 +451,7 @@ void kill_child_checks(void) {
             signal(SIGINT, SIG_DFL);
             return;
         }
-        if(pid_alive(current_child_pid)) {
+        if(pid_alive(current_child_pid, TRUE)) {
             gm_log( GM_LOG_TRACE, "kill_child_checks(): send SIGKILL to %d\n", current_child_pid);
             kill(current_child_pid, SIGKILL);
         }

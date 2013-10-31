@@ -307,16 +307,18 @@ int set_default_job(gm_job_t *job, mod_gm_opt_t *mod_gm_opt);
  */
 int free_job(gm_job_t *job);
 
+
 /**
  * pid_alive
  *
  * check if a pid is alive
  *
  * @param[in] pid - pid to check
+ * @param[in] with_child_check - check child by waitpid too
  *
  * @return true if pid is alive
  */
-int pid_alive(int pid);
+int pid_alive(int pid, int with_child_check);
 
 /**
  * escapestring

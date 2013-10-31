@@ -1212,9 +1212,8 @@ int free_job(gm_job_t *job) {
     return(GM_OK);
 }
 
-
 /* verify if a pid is alive */
-int pid_alive(int pid) {
+int pid_alive(int pid, int with_child_check) {
     int status;
 
     if(pid < 0) { pid = -pid; }
@@ -1225,14 +1224,17 @@ int pid_alive(int pid) {
 
     /* send kill 0 to verify the process still exists */
     if(kill(pid, 0) == 0) {
-        if(waitpid(pid, &status, WNOHANG) == -1) {
-            perror("waitpid");
-        }
-        if(WIFEXITED(status)) {
-            return FALSE;
-        }
-        if(WIFSIGNALED(status) && (WTERMSIG(status) == SIGINT || WTERMSIG(status) == SIGQUIT)) {
-            return FALSE;
+        // waitpid is only available for child processes
+        if(with_child_check) {
+            if(waitpid(pid, &status, WNOHANG) == -1) {
+                perror("waitpid");
+            }
+            if(WIFEXITED(status)) {
+                return FALSE;
+            }
+            if(WIFSIGNALED(status) && (WTERMSIG(status) == SIGINT || WTERMSIG(status) == SIGQUIT)) {
+                return FALSE;
+            }
         }
 
         return TRUE;
