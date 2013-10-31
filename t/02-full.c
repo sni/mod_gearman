@@ -364,6 +364,9 @@ int main (int argc, char **argv, char **env) {
         exit( EXIT_FAILURE );
     }
     if(!ok(pid_alive(gearmand_pid) == TRUE, "gearmand alive")) {
+        check_logfile("/tmp/gearmand.log", 3);
+        kill(gearmand_pid, SIGTERM);
+        kill(worker_pid, SIGTERM);
         exit( EXIT_FAILURE );
     }
     if(!ok(worker_pid > 0, "worker started with pid: %d", worker_pid))
@@ -371,6 +374,7 @@ int main (int argc, char **argv, char **env) {
     if(!ok(pid_alive(worker_pid) == TRUE, "worker alive")) {
         check_logfile(worker_logfile, 3);
         kill(gearmand_pid, SIGTERM);
+        kill(worker_pid, SIGTERM);
         exit( EXIT_FAILURE );
     }
 
