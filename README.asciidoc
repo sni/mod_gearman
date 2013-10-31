@@ -1270,16 +1270,23 @@ libgearman.
 
 Nagios
 ~~~~~~
-Mod-Gearman works perfect with the latest stable Nagios 3.2.3. Version
-3.3.1 has some serious bugs and is not recommended for use in
-production.
+Mod-Gearman works best since version 3.2.2 up to the latest stable Nagios 3.5.1.
+Nagios 4 is not fully tested yet, but there is a preview version
+available here http://mod-gearman.org/download/v1.4.0nagios4/ or in
+the nagios4 branch of the source tree.
 
  * http://nagios.org[Nagios]
 
+Naemon
+~~~~~~
+Mod-Gearman works on the Naemon core as well with the same remarks
+as Nagios 4.
+
+
 Icinga
 ~~~~~~
-Mod-Gearman has succesfully been tested on Icinga 1.2.0 and is running
-perfectly on up to the version 1.8.
+Mod-Gearman has been reported to work with Icinga 1.2.0 and
+ version 1.8 but it seems like some statistics are not updated.
 
  * http://icinga.org[Icinga]
 

@@ -582,6 +582,7 @@ body.manpage div.sectionbody {
 <div class='toclevel1'><a href='#_supported_dependencies'>Supported Dependencies</a></div>
 <div class='toclevel2'><a href='#_lib_gearman'>Lib-Gearman</a></div>
 <div class='toclevel2'><a href='#_nagios'>Nagios</a></div>
+<div class='toclevel2'><a href='#_naemon'>Naemon</a></div>
 <div class='toclevel2'><a href='#_icinga'>Icinga</a></div>
 <div class='toclevel1'><a href='#_hints'>Hints</a></div>
 <div class='toclevel1'><a href='#_archive'>Archive</a></div>
@@ -2510,9 +2511,10 @@ libgearman.</p></div>
 </div>
 <div class="sect2">
 <h3 id="_nagios">Nagios</h3>
-<div class="paragraph"><p>Mod-Gearman works perfect with the latest stable Nagios 3.2.3. Version
-3.3.1 has some serious bugs and is not recommended for use in
-production.</p></div>
+<div class="paragraph"><p>Mod-Gearman works best since version 3.2.2 up to the latest stable Nagios 3.5.1.
+Nagios 4 is not fully tested yet, but there is a preview version
+available here <a href="http://mod-gearman.org/download/v1.4.0nagios4/">http://mod-gearman.org/download/v1.4.0nagios4/</a> or in
+the nagios4 branch of the source tree.</p></div>
 <div class="ulist"><ul>
 <li>
 <p>
@@ -2522,9 +2524,14 @@ production.</p></div>
 </ul></div>
 </div>
 <div class="sect2">
+<h3 id="_naemon">Naemon</h3>
+<div class="paragraph"><p>Mod-Gearman works on the Naemon core as well with the same remarks
+as Nagios 4.</p></div>
+</div>
+<div class="sect2">
 <h3 id="_icinga">Icinga</h3>
-<div class="paragraph"><p>Mod-Gearman has succesfully been tested on Icinga 1.2.0 and is running
-perfectly on up to the version 1.8.</p></div>
+<div class="paragraph"><p>Mod-Gearman has been reported to work with Icinga 1.2.0 and
+ version 1.8 but it seems like some statistics are not updated.</p></div>
 <div class="ulist"><ul>
 <li>
 <p>
@@ -2766,7 +2773,7 @@ Make sure all your worker have the Nagios-Plugins available under
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2013-08-06 17:10:41 CEST
+Last updated 2013-10-31 23:24:12 CET
 </div>
 </div>
 </body>
