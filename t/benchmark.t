@@ -6,6 +6,8 @@ use Test::More tests => 8;
 use Data::Dumper;
 use Time::HiRes qw( gettimeofday tv_interval sleep );
 
+alarm(60); # hole test should not take longer than 60 seconds
+
 my $TESTPORT    = 54730;
 my $NR_TST_JOBS = 2000;
 

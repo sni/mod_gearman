@@ -39,9 +39,9 @@ void *start_gearmand(void*data) {
         snprintf(port, 30, "--port=%d", GEARMAND_TEST_PORT);
         /* for newer gearman versions */
         if(atof(gearman_version()) >= 0.27) {
-            execlp("gearmand", "gearmand", "--threads=10", "--job-retries=0", port, "--verbose=DEBUG", "--log-file=/tmp/gearmand.log" , (char *)NULL);
+            execlp("gearmand", "gearmand", "--listen=127.0.0.1", "--threads=10", "--job-retries=0", port, "--verbose=DEBUG", "--log-file=/tmp/gearmand.log" , (char *)NULL);
         } else if(atof(gearman_version()) > 0.14) {
-            execlp("gearmand", "gearmand", "--threads=10", "--job-retries=0", port, "--verbose=999", "--log-file=/tmp/gearmand.log" , (char *)NULL);
+            execlp("gearmand", "gearmand", "--listen=127.0.0.1", "--threads=10", "--job-retries=0", port, "--verbose=999", "--log-file=/tmp/gearmand.log" , (char *)NULL);
         } else {
             /* for gearman 0.14 */
             execlp("gearmand", "gearmand", "-t 10", "-j 0", port, (char *)NULL);
@@ -303,6 +303,8 @@ void wait_for_empty_queue(char *queue, int timeout) {
     // print some debug info
     if(tries >= timeout) {
         stats = malloc(sizeof(mod_gm_server_status_t));
+        stats->function_num = 0;
+        stats->worker_num   = 0;
         rc = get_gearman_server_data(stats, &message, &version, "localhost", GEARMAND_TEST_PORT);
         diag("get_gearman_server_data:  rc: %d\n", rc);
         diag("get_gearman_server_data: msg: %s\n", message);
@@ -396,7 +398,7 @@ int main (int argc, char **argv, char **env) {
         status = 0;
     }
 
-    if(!ok(gearmand_pid > 0, "'gearmand started with pid: %d", GEARMAND_TEST_PORT, gearmand_pid)) {
+    if(!ok(gearmand_pid > 0, "'gearmand started with port %d and pid: %d", GEARMAND_TEST_PORT, gearmand_pid)) {
         diag("make sure gearmand is in your PATH. Common locations are /usr/sbin or /usr/local/sbin");
         exit( EXIT_FAILURE );
     }
@@ -453,10 +455,10 @@ int main (int argc, char **argv, char **env) {
     sleep(1);
     kill(worker_pid, SIGTERM);
     waitpid(worker_pid, &status, 0);
-    ok(status == 0, "worker exited with exit code %d", real_exit_code(status));
+    ok(status == 0, "worker (%d) exited with exit code %d", worker_pid, real_exit_code(status));
     status = 0;
-    check_logfile(worker_logfile, 0);
     check_no_worker_running(worker_logfile);
+    check_logfile(worker_logfile, 0);
 
     char * test_keys[] = {
         "12345",
@@ -487,10 +489,10 @@ int main (int argc, char **argv, char **env) {
 
         kill(worker_pid, SIGTERM);
         waitpid(worker_pid, &status, 0);
-        ok(status == 0, "worker exited with exit code %d", real_exit_code(status));
+        ok(status == 0, "worker (%d) exited with exit code %d", worker_pid, real_exit_code(status));
         status = 0;
-        check_logfile(worker_logfile, 0);
         check_no_worker_running(worker_logfile);
+        check_logfile(worker_logfile, 0);
     }
 
     /*****************************************
@@ -540,7 +542,7 @@ int main (int argc, char **argv, char **env) {
         waitpid(gearmand_pid, &status, WNOHANG);
         if(pid_alive(gearmand_pid, FALSE) == FALSE) {
             todo();
-            ok(status == 0, "gearmand exited with: %d", real_exit_code(status));
+            ok(status == 0, "gearmand (%d) exited with: %d", gearmand_pid, real_exit_code(status));
             endtodo;
             break;
         }
@@ -551,7 +553,7 @@ int main (int argc, char **argv, char **env) {
         /* kill it the hard way */
         kill(gearmand_pid, SIGTERM);
         waitpid(gearmand_pid, &status, 0);
-        ok(status == 0, "gearmand exited with exit code %d", real_exit_code(status));
+        ok(status == 0, "gearmand (%d) exited with exit code %d", gearmand_pid, real_exit_code(status));
         status = 0;
         ok(false, "gearmand had to be killed!");
     }
@@ -561,9 +563,9 @@ int main (int argc, char **argv, char **env) {
 
     kill(worker_pid, SIGTERM);
     waitpid(worker_pid, &status, 0);
-    ok(status == 0, "worker exited with exit code %d", real_exit_code(status));
-    check_logfile(worker_logfile, 2);
+    ok(status == 0, "worker (%d) exited with exit code %d", worker_pid, real_exit_code(status));
     check_no_worker_running(worker_logfile);
+    check_logfile(worker_logfile, 2);
     status = 0;
 
 #ifdef EMBEDDEDPERL
