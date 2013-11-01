@@ -344,7 +344,7 @@ void check_no_worker_running(char* worker_logfile) {
 
     // ensure no worker are running anymore
     char *username=getenv("USER");
-    snprintf(cmd, 150, "ps -efl | grep -v grep | grep '%s' | grep mod_gearman_worker", username);
+    snprintf(cmd, 150, "ps -efl 2>/dev/null | grep -v grep | grep '%s' | grep mod_gearman_worker", username);
     rrc = real_exit_code(run_check(cmd, &result, &error));
     ok(rrc == 1, "no worker running anymore");
     like(result, "^\\s*$", "ps output should be empty");
