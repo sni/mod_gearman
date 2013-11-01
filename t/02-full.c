@@ -317,11 +317,31 @@ char* my_tmpfile() {
     return sfn;
 }
 
+void check_no_worker_running(char*);
+void check_no_worker_running(char* worker_logfile) {
+    char cmd[150];
+    char *result, *error;
+    int rrc;
+
+    // ensure no worker are running anymore
+    char *username=getenv("USER");
+    snprintf(cmd, 150, "ps -efl | grep -v grep | grep '%s' | grep mod_gearman_worker", username);
+    rrc = real_exit_code(run_check(cmd, &result, &error));
+    ok(rrc == 1, "no worker running anymore");
+    like(result, "^\\s*$", "ps output should be empty");
+    like(error, "^\\s*$", "ps error output should be empty");
+    if(rrc != 1) {
+        check_logfile(worker_logfile, 3);
+    }
+    return;
+}
+
+
 /* main tests */
 int main (int argc, char **argv, char **env) {
     argc = argc; argv = argv; env  = env;
     int status, chld, rc;
-    int tests = 92;
+    int tests = 110;
     int rrc;
     char cmd[150];
     char *result, *error, *message, *output;
@@ -419,6 +439,7 @@ int main (int argc, char **argv, char **env) {
     ok(status == 0, "worker exited with exit code %d", real_exit_code(status));
     status = 0;
     check_logfile(worker_logfile, 0);
+    check_no_worker_running(worker_logfile);
 
     char * test_keys[] = {
         "12345",
@@ -452,6 +473,7 @@ int main (int argc, char **argv, char **env) {
         ok(status == 0, "worker exited with exit code %d", real_exit_code(status));
         status = 0;
         check_logfile(worker_logfile, 0);
+        check_no_worker_running(worker_logfile);
     }
 
     /*****************************************
@@ -524,6 +546,7 @@ int main (int argc, char **argv, char **env) {
     waitpid(worker_pid, &status, 0);
     ok(status == 0, "worker exited with exit code %d", real_exit_code(status));
     check_logfile(worker_logfile, 2);
+    check_no_worker_running(worker_logfile);
     status = 0;
 
 #ifdef EMBEDDEDPERL
