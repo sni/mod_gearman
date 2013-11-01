@@ -286,7 +286,6 @@ void wait_for_empty_queue(char *queue, int timeout) {
         rc = get_gearman_server_data(stats, &message, &version, "localhost", GEARMAND_TEST_PORT);
         if( rc == STATE_OK ) {
             for(x=0; x<stats->function_num;x++) {
-                //diag("%s %d %d\n", stats->function[x]->queue, stats->function[x]->waiting, stats->function[x]->running);
                 if(stats->function[x]->waiting == 0 &&
                    stats->function[x]->running == 0 &&
                    !strcmp( stats->function[x]->queue, queue )
@@ -299,6 +298,24 @@ void wait_for_empty_queue(char *queue, int timeout) {
         free(version);
         free_mod_gm_status_server(stats);
         sleep(1);
+    }
+
+    // print some debug info
+    if(tries >= timeout) {
+        stats = malloc(sizeof(mod_gm_server_status_t));
+        rc = get_gearman_server_data(stats, &message, &version, "localhost", GEARMAND_TEST_PORT);
+        diag("get_gearman_server_data:  rc: %d\n", rc);
+        diag("get_gearman_server_data: msg: %s\n", message);
+        diag("get_gearman_server_data: ver: %s\n", version);
+        if( rc == STATE_OK ) {
+            diag("%-7s % 7s % 7s\n", "queue", "waiting", "running");
+            for(x=0; x<stats->function_num;x++) {
+                diag("%-7s % 7d % 7d\n", stats->function[x]->queue, stats->function[x]->waiting, stats->function[x]->running);
+            }
+        }
+        free(message);
+        free(version);
+        free_mod_gm_status_server(stats);
     }
 
     ok(tries < timeout, "queue %s empty after %d seconds", queue, tries);
@@ -374,7 +391,7 @@ int main (int argc, char **argv, char **env) {
 
     /* wait one second and catch died procs */
     sleep(1);
-        while((chld = waitpid(-1, &status, WNOHANG)) != -1 && chld > 0) {
+    while((chld = waitpid(-1, &status, WNOHANG)) != -1 && chld > 0) {
         diag( "waitpid() %d exited with %d\n", chld, status);
         status = 0;
     }
