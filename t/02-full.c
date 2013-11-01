@@ -214,7 +214,7 @@ void do_result_work(int nr) {
     int x = 0;
     for(x=0;x<nr;x++) {
         ret = gearman_worker_work( &worker );
-        //ok(ret == GEARMAN_SUCCESS, 'got valid job' );
+        ok(ret == GEARMAN_SUCCESS, "got valid job from result queue" );
     }
     return;
 }
@@ -360,7 +360,7 @@ void check_no_worker_running(char* worker_logfile) {
 int main (int argc, char **argv, char **env) {
     argc = argc; argv = argv; env  = env;
     int status, chld, rc;
-    int tests = 110;
+    int tests = 127;
     int rrc;
     char cmd[150];
     char *result, *error, *message, *output;
@@ -402,7 +402,7 @@ int main (int argc, char **argv, char **env) {
         diag("make sure gearmand is in your PATH. Common locations are /usr/sbin or /usr/local/sbin");
         exit( EXIT_FAILURE );
     }
-    if(!ok(pid_alive(gearmand_pid, FALSE) == TRUE, "gearmand alive")) {
+    if(!ok(pid_alive(gearmand_pid) == TRUE, "gearmand alive")) {
         check_logfile("/tmp/gearmand.log", 3);
         kill(gearmand_pid, SIGTERM);
         kill(worker_pid, SIGTERM);
@@ -410,7 +410,7 @@ int main (int argc, char **argv, char **env) {
     }
     if(!ok(worker_pid > 0, "worker started with pid: %d", worker_pid))
         diag("could not start worker");
-    if(!ok(pid_alive(worker_pid, FALSE) == TRUE, "worker alive")) {
+    if(!ok(pid_alive(worker_pid) == TRUE, "worker alive")) {
         check_logfile(worker_logfile, 3);
         kill(gearmand_pid, SIGTERM);
         kill(worker_pid, SIGTERM);
@@ -428,6 +428,9 @@ int main (int argc, char **argv, char **env) {
     /* send big job */
     send_big_jobs(GM_ENCODE_ONLY);
     do_result_work(1);
+    wait_for_empty_queue("eventhandler", 20);
+    wait_for_empty_queue("service", 5);
+    wait_for_empty_queue(GM_DEFAULT_RESULT_QUEUE, 5);
 
     /*****************************************
      * test check
@@ -436,6 +439,9 @@ int main (int argc, char **argv, char **env) {
     do_result_work(1);
     like(last_result, "test plugin CRITICAL", "stdout output from ./t/crit.pl");
     like(last_result, "some errors on stderr", "stderr output from ./t/crit.pl");
+    wait_for_empty_queue("eventhandler", 20);
+    wait_for_empty_queue("service", 5);
+    wait_for_empty_queue(GM_DEFAULT_RESULT_QUEUE, 5);
 
     /*****************************************
      * test check2
@@ -444,6 +450,9 @@ int main (int argc, char **argv, char **env) {
     do_result_work(1);
     like(last_result, "stdout output", "stdout output from ./t/both");
     like(last_result, "stderr output", "stderr output from ./t/both");
+    wait_for_empty_queue("eventhandler", 20);
+    wait_for_empty_queue("service", 5);
+    wait_for_empty_queue(GM_DEFAULT_RESULT_QUEUE, 5);
 
     /* try to send some data with base64 only */
     test_eventhandler(GM_ENCODE_ONLY);
@@ -540,7 +549,7 @@ int main (int argc, char **argv, char **env) {
     /* wait 5 seconds to shutdown */
     for(i=0;i<=5;i++) {
         waitpid(gearmand_pid, &status, WNOHANG);
-        if(pid_alive(gearmand_pid, FALSE) == FALSE) {
+        if(pid_alive(gearmand_pid) == FALSE) {
             todo();
             ok(status == 0, "gearmand (%d) exited with: %d", gearmand_pid, real_exit_code(status));
             endtodo;
@@ -549,7 +558,7 @@ int main (int argc, char **argv, char **env) {
         sleep(1);
     }
 
-    if(pid_alive(gearmand_pid, FALSE) == TRUE) {
+    if(pid_alive(gearmand_pid) == TRUE) {
         /* kill it the hard way */
         kill(gearmand_pid, SIGTERM);
         waitpid(gearmand_pid, &status, 0);

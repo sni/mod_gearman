@@ -202,7 +202,7 @@ void count_current_worker(int restart) {
      */
 
     /* check if status worker died */
-    if( shm[SHM_STATUS_WORKER_PID] != -1 && pid_alive(shm[SHM_STATUS_WORKER_PID], TRUE) == FALSE ) {
+    if( shm[SHM_STATUS_WORKER_PID] != -1 && pid_alive(shm[SHM_STATUS_WORKER_PID]) == FALSE ) {
         gm_log( GM_LOG_TRACE, "removed stale status worker, old pid: %d\n", shm[SHM_STATUS_WORKER_PID] );
         shm[SHM_STATUS_WORKER_PID] = -1;
     }
@@ -214,7 +214,7 @@ void count_current_worker(int restart) {
     for(x=SHM_SHIFT; x < mod_gm_opt->max_worker+SHM_SHIFT; x++) {
         /* verify worker is alive */
         gm_log( GM_LOG_TRACE3, "worker slot:   shm[%d] = %d\n", x, shm[x]);
-        if( shm[x] != -1 && pid_alive(shm[x], TRUE) == FALSE ) {
+        if( shm[x] != -1 && pid_alive(shm[x]) == FALSE ) {
             gm_log( GM_LOG_TRACE, "removed stale worker %d, old pid: %d\n", x, shm[x]);
             shm[x] = -1;
             /* immediately start new worker, otherwise the fork rate cannot be guaranteed */

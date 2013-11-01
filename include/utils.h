@@ -314,11 +314,10 @@ int free_job(gm_job_t *job);
  * check if a pid is alive
  *
  * @param[in] pid - pid to check
- * @param[in] with_child_check - check child by waitpid too
  *
  * @return true if pid is alive
  */
-int pid_alive(int pid, int with_child_check);
+int pid_alive(int pid);
 
 /**
  * escapestring
