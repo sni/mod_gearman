@@ -65,7 +65,7 @@ void *start_worker(void*data) {
     if(pid == 0) {
         sid = setsid();
         char options[150];
-        snprintf(options, 150, "server=localhost:%d", GEARMAND_TEST_PORT);
+        snprintf(options, 150, "server=127.0.0.1:%d", GEARMAND_TEST_PORT);
         char logf[150];
         snprintf(logf, 150, "logfile=%s", worker_logfile);
         if(key != NULL) {
@@ -200,10 +200,10 @@ void create_modules() {
     ok(create_client( mod_gm_opt->server_list, &client ) == GM_OK, "created test client");
 
     ok(create_worker( mod_gm_opt->server_list, &worker ) == GM_OK, "created test worker");
-    //gearman_worker_add_options(&worker, GEARMAN_WORKER_NON_BLOCKING);
-    gearman_worker_set_timeout(&worker, 5000);
     ok(worker_add_function( &worker, GM_DEFAULT_RESULT_QUEUE, get_results ) == GM_OK, "added result worker");
     ok(worker_add_function( &worker, "dummy", dummy ) == GM_OK, "added dummy worker");
+    //gearman_worker_add_options(&worker, GEARMAN_WORKER_NON_BLOCKING);
+    gearman_worker_set_timeout(&worker, 5000);
     return;
 }
 
@@ -240,7 +240,8 @@ void check_logfile(char *logfile, int mode) {
     line = malloc(GM_BUFFERSIZE);
     while(fgets(line, GM_BUFFERSIZE, fp) != NULL) {
         if(strstr(line, "ERROR") != NULL) {
-            mode == 2 && diag("logfile: %s", line);
+            if(mode == 2)
+                diag("logfile: %s", line);
             errors++;
         }
     }
@@ -268,6 +269,34 @@ void check_logfile(char *logfile, int mode) {
     return;
 }
 
+/* diag queues */
+void diag_queues(void);
+void diag_queues() {
+    char * message = NULL;
+    char * version = NULL;
+    int rc, x;
+    mod_gm_server_status_t *stats;
+
+    // print some debug info
+    stats = malloc(sizeof(mod_gm_server_status_t));
+    stats->function_num = 0;
+    stats->worker_num   = 0;
+    rc = get_gearman_server_data(stats, &message, &version, "127.0.0.1", GEARMAND_TEST_PORT);
+    diag("get_gearman_server_data:  rc: %d\n", rc);
+    diag("get_gearman_server_data: msg: %s\n", message);
+    diag("get_gearman_server_data: ver: %s\n", version);
+    if( rc == STATE_OK ) {
+        diag("%-35s %-9s %-9s\n", "queue", "waiting", "running");
+        for(x=0; x<stats->function_num;x++) {
+            diag("%-35s %-9d %-9d\n", stats->function[x]->queue, stats->function[x]->waiting, stats->function[x]->running);
+        }
+    }
+    free(message);
+    free(version);
+    free_mod_gm_status_server(stats);
+    return;
+}
+
 /* wait till the given queue is empty */
 void wait_for_empty_queue(char *queue, int timeout);
 void wait_for_empty_queue(char *queue, int timeout) {
@@ -283,7 +312,7 @@ void wait_for_empty_queue(char *queue, int timeout) {
         stats = malloc(sizeof(mod_gm_server_status_t));
         stats->function_num = 0;
         stats->worker_num   = 0;
-        rc = get_gearman_server_data(stats, &message, &version, "localhost", GEARMAND_TEST_PORT);
+        rc = get_gearman_server_data(stats, &message, &version, "127.0.0.1", GEARMAND_TEST_PORT);
         if( rc == STATE_OK ) {
             for(x=0; x<stats->function_num;x++) {
                 if(stats->function[x]->waiting == 0 &&
@@ -300,27 +329,12 @@ void wait_for_empty_queue(char *queue, int timeout) {
         sleep(1);
     }
 
-    // print some debug info
+    ok(tries < timeout, "queue %s empty after %d seconds", queue, tries);
+
     if(tries >= timeout) {
-        stats = malloc(sizeof(mod_gm_server_status_t));
-        stats->function_num = 0;
-        stats->worker_num   = 0;
-        rc = get_gearman_server_data(stats, &message, &version, "localhost", GEARMAND_TEST_PORT);
-        diag("get_gearman_server_data:  rc: %d\n", rc);
-        diag("get_gearman_server_data: msg: %s\n", message);
-        diag("get_gearman_server_data: ver: %s\n", version);
-        if( rc == STATE_OK ) {
-            diag("%-7s % 7s % 7s\n", "queue", "waiting", "running");
-            for(x=0; x<stats->function_num;x++) {
-                diag("%-7s % 7d % 7d\n", stats->function[x]->queue, stats->function[x]->waiting, stats->function[x]->running);
-            }
-        }
-        free(message);
-        free(version);
-        free_mod_gm_status_server(stats);
+        diag_queues();
     }
 
-    ok(tries < timeout, "queue %s empty after %d seconds", queue, tries);
     return;
 }
 
@@ -377,7 +391,7 @@ int main (int argc, char **argv, char **env) {
 #endif
 
     char options[150];
-    snprintf(options, 150, "--server=localhost:%d", GEARMAND_TEST_PORT);
+    snprintf(options, 150, "--server=127.0.0.1:%d", GEARMAND_TEST_PORT);
     ok(parse_args_line(mod_gm_opt, options, 0) == 0, "parse_args_line()");
     mod_gm_opt->debug_level = GM_LOG_ERROR;
 
@@ -389,10 +403,11 @@ int main (int argc, char **argv, char **env) {
 
     /* first fire up a gearmand server and one worker */
     start_gearmand((void*)NULL);
+    sleep(2);
     start_worker((void*)NULL);
+    sleep(2);
 
     /* wait one second and catch died procs */
-    sleep(1);
     while((chld = waitpid(-1, &status, WNOHANG)) != -1 && chld > 0) {
         diag( "waitpid() %d exited with %d\n", chld, status);
         status = 0;
@@ -427,39 +442,56 @@ int main (int argc, char **argv, char **env) {
 
     /* send big job */
     send_big_jobs(GM_ENCODE_ONLY);
-    do_result_work(1);
+    //diag_queues();
     wait_for_empty_queue("eventhandler", 20);
-    wait_for_empty_queue("service", 5);
+    wait_for_empty_queue("service", 20);
+    //diag_queues();
+    do_result_work(1);
+    //diag_queues();
     wait_for_empty_queue(GM_DEFAULT_RESULT_QUEUE, 5);
 
     /*****************************************
      * test check
      */
+    //diag_queues();
     test_servicecheck(GM_ENCODE_ONLY, "./t/crit.pl");
-    do_result_work(1);
-    like(last_result, "test plugin CRITICAL", "stdout output from ./t/crit.pl");
-    like(last_result, "some errors on stderr", "stderr output from ./t/crit.pl");
+    //diag_queues();
     wait_for_empty_queue("eventhandler", 20);
     wait_for_empty_queue("service", 5);
+    //diag_queues();
+    do_result_work(1);
+    //diag_queues();
     wait_for_empty_queue(GM_DEFAULT_RESULT_QUEUE, 5);
+    //diag_queues();
+    like(last_result, "test plugin CRITICAL", "stdout output from ./t/crit.pl");
+    like(last_result, "some errors on stderr", "stderr output from ./t/crit.pl");
 
     /*****************************************
      * test check2
      */
+    //diag_queues();
     test_servicecheck(GM_ENCODE_ONLY, "./t/both");
+    //diag_queues();
+    wait_for_empty_queue("eventhandler", 20);
+    wait_for_empty_queue("service", 5);
+    //diag_queues();
     do_result_work(1);
+    //diag_queues();
+    wait_for_empty_queue(GM_DEFAULT_RESULT_QUEUE, 5);
     like(last_result, "stdout output", "stdout output from ./t/both");
     like(last_result, "stderr output", "stderr output from ./t/both");
-    wait_for_empty_queue("eventhandler", 20);
-    wait_for_empty_queue("service", 5);
-    wait_for_empty_queue(GM_DEFAULT_RESULT_QUEUE, 5);
 
     /* try to send some data with base64 only */
+    //diag_queues();
     test_eventhandler(GM_ENCODE_ONLY);
+    //diag_queues();
     test_servicecheck(GM_ENCODE_ONLY, NULL);
-    do_result_work(1);
+    //diag_queues();
     wait_for_empty_queue("eventhandler", 20);
     wait_for_empty_queue("service", 5);
+    //diag_queues();
+    do_result_work(1);
+    //diag_queues();
     wait_for_empty_queue(GM_DEFAULT_RESULT_QUEUE, 5);
     sleep(1);
     kill(worker_pid, SIGTERM);
@@ -489,10 +521,9 @@ int main (int argc, char **argv, char **env) {
 
         test_eventhandler(GM_ENCODE_AND_ENCRYPT);
         test_servicecheck(GM_ENCODE_AND_ENCRYPT, NULL);
-        do_result_work(1);
-
         wait_for_empty_queue("eventhandler", 20);
         wait_for_empty_queue("service", 5);
+        do_result_work(1);
         wait_for_empty_queue(GM_DEFAULT_RESULT_QUEUE, 5);
         sleep(1);
 
@@ -507,7 +538,7 @@ int main (int argc, char **argv, char **env) {
     /*****************************************
      * send_gearman
      */
-    snprintf(cmd, 150, "./send_gearman --server=localhost:%d --key=testtest --host=test --service=test --message=test --returncode=0", GEARMAND_TEST_PORT);
+    snprintf(cmd, 150, "./send_gearman --server=127.0.0.1:%d --key=testtest --host=test --service=test --message=test --returncode=0", GEARMAND_TEST_PORT);
     rrc = real_exit_code(run_check(cmd, &result, &error));
     cmp_ok(rrc, "==", 0, "cmd '%s' returned rc %d", cmd, rrc);
     like(result, "^\\s*$", "output from ./send_gearman");
@@ -517,7 +548,7 @@ int main (int argc, char **argv, char **env) {
     /*****************************************
      * send_multi
      */
-    snprintf(cmd, 150, "./send_multi --server=localhost:%d --host=blah < t/data/send_multi.txt", GEARMAND_TEST_PORT);
+    snprintf(cmd, 150, "./send_multi --server=127.0.0.1:%d --host=blah < t/data/send_multi.txt", GEARMAND_TEST_PORT);
     rrc = real_exit_code(run_check(cmd, &result, &error));
     cmp_ok(rrc, "==", 0, "cmd '%s' returned rc %d", cmd, rrc);
     like(result, "send_multi OK: 2 check_multi child checks submitted", "output from ./send_multi");
@@ -527,7 +558,7 @@ int main (int argc, char **argv, char **env) {
     /*****************************************
      * check_gearman
      */
-    snprintf(cmd, 150, "./check_gearman -H localhost:%d -s check -a -q worker_test", GEARMAND_TEST_PORT);
+    snprintf(cmd, 150, "./check_gearman -H 127.0.0.1:%d -s check -a -q worker_test", GEARMAND_TEST_PORT);
     rrc = real_exit_code(run_check(cmd, &result, &error));
     cmp_ok(rrc, "==", 0, "cmd '%s' returned rc %d", cmd, rrc);
     like(result, "check_gearman OK - sending background job succeded", "output from ./check_gearman");
@@ -540,7 +571,7 @@ int main (int argc, char **argv, char **env) {
     free_worker(&worker);
 
     /* shutdown gearmand */
-    rc = send2gearmandadmin("shutdown\n", "localhost", GEARMAND_TEST_PORT, &output, &message);
+    rc = send2gearmandadmin("shutdown\n", "127.0.0.1", GEARMAND_TEST_PORT, &output, &message);
     ok(rc == 0, "rc of send2gearmandadmin %d", rc);
     like(output, "OK", "output contains OK");
     free(message);
