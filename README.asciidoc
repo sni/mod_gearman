@@ -346,20 +346,20 @@ Build/install Gearmand rpms
 --------------------------------------
 #> yum install autoconf automake libtool boost141-devel boost141-program-options
 #> cd /tmp
-#> wget http://launchpad.net/gearmand/trunk/0.25/+download/gearmand-0.25.tar.gz
-#> tar zxf gearmand-0.25.tar.gz
-#> ln -s gearmand-0.25/support/gearmand.init /tmp/gearmand.init
-#> vi gearmand-0.25/support/gearmand.spec
+#> wget http://launchpad.net/gearmand/trunk/0.33/+download/gearmand-0.33.tar.gz
+#> tar zxf gearmand-0.33.tar.gz
+#> ln -s gearmand-0.33/support/gearmand.init /tmp/gearmand.init
+#> vi gearmand-0.33/support/gearmand.spec
    change in line 9 and 25:
    Requires: sqlite, libevent >= 1.4, boost-program-options >=  1.39
    in
    Requires: sqlite, libevent >= 1.4, boost141-program-options >=  1.39
-#> tar cfz gearmand-0.25.tar.gz gearmand-0.25
+#> tar cfz gearmand-0.33.tar.gz gearmand-0.33
 #> LIBRARY_PATH=/usr/lib64/boost141:/usr/lib/boost141 \
    LD_LIBRARY_PATH=/usr/lib64/boost141:/usr/lib/boost141 \
    CPATH=/usr/include/boost141 \
-   rpmbuild -tb gearmand-0.25.tar.gz
-#> yum --nogpgcheck install /usr/src/redhat/RPMS/*/gearmand*-0.25-1*.rpm
+   rpmbuild -tb gearmand-0.33.tar.gz
+#> yum --nogpgcheck install /usr/src/redhat/RPMS/*/gearmand*-0.33-1*.rpm
 --------------------------------------
 
 NOTE: The link to gearmand.init is a workaround, otherwise the build
@@ -1253,7 +1253,7 @@ to be implemented in the near future.
 Supported Dependencies
 ----------------------
 
-NOTE: Mod-Gearman works best with libgearman/gearmand 0.25 and Nagios 3.2.3. If in
+NOTE: Mod-Gearman works best with libgearman/gearmand 0.33 and Nagios 3.2.3. If in
 doubt, use these versions.
 
 Lib-Gearman

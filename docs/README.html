@@ -1098,20 +1098,20 @@ available.</td>
 <div class="content">
 <pre><tt>#&gt; yum install autoconf automake libtool boost141-devel boost141-program-options
 #&gt; cd /tmp
-#&gt; wget http://launchpad.net/gearmand/trunk/0.25/+download/gearmand-0.25.tar.gz
-#&gt; tar zxf gearmand-0.25.tar.gz
-#&gt; ln -s gearmand-0.25/support/gearmand.init /tmp/gearmand.init
-#&gt; vi gearmand-0.25/support/gearmand.spec
+#&gt; wget http://launchpad.net/gearmand/trunk/0.33/+download/gearmand-0.33.tar.gz
+#&gt; tar zxf gearmand-0.33.tar.gz
+#&gt; ln -s gearmand-0.33/support/gearmand.init /tmp/gearmand.init
+#&gt; vi gearmand-0.33/support/gearmand.spec
    change in line 9 and 25:
    Requires: sqlite, libevent &gt;= 1.4, boost-program-options &gt;=  1.39
    in
    Requires: sqlite, libevent &gt;= 1.4, boost141-program-options &gt;=  1.39
-#&gt; tar cfz gearmand-0.25.tar.gz gearmand-0.25
+#&gt; tar cfz gearmand-0.33.tar.gz gearmand-0.33
 #&gt; LIBRARY_PATH=/usr/lib64/boost141:/usr/lib/boost141 \
    LD_LIBRARY_PATH=/usr/lib64/boost141:/usr/lib/boost141 \
    CPATH=/usr/include/boost141 \
-   rpmbuild -tb gearmand-0.25.tar.gz
-#&gt; yum --nogpgcheck install /usr/src/redhat/RPMS/*/gearmand*-0.25-1*.rpm</tt></pre>
+   rpmbuild -tb gearmand-0.33.tar.gz
+#&gt; yum --nogpgcheck install /usr/src/redhat/RPMS/*/gearmand*-0.33-1*.rpm</tt></pre>
 </div></div>
 <div class="admonitionblock">
 <table><tr>
@@ -2472,7 +2472,7 @@ to be implemented in the near future.</p></div>
 <td class="icon">
 <div class="title">Note</div>
 </td>
-<td class="content">Mod-Gearman works best with libgearman/gearmand 0.25 and Nagios 3.2.3. If in
+<td class="content">Mod-Gearman works best with libgearman/gearmand 0.33 and Nagios 3.2.3. If in
 doubt, use these versions.</td>
 </tr></table>
 </div>
@@ -2775,7 +2775,7 @@ Make sure all your worker have the Nagios-Plugins available under
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2013-11-04 22:49:58 CET
+Last updated 2013-11-04 22:56:42 CET
 </div>
 </div>
 </body>
