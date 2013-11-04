@@ -1285,8 +1285,10 @@ as Nagios 4.
 
 Icinga
 ~~~~~~
-Mod-Gearman has been reported to work with Icinga 1.2.0 and
- version 1.8 but it seems like some statistics are not updated.
+To be clear, Icinga is not the recommended platform for Mod-Gearman
+and not supported in any way. However, people have reported it works
+with Icinga 1.2.0, 1.8 and 1.10.1 but it seems like some statistics
+are not updated.
 
  * http://icinga.org[Icinga]
 
