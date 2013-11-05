@@ -1,6 +1,6 @@
 This file documents the revision history for mod_gearman.
 
-next:
+1.4.12 Tue Nov  5 10:26:07 CET 2013
           - fixed send_gearman to send duplicate result to normal server (Brian Christiansen)
           - ensure worker are running and doing jobs after reload/sighup
 
