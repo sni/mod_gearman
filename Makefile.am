@@ -247,9 +247,9 @@ install-data-local: install-local-state-dir $(install_epnfiles)
 
 
 install-config:
-	$(install_sh_PROGRAM) etc/mod_gearman_neb.conf    $(DESTDIR)$(sysconfdir)/mod_gearman/mod_gearman_neb.conf
-	$(install_sh_PROGRAM) etc/mod_gearman_worker.conf $(DESTDIR)$(sysconfdir)/mod_gearman/mod_gearman_worker.conf
-	$(install_sh_PROGRAM) etc/mod_gearman_logrotate   $(DESTDIR)$(sysconfdir)/logrotate.d/mod_gearman
+	$(install_sh_PROGRAM) -m 644 etc/mod_gearman_neb.conf    $(DESTDIR)$(sysconfdir)/mod_gearman/mod_gearman_neb.conf
+	$(install_sh_PROGRAM) -m 644 etc/mod_gearman_worker.conf $(DESTDIR)$(sysconfdir)/mod_gearman/mod_gearman_worker.conf
+	$(install_sh_PROGRAM) -m 644 etc/mod_gearman_logrotate   $(DESTDIR)$(sysconfdir)/logrotate.d/mod_gearman
 	@echo "################################################################"
 	@echo ""
 	@echo " configuration:"
