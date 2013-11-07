@@ -594,9 +594,9 @@ static int handle_host_check( int event_type, void *data ) {
     my_free(raw_command);
     my_free(processed_command);
 
-    /* orphanded check - submit fake result to mark host as orphaned */
+    /* orphaned check - submit fake result to mark host as orphaned */
     if(mod_gm_opt->orphan_host_checks == GM_ENABLED && check_options & CHECK_OPTION_ORPHAN_CHECK) {
-        gm_log( GM_LOG_DEBUG, "host check for %s orphanded\n", hst->name );
+        gm_log( GM_LOG_DEBUG, "host check for %s orphaned\n", hst->name );
         if ( ( chk_result = ( check_result * )malloc( sizeof *chk_result ) ) == 0 )
             return NEBERROR_CALLBACKCANCEL;
         snprintf( temp_buffer,GM_BUFFERSIZE-1,"(host check orphaned, is the mod-gearman worker on queue '%s' running?)\n", target_queue);
@@ -773,9 +773,9 @@ static int handle_svc_check( int event_type, void *data ) {
     my_free(raw_command);
     my_free(processed_command);
 
-    /* orphanded check - submit fake result to mark service as orphaned */
+    /* orphaned check - submit fake result to mark service as orphaned */
     if(mod_gm_opt->orphan_service_checks == GM_ENABLED && svc->check_options & CHECK_OPTION_ORPHAN_CHECK) {
-        gm_log( GM_LOG_DEBUG, "service check for %s - %s orphanded\n", svc->host_name, svc->description );
+        gm_log( GM_LOG_DEBUG, "service check for %s - %s orphaned\n", svc->host_name, svc->description );
         if ( ( chk_result = ( check_result * )malloc( sizeof *chk_result ) ) == 0 )
             return NEBERROR_CALLBACKCANCEL;
         snprintf( temp_buffer,GM_BUFFERSIZE-1,"(service check orphaned, is the mod-gearman worker on queue '%s' running?)\n", target_queue);
