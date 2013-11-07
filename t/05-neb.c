@@ -49,6 +49,7 @@ void check_neb(char * nebargs) {
     ok((*module_version_ptr) == CURRENT_NEB_API_VERSION, "got module api version %i", CURRENT_NEB_API_VERSION);
 
     /* init neb module */
+    dlerror();
     init_func=(void *)dlsym(neb_handle,"nebmodule_init");
     ok(init_func != NULL, "located nebmodule_init()");
     err = dlerror(); if(err != NULL) { BAIL_OUT("cannot load module: %s\n", err ); }
@@ -56,9 +57,9 @@ void check_neb(char * nebargs) {
     initfunc = init_func;
     int result=(*initfunc)(NEBMODULE_NORMAL_LOAD, nebargs, neb_handle);
     ok(result == 0, "run nebmodule_init() -> %d", result);
-    err = dlerror(); if(err != NULL) { BAIL_OUT("cannot load module: %s\n", err ); }
 
     /* deinit neb module */
+    dlerror();
     deinit_func=(void *)dlsym(neb_handle,"nebmodule_deinit");
     ok(deinit_func != NULL, "located nebmodule_deinit()");
     err = dlerror(); if(err != NULL) { BAIL_OUT("cannot load module: %s\n", err ); }

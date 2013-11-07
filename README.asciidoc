@@ -43,7 +43,7 @@ Features
 
 Download
 --------
- * Latest stable http://www.mod-gearman.org/download/v1.4.10/src/mod_gearman-1.4.10.tar.gz[version 1.4.10], released August 05 2013
+ * Latest stable http://www.mod-gearman.org/download/v1.4.12/src/mod_gearman-1.4.12.tar.gz[version 1.4.12], released November 05 2013
  * Mod Gearman is available for download at: http://mod-gearman.org/download.html
  * Source is available on GitHub: http://github.com/sni/mod_gearman
  * Older versions are available in the <<_archive,download archive>>.
@@ -346,20 +346,20 @@ Build/install Gearmand rpms
 --------------------------------------
 #> yum install autoconf automake libtool boost141-devel boost141-program-options
 #> cd /tmp
-#> wget http://launchpad.net/gearmand/trunk/0.25/+download/gearmand-0.25.tar.gz
-#> tar zxf gearmand-0.25.tar.gz
-#> ln -s gearmand-0.25/support/gearmand.init /tmp/gearmand.init
-#> vi gearmand-0.25/support/gearmand.spec
+#> wget http://launchpad.net/gearmand/trunk/0.33/+download/gearmand-0.33.tar.gz
+#> tar zxf gearmand-0.33.tar.gz
+#> ln -s gearmand-0.33/support/gearmand.init /tmp/gearmand.init
+#> vi gearmand-0.33/support/gearmand.spec
    change in line 9 and 25:
    Requires: sqlite, libevent >= 1.4, boost-program-options >=  1.39
    in
    Requires: sqlite, libevent >= 1.4, boost141-program-options >=  1.39
-#> tar cfz gearmand-0.25.tar.gz gearmand-0.25
+#> tar cfz gearmand-0.33.tar.gz gearmand-0.33
 #> LIBRARY_PATH=/usr/lib64/boost141:/usr/lib/boost141 \
    LD_LIBRARY_PATH=/usr/lib64/boost141:/usr/lib/boost141 \
    CPATH=/usr/include/boost141 \
-   rpmbuild -tb gearmand-0.25.tar.gz
-#> yum --nogpgcheck install /usr/src/redhat/RPMS/*/gearmand*-0.25-1*.rpm
+   rpmbuild -tb gearmand-0.33.tar.gz
+#> yum --nogpgcheck install /usr/src/redhat/RPMS/*/gearmand*-0.33-1*.rpm
 --------------------------------------
 
 NOTE: The link to gearmand.init is a workaround, otherwise the build
@@ -1253,7 +1253,7 @@ to be implemented in the near future.
 Supported Dependencies
 ----------------------
 
-NOTE: Mod-Gearman works best with libgearman/gearmand 0.25 and Nagios 3.2.3. If in
+NOTE: Mod-Gearman works best with libgearman/gearmand 0.33 and Nagios 3.2.3. If in
 doubt, use these versions.
 
 Lib-Gearman
@@ -1270,16 +1270,25 @@ libgearman.
 
 Nagios
 ~~~~~~
-Mod-Gearman works perfect with the latest stable Nagios 3.2.3. Version
-3.3.1 has some serious bugs and is not recommended for use in
-production.
+Mod-Gearman works best since version 3.2.2 up to the latest stable Nagios 3.5.1.
+Nagios 4 is not fully tested yet, but there is a preview version
+available here http://mod-gearman.org/download/v1.4.0nagios4/ or in
+the nagios4 branch of the source tree.
 
  * http://nagios.org[Nagios]
 
+Naemon
+~~~~~~
+Mod-Gearman works on the Naemon core as well with the same remarks
+as Nagios 4.
+
+
 Icinga
 ~~~~~~
-Mod-Gearman has succesfully been tested on Icinga 1.2.0 and is running
-perfectly on up to the version 1.8.
+To be clear, Icinga is not the recommended platform for Mod-Gearman
+and not supported in any way. However, people have reported it works
+with Icinga 1.2.0, 1.8 and 1.10.1 but it seems like some statistics
+are not updated.
 
  * http://icinga.org[Icinga]
 
@@ -1310,6 +1319,7 @@ Hints
 Archive
 -------
 
+* http://www.mod-gearman.org/download/v1.4.12/src/mod_gearman-1.4.12.tar.gz[version 1.4.12 - November 05 2013]
 * http://www.mod-gearman.org/download/v1.4.10/src/mod_gearman-1.4.10.tar.gz[version 1.4.10 - August 05 2013]
 * http://www.mod-gearman.org/download/v1.4.8/src/mod_gearman-1.4.8.tar.gz[version 1.4.8 - July 27 2013]
 * http://www.mod-gearman.org/download/v1.4.6/src/mod_gearman-1.4.6.tar.gz[version 1.4.6 - June 04 2013]

@@ -44,13 +44,14 @@
  * @{
  */
 
-int mod_gm_shm_key;        /**< key for the shared memory segment */
+int mod_gm_shm_key;             /**< key for the shared memory segment */
 
-#define SHM_SHIFT             4 /**< nr of global counter              */
+#define SHM_SHIFT             5 /**< nr of global counter              */
 #define SHM_JOBS_DONE         0 /**< shm id for jobs done counter      */
 #define SHM_WORKER_TOTAL      1 /**< shm id for total worker counter   */
 #define SHM_WORKER_RUNNING    2 /**< shm id for running worker counter */
 #define SHM_STATUS_WORKER_PID 3 /**< shm id for status worker pid      */
+#define SHM_WORKER_LAST_CHECK 4 /**< shm time of last check executed   */
 
 /** Mod-Gearman Worker
  *

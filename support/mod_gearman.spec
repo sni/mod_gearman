@@ -1,5 +1,5 @@
 Name:          mod_gearman
-Version:       1.4.10
+Version:       1.4.12
 Release:       1%{?dist}
 License:       GNU Public License version 2
 Packager:      Sven Nierlein <sven.nierlein@consol.de>
@@ -11,7 +11,7 @@ BuildRoot:     %{_tmppath}/%{name}-%{version}-root-%(%{__id_u} -n)
 BuildRequires: autoconf, automake, ncurses-devel
 BuildRequires: libtool, libtool-ltdl-devel, libevent-devel
 BuildRequires: gearmand-devel
-Summary:       Gearman module for Icinga/Nagios
+Summary:       Gearman module for Nagios
 Requires(pre,post): /sbin/ldconfig
 Requires(pre): shadow-utils
 Requires:      gearmand, perl, logrotate
@@ -19,12 +19,11 @@ Requires:      gearmand, perl, logrotate
 Provides:      mod_gearman
 
 %description
-Mod Gearman is a new way of distributing active Nagios/Icinga
-checks across your network. It consists of two parts: There is
-a NEB module which resides in the Nagios/Icinga core and adds
-servicechecks, hostchecks and eventhandler to a Gearman queue.
-There can be multiple equal gearman servers. The counterpart
-is one or more worker clients for the checks itself. They can
+Mod Gearman is a new way of distributing active Nagios (and compatible cores)
+checks across your network. It consists of two parts: There is a NEB module
+which resides in the Nagios core and adds servicechecks, hostchecks and
+eventhandler to a Gearman queue. There can be multiple equal gearman servers.
+The counterpart is one or more worker clients for the checks itself. They can
 be bound to host and servicegroups.
 
 %prep
@@ -94,6 +93,9 @@ exit 0
 %docdir %{_defaultdocdir}
 
 %changelog
+* Thu Oct 31 2013 Sven Nierlein <sven@consol.de>
+- added mini_epn
+
 * Mon Nov 19 2012 Ricardo Maraschini <ricardo.maraschini@opservices.com.br>
 - added logrotate configuration file
 

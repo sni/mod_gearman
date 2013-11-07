@@ -1035,7 +1035,7 @@ void dumpconfig(mod_gm_opt_t *opt, int mode) {
         gm_log( GM_LOG_DEBUG, "accept clear result:             %s\n", opt->accept_clear_results == GM_ENABLED ? "yes" : "no");
     }
     gm_log( GM_LOG_DEBUG, "transport mode:                  %s\n", opt->encryption == GM_ENABLED ? "aes-256+base64" : "base64 only");
-    gm_log( GM_LOG_DEBUG, "use uniq jobs:                   %s\n", opt->use_uniq_jobs == GM_ENABLED ? "overwrite" : "append");
+    gm_log( GM_LOG_DEBUG, "use uniq jobs:                   %s\n", opt->use_uniq_jobs == GM_ENABLED ? "yes" : "no");
 
     gm_log( GM_LOG_DEBUG, "--------------------------------\n" );
     return;
@@ -1215,16 +1215,17 @@ int free_job(gm_job_t *job) {
     return(GM_OK);
 }
 
-
 /* verify if a pid is alive */
 int pid_alive(int pid) {
+    int status;
+
     if(pid < 0) { pid = -pid; }
 
     /* 1/-1 are undefined pids in our case */
     if(pid == 1)
-        return TRUE;
+        return FALSE;
 
-    /* send kill 0 to verify the proc is alive */
+    /* send kill 0 to verify the process still exists */
     if(kill(pid, 0) == 0) {
         return TRUE;
     }

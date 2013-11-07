@@ -307,6 +307,7 @@ int set_default_job(gm_job_t *job, mod_gm_opt_t *mod_gm_opt);
  */
 int free_job(gm_job_t *job);
 
+
 /**
  * pid_alive
  *

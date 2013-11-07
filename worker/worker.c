@@ -174,17 +174,13 @@ int main (int argc, char **argv) {
 
 /* main loop for checking worker */
 void monitor_loop() {
-    int status;
 
     /* maintain the population */
     while (1) {
         /* check number of workers every second */
         sleep(GM_DEFAULT_WORKER_LOOP_SLEEP);
 
-        /* collect finished workers */
-        while(waitpid(-1, &status, WNOHANG) > 0)
-            gm_log( GM_LOG_TRACE, "waitpid() worker exited with: %d\n", status);
-
+        /* make sure our worker are running */
         check_worker_population();
     }
     return;
@@ -245,12 +241,32 @@ void count_current_worker(int restart) {
 
 /* start new worker if needed */
 void check_worker_population() {
-    int x, now, target_number_of_workers;
+    int x, now, status, target_number_of_workers;
 
     gm_log( GM_LOG_TRACE3, "check_worker_population()\n");
 
+    now = (int)time(NULL);
+
+    /* collect finished workers */
+    while(waitpid(-1, &status, WNOHANG) > 0)
+        gm_log( GM_LOG_TRACE, "waitpid() worker exited with: %d\n", status);
+
     /* set current worker number */
     count_current_worker(GM_ENABLED);
+
+    /* check last check time, force restart all worker if there is no result in 2 minutes */
+    if( shm[SHM_WORKER_LAST_CHECK] < (now - 120) ) {
+        gm_log( GM_LOG_INFO, "no checks in 2minutes, restarting all workers\n", shm[SHM_WORKER_LAST_CHECK]);
+        shm[SHM_WORKER_LAST_CHECK] = now;
+        for(x=SHM_SHIFT; x < mod_gm_opt->max_worker+SHM_SHIFT; x++) {
+            save_kill(shm[x], SIGINT);
+        }
+        sleep(3);
+        for(x=SHM_SHIFT; x < mod_gm_opt->max_worker+SHM_SHIFT; x++) {
+            save_kill(shm[x], SIGKILL);
+            shm[x] = -1;
+        }
+    }
 
     /* check if status worker died */
     if( shm[SHM_STATUS_WORKER_PID] == -1 ) {
@@ -263,8 +279,7 @@ void check_worker_population() {
         current_number_of_workers++;
     }
 
-    /* check every second */
-    now = (int)time(NULL);
+    /* check every second if we need to increase worker population */
     if(last_time_increased >= now)
         return;
 

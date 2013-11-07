@@ -396,7 +396,6 @@ int execute_safe_command(gm_job_t * exec_job, int fork_exec, char * identifier) 
 /* called when check runs into timeout */
 void check_alarm_handler(int sig) {
     pid_t pid;
-    int retval;
 
     gm_log( GM_LOG_TRACE, "check_alarm_handler(%i)\n", sig );
     pid = getpid();

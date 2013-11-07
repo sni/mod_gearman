@@ -454,6 +454,8 @@ void set_state(int status) {
     if(status == GM_JOB_END) {
         shm[SHM_JOBS_DONE]++; /* increase jobs done */
 
+        shm[SHM_WORKER_LAST_CHECK] = (int)time(NULL); /* set last job date */
+
         /* status slot changed to -1 -> exit */
         if( shm[shm_index] == -1 ) {
             gm_log( GM_LOG_TRACE, "worker finished: %d\n", getpid() );
