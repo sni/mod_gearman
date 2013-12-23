@@ -374,7 +374,7 @@ void check_no_worker_running(char* worker_logfile) {
 int main (int argc, char **argv, char **env) {
     argc = argc; argv = argv; env  = env;
     int status, chld, rc;
-    int tests = 127;
+    int tests = 125;
     int rrc;
     char cmd[150];
     char *result, *error, *message, *output;
@@ -606,7 +606,6 @@ int main (int argc, char **argv, char **env) {
     waitpid(worker_pid, &status, 0);
     ok(status == 0, "worker (%d) exited with exit code %d", worker_pid, real_exit_code(status));
     check_no_worker_running(worker_logfile);
-    check_logfile(worker_logfile, 2);
     status = 0;
 
 #ifdef EMBEDDEDPERL
