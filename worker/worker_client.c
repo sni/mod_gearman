@@ -83,9 +83,11 @@ void worker_client(int worker_mode, int indx, int shid) {
     }
 
     /* create duplicate client */
-    if ( create_client_dup( mod_gm_opt->dupserver_list, &client_dup ) != GM_OK ) {
-        gm_log( GM_LOG_ERROR, "cannot start client for duplicate server\n" );
-        _exit( EXIT_FAILURE );
+    if( mod_gm_opt->dupserver_num ) {
+        if ( create_client_dup( mod_gm_opt->dupserver_list, &client_dup ) != GM_OK ) {
+            gm_log( GM_LOG_ERROR, "cannot start client for duplicate server\n" );
+            _exit( EXIT_FAILURE );
+        }
     }
 
 #ifdef EMBEDDEDPERL
