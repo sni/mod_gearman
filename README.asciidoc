@@ -395,6 +395,7 @@ Pre Requirements:
 
 Download the tarball and perform the following steps:
 --------------------------------------
+#> ./autogen.sh        # only required when installing from git
 #> ./configure
 #> make
 #> make install
