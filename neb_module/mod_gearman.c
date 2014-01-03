@@ -787,7 +787,7 @@ static int handle_svc_check( int event_type, void *data ) {
         chk_result->output_file         = 0;
         chk_result->output_file_fp      = NULL;
         chk_result->output              = strdup(temp_buffer);
-        chk_result->return_code         = 2;
+        chk_result->return_code         = mod_gm_opt->orphan_return;
         chk_result->check_options       = CHECK_OPTION_NONE;
         chk_result->object_check_type   = SERVICE_CHECK;
         chk_result->check_type          = SERVICE_CHECK_ACTIVE;
