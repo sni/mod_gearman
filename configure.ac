@@ -77,8 +77,8 @@ AC_SUBST(initrddir)
 # Determine the user
 AC_ARG_WITH([user],
 [AS_HELP_STRING([--with-user],
-[specify the user @<:@default="nagios"@:>@])],
-[], [with_user="nagios"])
+[specify the user @<:@default="naemon"@:>@])],
+[], [with_user="naemon"])
 user="$with_user"
 AC_SUBST(user)
 

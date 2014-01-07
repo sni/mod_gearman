@@ -317,7 +317,7 @@ static int handle_process_events( int event_type, void *data ) {
         send_now = TRUE;
 
         /* verify names of supplied groups
-         * this cannot be done befor nagios has finished reading his config
+         * this cannot be done befor naemon has finished reading his config
          * verify local servicegroups names
          */
         while ( mod_gm_opt->local_servicegroups_list[x] != NULL ) {
@@ -447,7 +447,7 @@ static int handle_eventhandler( int event_type, void *data ) {
         gm_log( GM_LOG_TRACE, "handle_eventhandler() finished unsuccessfully\n" );
     }
 
-    /* tell nagios to not execute */
+    /* tell naemon to not execute */
     return NEBERROR_CALLBACKOVERRIDE;
 }
 
@@ -483,7 +483,7 @@ static int handle_host_check( int event_type, void *data ) {
         && hostdata->type != NEBTYPE_HOSTCHECK_SYNC_PRECHECK)
         return NEB_OK;
 
-    /* shouldn't happen - internal Nagios error */
+    /* shouldn't happen - internal naemon error */
     if ( hostdata == 0 ) {
         gm_log( GM_LOG_ERROR, "Host handler received NULL host data structure.\n" );
         return NEB_OK;
@@ -618,7 +618,7 @@ static int handle_host_check( int event_type, void *data ) {
         chk_result = NULL;
     }
 
-    /* tell nagios to not execute */
+    /* tell naemon to not execute */
     gm_log( GM_LOG_TRACE, "handle_host_check() finished successfully -> %d\n", NEBERROR_CALLBACKOVERRIDE );
     return NEBERROR_CALLBACKOVERRIDE;
 }
@@ -649,7 +649,7 @@ static int handle_svc_check( int event_type, void *data ) {
     if ( svcdata->type != NEBTYPE_SERVICECHECK_ASYNC_PRECHECK )
         return NEB_OK;
 
-    /* shouldn't happen - internal Nagios error */
+    /* shouldn't happen - internal naemon error */
     if ( svcdata == 0 ) {
         gm_log( GM_LOG_ERROR, "Service handler received NULL service data structure.\n" );
         return NEBERROR_CALLBACKCANCEL;
@@ -798,7 +798,7 @@ static int handle_svc_check( int event_type, void *data ) {
         chk_result = NULL;
     }
 
-    /* tell nagios to not execute */
+    /* tell naemon to not execute */
     gm_log( GM_LOG_TRACE, "handle_svc_check() finished successfully -> %d\n", NEBERROR_CALLBACKOVERRIDE );
 
     return NEBERROR_CALLBACKOVERRIDE;
@@ -1067,7 +1067,7 @@ int handle_perfdata(int event_type, void *data) {
                     break;
                 }
 
-                /* find the nagios service object for this service */
+                /* find the naemon service object for this service */
                 svc = find_service(srvchkdata->host_name, srvchkdata->service_description);
                 if(svc->process_performance_data == 0) {
                     gm_log( GM_LOG_TRACE, "handle_perfdata() process_performance_data disabled for: %s - %s\n", svc->host_name, svc->description );

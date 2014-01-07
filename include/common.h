@@ -26,9 +26,9 @@
  * \section intro_sec Introduction
  *
  * Mod-Gearman (http://labs.consol.de/nagios/mod-gearman) is a new
- * way of distributing active Nagios checks (http://www.nagios.org) across your network. It
+ * way of distributing active Naemon checks (http://www.naemon.org) across your network. It
  * consists of two parts: There is a NEB module which resides in the
- * Nagios core and adds servicechecks, hostchecks and eventhandler to a
+ * Naemon core and adds servicechecks, hostchecks and eventhandler to a
  * Gearman (http://gearman.org) queue. There can be multiple equal
  * gearman servers.  The counterpart is one or more worker clients for
  * the checks itself. They can be bound to host and servicegroups.
@@ -150,7 +150,7 @@
  */
 typedef struct mod_gm_export {
     char   * name[GM_LISTSIZE];             /**< list of queue names to export into */
-    int      return_code[GM_LISTSIZE];      /**< list of return codes which should be returned to nagios */
+    int      return_code[GM_LISTSIZE];      /**< list of return codes which should be returned to naemon */
     int      elem_number;                   /**< number of elements */
 } mod_gm_exp_t;
 
@@ -190,7 +190,7 @@ typedef struct mod_gm_opt_struct {
     int            job_timeout;                             /**< override job timeout */
     int            encryption;                              /**< flag wheter messages are encrypted */
     int            transportmode;                           /**< flag for the transportmode, base64 only or base64 and encrypted  */
-    int            logmode;                                 /**< logmode: auto, syslog, file or nagios */
+    int            logmode;                                 /**< logmode: auto, syslog, file or core */
     char         * logfile;                                 /**< path for the logfile */
     FILE         * logfile_fp;                              /**< filedescriptor for the logfile */
     int            use_uniq_jobs;                           /**< flag whether normal jobs will be sent with/without uniq set */

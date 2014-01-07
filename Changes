@@ -1,7 +1,10 @@
 This file documents the revision history for mod_gearman.
 
 2.0.0
-          - mod-gearman will now be a naemon addon
+          - migrated mod-gearman into a naemon addon to continue the nagios 4 branch
+
+
+
 
 1.4.14 Fri Nov 15 21:44:18 CET 2013
           - fixed segfault when dupserver list was empty

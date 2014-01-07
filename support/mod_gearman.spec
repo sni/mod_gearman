@@ -11,7 +11,7 @@ BuildRoot:     %{_tmppath}/%{name}-%{version}-root-%(%{__id_u} -n)
 BuildRequires: autoconf, automake, ncurses-devel
 BuildRequires: libtool, libtool-ltdl-devel, libevent-devel
 BuildRequires: gearmand-devel
-Summary:       Gearman module for Nagios
+Summary:       Gearman module for Naemon
 Requires(pre,post): /sbin/ldconfig
 Requires(pre): shadow-utils
 Requires:      gearmand, perl, logrotate
@@ -19,9 +19,9 @@ Requires:      gearmand, perl, logrotate
 Provides:      mod_gearman
 
 %description
-Mod Gearman is a new way of distributing active Nagios (and compatible cores)
+Mod Gearman is a new way of distributing active Naemon (and compatible cores)
 checks across your network. It consists of two parts: There is a NEB module
-which resides in the Nagios core and adds servicechecks, hostchecks and
+which resides in the Naemon core and adds servicechecks, hostchecks and
 eventhandler to a Gearman queue. There can be multiple equal gearman servers.
 The counterpart is one or more worker clients for the checks itself. They can
 be bound to host and servicegroups.
@@ -53,10 +53,10 @@ be bound to host and servicegroups.
 
 
 %pre
-getent group nagios >/dev/null || groupadd -r nagios
-getent passwd nagios >/dev/null || \
-    useradd -r -g nagios -d %{_localstatedir}/mod_gearman -s /sbin/nologin \
-    -c "nagios user" nagios
+getent group naemon >/dev/null || groupadd -r naemon
+getent passwd naemon >/dev/null || \
+    useradd -r -g naemon -d %{_localstatedir}/mod_gearman -s /sbin/nologin \
+    -c "naemon user" naemon
 exit 0
 
 %post -p /sbin/ldconfig
@@ -86,8 +86,8 @@ exit 0
 
 %{_libdir}/mod_gearman/mod_gearman.o
 
-%attr(755,nagios,root) %{_localstatedir}/mod_gearman
-%attr(755,nagios,root) %{_localstatedir}/log/mod_gearman
+%attr(755,naemon,root) %{_localstatedir}/mod_gearman
+%attr(755,naemon,root) %{_localstatedir}/log/mod_gearman
 
 %defattr(-,root,root)
 %docdir %{_defaultdocdir}

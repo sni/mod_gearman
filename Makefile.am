@@ -232,7 +232,7 @@ install-data-local: install-local-state-dir $(install_epnfiles)
 	@echo " send bin:       $(DESTDIR)$(bindir)/send_gearman"
 	@echo " send multi bin: $(DESTDIR)$(bindir)/send_multi"
 	@echo ""
-	@echo "just add the broker line to your nagios.cfg:"
+	@echo "just add the broker line to your naemon.cfg:"
 	@echo "broker_module=$(DESTDIR)$(pkglibdir)/mod_gearman.o config=$(DESTDIR)$(sysconfdir)/mod_gearman/mod_gearman_neb.conf"
 	@echo ""
 	@if [ -e $(DESTDIR)$(sysconfdir)/mod_gearman/mod_gearman_neb.conf -o -e $(DESTDIR)$(sysconfdir)/mod_gearman/mod_gearman_worker.conf ]; then \
