@@ -21,6 +21,7 @@ int main (int argc, char **argv, char **env) {
     char *result, *error;
     char cmd[120];
     char hostname[GM_BUFFERSIZE];
+    struct stat st;
 
     plan(60);
 
@@ -124,7 +125,14 @@ int main (int argc, char **argv, char **env) {
     /*****************************************
      * simple test command 3
      */
-    strcpy(cmd, "/usr/lib/nagios/plugins/check_icmp -H 127.0.0.1");
+    if(stat("/usr/lib/nagios/plugins/check_users", &st) == 0) {
+        strcpy(cmd, "/usr/lib/nagios/plugins/check_users -w 99 -c 99");
+    }
+    else if(stat("/usr/lib64/nagios/plugins/check_users", &st) == 0) {
+        strcpy(cmd, "/usr/lib64/nagios/plugins/check_users -w 99 -c 99");
+    } else {
+        strcpy(cmd, "/bin/false 'no check_icmp installed...'");
+    }
     rc = run_check(cmd, &result, &error);
     cmp_ok(rc, "==", 0, "pclose for cmd '%s' returned rc %d", cmd, rc);
     rrc = real_exit_code(rc);
