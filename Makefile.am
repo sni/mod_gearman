@@ -106,9 +106,9 @@ replace_vars = sed -e 's:%CONFIG_WORKER%:$(sysconfdir)/mod_gearman/mod_gearman_w
                -e 's:%WORKERBIN%:$(bindir)/mod_gearman_worker:g' \
                -e 's:%USER%:$(user):g'
 
-EXTRA_DIST = COPYING etc/*.in extras include lib \
+EXTRA_DIST = COPYING etc/*.in extras include \
              THANKS README docs/README.html Changes worker/initscript.in \
-             support/mod_gearman.spec \
+             support/naemon-mod-gearman.spec \
              t/data/* t/rc t/both t/killer t/sleep t/*.pl t/*.t \
              worker/mod_gearman_p1.pl t/test_all.pl t/valgrind_suppress.cfg contrib \
              etc/mod_gearman_logrotate
@@ -199,7 +199,7 @@ worker.static: worker
 
 install-exec-local: install-local-state-dir
 	$(install_sh_PROGRAM) -m 644 mod_gearman.o $(DESTDIR)$(pkglibdir)/mod_gearman.o
-	$(install_sh_PROGRAM) -m 755 worker/initscript $(DESTDIR)$(initrddir)/mod_gearman_worker
+	$(install_sh_PROGRAM) -m 755 worker/initscript $(DESTDIR)$(initrddir)/naemon-mod-gearman-worker
 	$(install_sh_PROGRAM) -m 755 extras/gearmand-init $(DESTDIR)$(initrddir)/gearmand
 
 install-local-state-dir:
@@ -225,7 +225,7 @@ install-data-local: install-local-state-dir $(install_epnfiles)
 	@echo " neb module:     $(DESTDIR)$(pkglibdir)/mod_gearman.o"
 	@echo ""
 	@echo " worker:         $(DESTDIR)$(bindir)/mod_gearman_worker"
-	@echo " init script:    $(DESTDIR)$(initrddir)/mod_gearman_worker"
+	@echo " init script:    $(DESTDIR)$(initrddir)/naemon-mod-gearman-worker"
 	@[ "$(EPN_BIN)" = "" ] || echo " mini-epn:       $(DESTDIR)$(bindir)/mod_gearman_mini_epn"
 	@echo ""
 	@echo " check bin:      $(DESTDIR)$(bindir)/check_gearman"

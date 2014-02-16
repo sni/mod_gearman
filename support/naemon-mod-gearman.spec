@@ -5,7 +5,7 @@ License:       GNU Public License version 2
 Packager:      Sven Nierlein <sven.nierlein@consol.de>
 Vendor:        Labs Consol
 URL:           http://labs.consol.de/nagios/mod-gearman/
-Source0:       mod_gearman-%{version}.tar.gz
+Source0:       naemon-mod-gearman-%{version}.tar.gz
 Group:         Applications/Monitoring
 BuildRoot:     %{_tmppath}/%{name}-%{version}-root-%(%{__id_u} -n)
 BuildRequires: autoconf, automake, ncurses-devel
@@ -47,6 +47,7 @@ be bound to host and servicegroups.
      install-config \
      DESTDIR="%{buildroot}" \
      AM_INSTALL_PROGRAM_FLAGS=""
+mv %{_libdir}/naemon-mod-gearman %{_libdir}/mod_gearman
 
 # remove custom gearmand initscript
 %{__rm} -f %{buildroot}/%{_initrddir}/gearmand
@@ -67,7 +68,7 @@ exit 0
 %{__rm} -rf %{buildroot}
 
 %files
-%attr(755,root,root) %{_initrddir}/mod_gearman_worker
+%attr(755,root,root) %{_initrddir}/naemon-mod-gearman-worker
 %config(noreplace) %{_sysconfdir}/mod_gearman/mod_gearman_neb.conf
 %config(noreplace) %{_sysconfdir}/mod_gearman/mod_gearman_worker.conf
 %config(noreplace) %{_sysconfdir}/logrotate.d/mod_gearman
@@ -93,6 +94,9 @@ exit 0
 %docdir %{_defaultdocdir}
 
 %changelog
+* Sun Feb 16 2014 Sven Nierlein <sven@consol.de>
+- provides naemon mod-gearman now
+
 * Thu Oct 31 2013 Sven Nierlein <sven@consol.de>
 - added mini_epn
 
