@@ -310,7 +310,7 @@ mrproper:
 version:
 	if [ -z "$$NEWVERSION" ]; then NEWVERSION=$$(dialog --stdout --inputbox "New Version:" 0 0 "$(VERSION)"); fi; \
 	if [ -n "$$NEWVERSION" ] && [ "$$NEWVERSION" != "$(VERSION)" ]; then \
-		sed -ri "s/$(VERSION)/$$NEWVERSION/" include/common.h configure.ac support/mod_gearman.spec; \
+		sed -ri "s/$(VERSION)/$$NEWVERSION/" include/common.h configure.ac support/naemon-mod-gearman.spec; \
 		sed -i Changes -e "s/$(VERSION)/$$NEWVERSION $(shell date)\n          - ...\n\n$(VERSION)/"; \
 		$(MAKE) docs; \
 	fi;
