@@ -1,4 +1,4 @@
-Name:          mod_gearman
+Name:          naemon-mod-gearman
 Version:       2.0.0b1
 Release:       1%{?dist}
 License:       GNU Public License version 2
