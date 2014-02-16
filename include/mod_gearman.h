@@ -50,13 +50,17 @@
  * @{
  */
 
-/* include some Nagios stuff as well */
-#include "nagios/nagios.h"
-#include "nagios/neberrors.h"
-#include "nagios/nebstructs.h"
-#include "nagios/nebcallbacks.h"
-#include "nagios/broker.h"
-#include "nagios/macros.h"
+/* include some libnaemon */
+#include "naemon/lib/libnaemon.h"
+#include "naemon/nebmods.h"
+#include "naemon/objects.h"
+#include "naemon/utils.h"
+#include "naemon/checks.h"
+#include "naemon/neberrors.h"
+#include "naemon/nebstructs.h"
+#include "naemon/logging.h"
+#include "naemon/broker.h"
+#include "naemon/events.h"
 
 /* include the gearman libs */
 #include <libgearman/gearman.h>

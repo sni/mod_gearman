@@ -41,6 +41,7 @@ AC_CHECK_LIB([pthread], [pthread_create])
 AC_CHECK_HEADERS([stdlib.h string.h unistd.h pthread.h arpa/inet.h fcntl.h limits.h netdb.h netinet/in.h stddef.h sys/socket.h sys/time.h sys/timeb.h syslog.h],,AC_MSG_ERROR([Compiling Mod-Gearman requires standard unix headers files]))
 AC_CHECK_HEADERS([ltdl.h],,AC_MSG_ERROR([Compiling Mod-Gearman requires ltdl.h]))
 AC_CHECK_HEADERS([curses.h],,AC_MSG_ERROR([Compiling Mod-Gearman requires curses.h]))
+AC_CHECK_HEADERS([naemon/lib/libnaemon.h],,AC_MSG_ERROR([Compiling Mod-Gearman requires libnaemon.h (hint: install naemon-dev pkg)]))
 
 AC_ARG_WITH(gearman,
  [  --with-gearman=DIR Specify the path to your gearman library],

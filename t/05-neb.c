@@ -6,11 +6,11 @@
 #include <ltdl.h>
 #include <t/tap.h>
 
-#include "nagios/nagios.h"
-#include "nagios/nebmodules.h"
-#include "nagios/nebstructs.h"
-#include "nagios/nebcallbacks.h"
-#include "nagios/broker.h"
+#include "naemon/naemon.h"
+#include "naemon/nebmodules.h"
+#include "naemon/nebstructs.h"
+#include "naemon/nebcallbacks.h"
+#include "naemon/broker.h"
 
 int service_check_timeout;
 int host_check_timeout;
