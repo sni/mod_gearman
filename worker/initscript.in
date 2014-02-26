@@ -51,6 +51,7 @@ case "$1" in
             echo "OK"
         else
             echo "failed"
+	    exit 1;
         fi
         ;;
     stop)
