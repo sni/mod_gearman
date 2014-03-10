@@ -200,6 +200,7 @@ void *get_job( gearman_job_st *job, void *context, size_t *result_size, gearman_
 
     if(decrypted_data == NULL) {
         *ret_ptr = GEARMAN_WORK_FAIL;
+        free(decrypted_orig);
         return NULL;
     }
     gm_log( GM_LOG_TRACE, "%d --->\n%s\n<---\n", strlen(decrypted_data), decrypted_data );
@@ -575,6 +576,7 @@ void *return_status( gearman_job_st *job, void *context, size_t *result_size, ge
         perror("shmat");
         *result_size = 0;
         alarm(0);
+        free(result);
         return NULL;
     }
 

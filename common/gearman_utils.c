@@ -279,7 +279,11 @@ int get_gearman_server_data(mod_gm_server_status_t *stats, char ** message, char
     snprintf(*version,  GM_BUFFERSIZE, "%s", "" );
 
     rc = send2gearmandadmin("status\nversion\n", hostnam, port, &output, message);
-    if(rc != STATE_OK) { return rc; }
+    if(rc != STATE_OK) {
+        if(output != NULL)
+            free(output);
+        return rc;
+    }
 
     output_c = output;
     while ( (line = strsep( &output, "\n" )) != NULL ) {
