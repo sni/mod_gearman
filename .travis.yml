@@ -8,7 +8,7 @@ before_install:
   - gpg --keyserver keys.gnupg.net --recv-keys F8C1CA08A57B9ED7
   - gpg --armor --export F8C1CA08A57B9ED7 | sudo apt-key add -
   - sudo apt-get update
-  - sudo apt-get install help2man nagios-plugins-basic autoconf automake libltdl-dev libtool libncurses5-dev devscripts pkg-config libperl-dev build-essential devscripts
+  - sudo apt-get install help2man nagios-plugins-basic autoconf automake libltdl-dev libtool libncurses5-dev devscripts pkg-config libperl-dev build-essential devscripts cppcheck
   - sudo apt-get install gearman-job-server libgearman-dev naemon-dev
   - git config --global user.email "travis@localhost"
   - git config --global user.name "Travis Testuser"

@@ -92,7 +92,7 @@ endif
 07_epn_SOURCES   = $(common_SOURCES) t/tap.h t/tap.c t/07-epn.c $(common_check_SOURCES)
 # only used for performance tests
 06_exec_SOURCES  = $(common_SOURCES) t/06-execvp_vs_popen.c $(common_check_SOURCES)
-TESTS            = $(check_PROGRAMS) t/benchmark.t
+TESTS            = $(check_PROGRAMS) t/benchmark.t t/cppcheck.t
 
 
 GEARMANDS=/usr/sbin/gearmand /opt/sbin/gearmand

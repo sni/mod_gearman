@@ -290,7 +290,9 @@ int check_server(char * server, in_port_t port) {
     free(message);
     free(version);
     free_mod_gm_status_server(stats);
-    return( rc );
+    if(buf != NULL)
+        free(buf);
+    return(rc);
 }
 
 

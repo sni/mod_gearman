@@ -343,8 +343,9 @@ char* my_tmpfile() {
     char *sfn = strdup("/tmp/modgm.XXXXXX");
     int fd = -1;
     if ((fd = mkstemp(sfn)) == -1) {
-       fprintf(stderr, "%s: %s\n", sfn, strerror(errno));
-       return (NULL);
+        fprintf(stderr, "%s: %s\n", sfn, strerror(errno));
+        free(sfn);
+        return (NULL);
     }
     close(fd);
     return sfn;

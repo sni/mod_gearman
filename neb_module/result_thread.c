@@ -164,6 +164,9 @@ void *get_results( gearman_job_st *job, void *context, size_t *result_size, gear
     /* nagios will free it after processing */
     if ( ( chk_result = ( check_result * )malloc( sizeof *chk_result ) ) == 0 ) {
         *ret_ptr = GEARMAN_WORK_FAIL;
+#ifdef GM_DEBUG
+    free(decrypted_orig);
+#endif
         return NULL;
     }
     init_check_result(chk_result);
@@ -230,6 +233,9 @@ void *get_results( gearman_job_st *job, void *context, size_t *result_size, gear
     if ( chk_result->host_name == NULL || chk_result->output == NULL ) {
         *ret_ptr= GEARMAN_WORK_FAIL;
         gm_log( GM_LOG_ERROR, "discarded invalid job (%s), check your encryption settings\n", gearman_job_handle( job ) );
+#ifdef GM_DEBUG
+    free(decrypted_orig);
+#endif
         return NULL;
     }
 
