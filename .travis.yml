@@ -22,7 +22,7 @@ script:
   - make clean                           || exit 1
   - ./configure --enable-embedded-perl --enable-debug || exit 1
   - make                                 || exit 1
-  - make fulltest                        || exit 1
+  - make test                            || exit 1
 notifications:
   email:
     - sven@nierlein.de
