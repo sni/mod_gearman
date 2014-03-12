@@ -258,6 +258,8 @@ int execute_safe_command(gm_job_t * exec_job, int fork_exec, char * identifier) 
 
         /*fork error */
         if( pid == -1 ) {
+            if(exec_job->output != NULL)
+                free(exec_job->output);
             exec_job->output      = strdup("(Error On Fork)");
             exec_job->return_code = 3;
             return(GM_ERROR);
@@ -358,6 +360,10 @@ int execute_safe_command(gm_job_t * exec_job, int fork_exec, char * identifier) 
             }
         }
 
+        if(exec_job->output != NULL)
+            free(exec_job->output);
+        if(exec_job->error != NULL)
+            free(exec_job->error);
         exec_job->output      = strdup(buffer);
         exec_job->error       = strdup(buf_error);
         exec_job->return_code = return_code;
@@ -387,6 +393,8 @@ int execute_safe_command(gm_job_t * exec_job, int fork_exec, char * identifier) 
     }
 
     snprintf( source, sizeof( source )-1, "Mod-Gearman Worker @ %s", identifier);
+    if(exec_job->source != NULL)
+        free(exec_job->source);
     exec_job->source = strdup(source);
 
     return(GM_OK);

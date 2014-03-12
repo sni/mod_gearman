@@ -168,13 +168,9 @@ int main (int argc, char **argv, char **env) {
     execute_safe_command(exec_job, fork_on_exec, hostname);
     cmp_ok(exec_job->return_code, "==", 2, "cmd '%s' returns rc 2", exec_job->command_line);
     like(exec_job->output, "CRITICAL: Return code of 127 is out of bounds. Make sure the plugin you're trying to run actually exists. \\(worker:", "returned result string");
-    free(exec_job->output);
-    free(exec_job->error);
 
     fork_on_exec = 1;
     lives_ok({execute_safe_command(exec_job, fork_on_exec, hostname);}, "executing command using fork on exec");
-    free(exec_job->output);
-    free(exec_job->error);
 
     /* non existing command 2 */
     free(exec_job->command_line);
@@ -182,8 +178,6 @@ int main (int argc, char **argv, char **env) {
     execute_safe_command(exec_job, fork_on_exec, hostname);
     cmp_ok(exec_job->return_code, "==", 2, "cmd '%s' returns rc 2", exec_job->command_line);
     like(exec_job->output, "CRITICAL: Return code of 127 is out of bounds. Make sure the plugin you're trying to run actually exists. \\(worker:", "returned result string");
-    free(exec_job->output);
-    free(exec_job->error);
 
 
 
@@ -197,8 +191,6 @@ int main (int argc, char **argv, char **env) {
     execute_safe_command(exec_job, fork_on_exec, hostname);
     cmp_ok(exec_job->return_code, "==", 2, "cmd '%s' returns rc 2", exec_job->command_line);
     like(exec_job->output, "CRITICAL: Return code of 126 is out of bounds. Make sure the plugin you're trying to run is executable. \\(worker:", "returned result string");
-    free(exec_job->output);
-    free(exec_job->error);
 
     /* non existing command 2 */
     fork_on_exec = 1;
@@ -207,8 +199,6 @@ int main (int argc, char **argv, char **env) {
     execute_safe_command(exec_job, fork_on_exec, hostname);
     cmp_ok(exec_job->return_code, "==", 2, "cmd '%s' returns rc 2", exec_job->command_line);
     like(exec_job->output, "CRITICAL: Return code of 126 is out of bounds. Make sure the plugin you're trying to run is executable. \\(worker:", "returned result string");
-    free(exec_job->output);
-    free(exec_job->error);
 
 
 
@@ -221,8 +211,6 @@ int main (int argc, char **argv, char **env) {
     execute_safe_command(exec_job, fork_on_exec, hostname);
     cmp_ok(exec_job->return_code, "==", 2, "cmd '%s' returns rc 2", exec_job->command_line);
     like(exec_job->output, "CRITICAL: Return code of 5 is out of bounds. \\(worker:.*exiting with exit code 5", "returned result string");
-    free(exec_job->output);
-    free(exec_job->error);
 
 
     /* unknown exit code 2 */
@@ -232,8 +220,6 @@ int main (int argc, char **argv, char **env) {
     execute_safe_command(exec_job, fork_on_exec, hostname);
     cmp_ok(exec_job->return_code, "==", 2, "cmd '%s' returns rc 2", exec_job->command_line);
     like(exec_job->output, "CRITICAL: Return code of 5 is out of bounds. \\(worker:.*exiting with exit code 5", "returned result string");
-    free(exec_job->output);
-    free(exec_job->error);
 
     /* unknown exit code 3 */
     free(exec_job->command_line);
@@ -241,8 +227,6 @@ int main (int argc, char **argv, char **env) {
     execute_safe_command(exec_job, fork_on_exec, hostname);
     cmp_ok(exec_job->return_code, "==", 2, "cmd '%s' returns rc 2", exec_job->command_line);
     like(exec_job->output, "CRITICAL: Return code of 128 is out of bounds. Plugin exited by signal signal 0. \\(worker:", "returned result string");
-    free(exec_job->output);
-    free(exec_job->error);
 
     /* unknown exit code 4 */
     free(exec_job->command_line);
@@ -250,8 +234,6 @@ int main (int argc, char **argv, char **env) {
     execute_safe_command(exec_job, fork_on_exec, hostname);
     cmp_ok(exec_job->return_code, "==", 2, "cmd '%s' returns rc 2", exec_job->command_line);
     like(exec_job->output, "CRITICAL: Return code of 137 is out of bounds. Plugin exited by signal SIGKILL. \\(worker:", "returned result string");
-    free(exec_job->output);
-    free(exec_job->error);
 
     /* unknown exit code 5 */
     free(exec_job->command_line);
@@ -259,8 +241,6 @@ int main (int argc, char **argv, char **env) {
     execute_safe_command(exec_job, fork_on_exec, hostname);
     cmp_ok(exec_job->return_code, "==", 2, "cmd '%s' returns rc 2", exec_job->command_line);
     like(exec_job->output, "CRITICAL: Return code of 255 is out of bounds. \\(worker:", "returned result string");
-    free(exec_job->output);
-    free(exec_job->error);
 
 
     /*****************************************
@@ -273,8 +253,6 @@ int main (int argc, char **argv, char **env) {
     execute_safe_command(exec_job, fork_on_exec, hostname);
     cmp_ok(exec_job->return_code, "==", 2, "cmd '%s' returns rc 2", exec_job->command_line);
     like(exec_job->output, "CRITICAL: Return code of 130 is out of bounds. Plugin exited by signal SIGINT. \\(worker:", "returned result string");
-    free(exec_job->output);
-    free(exec_job->error);
 
     /* signaled exit code SIGINT 2 */
     fork_on_exec = 0;
@@ -283,8 +261,6 @@ int main (int argc, char **argv, char **env) {
     execute_safe_command(exec_job, fork_on_exec, hostname);
     cmp_ok(exec_job->return_code, "==", 2, "cmd '%s' returns rc 2", exec_job->command_line);
     like(exec_job->output, "CRITICAL: Return code of 130 is out of bounds. Plugin exited by signal SIGINT. \\(worker:", "returned result string");
-    free(exec_job->output);
-    free(exec_job->error);
 
 
 
@@ -303,8 +279,6 @@ int main (int argc, char **argv, char **env) {
     execute_safe_command(exec_job, fork_on_exec, hostname);
     cmp_ok(exec_job->return_code, "==", 2, "cmd '%s' returns rc 2", exec_job->command_line);
     like(exec_job->output, "\\(Service Check Timed Out On Worker: ", "returned result string");
-    free(exec_job->output);
-    free(exec_job->error);
 
     /* timed out check 2 */
     fork_on_exec = 0;
@@ -313,8 +287,6 @@ int main (int argc, char **argv, char **env) {
     execute_safe_command(exec_job, fork_on_exec, hostname);
     cmp_ok(exec_job->return_code, "==", 2, "cmd '%s' returns rc 2", exec_job->command_line);
     like(exec_job->output, "\\(Service Check Timed Out On Worker: ", "returned result string");
-    free(exec_job->output);
-    free(exec_job->error);
 
     signal(SIGTERM, SIG_DFL);
     signal(SIGINT, SIG_DFL);
@@ -333,8 +305,6 @@ int main (int argc, char **argv, char **env) {
     cmp_ok(exec_job->return_code, "==", 0, "cmd '%s' returns rc 0", exec_job->command_line);
     like(exec_job->output, "out", "returned result string");
     like(exec_job->error,  "err", "returned error string");
-    free(exec_job->output);
-    free(exec_job->error);
 
     free(exec_job->command_line);
     exec_job->command_line = strdup("./t/both;");
@@ -342,8 +312,6 @@ int main (int argc, char **argv, char **env) {
     cmp_ok(exec_job->return_code, "==", 0, "cmd '%s' returns rc 0", exec_job->command_line);
     like(exec_job->output, "out", "returned result string");
     like(exec_job->error,  "err", "returned error string");
-    free(exec_job->output);
-    free(exec_job->error);
 
     fork_on_exec = 1;
     free(exec_job->command_line);
@@ -352,8 +320,6 @@ int main (int argc, char **argv, char **env) {
     cmp_ok(exec_job->return_code, "==", 0, "cmd '%s' returns rc 0", exec_job->command_line);
     like(exec_job->output, "out", "returned result string");
     like(exec_job->error,  "err", "returned error string");
-    free(exec_job->output);
-    free(exec_job->error);
 
     free(exec_job->command_line);
     exec_job->command_line = strdup("./t/both;");
@@ -361,8 +327,6 @@ int main (int argc, char **argv, char **env) {
     cmp_ok(exec_job->return_code, "==", 0, "cmd '%s' returns rc 0", exec_job->command_line);
     like(exec_job->output, "out", "returned result string");
     like(exec_job->error,  "err", "returned error string");
-    free(exec_job->output);
-    free(exec_job->error);
 
     /*****************************************
      * cmd env
