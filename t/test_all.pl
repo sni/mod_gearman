@@ -38,7 +38,7 @@ for my $test (@tests) {
     `cat $vallog >> $suppressions`;
 
     is(qx(grep "ERROR SUMMARY: " $vallog | grep -v "ERROR SUMMARY: 0 errors"), "", "valgrind Error Summary")
-      or BAIL_OUT("check memory $test in $vallog");
+      or BAIL_OUT("valgrind output for test $test from\n$vallog:\n".`cat $vallog`);
 }
 
 unlink($vallog);
