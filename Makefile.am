@@ -17,7 +17,7 @@ CFLAGS +=-DDATADIR='"$(datadir)"'
 OS=$(shell uname)
 
 if USEPERL
-P1FILE           = worker/mod_gearman_p1.pl
+P1FILE           = worker/mod_gearman2_p1.pl
 PERLLIB          = @PERLLIBS@
 perl_objects     = common/perlxsi.o common/epn_utils.o
 install_epnfiles = install_epnfiles
@@ -27,7 +27,7 @@ EXTRA_02_full_SOURCES=common/perlxsi.c common/epn_utils.c
 EXTRA_03_exec_SOURCES=common/perlxsi.c common/epn_utils.c
 EXTRA_06_exec_SOURCES=common/perlxsi.c common/epn_utils.c
 EXTRA_07_epn_SOURCES=common/perlxsi.c common/epn_utils.c
-EPN_BIN = mod_gearman_mini_epn
+EPN_BIN = mod_gearman2_mini_epn
 else
 PERLLIB          =
 P1FILE           =
@@ -96,21 +96,21 @@ TESTS            = $(check_PROGRAMS) t/benchmark.t t/cppcheck.t
 
 
 GEARMANDS=/usr/sbin/gearmand /opt/sbin/gearmand
-replace_vars = sed -e 's:%CONFIG_WORKER%:$(sysconfdir)/mod_gearman/mod_gearman_worker.conf:g' \
-               -e 's:%PIDFILE%:$(localstatedir)/mod_gearman/mod_gearman_worker.pid:g' \
-               -e 's:%LOGFILE_NEB%:$(localstatedir)/log/mod_gearman/mod_gearman_neb.log:g' \
-               -e 's:%LOGFILE_WORKER%:$(localstatedir)/log/mod_gearman/mod_gearman_worker.log:g' \
-               -e 's:%P1FILE%:$(datadir)/mod_gearman/mod_gearman_p1.pl:g' \
-               -e 's:%GPIDFILE%:$(localstatedir)/mod_gearman/gearmand.pid:g' \
-               -e 's:%GLOGFILE%:$(localstatedir)/mod_gearman/gearmand.log:g' \
-               -e 's:%WORKERBIN%:$(bindir)/mod_gearman_worker:g' \
+replace_vars = sed -e 's:%CONFIG_WORKER%:$(sysconfdir)/mod_gearman2/mod_gearman_worker.conf:g' \
+               -e 's:%PIDFILE%:$(localstatedir)/mod_gearman2/mod_gearman_worker.pid:g' \
+               -e 's:%LOGFILE_NEB%:$(localstatedir)/log/mod_gearman2/mod_gearman_neb.log:g' \
+               -e 's:%LOGFILE_WORKER%:$(localstatedir)/log/mod_gearman2/mod_gearman_worker.log:g' \
+               -e 's:%P1FILE%:$(datadir)/mod_gearman2/mod_gearman2_p1.pl:g' \
+               -e 's:%GPIDFILE%:$(localstatedir)/mod_gearman2/gearmand.pid:g' \
+               -e 's:%GLOGFILE%:$(localstatedir)/mod_gearman2/gearmand.log:g' \
+               -e 's:%WORKERBIN%:$(bindir)/mod_gearman2_worker:g' \
                -e 's:%USER%:$(user):g'
 
 EXTRA_DIST = COPYING etc/*.in extras include \
              THANKS README docs/README.html Changes worker/initscript.in \
-             support/naemon-mod-gearman.spec \
+             support/mod-gearman2.spec \
              t/data/* t/rc t/both t/killer t/sleep t/*.pl t/*.t \
-             worker/mod_gearman_p1.pl t/test_all.pl t/valgrind_suppress.cfg contrib \
+             worker/mod_gearman2_p1.pl t/test_all.pl t/valgrind_suppress.cfg contrib \
              etc/mod_gearman_logrotate
 
 include contrib/Makefile.am
@@ -198,44 +198,44 @@ worker.static: worker
 	@echo ""
 
 install-exec-local: install-local-state-dir
-	$(install_sh_PROGRAM) -m 644 mod_gearman.o $(DESTDIR)$(pkglibdir)/mod_gearman.o
-	$(install_sh_PROGRAM) -m 755 worker/initscript $(DESTDIR)$(initrddir)/naemon-mod-gearman-worker
+	$(install_sh_PROGRAM) -m 644 mod_gearman.o $(DESTDIR)$(pkglibdir)/mod_gearman2.o
+	$(install_sh_PROGRAM) -m 755 worker/initscript $(DESTDIR)$(initrddir)/mod-gearman2-worker
 	$(install_sh_PROGRAM) -m 755 extras/gearmand-init $(DESTDIR)$(initrddir)/gearmand
 
 install-local-state-dir:
-	$(install_sh_PROGRAM) -d $(DESTDIR)$(localstatedir)/mod_gearman/
+	$(install_sh_PROGRAM) -d $(DESTDIR)$(localstatedir)/mod_gearman2/
 
 install_epnfiles:
-	$(install_sh_PROGRAM) -m 755 $(P1FILE)  $(DESTDIR)$(datadir)/mod_gearman/mod_gearman_p1.pl
-	$(install_sh_PROGRAM) -m 755 $(EPN_BIN) $(DESTDIR)$(bindir)/mod_gearman_mini_epn
+	$(install_sh_PROGRAM) -m 755 $(P1FILE)  $(DESTDIR)$(datadir)/mod_gearman2/mod_gearman2_p1.pl
+	$(install_sh_PROGRAM) -m 755 $(EPN_BIN) $(DESTDIR)$(bindir)/mod_gearman2_mini_epn
 	@echo "################################################################"
 	@echo " Installation completed:"
-	@echo " p1file:         $(DESTDIR)$(datadir)/mod_gearman/mod_gearman_p1.pl"
+	@echo " p1file:         $(DESTDIR)$(datadir)/mod_gearman2/mod_gearman2_p1.pl"
 	@echo "################################################################"
 
 install-data-local: install-local-state-dir $(install_epnfiles)
-	$(install_sh_PROGRAM) -d $(DESTDIR)$(localstatedir)/log/mod_gearman
-	$(install_sh_PROGRAM) -m 644 extras/shared.conf            $(DESTDIR)$(datadir)/mod_gearman/shared.conf
-	$(install_sh_PROGRAM) -m 644 extras/standalone_worker.conf $(DESTDIR)$(datadir)/mod_gearman/standalone_worker.conf
-	$(install_sh_PROGRAM) -m 644 contrib/gearman_proxy.pl      $(DESTDIR)$(datadir)/mod_gearman/gearman_proxy.pl
+	$(install_sh_PROGRAM) -d $(DESTDIR)$(localstatedir)/log/mod_gearman2
+	$(install_sh_PROGRAM) -m 644 extras/shared.conf            $(DESTDIR)$(datadir)/mod_gearman2/shared.conf
+	$(install_sh_PROGRAM) -m 644 extras/standalone_worker.conf $(DESTDIR)$(datadir)/mod_gearman2/standalone_worker.conf
+	$(install_sh_PROGRAM) -m 644 contrib/gearman_proxy.pl      $(DESTDIR)$(datadir)/mod_gearman2/gearman_proxy.pl
 	@echo ""
 	@echo "################################################################"
 	@echo ""
 	@echo " Installation completed:"
-	@echo " neb module:     $(DESTDIR)$(pkglibdir)/mod_gearman.o"
+	@echo " neb module:     $(DESTDIR)$(pkglibdir)/mod_gearman2.o"
 	@echo ""
-	@echo " worker:         $(DESTDIR)$(bindir)/mod_gearman_worker"
-	@echo " init script:    $(DESTDIR)$(initrddir)/naemon-mod-gearman-worker"
-	@[ "$(EPN_BIN)" = "" ] || echo " mini-epn:       $(DESTDIR)$(bindir)/mod_gearman_mini_epn"
+	@echo " worker:         $(DESTDIR)$(bindir)/mod_gearman2_worker"
+	@echo " init script:    $(DESTDIR)$(initrddir)/mod-gearman2-worker"
+	@[ "$(EPN_BIN)" = "" ] || echo " mini-epn:       $(DESTDIR)$(bindir)/mod_gearman2_mini_epn"
 	@echo ""
-	@echo " check bin:      $(DESTDIR)$(bindir)/check_gearman"
-	@echo " send bin:       $(DESTDIR)$(bindir)/send_gearman"
-	@echo " send multi bin: $(DESTDIR)$(bindir)/send_multi"
+	@echo " check bin:      $(DESTDIR)$(bindir)/check_gearman2"
+	@echo " send bin:       $(DESTDIR)$(bindir)/send_gearman2"
+	@echo " send multi bin: $(DESTDIR)$(bindir)/send_multi2"
 	@echo ""
 	@echo "just add the broker line to your naemon.cfg:"
-	@echo "broker_module=$(DESTDIR)$(pkglibdir)/mod_gearman.o config=$(DESTDIR)$(sysconfdir)/mod_gearman/mod_gearman_neb.conf"
+	@echo "broker_module=$(DESTDIR)$(pkglibdir)/mod_gearman2.o config=$(DESTDIR)$(sysconfdir)/mod_gearman2/mod_gearman2_neb.conf"
 	@echo ""
-	@if [ -e $(DESTDIR)$(sysconfdir)/mod_gearman/mod_gearman_neb.conf -o -e $(DESTDIR)$(sysconfdir)/mod_gearman/mod_gearman_worker.conf ]; then \
+	@if [ -e $(DESTDIR)$(sysconfdir)/mod_gearman2/mod_gearman2_neb.conf -o -e $(DESTDIR)$(sysconfdir)/mod_gearman2/mod_gearman2_worker.conf ]; then \
 	    echo " install default config with"; \
 	    echo ""; \
 	    echo " make install-config"; \
@@ -247,15 +247,15 @@ install-data-local: install-local-state-dir $(install_epnfiles)
 
 
 install-config:
-	$(install_sh_PROGRAM) -m 644 etc/mod_gearman_neb.conf    $(DESTDIR)$(sysconfdir)/mod_gearman/mod_gearman_neb.conf
-	$(install_sh_PROGRAM) -m 644 etc/mod_gearman_worker.conf $(DESTDIR)$(sysconfdir)/mod_gearman/mod_gearman_worker.conf
-	$(install_sh_PROGRAM) -m 644 etc/mod_gearman_logrotate   $(DESTDIR)$(sysconfdir)/logrotate.d/mod_gearman
+	$(install_sh_PROGRAM) -m 644 etc/mod_gearman_neb.conf    $(DESTDIR)$(sysconfdir)/mod_gearman2/mod_gearman2_neb.conf
+	$(install_sh_PROGRAM) -m 644 etc/mod_gearman_worker.conf $(DESTDIR)$(sysconfdir)/mod_gearman2/mod_gearman2_worker.conf
+	$(install_sh_PROGRAM) -m 644 etc/mod_gearman_logrotate   $(DESTDIR)$(sysconfdir)/logrotate.d/mod_gearman2
 	@echo "################################################################"
 	@echo ""
 	@echo " configuration:"
-	@echo "         neb module:  $(DESTDIR)$(sysconfdir)/mod_gearman/mod_gearman_neb.conf"
-	@echo "         worker:      $(DESTDIR)$(sysconfdir)/mod_gearman/mod_gearman_worker.conf"
-	@echo "         logrotate.d: $(DESTDIR)$(sysconfdir)/logrotate.d/mod_gearman"
+	@echo "         neb module:  $(DESTDIR)$(sysconfdir)/mod_gearman2/mod_gearman2_neb.conf"
+	@echo "         worker:      $(DESTDIR)$(sysconfdir)/mod_gearman2/mod_gearman2_worker.conf"
+	@echo "         logrotate.d: $(DESTDIR)$(sysconfdir)/logrotate.d/mod_gearman2"
 	@echo ""
 	@echo "################################################################"
 
@@ -310,7 +310,7 @@ mrproper:
 version:
 	if [ -z "$$NEWVERSION" ]; then NEWVERSION=$$(dialog --stdout --inputbox "New Version:" 0 0 "$(VERSION)"); fi; \
 	if [ -n "$$NEWVERSION" ] && [ "$$NEWVERSION" != "$(VERSION)" ]; then \
-		sed -ri "s/$(VERSION)/$$NEWVERSION/" include/common.h configure.ac support/naemon-mod-gearman.spec; \
+		sed -ri "s/$(VERSION)/$$NEWVERSION/" include/common.h configure.ac support/mod-gearman2.spec; \
 		sed -i Changes -e "s/$(VERSION)/$$NEWVERSION $(shell date)\n          - ...\n\n$(VERSION)/"; \
 		$(MAKE) docs; \
 	fi;

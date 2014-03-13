@@ -36,7 +36,7 @@ int main (int argc, char **argv, char **env) {
     mod_gm_opt = malloc(sizeof(mod_gm_opt_t));
     set_default_options(mod_gm_opt);
     char cmds[150];
-    strcpy(cmds, "--p1_file=worker/mod_gearman_p1.pl");
+    strcpy(cmds, "--p1_file=worker/mod_gearman2_p1.pl");
     parse_args_line(mod_gm_opt, cmds, 0);
     strcpy(cmds, "--enable_embedded_perl=on");
     parse_args_line(mod_gm_opt, cmds, 0);

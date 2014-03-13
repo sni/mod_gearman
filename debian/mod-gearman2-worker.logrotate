@@ -1,0 +1,8 @@
+/var/log/mod_gearman2/mod_gearman_worker.log {
+    missingok
+    notifempty
+    sharedscripts
+    postrotate
+        /etc/init.d/mod-gearman2-worker reload > /dev/null 2>/dev/null || true
+    endscript
+}

@@ -71,9 +71,9 @@ void *start_worker(void*data) {
         if(key != NULL) {
             char encryption[150];
             snprintf(encryption, 150, "key=%s", key);
-            execl("./mod_gearman_worker", "./mod_gearman_worker", "debug=2", encryption,      logf, "max-worker=1", "p1_file=./worker/mod_gearman_p1.pl", options, (char *)NULL);
+            execl("./mod_gearman_worker", "./mod_gearman_worker", "debug=2", encryption,      logf, "max-worker=1", "p1_file=./worker/mod_gearman2_p1.pl", options, (char *)NULL);
         } else {
-            execl("./mod_gearman_worker", "./mod_gearman_worker", "debug=2", "encryption=no", logf, "max-worker=1", "p1_file=./worker/mod_gearman_p1.pl", options, (char *)NULL);
+            execl("./mod_gearman_worker", "./mod_gearman_worker", "debug=2", "encryption=no", logf, "max-worker=1", "p1_file=./worker/mod_gearman2_p1.pl", options, (char *)NULL);
         }
         perror("mod_gearman_worker");
         exit(1);
@@ -388,7 +388,7 @@ int main (int argc, char **argv, char **env) {
 
 #ifdef EMBEDDEDPERL
     char p1[150];
-    snprintf(p1, 150, "--p1_file=worker/mod_gearman_p1.pl");
+    snprintf(p1, 150, "--p1_file=worker/mod_gearman2_p1.pl");
     parse_args_line(mod_gm_opt, p1, 0);
     init_embedded_perl(env);
 #endif

@@ -1,0 +1,30 @@
+Usage
+=====
+
+Module configuration
+--------------------
+
+Copy the example configuration file to /etc/mod-gearman2
+
+# cp /usr/share/doc/mod-gearman-module/examples/module.conf /etc/mod-gearman2
+
+Edit to point to your gearman job server, and set a password common to the
+module and the workers.
+
+
+Naemon configuration
+--------------------
+
+Add the following stanza to /etc/naemon/naemon.cfg
+
+broker_module=/usr/lib/mod_gearman2/mod_gearman2.o config=/etc/mod-gearman2/module.conf
+
+
+Restart Naemon
+--------------
+
+Restart naemon, and check the log for warnings.  You should see the
+following message in your log:
+
+[...] Event broker module '/usr/lib/mod_gearman2/mod_gearman2.o' initialized successfully.
+

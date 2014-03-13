@@ -1,14 +1,14 @@
 #!/bin/bash
 
 ### BEGIN INIT INFO
-# Provides:          mod_gearman_proxy
+# Provides:          mod_gearman2_proxy
 # Required-Start:    $local_fs
 # Required-Stop:     $local_fs
 # Should-Start:
 # Should-Stop:
 # Default-Start:     2 3 4 5
 # Default-Stop:      0 1 6
-# Short-Description: Start/Stop the mod_gearman proxy daemon
+# Short-Description: Start/Stop the mod_gearman2 proxy daemon
 ### END INIT INFO
 
 # OMD
@@ -21,19 +21,19 @@ if [ -n $OMD_ROOT ]; then
     #if [ "$CONFIG_MOD_GEARMAN" != "on" -o "$CONFIG_GEARMAN_WORKER" != "on" ] ; then
     #    exit 5
     #fi
-    PROXY=$OMD_ROOT/share/mod_gearman/gearman_proxy.pl
-    PIDFILE=$OMD_ROOT/tmp/run/gearman_proxy.pid
-    LOGFILE=$OMD_ROOT/var/log/gearman/proxy.log
-    CONFIGFILE=$OMD_ROOT/etc/mod_gearman/gearman_proxy.cfg
+    PROXY=$OMD_ROOT/share/mod_gearman2/gearman_proxy2.pl
+    PIDFILE=$OMD_ROOT/tmp/run/gearman_proxy2.pid
+    LOGFILE=$OMD_ROOT/var/log/gearman/proxy2.log
+    CONFIGFILE=$OMD_ROOT/etc/mod_gearman2/gearman_proxy2.cfg
     mkdir -p $OMD_ROOT/tmp/run
 else
-    PROXY=/usr/share/mod_gearman/gearman_proxy.pl
-    PIDFILE=/var/run/gearman_proxy.pid
-    LOGFILE=/var/log/gearman/proxy.log
-    CONFIGFILE=/etc/mod_gearman/gearman_proxy.cfg
+    PROXY=/usr/share/mod_gearman2/gearman_proxy2.pl
+    PIDFILE=/var/run/gearman_proxy2.pid
+    LOGFILE=/var/log/gearman/proxy2.log
+    CONFIGFILE=/etc/mod_gearman2/gearman_proxy2.cfg
 fi
 
-NAME=gearman_proxy
+NAME=gearman_proxy2
 USER=$USER
 USERID=`id -u`
 

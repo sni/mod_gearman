@@ -1,11 +1,11 @@
-Name:          naemon-mod-gearman
+Name:          mod-gearman2
 Version:       2.0.0b1
 Release:       1%{?dist}
 License:       GNU Public License version 2
 Packager:      Sven Nierlein <sven.nierlein@consol.de>
 Vendor:        Labs Consol
 URL:           http://labs.consol.de/nagios/mod-gearman/
-Source0:       naemon-mod-gearman-%{version}.tar.gz
+Source0:       mod-gearman2-%{version}.tar.gz
 Group:         Applications/Monitoring
 BuildRoot:     %{_tmppath}/%{name}-%{version}-root-%(%{__id_u} -n)
 BuildRequires: autoconf, automake, ncurses-devel
@@ -47,7 +47,6 @@ be bound to host and servicegroups.
      install-config \
      DESTDIR="%{buildroot}" \
      AM_INSTALL_PROGRAM_FLAGS=""
-mv %{_libdir}/naemon-mod-gearman %{_libdir}/mod_gearman
 
 # remove custom gearmand initscript
 %{__rm} -f %{buildroot}/%{_initrddir}/gearmand
@@ -56,7 +55,7 @@ mv %{_libdir}/naemon-mod-gearman %{_libdir}/mod_gearman
 %pre
 getent group naemon >/dev/null || groupadd -r naemon
 getent passwd naemon >/dev/null || \
-    useradd -r -g naemon -d %{_localstatedir}/mod_gearman -s /sbin/nologin \
+    useradd -r -g naemon -d %{_localstatedir}/mod_gearman2 -s /sbin/nologin \
     -c "naemon user" naemon
 exit 0
 
@@ -68,27 +67,27 @@ exit 0
 %{__rm} -rf %{buildroot}
 
 %files
-%attr(755,root,root) %{_initrddir}/naemon-mod-gearman-worker
-%config(noreplace) %{_sysconfdir}/mod_gearman/mod_gearman_neb.conf
-%config(noreplace) %{_sysconfdir}/mod_gearman/mod_gearman_worker.conf
-%config(noreplace) %{_sysconfdir}/logrotate.d/mod_gearman
+%attr(755,root,root) %{_initrddir}/mod-gearman2-worker
+%config(noreplace) %{_sysconfdir}/mod_gearman2/mod_gearman_neb.conf
+%config(noreplace) %{_sysconfdir}/mod_gearman2/mod_gearman_worker.conf
+%config(noreplace) %{_sysconfdir}/logrotate.d/mod_gearman2
 
-%{_datadir}/mod_gearman/standalone_worker.conf
-%{_datadir}/mod_gearman/shared.conf
-%{_datadir}/mod_gearman/mod_gearman_p1.pl
-%{_datadir}/mod_gearman/gearman_proxy.pl
+%{_datadir}/mod_gearman2/standalone_worker.conf
+%{_datadir}/mod_gearman2/shared.conf
+%{_datadir}/mod_gearman2/mod_gearman2_p1.pl
+%{_datadir}/mod_gearman2/gearman_proxy.pl
 
-%{_bindir}/check_gearman
-%{_bindir}/gearman_top
-%{_bindir}/mod_gearman_worker
-%{_bindir}/send_gearman
-%{_bindir}/send_multi
-%{_bindir}/mod_gearman_mini_epn
+%{_bindir}/check_gearman2
+%{_bindir}/gearman_top2
+%{_bindir}/mod_gearman2_worker
+%{_bindir}/send_gearman2
+%{_bindir}/send_multi2
+%{_bindir}/mod_gearman2_mini_epn
 
-%{_libdir}/mod_gearman/mod_gearman.o
+%{_libdir}/mod_gearman2/mod_gearman2.o
 
-%attr(755,naemon,root) %{_localstatedir}/mod_gearman
-%attr(755,naemon,root) %{_localstatedir}/log/mod_gearman
+%attr(755,naemon,root) %{_localstatedir}/mod_gearman2
+%attr(755,naemon,root) %{_localstatedir}/log/mod_gearman2
 
 %defattr(-,root,root)
 %docdir %{_defaultdocdir}

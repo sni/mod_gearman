@@ -1,0 +1,93 @@
+#!/bin/sh
+
+### BEGIN INIT INFO
+# Provides:          mod_gearman_worker
+# Required-Start:    $local_fs $remote_fs
+# Required-Stop:     $local_fs $remote_fs
+# Should-Start:
+# Should-Stop:
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Control the mod-gearman worker daemon
+### END INIT INFO
+
+
+PATH=/usr/sbin:/usr/bin:/sbin:/bin
+NAME=mod-gearman2-worker
+DAEMON=/usr/sbin/$NAME
+CONFIG=/etc/mod-gearman/worker.conf
+PIDFILE=/var/run/mod-gearman/worker.pid
+USER=nagios
+USERID=$(id -u)
+DAEMON_OPTS="-d --config=$CONFIG --pidfile=$PIDFILE"
+
+. /lib/lsb/init-functions
+
+pre_start() {
+    if [ ! -e "$CONFIG" ]; then
+        log_failure_msg "Configuration file $CONFIG not present"
+        exit 1
+    fi
+    install -o $USER -g $USER -d $(dirname $PIDFILE)
+}
+
+start_worker() {
+    start-stop-daemon --start --oknodo --user $USER --exec $DAEMON --quiet \
+        --chuid $USER --pidfile $PIDFILE -- $DAEMON_OPTS
+}
+
+stop_worker() {
+    start-stop-daemon --stop --oknodo --user $USER --exec $DAEMON --quiet \
+        --retry 10 --pidfile $PIDFILE
+}
+
+reload_worker() {
+    start-stop-daemon --stop --oknodo --user $USER --exec $DAEMON --quiet \
+        --signal HUP --pidfile $PIDFILE
+}
+
+status_worker() {
+    status_of_proc -p $PIDFILE $DAEMON $NAME
+}
+
+case "$1" in
+    start)
+        log_daemon_msg "Starting $DESC" "$NAME"
+        pre_start
+        if start_worker; then
+          log_end_msg 0
+        else
+          log_end_msg 1
+        fi
+        ;;
+    stop)
+        log_daemon_msg "Stopping $DESC" "$NAME"
+        if stop_worker; then
+          log_end_msg 0
+        else
+          log_end_msg 1
+        fi
+        ;;
+    reload|force-reload)
+        log_daemon_msg "Reloading $DESC" "$NAME"
+        if reload_worker; then
+          log_end_msg 0
+        else
+          log_end_msg 1
+        fi
+        ;;
+    status)
+        status_worker
+        exit $rc
+        ;;
+    restart)
+        $0 stop
+        $0 start
+        ;;
+    *)
+        echo "Usage: $NAME [start|stop|status|reload|force-reload|restart]"
+        exit 1
+        ;;
+esac
+
+exit 0

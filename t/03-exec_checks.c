@@ -35,7 +35,7 @@ int main (int argc, char **argv, char **env) {
 
 #ifdef EMBEDDEDPERL
     char p1[150];
-    snprintf(p1, 150, "--p1_file=worker/mod_gearman_p1.pl");
+    snprintf(p1, 150, "--p1_file=worker/mod_gearman2_p1.pl");
     parse_args_line(mod_gm_opt, p1, 0);
     init_embedded_perl(env);
 #endif

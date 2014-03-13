@@ -1,0 +1,5 @@
+/var/log/mod_gearman2/mod_gearman_neb.log {
+    missingok
+    notifempty
+    copytruncate
+}

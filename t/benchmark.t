@@ -36,7 +36,7 @@ ok($rate > 500, 'fill rate '.$rate.'/s');
 # now clear the queue
 `>worker.log`;
 $t0 = [gettimeofday];
-my $cmd = "./mod_gearman_worker --server=localhost:$TESTPORT --debug=0 --max-worker=1 --encryption=off --p1_file=./worker/mod_gearman_p1.pl --daemon --pidfile=./worker.pid --logfile=./worker.log";
+my $cmd = "./mod_gearman_worker --server=localhost:$TESTPORT --debug=0 --max-worker=1 --encryption=off --p1_file=./worker/mod_gearman2_p1.pl --daemon --pidfile=./worker.pid --logfile=./worker.log";
 system($cmd);
 chomp(my $worker_pid = `cat ./worker.pid 2>/dev/null`);
 isnt($worker_pid, '', 'worker running: '.$worker_pid);
