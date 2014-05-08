@@ -137,10 +137,6 @@ void *get_results( gearman_job_st *job, void *context, size_t *result_size, gear
     }
     mod_gm_decrypt(&decrypted_data, workload, transportmode);
 
-    if(decrypted_data == NULL) {
-        *ret_ptr = GEARMAN_WORK_FAIL;
-        return NULL;
-    }
     gm_log( GM_LOG_TRACE, "%d --->\n%s\n<---\n", strlen(decrypted_data), decrypted_data );
 #ifdef GM_DEBUG
     decrypted_orig   = strdup(decrypted_data);
@@ -167,6 +163,7 @@ void *get_results( gearman_job_st *job, void *context, size_t *result_size, gear
 #ifdef GM_DEBUG
     free(decrypted_orig);
 #endif
+        free(decrypted_data);
         return NULL;
     }
     init_check_result(chk_result);

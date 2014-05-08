@@ -383,6 +383,7 @@ int read_multi_stream(FILE *stream) {
         }
         gm_log( GM_LOG_TRACE, "\tread %ld bytes, %ld bytes remaining in buffer\n", bytes_read, buflen);
     } while (buflen > 0);
+    buffer[buflen] = '\0';
     return count;
 }
 

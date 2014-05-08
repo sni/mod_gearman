@@ -132,7 +132,8 @@ int create_client( gm_server_t * server_list[GM_LISTSIZE], gearman_client_st *cl
 /* create a task and send it */
 int add_job_to_queue( gearman_client_st *client, gm_server_t * server_list[GM_LISTSIZE], char * queue, char * uniq, char * data, int priority, int retries, int transport_mode, int send_now ) {
     gearman_task_st *task = NULL;
-    gearman_return_t ret1, ret2;
+    gearman_return_t ret1 = GEARMAN_SUCCESS;
+    gearman_return_t ret2 = GEARMAN_SUCCESS;
     char * crypted_data;
     int size, free_uniq;
     struct timeval now;
@@ -224,11 +225,17 @@ int add_job_to_queue( gearman_client_st *client, gm_server_t * server_list[GM_LI
         if(retries > 0) {
             retries--;
             gm_log( GM_LOG_TRACE, "add_job_to_queue() retrying... %d\n", retries );
-            return(add_job_to_queue( client, server_list, queue, uniq, data, priority, retries, transport_mode, send_now ));
+            ret2 = add_job_to_queue( client, server_list, queue, uniq, data, priority, retries, transport_mode, send_now );
+            if(free_uniq)
+                free(uniq);
+            return(ret2);
         }
         /* no more retries... */
         else {
             gm_log( GM_LOG_TRACE, "add_job_to_queue() finished with errors: %d %d\n", ret1, ret2 );
+            free(crypted_data);
+            if(free_uniq)
+                free(uniq);
             return GM_ERROR;
         }
     }
@@ -362,6 +369,7 @@ int send2gearmandadmin(char * cmd, char * hostnam, int port, char ** output, cha
     server = gethostbyname(hostnam);
     if( server == NULL ) {
         snprintf(*error, GM_BUFFERSIZE, "failed to resolve %s\n", hostnam);
+        close(sockfd);
         return( STATE_CRITICAL );
     }
     serv_addr.sin_family = AF_INET;
@@ -383,12 +391,12 @@ int send2gearmandadmin(char * cmd, char * hostnam, int port, char ** output, cha
     }
 
     n = read( sockfd, buf, GM_BUFFERSIZE-1 );
-    buf[n] = '\x0';
     if (n < 0) {
         snprintf(*error, GM_BUFFERSIZE, "error reading from %s:%i - %s\n", hostnam, (int)port, strerror(errno));
         close(sockfd);
         return( STATE_CRITICAL );
     }
+    buf[n] = '\x0';
     free(*output);
     *output = strdup(buf);
     close(sockfd);

@@ -223,6 +223,7 @@ int execute_safe_command(gm_job_t * exec_job, int fork_exec, char * identifier) 
     int pipe_stdout[2] , pipe_stderr[2];
     int return_code;
     int pclose_result;
+    int size;
     char *plugin_output, *plugin_error;
     char *bufdup;
     char buffer[GM_BUFFERSIZE], buf_error[GM_BUFFERSIZE], source[GM_BUFFERSIZE];
@@ -322,10 +323,12 @@ int execute_safe_command(gm_job_t * exec_job, int fork_exec, char * identifier) 
             waitpid(pid, &return_code, 0);
             gm_log( GM_LOG_TRACE, "finished check from pid: %d with status: %d\n", pid, return_code);
             /* get all lines of plugin output */
-            if(read(pipe_stdout[0], buffer, sizeof(buffer)-1) < 0)
+            if((size = read(pipe_stdout[0], buffer, sizeof(buffer)-1)) < 0)
                 perror("read");
-            if(read(pipe_stderr[0], buf_error, sizeof(buf_error)-1) < 0)
+            buffer[size] = '\0';
+            if((size = read(pipe_stderr[0], buf_error, sizeof(buf_error)-1)) < 0)
                 perror("read");
+            buf_error[size] = '\0';
         }
         return_code = real_exit_code(return_code);
 

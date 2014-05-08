@@ -57,8 +57,10 @@ char *gm_escape_newlines(char *rawbuf, int trimmed) {
     }
 
     /* allocate enough memory to escape all chars if necessary */
-    if((newbuf=malloc((strlen(tmpbuf)*2)+1))==NULL)
+    if((newbuf=malloc((strlen(tmpbuf)*2)+1))==NULL) {
+        free(tmpbuf);
         return NULL;
+    }
 
     for(x=0,y=0;tmpbuf[x]!=(char)'\x0';x++){
 
@@ -150,7 +152,7 @@ void mod_gm_decrypt(char ** decrypted, char * text, int mode) {
         mod_gm_aes_decrypt(decrypted, buffer, bsize);
     }
     else  {
-        char debase64[GM_BUFFERSIZE];
+        char debase64[bsize+1];
         strncpy(debase64, (char*)buffer, bsize);
         debase64[bsize] = '\0';
         strcpy(*decrypted, debase64);
@@ -281,22 +283,22 @@ int set_default_options(mod_gm_opt_t *opt) {
 #endif
 
     opt->server_num         = 0;
-    for(i=0;i<=GM_LISTSIZE;i++)
+    for(i=0;i<GM_LISTSIZE;i++)
         opt->server_list[i] = NULL;
     opt->dupserver_num         = 0;
-    for(i=0;i<=GM_LISTSIZE;i++)
+    for(i=0;i<GM_LISTSIZE;i++)
         opt->dupserver_list[i] = NULL;
     opt->hostgroups_num     = 0;
-    for(i=0;i<=GM_LISTSIZE;i++)
+    for(i=0;i<GM_LISTSIZE;i++)
         opt->hostgroups_list[i] = NULL;
     opt->servicegroups_num  = 0;
-    for(i=0;i<=GM_LISTSIZE;i++)
+    for(i=0;i<GM_LISTSIZE;i++)
         opt->servicegroups_list[i] = NULL;
     opt->local_hostgroups_num     = 0;
-    for(i=0;i<=GM_LISTSIZE;i++)
+    for(i=0;i<GM_LISTSIZE;i++)
         opt->local_hostgroups_list[i] = NULL;
     opt->local_servicegroups_num  = 0;
-    for(i=0;i<=GM_LISTSIZE;i++)
+    for(i=0;i<GM_LISTSIZE;i++)
         opt->local_servicegroups_list[i] = NULL;
     for(i=0;i<GM_NEBTYPESSIZE;i++) {
         mod_gm_exp_t *mod_gm_exp;
@@ -304,6 +306,7 @@ int set_default_options(mod_gm_opt_t *opt) {
         mod_gm_exp->elem_number = 0;
         opt->exports[i]         = mod_gm_exp;
     }
+    opt->exports_count = 0;
 
     return(GM_OK);
 }
@@ -514,9 +517,6 @@ int parse_args_line(mod_gm_opt_t *opt, char * arg, int recursion_level) {
         gm_log( GM_LOG_ERROR, "unknown switch '%s'\n", key );
         return(GM_OK);
     }
-
-    if ( value == NULL )
-        return(GM_OK);
 
     /* debug */
     if ( !strcmp( key, "debug" ) ) {
@@ -1302,8 +1302,9 @@ void escape(char *out, int ch) {
         case '\"':
             strcpy(out, "\\\""); break;
         default:
-            out[0] = (char) ch; break;
+            out[0] = (char) ch;
             out[1] = 0;
+            break;
     }
 }
 
