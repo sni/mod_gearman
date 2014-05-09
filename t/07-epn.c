@@ -94,7 +94,7 @@ int main (int argc, char **argv, char **env) {
     free(error);
 
     /* test mini epn */
-    strcpy(cmd, "./mod_gearman_mini_epn ./t/ok.pl");
+    strcpy(cmd, "./mod_gearman2_mini_epn ./t/ok.pl");
     rrc = real_exit_code(run_check(cmd, &result, &error));
     cmp_ok(rrc, "==", 0, "cmd '%s' returned rc %d", cmd, rrc);
     like(result, "plugin return code: 0", "contains return code");

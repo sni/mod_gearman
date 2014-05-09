@@ -1,11 +1,11 @@
-Name:          mod-gearman2
+Name:          mod_gearman2
 Version:       2.0.0b1
 Release:       1%{?dist}
 License:       GNU Public License version 2
 Packager:      Sven Nierlein <sven.nierlein@consol.de>
 Vendor:        Labs Consol
 URL:           http://labs.consol.de/nagios/mod-gearman/
-Source0:       mod-gearman2-%{version}.tar.gz
+Source0:       mod_gearman2-%{version}.tar.gz
 Group:         Applications/Monitoring
 BuildRoot:     %{_tmppath}/%{name}-%{version}-root-%(%{__id_u} -n)
 BuildRequires: autoconf, automake, ncurses-devel
@@ -16,7 +16,7 @@ Requires(pre,post): /sbin/ldconfig
 Requires(pre): shadow-utils
 Requires:      gearmand, perl, logrotate
 
-Provides:      mod_gearman
+Provides:      mod_gearman2
 
 %description
 Mod Gearman is a new way of distributing active Naemon (and compatible cores)
@@ -68,8 +68,8 @@ exit 0
 
 %files
 %attr(755,root,root) %{_initrddir}/mod-gearman2-worker
-%config(noreplace) %{_sysconfdir}/mod_gearman2/mod_gearman_neb.conf
-%config(noreplace) %{_sysconfdir}/mod_gearman2/mod_gearman_worker.conf
+%config(noreplace) %{_sysconfdir}/mod_gearman2/module.conf
+%config(noreplace) %{_sysconfdir}/mod_gearman2/worker.conf
 %config(noreplace) %{_sysconfdir}/logrotate.d/mod_gearman2
 
 %{_datadir}/mod_gearman2/standalone_worker.conf
@@ -93,6 +93,9 @@ exit 0
 %docdir %{_defaultdocdir}
 
 %changelog
+* Thu May 08 2014 Sven Nierlein <sven@consol.de>
+- renamed to mod-gearman2
+
 * Sun Feb 16 2014 Sven Nierlein <sven@consol.de>
 - provides naemon mod-gearman now
 

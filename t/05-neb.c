@@ -42,10 +42,11 @@ void check_neb(char * nebargs) {
     process_performance_data         = 1;
 
     /* load neb module */
-    neb_handle=(void *)dlopen("./mod_gearman.o",RTLD_LAZY|RTLD_GLOBAL);
+    neb_handle=(void *)dlopen("./mod_gearman2.o",RTLD_LAZY|RTLD_GLOBAL);
     ok(neb_handle != NULL, "neb module loaded");
     err = dlerror(); if(err != NULL) { BAIL_OUT("cannot load module: %s\n", err ); }
     module_version_ptr=(int *)dlsym(neb_handle,"__neb_api_version");
+    ok(module_version_ptr != NULL, "got module pointer %p", module_version_ptr);
     ok((*module_version_ptr) == CURRENT_NEB_API_VERSION, "got module api version %i", CURRENT_NEB_API_VERSION);
 
     /* init neb module */
@@ -92,7 +93,7 @@ int neb_deregister_callback(int callback_type, int (*callback_func)(int,void *))
 int main(void) {
     int i;
 
-    plan(28);
+    plan(32);
 
     char * test_nebargs[] = {
         "encryption=no server=localhost",

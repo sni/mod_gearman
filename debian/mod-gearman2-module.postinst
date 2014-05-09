@@ -4,10 +4,10 @@ set -e
 
 case "$1" in
     configure)
-        mkdir -p /etc/mod-gearman /var/lib/log/mod_gearman
-        chown nagios:nagios /var/lib/log/mod_gearman
-        [ -e /etc/mod-gearman/module.conf ] || cp -p /usr/share/doc/mod-gearman-module/examples/module.conf.gz /etc/mod-gearman/module.conf.gz
-        [ -e /etc/mod-gearman/module.conf.gz ] && gunzip /etc/mod-gearman/module.conf.gz
+        mkdir -p /etc/mod-gearman2 /var/lib/log/mod_gearman2
+        chown naemon:naemon /var/lib/log/mod_gearman2
+        [ -e /etc/mod-gearman2/module.conf ] || cp -p /usr/share/doc/mod-gearman2-module/examples/module.conf.gz /etc/mod-gearman2/module.conf.gz
+        [ -e /etc/mod-gearman2/module.conf.gz ] && gunzip /etc/mod-gearman2/module.conf.gz
     ;;
 
     abort-upgrade|abort-remove|abort-deconfigure)

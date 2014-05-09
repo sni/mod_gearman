@@ -61,7 +61,7 @@ int main (int argc, char **argv, char **env) {
     /*****************************************
      * send_gearman 1
      */
-    strcpy(cmd, "./send_gearman --server=blah --key=testtest --host=test --service=test --message=test --returncode=0");
+    strcpy(cmd, "./send_gearman2 --server=blah --key=testtest --host=test --service=test --message=test --returncode=0");
     rrc = real_exit_code(run_check(cmd, &result, &error));
     cmp_ok(rrc, "==", 3, "cmd '%s' returned rc %d", cmd, rrc);
     if(atof(gearman_version()) >= 0.31) {
@@ -75,7 +75,7 @@ int main (int argc, char **argv, char **env) {
     /*****************************************
      * send_gearman 2
      */
-    strcpy(cmd, "./send_gearman --server=blah < t/data/send_gearman_results.txt");
+    strcpy(cmd, "./send_gearman2 --server=blah < t/data/send_gearman_results.txt");
     rrc = real_exit_code(run_check(cmd, &result, &error));
     cmp_ok(rrc, "==", 3, "cmd '%s' returned rc %d", cmd, rrc);
     if(atof(gearman_version()) >= 0.31) {
@@ -89,7 +89,7 @@ int main (int argc, char **argv, char **env) {
     /*****************************************
      * send_multi
      */
-    strcpy(cmd, "./send_multi --server=blah --host=blah < t/data/send_multi.txt");
+    strcpy(cmd, "./send_multi2 --server=blah --host=blah < t/data/send_multi.txt");
     rrc = real_exit_code(run_check(cmd, &result, &error));
     cmp_ok(rrc, "==", 3, "cmd '%s' returned rc %d", cmd, rrc);
     if(atof(gearman_version()) >= 0.31) {
@@ -131,7 +131,7 @@ int main (int argc, char **argv, char **env) {
     else if(stat("/usr/lib64/nagios/plugins/check_users", &st) == 0) {
         strcpy(cmd, "/usr/lib64/nagios/plugins/check_users -w 99 -c 99");
     } else {
-        strcpy(cmd, "/bin/false 'no check_icmp installed...'");
+        strcpy(cmd, "/bin/false 'no check_users installed...'");
     }
     rc = run_check(cmd, &result, &error);
     cmp_ok(rc, "==", 0, "pclose for cmd '%s' returned rc %d", cmd, rc);

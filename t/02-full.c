@@ -71,11 +71,11 @@ void *start_worker(void*data) {
         if(key != NULL) {
             char encryption[150];
             snprintf(encryption, 150, "key=%s", key);
-            execl("./mod_gearman_worker", "./mod_gearman_worker", "debug=2", encryption,      logf, "max-worker=1", "p1_file=./worker/mod_gearman2_p1.pl", options, (char *)NULL);
+            execl("./mod_gearman2_worker", "./mod_gearman2_worker", "debug=2", encryption,      logf, "max-worker=1", "p1_file=./worker/mod_gearman2_p1.pl", options, (char *)NULL);
         } else {
-            execl("./mod_gearman_worker", "./mod_gearman_worker", "debug=2", "encryption=no", logf, "max-worker=1", "p1_file=./worker/mod_gearman2_p1.pl", options, (char *)NULL);
+            execl("./mod_gearman2_worker", "./mod_gearman2_worker", "debug=2", "encryption=no", logf, "max-worker=1", "p1_file=./worker/mod_gearman2_p1.pl", options, (char *)NULL);
         }
-        perror("mod_gearman_worker");
+        perror("mod_gearman2_worker");
         exit(1);
     }
     else {
@@ -359,7 +359,7 @@ void check_no_worker_running(char* worker_logfile) {
 
     // ensure no worker are running anymore
     char *username=getenv("USER");
-    snprintf(cmd, 150, "ps -efl 2>/dev/null | grep -v grep | grep '%s' | grep mod_gearman_worker", username);
+    snprintf(cmd, 150, "ps -efl 2>/dev/null | grep -v grep | grep '%s' | grep mod_gearman2_worker", username);
     rrc = real_exit_code(run_check(cmd, &result, &error));
     ok(rrc == 1, "no worker running anymore");
     like(result, "^\\s*$", "ps output should be empty");
@@ -541,17 +541,17 @@ int main (int argc, char **argv, char **env) {
     /*****************************************
      * send_gearman
      */
-    snprintf(cmd, 150, "./send_gearman --server=127.0.0.1:%d --key=testtest --host=test --service=test --message=test --returncode=0", GEARMAND_TEST_PORT);
+    snprintf(cmd, 150, "./send_gearman2 --server=127.0.0.1:%d --key=testtest --host=test --service=test --message=test --returncode=0", GEARMAND_TEST_PORT);
     rrc = real_exit_code(run_check(cmd, &result, &error));
     cmp_ok(rrc, "==", 0, "cmd '%s' returned rc %d", cmd, rrc);
-    like(result, "^\\s*$", "output from ./send_gearman");
+    like(result, "^\\s*$", "output from ./send_gearman2");
     free(result);
     free(error);
 
     /*****************************************
      * send_multi
      */
-    snprintf(cmd, 150, "./send_multi --server=127.0.0.1:%d --host=blah < t/data/send_multi.txt", GEARMAND_TEST_PORT);
+    snprintf(cmd, 150, "./send_multi2 --server=127.0.0.1:%d --host=blah < t/data/send_multi.txt", GEARMAND_TEST_PORT);
     rrc = real_exit_code(run_check(cmd, &result, &error));
     cmp_ok(rrc, "==", 0, "cmd '%s' returned rc %d", cmd, rrc);
     like(result, "send_multi OK: 2 check_multi child checks submitted", "output from ./send_multi");
@@ -561,7 +561,7 @@ int main (int argc, char **argv, char **env) {
     /*****************************************
      * check_gearman
      */
-    snprintf(cmd, 150, "./check_gearman -H 127.0.0.1:%d -s check -a -q worker_test", GEARMAND_TEST_PORT);
+    snprintf(cmd, 150, "./check_gearman2 -H 127.0.0.1:%d -s check -a -q worker_test", GEARMAND_TEST_PORT);
     rrc = real_exit_code(run_check(cmd, &result, &error));
     cmp_ok(rrc, "==", 0, "cmd '%s' returned rc %d", cmd, rrc);
     like(result, "check_gearman OK - sending background job succeded", "output from ./check_gearman");

@@ -12,7 +12,7 @@ my $TESTPORT    = 54730;
 my $NR_TST_JOBS = 2000;
 
 # check requirements
-ok(-f './mod_gearman_worker', 'worker present') or BAIL_OUT("no worker!");
+ok(-f './mod_gearman2_worker', 'worker present') or BAIL_OUT("no worker!");
 chomp(my $gearmand = `which gearmand 2>/dev/null`);
 isnt($gearmand, '', 'gearmand present: '.$gearmand) or BAIL_OUT("no gearmand");
 
@@ -22,7 +22,7 @@ chomp(my $gearmand_pid = `cat ./gearman.pid`);
 isnt($gearmand_pid, '', 'gearmand running: '.$gearmand_pid) or BAIL_OUT("no gearmand");
 
 # fill the queue
-open(my $ph, "|./send_gearman --server=localhost:$TESTPORT --result_queue=eventhandler") or die("failed to open send_gearman: $!");
+open(my $ph, "|./send_gearman2 --server=localhost:$TESTPORT --result_queue=eventhandler") or die("failed to open send_gearman2: $!");
 my $t0 = [gettimeofday];
 for my $x (1..$NR_TST_JOBS) {
     print $ph "hostname\t1\ttest\n";
@@ -36,7 +36,7 @@ ok($rate > 500, 'fill rate '.$rate.'/s');
 # now clear the queue
 `>worker.log`;
 $t0 = [gettimeofday];
-my $cmd = "./mod_gearman_worker --server=localhost:$TESTPORT --debug=0 --max-worker=1 --encryption=off --p1_file=./worker/mod_gearman2_p1.pl --daemon --pidfile=./worker.pid --logfile=./worker.log";
+my $cmd = "./mod_gearman2_worker --server=localhost:$TESTPORT --debug=0 --max-worker=1 --encryption=off --p1_file=./worker/mod_gearman2_p1.pl --daemon --pidfile=./worker.pid --logfile=./worker.log";
 system($cmd);
 chomp(my $worker_pid = `cat ./worker.pid 2>/dev/null`);
 isnt($worker_pid, '', 'worker running: '.$worker_pid);
@@ -58,7 +58,7 @@ exit(0);
 #################################################
 sub wait_for_empty_queue {
     my $queue = shift;
-    open(my $ph, "./gearman_top -b -i 0.1 -H localhost:$TESTPORT |") or die("cannot launch gearman_top: $!");
+    open(my $ph, "./gearman_top2 -b -i 0.1 -H localhost:$TESTPORT |") or die("cannot launch gearman_top2: $!");
     while(my $line = <$ph>) {
         if($line =~ m/^\s*$queue\s*\|\s*(\d+)\s*\|\s*(\d+)\s*\|\s*(\d+)/mx) {
             my $worker  = $1;
