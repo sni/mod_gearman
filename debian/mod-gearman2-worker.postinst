@@ -5,7 +5,7 @@ set -e
 case "$1" in
     configure)
         mkdir -p /etc/mod-gearman2 /var/lib/log/mod_gearman2
-        chown naemon:naemon /var/lib/log/mod_gearman
+        chown naemon:naemon /var/lib/log/mod_gearman2
         [ -e /etc/mod-gearman2/worker.conf ] || cp -p /usr/share/doc/mod-gearman2-worker/examples/worker.conf.gz /etc/mod-gearman2/worker.conf.gz
         [ -e /etc/mod-gearman2/worker.conf.gz ] && gunzip /etc/mod-gearman2/worker.conf.gz
     ;;
