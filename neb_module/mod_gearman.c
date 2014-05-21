@@ -35,11 +35,7 @@ extern int            currently_running_host_checks;
 extern int            currently_running_service_checks;
 extern int            service_check_timeout;
 extern int            host_check_timeout;
-extern timed_event  * event_list_low;
-extern timed_event  * event_list_low_tail;
 extern int            process_performance_data;
-//extern check_result   check_result_info;
-extern check_result * check_result_list;
 
 /* global variables */
 static objectlist * mod_gm_result_list = 0;
