@@ -40,3 +40,4 @@ mod_gearman_mini_epn
 mod_gearman_mini_epn.o
 perlxsi.c
 perlxsi.o
+mod_gearman2_mini_epn
