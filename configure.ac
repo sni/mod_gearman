@@ -48,7 +48,7 @@ AC_ARG_WITH(gearman,
  [
     found=0
     libgm_1_0=0
-    for d in libgearman/.libs lib .; do
+    for d in libgearman/.libs lib lib64 .; do
       test -e "$withval/$d/libgearman.so" && LDFLAGS="${LDFLAGS} -L$withval/$d" && CFLAGS="${CFLAGS} -L$withval/$d" && found=1 && break;
     done
     test $found -eq 1 || { echo 'did not find libgearman.so under your specified path!' && exit 1; }
