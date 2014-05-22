@@ -354,6 +354,19 @@ int escaped(int ch);
 void escape(char *out, int ch);
 
 /**
+ * replace_str
+ *
+ * return string with old replaced by new
+ *
+ * @param[in] str - input string
+ * @param[in] old - char to replace
+ * @param[in] new - char to replace with
+ *
+ * @return the replaced string
+ */
+char *replace_str(const char *str, const char *old, const char *new);
+
+/**
  * nebtype2str
  *
  * get human readable name for neb type

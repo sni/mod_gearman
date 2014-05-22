@@ -4,6 +4,7 @@ This file documents the revision history for mod_gearman.
           - migrated mod-gearman into a naemon addon to continue the nagios 4 branch
           - fixed some potential memory and filedescriptor leaks
           - fixed memory leak while processing check results
+          - fixed unescaped newlines in performance data breaking pnp
 
 
 

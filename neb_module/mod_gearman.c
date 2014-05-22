@@ -1001,6 +1001,7 @@ int handle_perfdata(int event_type, void *data) {
     host *hst        = NULL;
     service *svc     = NULL;
     int has_perfdata = FALSE;
+    char *perf_data;
 
     gm_log( GM_LOG_TRACE, "handle_perfdata(%d)\n", event_type );
     if(process_performance_data == 0) {
@@ -1028,6 +1029,10 @@ int handle_perfdata(int event_type, void *data) {
                 uniq[0]='\x0';
                 snprintf( uniq,GM_BUFFERSIZE-1,"%s", hostchkdata->host_name);
 
+                /* replace newlines with actual newlines */
+                perf_data = replace_str(hostchkdata->perf_data, "\\n", "\n");
+
+
                 temp_buffer[0]='\x0';
                 snprintf( temp_buffer,GM_BUFFERSIZE-1,
                             "DATATYPE::HOSTPERFDATA\t"
@@ -1038,7 +1043,7 @@ int handle_perfdata(int event_type, void *data) {
                             "HOSTSTATE::%d\t"
                             "HOSTSTATETYPE::%d\n",
                             (int)hostchkdata->timestamp.tv_sec,
-                            hostchkdata->host_name, hostchkdata->perf_data,
+                            hostchkdata->host_name, perf_data,
                             hostchkdata->command_name, hostchkdata->command_args,
                             hostchkdata->state, hostchkdata->state_type);
                 has_perfdata = TRUE;
@@ -1063,6 +1068,9 @@ int handle_perfdata(int event_type, void *data) {
                 uniq[0]='\x0';
                 snprintf( uniq,GM_BUFFERSIZE-1,"%s-%s", srvchkdata->host_name, srvchkdata->service_description);
 
+                /* replace newlines with actual newlines */
+                perf_data = replace_str(srvchkdata->perf_data, "\\n", "\n");
+
                 temp_buffer[0]='\x0';
                 snprintf( temp_buffer,GM_BUFFERSIZE-1,
                             "DATATYPE::SERVICEPERFDATA\t"
@@ -1075,8 +1083,9 @@ int handle_perfdata(int event_type, void *data) {
                             "SERVICESTATETYPE::%d\n\n\n",
                             (int)srvchkdata->timestamp.tv_sec,
                             srvchkdata->host_name, srvchkdata->service_description,
-                            srvchkdata->perf_data, svc->check_command,
+                            perf_data, svc->check_command,
                             srvchkdata->state, srvchkdata->state_type);
+                free(perf_data);
                 temp_buffer[GM_BUFFERSIZE-1]='\x0';
                 has_perfdata = TRUE;
             }
