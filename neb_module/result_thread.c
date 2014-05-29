@@ -189,7 +189,8 @@ void *get_results( gearman_job_st *job, void *context, size_t *result_size, gear
                 chk_result->output = strdup("(null)");
             }
             else {
-                chk_result->output = strdup( value );
+                /* replace newlines with actual newlines */
+                chk_result->output = replace_str(value, "\\n", "\n");
             }
         }
 
