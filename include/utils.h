@@ -39,6 +39,7 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <sys/stat.h>
+#include <stddef.h>
 
 #include "polarssl/md5.h"
 #include "common.h"
@@ -352,6 +353,19 @@ int escaped(int ch);
  * @return the escaped string
  */
 void escape(char *out, int ch);
+
+/**
+ * replace_str
+ *
+ * return string with old replaced by new
+ *
+ * @param[in] str - input string
+ * @param[in] old - char to replace
+ * @param[in] new - char to replace with
+ *
+ * @return the replaced string
+ */
+char *replace_str(const char *str, const char *old, const char *new);
 
 /**
  * nebtype2str
