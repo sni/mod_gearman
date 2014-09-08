@@ -15,7 +15,7 @@ missing
 mod_gearman2.o
 mod_gearman2.so
 stamp-h1
-mod_gearman2_worker
+mod_gearman_worker
 01_utils
 02_full
 03_exec
@@ -24,10 +24,10 @@ mod_gearman2_worker
 06_exec
 07_epn
 images
-send_gearman2
-send_multi2
-check_gearman2
-gearman_top2
+send_gearman
+send_multi
+check_gearman
+gearman_top
 *.gz
 *.rpm
 common/perlxsi.c
@@ -40,4 +40,4 @@ mod_gearman_mini_epn
 mod_gearman_mini_epn.o
 perlxsi.c
 perlxsi.o
-mod_gearman2_mini_epn
+mod_gearman_mini_epn
