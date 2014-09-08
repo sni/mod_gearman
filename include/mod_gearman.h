@@ -50,17 +50,8 @@
  * @{
  */
 
-/* include some libnaemon */
-#include "naemon/lib/libnaemon.h"
-#include "naemon/nebmods.h"
-#include "naemon/objects.h"
-#include "naemon/utils.h"
-#include "naemon/checks.h"
-#include "naemon/neberrors.h"
-#include "naemon/nebstructs.h"
-#include "naemon/logging.h"
-#include "naemon/broker.h"
-#include "naemon/events.h"
+/* include naemon */
+#include "naemon/naemon.h"
 
 /* include the gearman libs */
 #include <libgearman/gearman.h>
