@@ -67,7 +67,7 @@ exit 0
 %{__rm} -rf %{buildroot}
 
 %files
-%attr(755,root,root) %{_initrddir}/mod-gearman2-worker
+%attr(755,root,root) %{_initrddir}/mod-gearman-worker
 %config(noreplace) %{_sysconfdir}/mod_gearman2/module.conf
 %config(noreplace) %{_sysconfdir}/mod_gearman2/worker.conf
 %config(noreplace) %{_sysconfdir}/logrotate.d/mod_gearman2
@@ -77,12 +77,12 @@ exit 0
 %{_datadir}/mod_gearman2/mod_gearman_p1.pl
 %{_datadir}/mod_gearman2/gearman_proxy.pl
 
-%{_bindir}/check_gearman2
-%{_bindir}/gearman_top2
-%{_bindir}/mod_gearman2_worker
-%{_bindir}/send_gearman2
-%{_bindir}/send_multi2
-%{_bindir}/mod_gearman2_mini_epn
+%{_bindir}/check_gearman
+%{_bindir}/gearman_top
+%{_bindir}/mod_gearman_worker
+%{_bindir}/send_gearman
+%{_bindir}/send_multi
+%{_bindir}/mod_gearman_mini_epn
 
 %{_libdir}/mod_gearman2/mod_gearman2.o
 
@@ -93,6 +93,9 @@ exit 0
 %docdir %{_defaultdocdir}
 
 %changelog
+* Mon Sep 08 2014 Sven Nierlein <sven@consol.de>
+- released mod-gearman 2.0
+
 * Thu May 08 2014 Sven Nierlein <sven@consol.de>
 - renamed to mod-gearman2
 
