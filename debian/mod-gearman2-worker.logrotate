@@ -3,6 +3,6 @@
     notifempty
     sharedscripts
     postrotate
-        /etc/init.d/mod-gearman2-worker reload > /dev/null 2>/dev/null || true
+        /etc/init.d/mod-gearman-worker reload > /dev/null 2>/dev/null || true
     endscript
 }
