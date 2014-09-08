@@ -74,7 +74,7 @@ exit 0
 
 %{_datadir}/mod_gearman2/standalone_worker.conf
 %{_datadir}/mod_gearman2/shared.conf
-%{_datadir}/mod_gearman2/mod_gearman2_p1.pl
+%{_datadir}/mod_gearman2/mod_gearman_p1.pl
 %{_datadir}/mod_gearman2/gearman_proxy.pl
 
 %{_bindir}/check_gearman2
