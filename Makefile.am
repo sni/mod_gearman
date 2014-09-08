@@ -17,17 +17,17 @@ CFLAGS +=-DDATADIR='"$(datadir)"'
 OS=$(shell uname)
 
 if USEPERL
-P1FILE           = worker/mod_gearman2_p1.pl
+P1FILE           = worker/mod_gearman_p1.pl
 PERLLIB          = @PERLLIBS@
 perl_objects     = common/perlxsi.o common/epn_utils.o
 install_epnfiles = install_epnfiles
-EXTRA_mod_gearman2_worker_SOURCES=common/perlxsi.c common/epn_utils.c
+EXTRA_mod_gearman_worker_SOURCES=common/perlxsi.c common/epn_utils.c
 EXTRA_01_utils_SOURCES=common/perlxsi.c common/epn_utils.c
 EXTRA_02_full_SOURCES=common/perlxsi.c common/epn_utils.c
 EXTRA_03_exec_SOURCES=common/perlxsi.c common/epn_utils.c
 EXTRA_06_exec_SOURCES=common/perlxsi.c common/epn_utils.c
 EXTRA_07_epn_SOURCES=common/perlxsi.c common/epn_utils.c
-EPN_BIN = mod_gearman2_mini_epn
+EPN_BIN = mod_gearman_mini_epn
 else
 PERLLIB          =
 P1FILE           =
@@ -53,28 +53,28 @@ mod_gearman2_so_SOURCES    = $(common_SOURCES) \
                              neb_module/result_thread.c \
                              neb_module/mod_gearman.c
 
-bin_PROGRAMS               = mod_gearman2_worker \
-                             send_gearman2 \
-                             send_multi2 \
-                             check_gearman2 \
-                             gearman_top2
+bin_PROGRAMS               = mod_gearman_worker \
+                             send_gearman \
+                             send_multi \
+                             check_gearman \
+                             gearman_top
 
-mod_gearman2_worker_SOURCES= $(common_SOURCES) \
+mod_gearman_worker_SOURCES= $(common_SOURCES) \
                              $(common_check_SOURCES) \
                              worker/worker.c
 
-send_gearman2_SOURCES      = $(common_SOURCES) \
+send_gearman_SOURCES      = $(common_SOURCES) \
                              tools/send_gearman.c
 
-send_multi2_SOURCES        = $(common_SOURCES) \
+send_multi_SOURCES        = $(common_SOURCES) \
                              tools/send_multi.c
 
-check_gearman2_SOURCES     = $(common_SOURCES) \
+check_gearman_SOURCES     = $(common_SOURCES) \
                              tools/check_gearman.c
 
-gearman_top2_SOURCES       = $(common_SOURCES) \
+gearman_top_SOURCES       = $(common_SOURCES) \
                              tools/gearman_top.c
-gearman_top2_LDADD         = -lncurses
+gearman_top_LDADD         = -lncurses
 
 # tests
 check_PROGRAMS   = 01_utils 02_full 03_exec 04_log 05_neb 06_exec 07_epn
@@ -100,17 +100,17 @@ replace_vars = sed -e 's:%CONFIG_WORKER%:$(sysconfdir)/mod_gearman2/worker.conf:
                -e 's:%PIDFILE%:$(localstatedir)/mod_gearman2/mod_gearman_worker.pid:g' \
                -e 's:%LOGFILE_NEB%:$(localstatedir)/log/mod_gearman2/mod_gearman_neb.log:g' \
                -e 's:%LOGFILE_WORKER%:$(localstatedir)/log/mod_gearman2/mod_gearman_worker.log:g' \
-               -e 's:%P1FILE%:$(datadir)/mod_gearman2/mod_gearman2_p1.pl:g' \
+               -e 's:%P1FILE%:$(datadir)/mod_gearman2/mod_gearman_p1.pl:g' \
                -e 's:%GPIDFILE%:$(localstatedir)/mod_gearman2/gearmand.pid:g' \
                -e 's:%GLOGFILE%:$(localstatedir)/mod_gearman2/gearmand.log:g' \
-               -e 's:%WORKERBIN%:$(bindir)/mod_gearman2_worker:g' \
+               -e 's:%WORKERBIN%:$(bindir)/mod_gearman_worker:g' \
                -e 's:%USER%:$(user):g'
 
 EXTRA_DIST = COPYING etc/*.in extras include \
              THANKS README docs/README.html Changes worker/initscript.in \
              support/mod-gearman2.spec \
              t/data/* t/rc t/both t/killer t/sleep t/*.pl t/*.t \
-             worker/mod_gearman2_p1.pl t/test_all.pl t/valgrind_suppress.cfg contrib \
+             worker/mod_gearman_p1.pl t/test_all.pl t/valgrind_suppress.cfg contrib \
              etc/mod_gearman_logrotate ./autogen.sh \
              debian
 
@@ -185,7 +185,7 @@ distclean-local: clean
 	$(RM) -rf .deps/ Makefile.in aclocal.m4 autom4te.cache config.* configure depcomp install-sh missing *.gz contrib/.deps/ contrib/.dirstamp
 
 clean-local:
-	$(RM) -f worker.static worker/initscript etc/mod_gearman.conf rpm.topdir *.o */*.o extras/gearmand-init etc/mod_gearman_neb.conf etc/mod_gearman_worker.conf mod_gearman2_mini_epn perlxsi.c
+	$(RM) -f worker.static worker/initscript etc/mod_gearman.conf rpm.topdir *.o */*.o extras/gearmand-init etc/mod_gearman_neb.conf etc/mod_gearman_worker.conf mod_gearman_mini_epn perlxsi.c
 
 worker.static: worker
 	@echo "################################################################"
@@ -201,18 +201,18 @@ worker.static: worker
 
 install-exec-local: install-local-state-dir
 	$(install_sh_PROGRAM) -m 644 mod_gearman2.o $(DESTDIR)$(pkglibdir)/mod_gearman2.o
-	$(install_sh_PROGRAM) -m 755 worker/initscript $(DESTDIR)$(initrddir)/mod-gearman2-worker
+	$(install_sh_PROGRAM) -m 755 worker/initscript $(DESTDIR)$(initrddir)/mod-gearman-worker
 	$(install_sh_PROGRAM) -m 755 extras/gearmand-init $(DESTDIR)$(initrddir)/gearmand
 
 install-local-state-dir:
 	$(install_sh_PROGRAM) -d $(DESTDIR)$(localstatedir)/mod_gearman2/
 
 install_epnfiles:
-	$(install_sh_PROGRAM) -m 755 $(P1FILE)  $(DESTDIR)$(datadir)/mod_gearman2/mod_gearman2_p1.pl
-	$(install_sh_PROGRAM) -m 755 $(EPN_BIN) $(DESTDIR)$(bindir)/mod_gearman2_mini_epn
+	$(install_sh_PROGRAM) -m 755 $(P1FILE)  $(DESTDIR)$(datadir)/mod_gearman2/mod_gearman_p1.pl
+	$(install_sh_PROGRAM) -m 755 $(EPN_BIN) $(DESTDIR)$(bindir)/mod_gearman_mini_epn
 	@echo "################################################################"
 	@echo " Installation completed:"
-	@echo " p1file:         $(DESTDIR)$(datadir)/mod_gearman2/mod_gearman2_p1.pl"
+	@echo " p1file:         $(DESTDIR)$(datadir)/mod_gearman2/mod_gearman_p1.pl"
 	@echo "################################################################"
 
 install-data-local: install-local-state-dir $(install_epnfiles)
@@ -226,13 +226,13 @@ install-data-local: install-local-state-dir $(install_epnfiles)
 	@echo " Installation completed:"
 	@echo " neb module:     $(DESTDIR)$(pkglibdir)/mod_gearman2.o"
 	@echo ""
-	@echo " worker:         $(DESTDIR)$(bindir)/mod_gearman2_worker"
-	@echo " init script:    $(DESTDIR)$(initrddir)/mod-gearman2-worker"
-	@[ "$(EPN_BIN)" = "" ] || echo " mini-epn:       $(DESTDIR)$(bindir)/mod_gearman2_mini_epn"
+	@echo " worker:         $(DESTDIR)$(bindir)/mod_gearman_worker"
+	@echo " init script:    $(DESTDIR)$(initrddir)/mod-gearman-worker"
+	@[ "$(EPN_BIN)" = "" ] || echo " mini-epn:       $(DESTDIR)$(bindir)/mod_gearman_mini_epn"
 	@echo ""
-	@echo " check bin:      $(DESTDIR)$(bindir)/check_gearman2"
-	@echo " send bin:       $(DESTDIR)$(bindir)/send_gearman2"
-	@echo " send multi bin: $(DESTDIR)$(bindir)/send_multi2"
+	@echo " check bin:      $(DESTDIR)$(bindir)/check_gearman"
+	@echo " send bin:       $(DESTDIR)$(bindir)/send_gearman"
+	@echo " send multi bin: $(DESTDIR)$(bindir)/send_multi"
 	@echo ""
 	@echo "just add the broker line to your naemon.cfg:"
 	@echo "broker_module=$(DESTDIR)$(pkglibdir)/mod_gearman2.o config=$(DESTDIR)$(sysconfdir)/mod_gearman2/module.conf"
@@ -318,9 +318,9 @@ version:
 	fi;
 
 # order does matter for perl libs/includes (at least on centos 5)
-mod_gearman2_worker$(EXEEXT): $(mod_gearman2_worker_OBJECTS) $(perl_objects) $(mod_gearman2_worker_DEPENDENCIES)
-	@rm -f mod_gearman2_worker$(EXEEXT)
-	$(CCLD) $(AM_CFLAGS) $(CFLAGS) $(LDFLAGS) -o $@ $(mod_gearman2_worker_OBJECTS) $(perl_objects) $(mod_gearman2_worker_LDADD) $(LIBS) $(PERLLIB)
+mod_gearman_worker$(EXEEXT): $(mod_gearman_worker_OBJECTS) $(perl_objects) $(mod_gearman_worker_DEPENDENCIES)
+	@rm -f mod_gearman_worker$(EXEEXT)
+	$(CCLD) $(AM_CFLAGS) $(CFLAGS) $(LDFLAGS) -o $@ $(mod_gearman_worker_OBJECTS) $(perl_objects) $(mod_gearman_worker_LDADD) $(LIBS) $(PERLLIB)
 
 01_utils$(EXEEXT): $(01_utils_OBJECTS) $(perl_objects) $(01_utils_DEPENDENCIES)
 	@rm -f 01_utils$(EXEEXT)

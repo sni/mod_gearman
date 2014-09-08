@@ -36,7 +36,7 @@ int main (int argc, char **argv, char **env) {
     mod_gm_opt = malloc(sizeof(mod_gm_opt_t));
     set_default_options(mod_gm_opt);
     char cmds[150];
-    strcpy(cmds, "--p1_file=worker/mod_gearman2_p1.pl");
+    strcpy(cmds, "--p1_file=worker/mod_gearman_p1.pl");
     parse_args_line(mod_gm_opt, cmds, 0);
     strcpy(cmds, "--enable_embedded_perl=on");
     parse_args_line(mod_gm_opt, cmds, 0);
@@ -94,7 +94,7 @@ int main (int argc, char **argv, char **env) {
     free(error);
 
     /* test mini epn */
-    strcpy(cmd, "./mod_gearman2_mini_epn ./t/ok.pl");
+    strcpy(cmd, "./mod_gearman_mini_epn ./t/ok.pl");
     rrc = real_exit_code(run_check(cmd, &result, &error));
     cmp_ok(rrc, "==", 0, "cmd '%s' returned rc %d", cmd, rrc);
     like(result, "plugin return code: 0", "contains return code");

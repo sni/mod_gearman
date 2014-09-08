@@ -35,7 +35,7 @@ int main (int argc, char **argv, char **env) {
 
 #ifdef EMBEDDEDPERL
     char p1[150];
-    snprintf(p1, 150, "--p1_file=worker/mod_gearman2_p1.pl");
+    snprintf(p1, 150, "--p1_file=worker/mod_gearman_p1.pl");
     parse_args_line(mod_gm_opt, p1, 0);
     init_embedded_perl(env);
 #endif
@@ -61,7 +61,7 @@ int main (int argc, char **argv, char **env) {
     /*****************************************
      * send_gearman 1
      */
-    strcpy(cmd, "./send_gearman2 --server=blah --key=testtest --host=test --service=test --message=test --returncode=0");
+    strcpy(cmd, "./send_gearman --server=blah --key=testtest --host=test --service=test --message=test --returncode=0");
     rrc = real_exit_code(run_check(cmd, &result, &error));
     cmp_ok(rrc, "==", 3, "cmd '%s' returned rc %d", cmd, rrc);
     if(atof(gearman_version()) >= 0.31) {
@@ -75,7 +75,7 @@ int main (int argc, char **argv, char **env) {
     /*****************************************
      * send_gearman 2
      */
-    strcpy(cmd, "./send_gearman2 --server=blah < t/data/send_gearman_results.txt");
+    strcpy(cmd, "./send_gearman --server=blah < t/data/send_gearman_results.txt");
     rrc = real_exit_code(run_check(cmd, &result, &error));
     cmp_ok(rrc, "==", 3, "cmd '%s' returned rc %d", cmd, rrc);
     if(atof(gearman_version()) >= 0.31) {
@@ -89,7 +89,7 @@ int main (int argc, char **argv, char **env) {
     /*****************************************
      * send_multi
      */
-    strcpy(cmd, "./send_multi2 --server=blah --host=blah < t/data/send_multi.txt");
+    strcpy(cmd, "./send_multi --server=blah --host=blah < t/data/send_multi.txt");
     rrc = real_exit_code(run_check(cmd, &result, &error));
     cmp_ok(rrc, "==", 3, "cmd '%s' returned rc %d", cmd, rrc);
     if(atof(gearman_version()) >= 0.31) {
