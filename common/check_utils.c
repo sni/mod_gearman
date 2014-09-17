@@ -375,7 +375,7 @@ int execute_safe_command(gm_job_t * exec_job, int fork_exec, char * identifier) 
 
     /* did we have a timeout? */
     if(exec_job->timeout < ((int)end_time.tv_sec - (int)exec_job->start_time.tv_sec)) {
-        exec_job->return_code   = 2;
+        exec_job->return_code   = mod_gm_opt->timeout_return;
         exec_job->early_timeout = 1;
         if ( !strcmp( exec_job->type, "service" ) )
             snprintf( buffer, sizeof( buffer ) -1, "(Service Check Timed Out On Worker: %s)", identifier);
