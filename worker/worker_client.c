@@ -116,6 +116,13 @@ void worker_loop() {
 
         signal(SIGPIPE, SIG_IGN);
         ret = gearman_worker_work( &worker );
+
+        if (mod_gm_opt->max_jobs > 0 && jobs_done >= mod_gm_opt->max_jobs) {
+            gm_log( GM_LOG_TRACE, "jobs done: %i -> exiting...\n", jobs_done );
+            clean_worker_exit(0);
+            _exit( EXIT_SUCCESS );
+        }
+
         if ( ret != GEARMAN_SUCCESS ) {
             gm_log( GM_LOG_ERROR, "worker error: %s\n", gearman_worker_error( &worker ) );
             gearman_job_free_all( &worker );
@@ -280,12 +287,6 @@ void *get_job( gearman_job_st *job, void *context, size_t *result_size, gearman_
 
     /* send finish signal to parent */
     set_state(GM_JOB_END);
-
-    if(mod_gm_opt->max_jobs > 0 && jobs_done >= mod_gm_opt->max_jobs) {
-        gm_log( GM_LOG_TRACE, "jobs done: %i -> exiting...\n", jobs_done );
-        clean_worker_exit(0);
-        _exit( EXIT_SUCCESS );
-    }
 
     return NULL;
 }
