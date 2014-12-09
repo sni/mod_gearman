@@ -77,21 +77,25 @@ gearman_top_SOURCES       = $(common_SOURCES) \
 gearman_top_LDADD         = -lncurses
 
 # tests
-check_PROGRAMS   = 01_utils 02_full 03_exec 04_log 05_neb 06_exec 07_epn
+check_PROGRAMS   = 01_utils 02_full 03_exec 04_log 05_neb 06_exec 07_epn 08_roundtrip
 01_utils_SOURCES = $(common_SOURCES) t/tap.h t/tap.c t/01-utils.c $(common_check_SOURCES)
 02_full_SOURCES  = $(common_SOURCES) t/tap.h t/tap.c t/02-full.c $(common_check_SOURCES)
 03_exec_SOURCES  = $(common_SOURCES) t/tap.h t/tap.c t/03-exec_checks.c $(common_check_SOURCES)
 04_log_SOURCES   = $(common_SOURCES) t/tap.h t/tap.c t/04-log.c
 05_neb_SOURCES   = $(common_SOURCES) t/tap.h t/tap.c t/05-neb.c
-if USEBSD
-05_neb_LDADD=
-else
-05_neb_LDADD=-ldl
-endif
 05_neb_LDFLAGS   = -Wl,--export-dynamic -rdynamic
 07_epn_SOURCES   = $(common_SOURCES) t/tap.h t/tap.c t/07-epn.c $(common_check_SOURCES)
 # only used for performance tests
 06_exec_SOURCES  = $(common_SOURCES) t/06-execvp_vs_popen.c $(common_check_SOURCES)
+08_roundtrip_SOURCES  = $(common_SOURCES) t/08-roundtrip.c
+08_roundtrip_LDFLAGS = -Wl,--export-dynamic -rdynamic
+if USEBSD
+05_neb_LDADD=
+08_roundtrip_LDADD=
+else
+05_neb_LDADD=-ldl
+08_roundtrip_LDADD=-ldl
+endif
 TESTS            = $(check_PROGRAMS) t/benchmark.t t/cppcheck.t
 
 
