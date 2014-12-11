@@ -152,7 +152,6 @@ int neb_deregister_callback(int callback_type,
 
 /* declared in naemon/nebmods.h */
 int neb_make_callbacks(int callback_type, void *data) {
-    nebcallback *cb;
     int (*callbackfunc)(int, void *);
     register int cbresult = 0;
     int i;
@@ -483,7 +482,6 @@ static service* init_svc()
     svc->check_interval = 1;
     svc->retry_interval = 1;
     svc->max_attempts = 3;
-    svc->parallelize = 1;
     svc->contact_groups = NULL;
     svc->contacts = 0x0;
     svc->notification_interval = 60;

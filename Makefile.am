@@ -77,7 +77,8 @@ gearman_top_SOURCES       = $(common_SOURCES) \
 gearman_top_LDADD         = -lncurses
 
 # tests
-check_PROGRAMS   = 01_utils 02_full 03_exec 04_log 05_neb 06_exec 07_epn 08_roundtrip
+check_PROGRAMS   = 01_utils 02_full 03_exec 04_log 05_neb 06_exec 07_epn
+#check_PROGRAMS  += 08_roundtrip
 01_utils_SOURCES = $(common_SOURCES) t/tap.h t/tap.c t/01-utils.c $(common_check_SOURCES)
 02_full_SOURCES  = $(common_SOURCES) t/tap.h t/tap.c t/02-full.c $(common_check_SOURCES)
 03_exec_SOURCES  = $(common_SOURCES) t/tap.h t/tap.c t/03-exec_checks.c $(common_check_SOURCES)

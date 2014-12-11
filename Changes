@@ -5,6 +5,7 @@ This file documents the revision history for mod_gearman.
           - fixed some potential memory and filedescriptor leaks
           - fixed memory leak while processing check results
           - fixed unescaped newlines in performance data breaking pnp
+          - fixed running jobs twice when worker hits max-jobs (Tobias Deiminger)
 
 
 
