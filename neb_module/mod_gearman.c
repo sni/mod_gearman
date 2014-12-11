@@ -278,7 +278,7 @@ static void move_results_to_core() {
     pthread_mutex_lock(&mod_gm_result_list_mutex);
 
     objectlist *tmp_list = NULL;
-    for (mod_gm_result_list; mod_gm_result_list; mod_gm_result_list = mod_gm_result_list->next) {
+    for(mod_gm_result_list; mod_gm_result_list; mod_gm_result_list = mod_gm_result_list->next) {
         free(tmp_list);
         process_check_result(mod_gm_result_list->object_ptr);
         free_check_result(mod_gm_result_list->object_ptr);
@@ -726,8 +726,8 @@ static int handle_svc_check( int event_type, void *data ) {
     snprintf( uniq,GM_BUFFERSIZE-1,"%s-%s", svcdata->host_name, svcdata->service_description);
 
     /* execute forced checks with high prio as they are propably user requested */
-    //if(check_result_info.check_options & CHECK_OPTION_FORCE_EXECUTION)
-    //    prio = GM_JOB_PRIO_HIGH;
+    if(svc->check_options & CHECK_OPTION_FORCE_EXECUTION)
+        prio = GM_JOB_PRIO_HIGH;
 
     if(add_job_to_queue( &client,
                          mod_gm_opt->server_list,
