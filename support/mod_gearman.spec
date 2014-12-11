@@ -56,9 +56,9 @@ be bound to host and servicegroups.
 
 %if 0%{?el7}%{?fc20}%{?fc21}%{?fc22}
 # Install systemd entry
-%{__install} -D -m 0644 -p %{name}/worker/daemon-systemd %{buildroot}%{_unitdir}/mod-gearman-worker.service
+%{__install} -D -m 0644 -p %{name}/worker/daemon-systemd %{buildroot}%{_unitdir}/mod_gearman_worker.service
 # remove SystemV init-script
-%{__rm} -f %{buildroot}%{_initrddir}/mod-gearman-worker
+%{__rm} -f %{buildroot}%{_initrddir}/mod_gearman_worker
 %endif
 
 
@@ -79,9 +79,9 @@ exit 0
 
 %files
 %if 0%{?el7}%{?fc20}%{?fc21}%{?fc22}
-  %attr(0644,root,root) %{_unitdir}/mod-gearman-worker.service
+  %attr(0644,root,root) %{_unitdir}/mod_gearman_worker.service
 %else
-  %attr(755,root,root) %{_initrddir}/mod-gearman-worker
+  %attr(755,root,root) %{_initrddir}/mod_gearman_worker
 %endif
 %config(noreplace) %{_sysconfdir}/mod_gearman/mod_gearman_neb.conf
 %config(noreplace) %{_sysconfdir}/mod_gearman/mod_gearman_worker.conf
