@@ -112,7 +112,7 @@ replace_vars = sed -e 's:%CONFIG_WORKER%:$(sysconfdir)/mod_gearman2/worker.conf:
                -e 's:%USER%:$(user):g'
 
 EXTRA_DIST = COPYING etc/*.in extras include \
-             THANKS README docs/README.html Changes worker/initscript.in \
+             THANKS README docs/README.html Changes worker/initscript.in worker/daemon-systemd.in \
              support/mod-gearman2.spec \
              t/data/* t/rc t/both t/killer t/sleep t/*.pl t/*.t \
              worker/mod_gearman_p1.pl t/test_all.pl t/valgrind_suppress.cfg contrib \
@@ -153,6 +153,7 @@ mod_gearman_worker.conf-local:
 
 initscript-local:
 	@$(replace_vars) worker/initscript.in > worker/initscript
+	@$(replace_vars) worker/daemon-systemd.in > worker/daemon-systemd
 
 gearmand-init-local:
 	@$(replace_vars) extras/gearmand-init.in > extras/gearmand-init
@@ -174,6 +175,7 @@ all-local: mod_gearman2.o initscript-local mod_gearman_neb.conf-local mod_gearma
 	@echo "  mod_gearman2.o"
 	@echo "  mod_gearman_worker"
 	@echo "  worker/initscript"
+	@echo "  worker/daemon-systemd"
 	@echo "  etc/mod_gearman_neb.conf"
 	@echo "  etc/mod_gearman_worker.conf"
 	@[ "$(P1FILE)"  = "" ] || echo "  $(P1FILE)"
@@ -190,7 +192,17 @@ distclean-local: clean
 	$(RM) -rf .deps/ Makefile.in aclocal.m4 autom4te.cache config.* configure depcomp install-sh missing *.gz contrib/.deps/ contrib/.dirstamp
 
 clean-local:
-	$(RM) -f worker.static worker/initscript etc/mod_gearman.conf rpm.topdir *.o */*.o extras/gearmand-init etc/mod_gearman_neb.conf etc/mod_gearman_worker.conf mod_gearman_mini_epn perlxsi.c
+	$(RM) -f worker.static \
+	         worker/initscript \
+	         worker/daemon-systemd \
+	         etc/mod_gearman.conf \
+	         rpm.topdir \
+	         *.o \
+	         */*.o \
+	         extras/gearmand-init \
+	         etc/mod_gearman_neb.conf \
+	         etc/mod_gearman_worker.conf \
+	         mod_gearman_mini_epn perlxsi.c
 
 worker.static: worker
 	@echo "################################################################"

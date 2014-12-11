@@ -42,3 +42,4 @@ mod_gearman_mini_epn.o
 perlxsi.c
 perlxsi.o
 mod_gearman_mini_epn
+worker/daemon-systemd
