@@ -1,0 +1,20 @@
+[Unit]
+Description=Mod-Gearman Worker
+Documentation=http://mod-gearman.org/docs.html
+After=network.target
+
+[Service]
+EnvironmentFile=/etc/sysconfig/mod-gearman-worker
+Type=forking
+PIDFile=%PIDFILE%
+ExecStart=%WORKERBIN% -d --config=%CONFIG_WORKER% --pidfile=%PIDFILE%
+ExecReload=/bin/kill -HUP $MAINPID
+User=%USER%
+Group=%USER%
+Nice=$NICELEVEL
+StandardOutput=journal
+StandardError=inherit
+
+[Install]
+WantedBy=multi-user.target
+

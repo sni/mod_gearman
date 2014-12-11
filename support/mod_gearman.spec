@@ -15,6 +15,9 @@ Summary:       Gearman module for Nagios
 Requires(pre,post): /sbin/ldconfig
 Requires(pre): shadow-utils
 Requires:      gearmand, perl, logrotate
+%if 0%{?el7}%{?fc20}%{?fc21}%{?fc22}
+BuildRequires: systemd
+%endif
 
 Provides:      mod_gearman
 
@@ -51,6 +54,14 @@ be bound to host and servicegroups.
 # remove custom gearmand initscript
 %{__rm} -f %{buildroot}/%{_initrddir}/gearmand
 
+%if 0%{?el7}%{?fc20}%{?fc21}%{?fc22}
+# Install systemd entry
+%{__install} -D -m 0644 -p %{name}/worker/daemon-systemd %{buildroot}%{_unitdir}/mod-gearman-worker.service
+# remove SystemV init-script
+%{__rm} -f %{buildroot}%{_initrddir}/mod-gearman-worker
+%endif
+
+
 
 %pre
 getent group nagios >/dev/null || groupadd -r nagios
@@ -67,7 +78,11 @@ exit 0
 %{__rm} -rf %{buildroot}
 
 %files
-%attr(755,root,root) %{_initrddir}/mod_gearman_worker
+%if 0%{?el7}%{?fc20}%{?fc21}%{?fc22}
+  %attr(0644,root,root) %{_unitdir}/mod-gearman-worker.service
+%else
+  %attr(755,root,root) %{_initrddir}/mod-gearman-worker
+%endif
 %config(noreplace) %{_sysconfdir}/mod_gearman/mod_gearman_neb.conf
 %config(noreplace) %{_sysconfdir}/mod_gearman/mod_gearman_worker.conf
 %config(noreplace) %{_sysconfdir}/logrotate.d/mod_gearman
