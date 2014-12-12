@@ -538,6 +538,7 @@ void print_usage() {
 /* create shared memory segments */
 void setup_child_communicator() {
     int x;
+    int now = (int)time(NULL);
 
     gm_log( GM_LOG_TRACE, "setup_child_communicator()\n");
 
@@ -554,10 +555,11 @@ void setup_child_communicator() {
         exit( EXIT_FAILURE );
     }
     /* change SHM_SHIFT if more global counters are added */
-    shm[SHM_JOBS_DONE]         = 0;  /* done jobs         */
-    shm[SHM_WORKER_TOTAL]      = 0;  /* total worker      */
-    shm[SHM_WORKER_RUNNING]    = 0;  /* running worker    */
-    shm[SHM_STATUS_WORKER_PID] = -1; /* status worker pid */
+    shm[SHM_JOBS_DONE]         = 0;   /* done jobs         */
+    shm[SHM_WORKER_TOTAL]      = 0;   /* total worker      */
+    shm[SHM_WORKER_RUNNING]    = 0;   /* running worker    */
+    shm[SHM_STATUS_WORKER_PID] = -1;  /* status worker pid */
+    shm[SHM_WORKER_LAST_CHECK] = now; /* time of last check */
     for(x = 0; x < mod_gm_opt->max_worker; x++) {
         shm[x+SHM_SHIFT] = -1; /* normal worker   */
     }
