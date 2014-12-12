@@ -1,6 +1,6 @@
 This file documents the revision history for mod_gearman.
 
-2.0.0
+2.0.0 Thu Dec 11 23:46:11 CET 2014
           - migrated mod-gearman into a naemon addon to continue the nagios 4 branch
           - fixed some potential memory and filedescriptor leaks
           - fixed memory leak while processing check results

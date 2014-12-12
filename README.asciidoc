@@ -10,6 +10,9 @@ increasing Naemon scalability. Mod-Gearman can even help to reduce the
 load on a single Naemon host, because its much smaller and more
 efficient in executing checks.
 
+ * Mod-Gearman 1.x works with Nagios 3
+ * Mod-Gearman 2.x works with Naemon (and might work with Nagios 4)
+
 It consists of three parts:
 
  * There is a NEB module which resides in the Naemon core and adds servicechecks,
@@ -43,7 +46,8 @@ Features
 
 Download
 --------
- * Latest stable http://www.mod-gearman.org/download/v1.4.12/src/mod_gearman-1.4.12.tar.gz[version 1.4.12], released November 05 2013
+ * Latest stable for Naemon http://www.mod-gearman.org/download2/v2.0.0/src/mod_gearman-2.0.0.tar.gz[version 2.0.0], released December 11 2014
+ * Latest stable for Nagios 3 http://www.mod-gearman.org/download/v1.4.16/src/mod_gearman-1.4.16.tar.gz[version 1.4.16], released December 11 2014
  * Mod Gearman is available for download at: http://mod-gearman.org/download.html
  * Source is available on GitHub: http://github.com/sni/mod_gearman
  * Older versions are available in the <<_archive,download archive>>.
@@ -1306,6 +1310,9 @@ Hints
 Archive
 -------
 
+* http://www.mod-gearman.org/download/v2.0.0/src/mod_gearman-2.0.0.tar.gz[version 2.0.0 - December 11 2014]
+* http://www.mod-gearman.org/download/v1.4.16/src/mod_gearman-1.4.16.tar.gz[version 1.4.16 - December 11 2014]
+* http://www.mod-gearman.org/download/v1.4.14/src/mod_gearman-1.4.14.tar.gz[version 1.4.14 - November 15 2013]
 * http://www.mod-gearman.org/download/v1.4.12/src/mod_gearman-1.4.12.tar.gz[version 1.4.12 - November 05 2013]
 * http://www.mod-gearman.org/download/v1.4.10/src/mod_gearman-1.4.10.tar.gz[version 1.4.10 - August 05 2013]
 * http://www.mod-gearman.org/download/v1.4.8/src/mod_gearman-1.4.8.tar.gz[version 1.4.8 - July 27 2013]
