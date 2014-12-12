@@ -56,11 +56,11 @@ be bound to host and servicegroups.
 
 %if 0%{?el7}%{?fc20}%{?fc21}%{?fc22}
 # Install systemd entry
-%{__install} -D -m 0644 -p worker/daemon-systemd %{buildroot}%{_unitdir}/mod-gearman-worker.service
+%{__install} -D -m 0644 -p worker/daemon-systemd %{buildroot}%{_unitdir}/mod-gearman2-worker.service
 mkdir -p %{buildroot}%{_sysconfdir}/sysconfig
-touch %{buildroot}%{_sysconfdir}/sysconfig/mod-gearman-worker
+touch %{buildroot}%{_sysconfdir}/sysconfig/mod-gearman2-worker
 # remove SystemV init-script
-%{__rm} -f %{buildroot}%{_initrddir}/mod-gearman-worker
+%{__rm} -f %{buildroot}%{_initrddir}/mod-gearman2-worker
 %endif
 
 
@@ -81,10 +81,10 @@ exit 0
 
 %files
 %if 0%{?el7}%{?fc20}%{?fc21}%{?fc22}
-  %attr(0644,root,root) %{_unitdir}/mod-gearman-worker.service
-  %attr(0644,root,root) %{_sysconfdir}/sysconfig/mod-gearman-worker
+  %attr(0644,root,root) %{_unitdir}/mod-gearman2-worker.service
+  %attr(0644,root,root) %{_sysconfdir}/sysconfig/mod-gearman2-worker
 %else
-  %attr(755,root,root) %{_initrddir}/mod-gearman-worker
+  %attr(755,root,root) %{_initrddir}/mod-gearman2-worker
 %endif
 
 %config(noreplace) %{_sysconfdir}/mod_gearman2/module.conf
@@ -96,12 +96,12 @@ exit 0
 %{_datadir}/mod_gearman2/mod_gearman_p1.pl
 %{_datadir}/mod_gearman2/gearman_proxy.pl
 
-%{_bindir}/check_gearman
-%{_bindir}/gearman_top
-%{_bindir}/mod_gearman_worker
-%{_bindir}/send_gearman
-%{_bindir}/send_multi
-%{_bindir}/mod_gearman_mini_epn
+%{_bindir}/check_gearman2
+%{_bindir}/gearman_top2
+%{_bindir}/mod_gearman2_worker
+%{_bindir}/send_gearman2
+%{_bindir}/send_multi2
+%{_bindir}/mod_gearman2_mini_epn
 
 %{_libdir}/mod_gearman2/mod_gearman2.o
 

@@ -4,7 +4,7 @@ Documentation=http://mod-gearman.org/docs.html
 After=network.target
 
 [Service]
-EnvironmentFile=/etc/sysconfig/mod-gearman-worker
+EnvironmentFile=/etc/sysconfig/mod-gearman2-worker
 Type=forking
 PIDFile=%PIDFILE%
 ExecStart=%WORKERBIN% -d --config=%CONFIG_WORKER% --pidfile=%PIDFILE%

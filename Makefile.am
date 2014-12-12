@@ -108,7 +108,7 @@ replace_vars = sed -e 's:%CONFIG_WORKER%:$(sysconfdir)/mod_gearman2/worker.conf:
                -e 's:%P1FILE%:$(datadir)/mod_gearman2/mod_gearman_p1.pl:g' \
                -e 's:%GPIDFILE%:$(localstatedir)/mod_gearman2/gearmand.pid:g' \
                -e 's:%GLOGFILE%:$(localstatedir)/mod_gearman2/gearmand.log:g' \
-               -e 's:%WORKERBIN%:$(bindir)/mod_gearman_worker:g' \
+               -e 's:%WORKERBIN%:$(bindir)/mod_gearman2_worker:g' \
                -e 's:%USER%:$(user):g'
 
 EXTRA_DIST = COPYING etc/*.in extras include \
@@ -226,7 +226,7 @@ install-local-state-dir:
 
 install_epnfiles:
 	$(install_sh_PROGRAM) -m 755 $(P1FILE)  $(DESTDIR)$(datadir)/mod_gearman2/mod_gearman_p1.pl
-	$(install_sh_PROGRAM) -m 755 $(EPN_BIN) $(DESTDIR)$(bindir)/mod_gearman_mini_epn
+	$(install_sh_PROGRAM) -m 755 $(EPN_BIN) $(DESTDIR)$(bindir)/mod_gearman2_mini_epn
 	@echo "################################################################"
 	@echo " Installation completed:"
 	@echo " p1file:         $(DESTDIR)$(datadir)/mod_gearman2/mod_gearman_p1.pl"
@@ -237,19 +237,25 @@ install-data-local: install-local-state-dir $(install_epnfiles)
 	$(install_sh_PROGRAM) -m 644 extras/shared.conf            $(DESTDIR)$(datadir)/mod_gearman2/shared.conf
 	$(install_sh_PROGRAM) -m 644 extras/standalone_worker.conf $(DESTDIR)$(datadir)/mod_gearman2/standalone_worker.conf
 	$(install_sh_PROGRAM) -m 644 contrib/gearman_proxy.pl      $(DESTDIR)$(datadir)/mod_gearman2/gearman_proxy.pl
+	mv -f $(DESTDIR)$(bindir)/mod_gearman_worker $(DESTDIR)$(bindir)/mod_gearman2_worker
+	mv -f $(DESTDIR)$(initrddir)/mod-gearman-worker $(DESTDIR)$(initrddir)/mod-gearman2-worker
+	mv -f $(DESTDIR)$(bindir)/gearman_top $(DESTDIR)$(bindir)/gearman_top2
+	mv -f $(DESTDIR)$(bindir)/check_gearman $(DESTDIR)$(bindir)/check_gearman2
+	mv -f $(DESTDIR)$(bindir)/send_gearman $(DESTDIR)$(bindir)/send_gearman2
+	mv -f $(DESTDIR)$(bindir)/send_multi $(DESTDIR)$(bindir)/send_multi2
 	@echo ""
 	@echo "################################################################"
 	@echo ""
 	@echo " Installation completed:"
 	@echo " neb module:     $(DESTDIR)$(pkglibdir)/mod_gearman2.o"
 	@echo ""
-	@echo " worker:         $(DESTDIR)$(bindir)/mod_gearman_worker"
-	@echo " init script:    $(DESTDIR)$(initrddir)/mod-gearman-worker"
-	@[ "$(EPN_BIN)" = "" ] || echo " mini-epn:       $(DESTDIR)$(bindir)/mod_gearman_mini_epn"
+	@echo " worker:         $(DESTDIR)$(bindir)/mod_gearman2_worker"
+	@echo " init script:    $(DESTDIR)$(initrddir)/mod-gearman2-worker"
+	@[ "$(EPN_BIN)" = "" ] || echo " mini-epn:       $(DESTDIR)$(bindir)/mod_gearman2_mini_epn"
 	@echo ""
-	@echo " check bin:      $(DESTDIR)$(bindir)/check_gearman"
-	@echo " send bin:       $(DESTDIR)$(bindir)/send_gearman"
-	@echo " send multi bin: $(DESTDIR)$(bindir)/send_multi"
+	@echo " check bin:      $(DESTDIR)$(bindir)/check_gearman2"
+	@echo " send bin:       $(DESTDIR)$(bindir)/send_gearman2"
+	@echo " send multi bin: $(DESTDIR)$(bindir)/send_multi2"
 	@echo ""
 	@echo "just add the broker line to your naemon.cfg:"
 	@echo "broker_module=$(DESTDIR)$(pkglibdir)/mod_gearman2.o config=$(DESTDIR)$(sysconfdir)/mod_gearman2/module.conf"

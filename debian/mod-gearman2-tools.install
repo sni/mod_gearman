@@ -1,5 +1,5 @@
-debian/tmp/usr/bin/check_gearman usr/lib/nagios/plugins
-debian/tmp/usr/bin/gearman_top
-debian/tmp/usr/bin/send_gearman usr/lib/nagios/plugins
-debian/tmp/usr/bin/send_multi usr/lib/nagios/plugins
-debian/tmp/usr/bin/mod_gearman_mini_epn
+debian/tmp/usr/bin/check_gearman2 usr/lib/nagios/plugins
+debian/tmp/usr/bin/gearman_top2
+debian/tmp/usr/bin/send_gearman2 usr/lib/nagios/plugins
+debian/tmp/usr/bin/send_multi2 usr/lib/nagios/plugins
+debian/tmp/usr/bin/mod_gearman2_mini_epn
