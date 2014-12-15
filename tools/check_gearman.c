@@ -199,11 +199,11 @@ int check_server(char * server, in_port_t port) {
     int x;
     char * message = NULL;
     char * version = NULL;
+    char *buf      = NULL;
     int total_running = 0;
     int total_waiting = 0;
     int checked       = 0;
     int rc;
-    char *buf;
 
     stats = malloc(sizeof(mod_gm_server_status_t));
     rc = get_gearman_server_data(stats, &message, &version, server, port);
