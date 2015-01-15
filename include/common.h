@@ -69,6 +69,8 @@
 #define GM_ERROR                        1
 #define GM_NO_EPN                      -1
 
+#define GM_EXIT_UNKNOWN               768   /* results in exit code 3 after processed by WEXITSTATUS() */
+
 /* log modes */
 #define GM_LOG_ERROR                   -1
 #define GM_LOG_INFO                     0
@@ -236,6 +238,8 @@ typedef struct mod_gm_opt_struct {
     int            use_perl_cache;                          /**< cache embedded perl scripts */
     char         * p1_file;                                 /**< path to p1 file, needed for embedded perl */
 #endif
+    char         * restrict_path[GM_LISTSIZE];              /**< list of path restrictions */
+    int            restrict_path_num;                       /**< number of path restrictions */
     int            workaround_rc_25;                        /**< optional workaround for plugins returning exit code 25 */
 /* send_gearman */
     int            timeout;                                 /**< timeout for waiting reading on stdin */

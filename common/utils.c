@@ -307,6 +307,9 @@ int set_default_options(mod_gm_opt_t *opt) {
         opt->exports[i]         = mod_gm_exp;
     }
     opt->exports_count = 0;
+    opt->restrict_path_num      = 0;
+    for(i=0;i<GM_LISTSIZE;i++)
+        opt->restrict_path[i] = NULL;
 
     return(GM_OK);
 }
@@ -876,6 +879,12 @@ int parse_args_line(mod_gm_opt_t *opt, char * arg, int recursion_level) {
 #endif
     }
 
+    /* restrict_path */
+    else if ( !strcmp( key, "restrict_path" ) || !strcmp( key, "restrictpath" )) {
+        opt->restrict_path[opt->restrict_path_num] = strdup(value);
+        opt->restrict_path_num++;
+    }
+
     else {
         gm_log( GM_LOG_ERROR, "unknown option '%s'\n", key );
     }
@@ -971,6 +980,8 @@ void dumpconfig(mod_gm_opt_t *opt, int mode) {
         gm_log( GM_LOG_DEBUG, "use_epn_implicitly:              %s\n", opt->use_embedded_perl_implicitly == GM_ENABLED ? "yes" : "no");
         gm_log( GM_LOG_DEBUG, "use_perl_cache:                  %s\n", opt->use_perl_cache == GM_ENABLED ? "yes" : "no");
         gm_log( GM_LOG_DEBUG, "p1_file:                         %s\n", opt->p1_file == NULL ? "not set" : opt->p1_file );
+        for(i=0;i<opt->restrict_path_num;i++)
+            gm_log( GM_LOG_DEBUG, "restricted path:                 %s\n", opt->restrict_path[i]);
 #endif
     }
     if(mode == GM_NEB_MODE) {
@@ -1068,6 +1079,9 @@ void mod_gm_free_opt(mod_gm_opt_t *opt) {
           free(opt->exports[i]->name[j]);
         }
         free(opt->exports[i]);
+    }
+    for(i=0;i<opt->restrict_path_num;i++) {
+        free(opt->restrict_path[i]);
     }
     free(opt->crypt_key);
     free(opt->keyfile);
@@ -1219,8 +1233,6 @@ int free_job(gm_job_t *job) {
 
 /* verify if a pid is alive */
 int pid_alive(int pid) {
-    int status;
-
     if(pid < 0) { pid = -pid; }
 
     /* 1/-1 are undefined pids in our case */
@@ -1888,4 +1900,11 @@ void add_server(int * server_num, gm_server_t * server_list[GM_LISTSIZE], char *
     }
     free(server_c);
     return;
+}
+
+/* check if string starts with another string */
+int starts_with(const char *pre, const char *str) {
+    size_t lenpre = strlen(pre),
+           lenstr = strlen(str);
+    return lenstr < lenpre ? FALSE : strncmp(pre, str, lenpre) == 0;
 }

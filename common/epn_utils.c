@@ -109,7 +109,7 @@ int run_epn_check(char *processed_command, char **ret, char **err) {
             *ret = gm_escape_newlines(perl_plugin_output, GM_ENABLED);
         *err = strdup("");
         gm_log( GM_LOG_TRACE, "Embedded Perl failed to compile %s, compile error %s - skipping plugin\n", fname, perl_plugin_output);
-        return 768;
+        return(GM_EXIT_UNKNOWN);
     }
     else {
         plugin_hndlr_cr=newSVsv(POPs);

@@ -460,7 +460,7 @@ void send_result_back(gm_job_t * exec_job);
 char *md5sum(char *text);
 
 /**
- * add_server(
+ * add_server
  *
  * adds parsed server to list
  *
@@ -471,6 +471,18 @@ char *md5sum(char *text);
  * @return nothing
  */
 void add_server(int * server_num, gm_server_t * server_list[GM_LISTSIZE], char * servername);
+
+/**
+ * starts_with
+ *
+ * returns true if string starts with another string
+ *
+ * @param[in] pre - start string
+ * @param[in] str - string to search in
+ *
+ * @return nothing
+ */
+int starts_with(const char *pre, const char *str);
 
 /**
  * @}
