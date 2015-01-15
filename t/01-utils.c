@@ -29,7 +29,7 @@ mod_gm_opt_t * renew_opts() {
 }
 
 int main(void) {
-    plan(65);
+    plan(69);
 
     /* lowercase */
     char test[100];
@@ -221,6 +221,21 @@ int main(void) {
     sum = md5sum(test);
     like(sum, "e4d909c290d0fb1ca068ffaddf22cbd0", "md5sum()");
     free(sum);
+
+    /* starts_with */
+    strcpy(test, "test123");
+    test2 = strdup("test");
+    is(starts_with(test2, test), TRUE, "starts_with(test, test123)");
+    free(test2);
+    test2 = strdup("test123");
+    is(starts_with(test2, test), TRUE,  "starts_with(test123, test123)");
+    free(test2);
+    test2 = strdup("test1234");
+    is(starts_with(test2, test), FALSE,  "starts_with(test1234, test123)");
+    free(test2);
+    test2 = strdup("xyz");
+    is(starts_with(test2, test), FALSE,  "starts_with(xyz, test123)");
+    free(test2);
 
     mod_gm_free_opt(mod_gm_opt);
 

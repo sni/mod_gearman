@@ -45,8 +45,7 @@ typedef UINT32 uint32_t;
 #define POLARSSL_ERR_MD5_FILE_IO_ERROR                 -0x0074  /**< Read/write error in file. */
 
 #if !defined(POLARSSL_MD5_ALT)
-// Regular implementation
-//
+/* Regular implementation */
 
 #ifdef __cplusplus
 extern "C" {

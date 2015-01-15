@@ -21,11 +21,15 @@ int main (int argc, char **argv, char **env) {
     char *result, *error;
     char cmd[120];
     char hostname[GM_BUFFERSIZE];
+    char cwd[1024];
+    struct stat st;
 
-    plan(60);
+    plan(72);
 
-    /* set hostname */
+    /* set hostname and cwd */
     gethostname(hostname, GM_BUFFERSIZE-1);
+    if(!getcwd(cwd, sizeof(cwd)) != NULL)
+       perror("getcwd() error");
 
     /* create options structure and set debug level */
     mod_gm_opt = malloc(sizeof(mod_gm_opt_t));
@@ -364,6 +368,55 @@ int main (int argc, char **argv, char **env) {
     execute_safe_command(exec_job, fork_on_exec, hostname);
     cmp_ok(exec_job->return_code, "==", 0, "cmd '%s' returns rc 0", exec_job->command_line);
     like(exec_job->output, "test plugin OK", "returned result string");
+
+    /*****************************************
+     * restricted paths
+     */
+    char res[150];
+    snprintf(res, 150, "--restrict_path=/tmp/");
+    rc = parse_args_line(mod_gm_opt, res, 0);
+    cmp_ok(rc, "==", GM_OK, "parsed %s option", res);
+    cmp_ok(mod_gm_opt->restrict_path_num, "==", 1, "restricted path is set in opts: %d", mod_gm_opt->restrict_path_num);
+    strcpy(cmd, "./t/ok.pl");
+    rrc = real_exit_code(run_check(cmd, &result, &error));
+    cmp_ok(rrc, "==", 3, "cmd '%s' returned rc %d", cmd, rrc);
+    like(result, "ERROR: restricted paths in affect, but command does not start with an absolute path: ./t/ok.p...", "returned result string");
+    free(result);
+    free(error);
+
+    /*****************************************
+     * restricted paths (2)
+     */
+    strcpy(cmd, "./t/ok.pl; somethingnasty");
+    rrc = real_exit_code(run_check(cmd, &result, &error));
+    cmp_ok(rrc, "==", 3, "cmd '%s' returned rc %d", cmd, rrc);
+    like(result, "ERROR: restricted paths in affect, but command does not start with an absolute path: ./t/ok.p...", "returned result string");
+    free(result);
+    free(error);
+
+    /*****************************************
+     * restricted paths (3)
+     */
+    snprintf(res, 150, "--restrict_path=%s", cwd);
+    rc = parse_args_line(mod_gm_opt, res, 0);
+    cmp_ok(rc, "==", GM_OK, "parsed %s option", res);
+    cmp_ok(mod_gm_opt->restrict_path_num, "==", 2, "restricted path is set in opts: %d", mod_gm_opt->restrict_path_num);
+    snprintf(cmd, sizeof(cmd), "%s/t/ok.pl", cwd);
+    rrc = real_exit_code(run_check(cmd, &result, &error));
+    cmp_ok(rrc, "==", 0, "cmd '%s' returned rc %d", cmd, rrc);
+    like(result, "test plugin OK", "returned result string");
+    free(result);
+    free(error);
+
+    /*****************************************
+     * restricted paths (4)
+     */
+    strcpy(cmd, "/forbidden/t/ok.pl");
+    rrc = real_exit_code(run_check(cmd, &result, &error));
+    cmp_ok(rrc, "==", 3, "cmd '%s' returned rc %d", cmd, rrc);
+    like(result, "ERROR: command does not start with any of the restricted paths: /forbidd...", "returned result string");
+    free(result);
+    free(error);
 
     /*****************************************
      * clean up

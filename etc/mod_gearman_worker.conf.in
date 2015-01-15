@@ -165,6 +165,14 @@ use_perl_cache=on
 p1_file=%P1FILE%
 
 
+# Security
+# restrict_path allows you to restrict this worker to only execute plugins
+# from these particular folders. Can be used multiple times to specify more
+# than one folder.
+# Note that when this restriction is active, no shell will be spawned and
+# no shell characters ($`'"()|) are allowed in the command line itself.
+#restrict_path=/usr/local/plugins/
+
 # Workarounds
 
 # workaround for rc 25 bug

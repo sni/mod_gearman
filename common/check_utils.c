@@ -101,7 +101,36 @@ int run_check(char *processed_command, char **ret, char **err) {
     pid_t pid;
     int pipe_stdout[2], pipe_stderr[2], pipe_rwe[3];
     int retval;
+    int i;
+    int restricted_ok = FALSE;
     sigset_t mask;
+
+    /* verify restricted paths
+     * make sure our command does not contain any bash special characters
+     * and starts with one of the allowed paths
+     */
+    if(mod_gm_opt->restrict_path_num) {
+        if(*processed_command != '/') {
+            *err = strdup("");
+            asprintf(ret, "ERROR: restricted paths in affect, but command does not start with an absolute path: %.*s...\n", 8, processed_command);
+            return(GM_EXIT_UNKNOWN);
+        }
+        if(strpbrk(processed_command,"$&();<>`\"'|") != NULL) {
+            *err = strdup("");
+            asprintf(ret, "ERROR: restricted paths in affect, but command contains forbidden character(s): %.*s...\n", 8, processed_command);
+            return(GM_EXIT_UNKNOWN);
+        }
+        for(i=0;i<mod_gm_opt->restrict_path_num;i++) {
+            if(starts_with(mod_gm_opt->restrict_path[i], processed_command)) {
+                restricted_ok = TRUE;
+            }
+        }
+        if(!restricted_ok) {
+            *err = strdup("");
+            asprintf(ret, "ERROR: command does not start with any of the restricted paths: %.*s...\n", 8, processed_command);
+            return(GM_EXIT_UNKNOWN);
+        }
+    }
 
 #ifdef EMBEDDEDPERL
     retval = run_epn_check(processed_command, ret, err);
@@ -115,7 +144,7 @@ int run_check(char *processed_command, char **ret, char **err) {
      * and cmd must begin with a /. Otherwise "BLAH=BLUB cmd" would lead
      * to file not found errors
      */
-    if((*processed_command == '/' || *processed_command == '.') && !strpbrk(processed_command,"!$^&*()~[]\\|{};<>?`\"'")) {
+    if((*processed_command == '/' || *processed_command == '.') && strpbrk(processed_command,"!$^&*()~[]\\|{};<>?`\"'") == NULL) {
         /* use the fast execvp when there are no shell characters */
         gm_log( GM_LOG_TRACE, "using execvp, no shell characters found\n" );
 
@@ -233,8 +262,7 @@ int execute_safe_command(gm_job_t * exec_job, int fork_exec, char * identifier) 
 
     gm_log( GM_LOG_TRACE, "execute_safe_command()\n" );
 
-    // mark all filehandles to close on exec
-    int x;
+    /* mark all filehandles to close on exec */
     for(x = 0; x<=64; x++)
         fcntl(x, F_SETFD, FD_CLOEXEC);
 
@@ -424,7 +452,7 @@ void check_alarm_handler(int sig) {
     signal(SIGINT, SIG_DFL);
     sleep(1);
 
-    // skip sigkill in test mode
+    /* skip sigkill in test mode */
     if(getenv("MODGEARMANTEST") == NULL) {
         gm_log( GM_LOG_TRACE, "send SIGKILL to %d\n", pid);
         kill(-pid, SIGKILL);

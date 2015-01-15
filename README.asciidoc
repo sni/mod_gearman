@@ -977,6 +977,18 @@ interpreter, but will not cache the compiled script.
 ====
 
 
+restrict_path::
+`restrict_path` allows you to restrict this worker to only execute plugins
+from these particular folders. Can be used multiple times to specify more
+than one folder.
+Note that when this restriction is active, no shell will be spawned and
+no shell characters ($&();<>`"'|) are allowed in the command line itself.
++
+====
+    restrict_path=/usr/local/plugins/
+====
+
+
 workaround_rc_25::
 Duplicate jobs from gearmand result sometimes in exit code 25 of
 plugins because they are executed twice and get killed because of
