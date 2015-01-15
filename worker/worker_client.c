@@ -32,9 +32,6 @@
 #include "epn_utils.h"
 #endif
 
-char temp_buffer1[GM_BUFFERSIZE];
-char temp_buffer2[GM_BUFFERSIZE];
-
 gearman_worker_st worker;
 gearman_client_st client;
 gearman_client_st client_dup;
@@ -153,7 +150,7 @@ void worker_loop() {
 void *get_job( gearman_job_st *job, void *context, size_t *result_size, gearman_return_t *ret_ptr ) {
     sigset_t block_mask;
     int wsize, valid_lines;
-    char workload[GM_BUFFERSIZE];
+    char * workload;
     char * decrypted_data;
     char * decrypted_data_c;
     char * decrypted_orig;
@@ -187,16 +184,18 @@ void *get_job( gearman_job_st *job, void *context, size_t *result_size, gearman_
     /* get the data */
     current_gearman_job = job;
     wsize = gearman_job_workload_size(job);
+    workload = malloc(sizeof(char)*wsize+1);
     strncpy(workload, (const char*)gearman_job_workload(job), wsize);
     workload[wsize] = '\0';
     gm_log( GM_LOG_TRACE, "got new job %s\n", gearman_job_handle( job ) );
     gm_log( GM_LOG_TRACE, "%d +++>\n%s\n<+++\n", strlen(workload), workload );
 
     /* decrypt data */
-    decrypted_data = malloc(GM_BUFFERSIZE);
+    decrypted_data = malloc(wsize*2);
     decrypted_data_c = decrypted_data;
     mod_gm_decrypt(&decrypted_data, workload, mod_gm_opt->transportmode);
     decrypted_orig = strdup(decrypted_data);
+    free(workload);
 
     if(decrypted_data == NULL) {
         *ret_ptr = GEARMAN_WORK_FAIL;

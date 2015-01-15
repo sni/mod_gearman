@@ -1,6 +1,7 @@
 This file documents the revision history for mod_gearman.
 
 next:
+          - add support for unlimited result sizes
           - add --restrict_path option to restrict worker to certain paths
 
 1.4.18 Mon Dec 15 11:52:56 CET 2014
