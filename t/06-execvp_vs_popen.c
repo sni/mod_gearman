@@ -3,6 +3,7 @@
 #include <string.h>
 #include <unistd.h>
 
+#include <t/tap.h>
 #include <common.h>
 #include <utils.h>
 #include <check_utils.h>
@@ -10,13 +11,57 @@
 #include <epn_utils.h>
 #endif
 
+
 mod_gm_opt_t *mod_gm_opt;
+
+char* my_tmpfile(void);
+char* my_tmpfile() {
+    char *sfn = strdup("/tmp/modgm.XXXXXX");
+    int fd = -1;
+    if ((fd = mkstemp(sfn)) == -1) {
+        fprintf(stderr, "%s: %s\n", sfn, strerror(errno));
+        free(sfn);
+        return (NULL);
+    }
+    close(fd);
+    return sfn;
+}
+
+/* check logfile for errors
+ */
+int check_logfile(char *logfile, char *match);
+int check_logfile(char *logfile, char *match) {
+    FILE * fp;
+    char *line;
+    int found = 0;
+
+    fp = fopen(logfile, "r");
+    if(fp == NULL) {
+        perror(logfile);
+        return;
+    }
+    line = malloc(GM_BUFFERSIZE);
+    while(fgets(line, GM_BUFFERSIZE, fp) != NULL) {
+        if(strstr(line, match) != NULL) {
+            found++;
+        }
+    }
+    fclose(fp);
+
+    free(line);
+    return(found);
+}
+
 
 int main (int argc, char **argv, char **env) {
     argc = argc; argv = argv; env  = env;
     char *result, *error;
     char cmd[120];
-    int x;
+    char logf[150];
+    char * worker_logfile;
+    int x, rc, matches;
+
+    plan(3);
 
     /* set hostname */
     gethostname(hostname, GM_BUFFERSIZE-1);
@@ -25,6 +70,17 @@ int main (int argc, char **argv, char **env) {
     mod_gm_opt = malloc(sizeof(mod_gm_opt_t));
     set_default_options(mod_gm_opt);
     mod_gm_opt->debug_level = 4;
+    mod_gm_opt->logmode     = GM_LOG_MODE_FILE;
+
+    worker_logfile = my_tmpfile();
+    snprintf(logf, 150, "logfile=%s", worker_logfile);
+    rc = parse_args_line(mod_gm_opt, logf, 0);
+    cmp_ok(rc, "==", GM_OK, "parsed %s option", logf);
+    mod_gm_opt->logfile_fp = fopen(mod_gm_opt->logfile, "a+");
+    if(mod_gm_opt->logfile_fp == NULL) {
+        perror(mod_gm_opt->logfile);
+        fail("failed to open logfile");
+    }
 
 #ifdef EMBEDDEDPERL
     char p1[150];
@@ -33,21 +89,25 @@ int main (int argc, char **argv, char **env) {
     init_embedded_perl(env);
 #endif
 
+    /* popen */
     gm_job_t * exec_job;
     exec_job = ( gm_job_t * )malloc( sizeof *exec_job );
     set_default_job(exec_job, mod_gm_opt);
     strcpy(cmd, "BLAH=BLUB /bin/hostname");
-    printf("this should be popen\n");
     run_check(cmd, &result, &error);
     free(result);
     free(error);
+    matches = check_logfile(worker_logfile, "using popen");
+    ok(matches == 1, "worker uses popen");
 
+    /* execvp */
     strcpy(cmd, "/bin/hostname");
-    printf("this should be execvp\n");
     run_check(cmd, &result, &error);
     free(result);
     free(error);
     mod_gm_opt->debug_level = 0;
+    matches = check_logfile(worker_logfile, "using execvp");
+    ok(matches == 1, "worker uses execvp");
 
     for(x=0;x<100;x++) {
         run_check(cmd, &result, &error);
@@ -61,7 +121,8 @@ int main (int argc, char **argv, char **env) {
 #ifdef EMBEDDEDPERL
     deinit_embedded_perl(0);
 #endif
-    exit(0);
+    unlink(worker_logfile);
+    return(exit_status());
 }
 
 /* core log wrapper */
