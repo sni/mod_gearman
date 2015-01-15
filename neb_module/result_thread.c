@@ -95,7 +95,7 @@ void *result_worker( void * data ) {
 /* put back the result into the core */
 void *get_results( gearman_job_st *job, void *context, size_t *result_size, gearman_return_t *ret_ptr ) {
     int wsize, transportmode;
-    char workload[GM_BUFFERSIZE];
+    char *workload;
     char *decrypted_data;
     char *decrypted_data_c;
 #ifdef GM_DEBUG
@@ -121,13 +121,14 @@ void *get_results( gearman_job_st *job, void *context, size_t *result_size, gear
 
     /* get the data */
     wsize = gearman_job_workload_size(job);
+    workload = malloc(sizeof(char)*wsize+1);
     strncpy(workload, (const char*)gearman_job_workload(job), wsize);
     workload[wsize] = '\x0';
     gm_log( GM_LOG_TRACE, "got result %s\n", gearman_job_handle( job ));
     gm_log( GM_LOG_TRACE, "%d +++>\n%s\n<+++\n", strlen(workload), workload );
 
     /* decrypt data */
-    decrypted_data   = malloc(GM_BUFFERSIZE);
+    decrypted_data   = malloc(wsize*2);
     decrypted_data_c = decrypted_data;
 
     if(mod_gm_opt->transportmode == GM_ENCODE_AND_ENCRYPT && mod_gm_opt->accept_clear_results == GM_ENABLED) {
@@ -141,6 +142,7 @@ void *get_results( gearman_job_st *job, void *context, size_t *result_size, gear
 #ifdef GM_DEBUG
     decrypted_orig   = strdup(decrypted_data);
 #endif
+    free(workload);
 
     /*
      * save this result to a file, so when nagios crashes,

@@ -142,10 +142,11 @@ int mod_gm_encrypt(char ** encrypted, char * text, int mode) {
 /* decrypt text with given key */
 void mod_gm_decrypt(char ** decrypted, char * text, int mode) {
     char *test;
-    unsigned char * buffer = malloc(sizeof(unsigned char) * GM_BUFFERSIZE);
+    int input_size = strlen(text);
+    unsigned char * buffer = malloc(sizeof(unsigned char) * input_size * 2);
 
     /* first decode from base64 */
-    size_t bsize = base64_decode(text, buffer, GM_BUFFERSIZE);
+    size_t bsize = base64_decode(text, buffer, input_size);
     test = strndup(buffer, 5);
     if(mode == GM_ENCODE_AND_ENCRYPT || (mode == GM_ENCODE_ACCEPT_ALL && strcmp(test, "type="))) {
         /* then decrypt */

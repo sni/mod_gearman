@@ -97,7 +97,7 @@ else
 05_neb_LDADD=-ldl
 08_roundtrip_LDADD=-ldl
 endif
-TESTS            = $(check_PROGRAMS) t/09-benchmark.t t/cppcheck.t
+TESTS            = $(check_PROGRAMS) t/09-benchmark.t t/10-large-result.t t/cppcheck.t
 
 
 GEARMANDS=/usr/sbin/gearmand /opt/sbin/gearmand
