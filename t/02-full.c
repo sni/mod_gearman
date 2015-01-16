@@ -367,6 +367,8 @@ void check_no_worker_running(char* worker_logfile) {
     if(rrc != 1) {
         check_logfile(worker_logfile, 3);
     }
+    free(result);
+    free(error);
     return;
 }
 
@@ -567,7 +569,6 @@ int main (int argc, char **argv, char **env) {
     /* cleanup */
     free(result);
     free(error);
-    mod_gm_free_opt(mod_gm_opt);
     free_client(&client);
     free_worker(&worker);
 
@@ -616,6 +617,7 @@ int main (int argc, char **argv, char **env) {
     free(last_result);
     free(worker_logfile);
     endskip;
+    mod_gm_free_opt(mod_gm_opt);
     return exit_status();
 }
 

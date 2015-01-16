@@ -380,10 +380,6 @@ int execute_safe_command(gm_job_t * exec_job, int fork_exec, char * identifier) 
             }
         }
 
-        if(exec_job->output != NULL)
-            free(exec_job->output);
-        if(exec_job->error != NULL)
-            free(exec_job->error);
         exec_job->output      = plugin_output;
         exec_job->error       = plugin_error;
         exec_job->return_code = return_code;
