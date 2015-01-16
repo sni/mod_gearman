@@ -121,7 +121,7 @@ void *get_results( gearman_job_st *job, void *context, size_t *result_size, gear
 
     /* get the data */
     wsize = gearman_job_workload_size(job);
-    workload = malloc(sizeof(char)*wsize+1);
+    workload = malloc(sizeof(char*)*wsize+1);
     strncpy(workload, (const char*)gearman_job_workload(job), wsize);
     workload[wsize] = '\x0';
     gm_log( GM_LOG_TRACE, "got result %s\n", gearman_job_handle( job ));

@@ -485,5 +485,18 @@ void add_server(int * server_num, gm_server_t * server_list[GM_LISTSIZE], char *
 int starts_with(const char *pre, const char *str);
 
 /**
+ * read_filepointer
+ *
+ * reads filepointer into a malloced char and returns size.
+ * increases size if required.
+ *
+ * @param[in] buffer - buffer to read into
+ * @param[in] fp - filepointer to read from
+ *
+ * @return number of bytes read
+ */
+int read_filepointer(char **, FILE*);
+
+/**
  * @}
  */
