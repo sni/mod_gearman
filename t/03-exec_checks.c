@@ -24,7 +24,7 @@ int main (int argc, char **argv, char **env) {
     char cwd[1024];
     struct stat st;
 
-    plan(72);
+    plan(74);
 
     /* set hostname and cwd */
     gethostname(hostname, GM_BUFFERSIZE-1);
@@ -133,6 +133,8 @@ int main (int argc, char **argv, char **env) {
     cmp_ok(rc, "==", 0, "pclose for cmd '%s' returned rc %d", cmd, rc);
     rrc = real_exit_code(rc);
     cmp_ok(rrc, "==", 0, "cmd '%s' returned rc %d", cmd, rrc);
+    like(result, "^OK", "returned result string");
+    like(error, "", "returned no errors");
     free(result);
     free(error);
 
