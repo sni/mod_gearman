@@ -511,12 +511,6 @@ static int handle_host_check( int event_type, void *data ) {
         && hostdata->type != NEBTYPE_HOSTCHECK_SYNC_PRECHECK)
         return NEB_OK;
 
-    /* shouldn't happen - internal Nagios error */
-    if ( hostdata == 0 ) {
-        gm_log( GM_LOG_ERROR, "Host handler received NULL host data structure.\n" );
-        return NEB_OK;
-    }
-
     /* get objects and set target function */
     if((hst=hostdata->object_ptr)==NULL) {
         gm_log( GM_LOG_ERROR, "Host handler received NULL host object pointer.\n" );
@@ -676,12 +670,6 @@ static int handle_svc_check( int event_type, void *data ) {
     /* ignore non-initiate service checks */
     if ( svcdata->type != NEBTYPE_SERVICECHECK_ASYNC_PRECHECK )
         return NEB_OK;
-
-    /* shouldn't happen - internal Nagios error */
-    if ( svcdata == 0 ) {
-        gm_log( GM_LOG_ERROR, "Service handler received NULL service data structure.\n" );
-        return NEBERROR_CALLBACKCANCEL;
-    }
 
     /* get objects and set target function */
     if((svc=svcdata->object_ptr)==NULL) {
