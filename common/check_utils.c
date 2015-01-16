@@ -248,10 +248,9 @@ int execute_safe_command(gm_job_t * exec_job, int fork_exec, char * identifier) 
     int pipe_stdout[2] , pipe_stderr[2];
     int return_code;
     int pclose_result;
-    int size;
     int x;
     char *plugin_output, *plugin_error, *bufdup;
-    char buffer[GM_BUFFERSIZE], buf_error[GM_BUFFERSIZE], source[GM_BUFFERSIZE];
+    char source[GM_BUFFERSIZE];
     struct timeval start_time,end_time;
     pid_t pid    = 0;
     source[0]    = '\x0';
