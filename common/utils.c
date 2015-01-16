@@ -150,7 +150,9 @@ void mod_gm_decrypt(char ** decrypted, char * text, int mode) {
         mod_gm_aes_decrypt(decrypted, buffer, bsize);
     }
     else  {
-        strncpy(*decrypted, (char*)buffer, bsize);
+        *decrypted[0] = '\x0';
+        buffer[bsize] = '\x0';
+        strncat(*decrypted, (char*)buffer, bsize);
     }
     free(test);
     free(buffer);
