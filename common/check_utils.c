@@ -80,7 +80,7 @@ char *extract_check_result(FILE *fp, int trimmed) {
     char *output;
     char *escaped;
 
-    output   = malloc(GM_BUFFERSIZE);
+    output   = malloc(sizeof(char*)*GM_BUFFERSIZE);
     output[0]='\x0';
     read_filepointer(&output, fp);
 
@@ -250,13 +250,10 @@ int execute_safe_command(gm_job_t * exec_job, int fork_exec, char * identifier) 
     int pclose_result;
     int size;
     int x;
-    char *plugin_output, *plugin_error;
-    char *bufdup;
+    char *plugin_output, *plugin_error, *bufdup;
     char buffer[GM_BUFFERSIZE], buf_error[GM_BUFFERSIZE], source[GM_BUFFERSIZE];
     struct timeval start_time,end_time;
     pid_t pid    = 0;
-    buffer[0]    = '\x0';
-    buf_error[0] = '\x0';
     source[0]    = '\x0';
 
     gm_log( GM_LOG_TRACE, "execute_safe_command()\n" );
@@ -328,12 +325,6 @@ int execute_safe_command(gm_job_t * exec_job, int fork_exec, char * identifier) 
             free(plugin_error);
             _exit(return_code);
         }
-        else {
-            snprintf( buffer,    sizeof( buffer )-1,    "%s", plugin_output );
-            snprintf( buf_error, sizeof( buf_error )-1, "%s", plugin_error  );
-            free(plugin_output);
-            free(plugin_error);
-        }
     }
 
     /* we are the parent */
@@ -348,30 +339,33 @@ int execute_safe_command(gm_job_t * exec_job, int fork_exec, char * identifier) 
             waitpid(pid, &return_code, 0);
             gm_log( GM_LOG_TRACE, "finished check from pid: %d with status: %d\n", pid, return_code);
             /* get all lines of plugin output */
-            if((size = read(pipe_stdout[0], buffer, sizeof(buffer)-1)) < 0)
-                perror("read");
-            buffer[size] = '\0';
-            if((size = read(pipe_stderr[0], buf_error, sizeof(buf_error)-1)) < 0)
-                perror("read");
-            buf_error[size] = '\0';
+            plugin_output = malloc(GM_BUFFERSIZE);
+            plugin_output[0]='\x0';
+            plugin_error  = malloc(GM_BUFFERSIZE);
+            plugin_error[0]='\x0';
+            read_pipe(&plugin_output, pipe_stdout[0]);
+            read_pipe(&plugin_error, pipe_stderr[0]);
         }
         return_code = real_exit_code(return_code);
 
         /* file not executable? */
         if(return_code == 126) {
             return_code = STATE_CRITICAL;
-            snprintf( buffer, sizeof( buffer )-1, "CRITICAL: Return code of 126 is out of bounds. Make sure the plugin you're trying to run is executable. (worker: %s)", identifier);
+            free(plugin_output);
+            asprintf(&plugin_output, "CRITICAL: Return code of 126 is out of bounds. Make sure the plugin you're trying to run is executable. (worker: %s)", identifier);
         }
         /* file not found errors? */
         else if(return_code == 127) {
             return_code = STATE_CRITICAL;
-            snprintf( buffer, sizeof( buffer )-1, "CRITICAL: Return code of 127 is out of bounds. Make sure the plugin you're trying to run actually exists. (worker: %s)", identifier);
+            free(plugin_output);
+            asprintf(&plugin_output, "CRITICAL: Return code of 127 is out of bounds. Make sure the plugin you're trying to run actually exists. (worker: %s)", identifier);
         }
         /* signaled */
         else if(return_code >= 128 && return_code < 144) {
             char * signame = nr2signal((int)(return_code-128));
-            bufdup = strdup(buffer);
-            snprintf( buffer, sizeof( buffer )-1, "CRITICAL: Return code of %d is out of bounds. Plugin exited by signal %s. (worker: %s)\\n%s", (int)(return_code), signame, identifier, bufdup);
+            bufdup = strdup(plugin_output);
+            free(plugin_output);
+            asprintf(&plugin_output, "CRITICAL: Return code of %d is out of bounds. Plugin exited by signal %s. (worker: %s)\\n%s", (int)(return_code), signame, identifier, bufdup);
             return_code = STATE_CRITICAL;
             free(bufdup);
             free(signame);
@@ -379,9 +373,10 @@ int execute_safe_command(gm_job_t * exec_job, int fork_exec, char * identifier) 
         /* other error codes > 3 */
         else if(return_code > 3) {
             gm_log( GM_LOG_DEBUG, "check exited with exit code > 3. Exit: %d\n", (int)(return_code));
-            gm_log( GM_LOG_DEBUG, "stdout: %s\n", buffer);
-            bufdup = strdup(buffer);
-            snprintf( buffer, sizeof( buffer )-1, "CRITICAL: Return code of %d is out of bounds. (worker: %s)\\n%s", (int)(return_code), identifier, bufdup);
+            gm_log( GM_LOG_DEBUG, "stdout: %s\n", plugin_output);
+            bufdup = strdup(plugin_output);
+            free(plugin_output);
+            asprintf(&plugin_output, "CRITICAL: Return code of %d is out of bounds. (worker: %s)\\n%s", (int)(return_code), identifier, bufdup);
             free(bufdup);
             if(return_code != 25 && mod_gm_opt->workaround_rc_25 == GM_DISABLED) {
                 return_code = STATE_CRITICAL;
@@ -392,8 +387,8 @@ int execute_safe_command(gm_job_t * exec_job, int fork_exec, char * identifier) 
             free(exec_job->output);
         if(exec_job->error != NULL)
             free(exec_job->error);
-        exec_job->output      = strdup(buffer);
-        exec_job->error       = strdup(buf_error);
+        exec_job->output      = plugin_output;
+        exec_job->error       = plugin_error;
         exec_job->return_code = return_code;
         if( fork_exec == GM_ENABLED) {
             close(pipe_stdout[0]);
@@ -412,12 +407,13 @@ int execute_safe_command(gm_job_t * exec_job, int fork_exec, char * identifier) 
     if(exec_job->timeout < ((int)end_time.tv_sec - (int)exec_job->start_time.tv_sec)) {
         exec_job->return_code   = mod_gm_opt->timeout_return;
         exec_job->early_timeout = 1;
-        if ( !strcmp( exec_job->type, "service" ) )
-            snprintf( buffer, sizeof( buffer ) -1, "(Service Check Timed Out On Worker: %s)", identifier);
-        if ( !strcmp( exec_job->type, "host" ) )
-            snprintf( buffer, sizeof( buffer ) -1, "(Host Check Timed Out On Worker: %s)", identifier);
         free(exec_job->output);
-        exec_job->output = strdup( buffer );
+        if ( !strcmp( exec_job->type, "service" ) ) {
+            asprintf(&exec_job->output, "(Service Check Timed Out On Worker: %s)", identifier);
+        }
+        else {
+            asprintf(&exec_job->output, "(Host Check Timed Out On Worker: %s)", identifier);
+        }
     }
 
     snprintf( source, sizeof( source )-1, "Mod-Gearman Worker @ %s", identifier);

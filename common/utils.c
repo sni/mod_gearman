@@ -126,9 +126,9 @@ int mod_gm_encrypt(char ** encrypted, char * text, int mode) {
     }
 
     /* now encode in base64 */
-    base64 = malloc(GM_BUFFERSIZE);
+    base64 = malloc(size*2);
     base64[0] = 0;
-    base64_encode(crypted, size, base64, GM_BUFFERSIZE);
+    base64_encode(crypted, size, base64, size*2);
     free(*encrypted);
     free(crypted);
     *encrypted = base64;
@@ -150,10 +150,7 @@ void mod_gm_decrypt(char ** decrypted, char * text, int mode) {
         mod_gm_aes_decrypt(decrypted, buffer, bsize);
     }
     else  {
-        char debase64[bsize+1];
-        strncpy(debase64, (char*)buffer, bsize);
-        debase64[bsize] = '\0';
-        strcpy(*decrypted, debase64);
+        strncpy(*decrypted, (char*)buffer, bsize);
     }
     free(test);
     free(buffer);
@@ -1925,6 +1922,29 @@ int read_filepointer(char **target, FILE* input) {
     size  = GM_BUFFERSIZE;
     total = size;
     while(fgets(buffer,sizeof(buffer)-1, input)){
+        alarm(0);
+        bytes = strlen(buffer);
+        if(total < bytes + size) {
+            *target = realloc(*target, total+GM_BUFFERSIZE);
+            total += GM_BUFFERSIZE;
+        }
+        size += bytes;
+        strncat(*target, buffer, bytes);
+        alarm(mod_gm_opt->timeout);
+    }
+    alarm(0);
+    return(size);
+}
+
+/* read from pipe as long as it has data and return size of string */
+int read_pipe(char **target, int input) {
+    char buffer[GM_BUFFERSIZE] = "";
+    int bytes, size, total;
+    alarm(mod_gm_opt->timeout);
+    strcpy(buffer,"");
+    size  = GM_BUFFERSIZE;
+    total = size;
+    while(read(input, buffer, sizeof(buffer)-1)){
         alarm(0);
         bytes = strlen(buffer);
         if(total < bytes + size) {
