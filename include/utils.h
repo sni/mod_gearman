@@ -484,5 +484,18 @@ int starts_with(const char *pre, const char *str);
 int read_filepointer(char **, FILE*);
 
 /**
+ * read_pipe
+ *
+ * reads pipe into a malloced char and returns size.
+ * increases size if required.
+ *
+ * @param[in] buffer - buffer to read into
+ * @param[in] pipe - pipe to read from
+ *
+ * @return number of bytes read
+ */
+int read_pipe(char **, int);
+
+/**
  * @}
  */

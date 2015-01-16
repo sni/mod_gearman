@@ -91,10 +91,12 @@ int mod_gm_aes_encrypt(unsigned char ** encrypted, char * text) {
 
 /* decrypt text with given key */
 void mod_gm_aes_decrypt(char ** text, unsigned char * encrypted, int size) {
-    char decr[GM_BUFFERSIZE];
+    char *decr;
     unsigned long rk[RKLENGTH(KEYBITS)];
     int nrounds;
     int i = 0;
+
+    decr = malloc(sizeof(char*)*size+GM_BUFFERSIZE);
 
     assert(encryption_initialized == 1);
     nrounds = rijndaelSetupDecrypt(rk, key, KEYBITS);
@@ -117,5 +119,6 @@ void mod_gm_aes_decrypt(char ** text, unsigned char * encrypted, int size) {
     }
 
     strcpy(*text, decr);
+    free(decr);
     return;
 }
