@@ -312,7 +312,7 @@ int submit_result() {
     gm_log( GM_LOG_TRACE, "queue: %s\n", mod_gm_opt->result_queue );
     resultsize = sizeof(char) * strlen(mod_gm_opt->message) + GM_BUFFERSIZE;
     result = malloc(resultsize);
-    snprintf( result, resultsize-1, "type=%s\nhost_name=%s\nstart_time=%i.%i\nfinish_time=%i.%i\nlatency=%i.%i\nreturn_code=%i\n",
+    snprintf( result, resultsize-1, "type=%s\nhost_name=%s\nstart_time=%i.%i\nfinish_time=%i.%i\nlatency=%i.%i\nreturn_code=%i\nsource=send_gearman\n",
               mod_gm_opt->active == GM_ENABLED ? "active" : "passive",
               mod_gm_opt->host,
               (int)starttime.tv_sec,

@@ -278,6 +278,8 @@ int execute_safe_command(gm_job_t * exec_job, int fork_exec, char * identifier) 
 
         /*fork error */
         if( pid == -1 ) {
+            if(exec_job->output != NULL)
+                free(exec_job->output);
             exec_job->output      = strdup("(Error On Fork)");
             exec_job->return_code = 3;
             return(GM_ERROR);
@@ -378,6 +380,10 @@ int execute_safe_command(gm_job_t * exec_job, int fork_exec, char * identifier) 
             }
         }
 
+        if(exec_job->output != NULL)
+            free(exec_job->output);
+        if(exec_job->error != NULL)
+            free(exec_job->error);
         exec_job->output      = plugin_output;
         exec_job->error       = plugin_error;
         exec_job->return_code = return_code;

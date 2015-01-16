@@ -199,13 +199,15 @@ int check_server(char * server, in_port_t port) {
     int x;
     char * message = NULL;
     char * version = NULL;
-    char *buf      = NULL;
+    char * buf     = NULL;
     int total_running = 0;
     int total_waiting = 0;
     int checked       = 0;
     int rc;
 
     stats = malloc(sizeof(mod_gm_server_status_t));
+    stats->function_num = 0;
+    stats->worker_num   = 0;
     rc = get_gearman_server_data(stats, &message, &version, server, port);
     if( rc == STATE_OK ) {
         for(x=0; x<stats->function_num;x++) {
@@ -216,38 +218,41 @@ int check_server(char * server, in_port_t port) {
             total_waiting += stats->function[x]->waiting;
             if(stats->function[x]->waiting > 0 && stats->function[x]->worker == 0) {
                 rc = STATE_CRITICAL;
-                buf = malloc(GM_BUFFERSIZE);
+                buf = (char*)malloc(GM_BUFFERSIZE);
                 snprintf(buf, GM_BUFFERSIZE, "Queue %s has %i job%s without any worker. ", stats->function[x]->queue, stats->function[x]->waiting, stats->function[x]->waiting > 1 ? "s":"" );
                 strncat(message, buf, GM_BUFFERSIZE);
             }
             else if(opt_job_critical > 0 && stats->function[x]->waiting >= opt_job_critical) {
                 rc = STATE_CRITICAL;
-                buf = malloc(GM_BUFFERSIZE);
+                buf = (char*)malloc(GM_BUFFERSIZE);
                 snprintf(buf, GM_BUFFERSIZE, "Queue %s has %i waiting job%s. ", stats->function[x]->queue, stats->function[x]->waiting, stats->function[x]->waiting > 1 ? "s":"" );
                 strncat(message, buf, GM_BUFFERSIZE);
             }
             else if(opt_worker_critical > 0 && stats->function[x]->worker >= opt_worker_critical) {
                 rc = STATE_CRITICAL;
-                buf = malloc(GM_BUFFERSIZE);
+                buf = (char*)malloc(GM_BUFFERSIZE);
                 snprintf(buf, GM_BUFFERSIZE, "Queue %s has %i worker. ", stats->function[x]->queue, stats->function[x]->worker );
                 strncat(message, buf, GM_BUFFERSIZE);
             }
             else if(opt_job_warning > 0 && stats->function[x]->waiting >= opt_job_warning) {
                 rc = STATE_WARNING;
-                buf = malloc(GM_BUFFERSIZE);
+                buf = (char*)malloc(GM_BUFFERSIZE);
                 snprintf(buf, GM_BUFFERSIZE, "Queue %s has %i waiting job%s. ", stats->function[x]->queue, stats->function[x]->waiting, stats->function[x]->waiting > 1 ? "s":"" );
                 strncat(message, buf, GM_BUFFERSIZE);
             }
             else if(opt_worker_warning > 0 && stats->function[x]->worker >= opt_worker_warning) {
                 rc = STATE_WARNING;
-                buf = malloc(GM_BUFFERSIZE);
+                buf = (char*)malloc(GM_BUFFERSIZE);
                 snprintf(buf, GM_BUFFERSIZE, "Queue %s has %i worker. ", stats->function[x]->queue, stats->function[x]->worker );
                 strncat(message, buf, GM_BUFFERSIZE);
             }
+            if(buf != NULL)
+                free(buf);
+            buf = NULL;
         }
     }
     if(opt_queue != NULL && checked == 0) {
-        buf = malloc(GM_BUFFERSIZE);
+        buf = (char*)malloc(GM_BUFFERSIZE);
         snprintf(buf, GM_BUFFERSIZE, "Queue %s not found", opt_queue );
         strncat(message, buf, GM_BUFFERSIZE);
         rc = STATE_WARNING;
@@ -319,7 +324,7 @@ int check_worker(char * queue, char * to_send, char * expect) {
 
     while (1) {
         if (send_async) {
-            result = "sending background job succeded";
+            result = strdup("sending background job succeded");
             job_handle = malloc(GEARMAN_JOB_HANDLE_SIZE * sizeof(char));
             ret= gearman_client_do_high_background( &client,
                                                     queue,

@@ -162,7 +162,7 @@ void *get_results( gearman_job_st *job, void *context, size_t *result_size, gear
     chk_result->scheduled_check     = TRUE;
     chk_result->reschedule_check    = TRUE;
     chk_result->output_file         = 0;
-    chk_result->output_file_fd      = -1;
+    chk_result->output_file_fp      = NULL;
 
     core_start_time.tv_sec          = 0;
     core_start_time.tv_usec         = 0;

@@ -39,6 +39,7 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <sys/stat.h>
+#include <stddef.h>
 
 #include "polarssl/md5.h"
 #include "common.h"
