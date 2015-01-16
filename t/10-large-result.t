@@ -28,7 +28,7 @@ chomp(my $gearmand_pid = `cat ./gearman.pid`);
 isnt($gearmand_pid, '', 'gearmand running: '.$gearmand_pid) or BAIL_OUT("no gearmand");
 
 # start worker
-my $cmd = "./mod_gearman_worker --server=localhost:$TESTPORT --debug=4 --max-worker=1 --encryption=off --p1_file=./worker/mod_gearman_p1.pl --daemon --pidfile=./worker.pid --logfile=./worker.log";
+my $cmd = "./mod_gearman_worker --server=localhost:$TESTPORT --debug=4 --max-worker=1 --encryption=off --p1_file=./worker/mod_gearman_p1.pl --daemon --pidfile=./worker.pid --logfile=$LOGFILE";
 system($cmd);
 chomp(my $worker_pid = `cat ./worker.pid 2>/dev/null`);
 isnt($worker_pid, '', 'worker running: '.$worker_pid);

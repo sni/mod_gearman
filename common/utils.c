@@ -1933,6 +1933,10 @@ int read_filepointer(char **target, FILE* input) {
         size += bytes;
         strncat(*target, buffer, bytes);
         alarm(mod_gm_opt->timeout);
+        if(size >= GM_MAX_OUTPUT) {
+            gm_log( GM_LOG_INFO, "plugin output exceeds %d bytes, cutting off\n", GM_MAX_OUTPUT );
+            break;
+        }
     }
     alarm(0);
     return(size);
@@ -1956,6 +1960,10 @@ int read_pipe(char **target, int input) {
         size += bytes;
         strncat(*target, buffer, bytes);
         alarm(mod_gm_opt->timeout);
+        if(size >= GM_MAX_OUTPUT) {
+            gm_log( GM_LOG_INFO, "plugin output exceeds %d bytes, cutting off\n", GM_MAX_OUTPUT );
+            break;
+        }
     }
     alarm(0);
     return(size);

@@ -58,6 +58,7 @@
 #define GM_ENABLED                      1
 #define GM_DISABLED                     0
 #define GM_BUFFERSIZE               65536
+#define GM_MAX_OUTPUT             1048576   /* limit plugin output size to 1mb */
 #define GM_LISTSIZE                   512
 #define GM_NEBTYPESSIZE                33   /* maximum number of neb types */
 
