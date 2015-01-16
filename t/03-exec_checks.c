@@ -128,12 +128,19 @@ int main (int argc, char **argv, char **env) {
     /*****************************************
      * simple test command 3
      */
-    strcpy(cmd, "/usr/lib/nagios/plugins/check_icmp -H 127.0.0.1");
+    if(stat("/usr/lib/nagios/plugins/check_users", &st) == 0) {
+        strcpy(cmd, "/usr/lib/nagios/plugins/check_users -w 99 -c 99");
+    }
+    else if(stat("/usr/lib64/nagios/plugins/check_users", &st) == 0) {
+        strcpy(cmd, "/usr/lib64/nagios/plugins/check_users -w 99 -c 99");
+    } else {
+        strcpy(cmd, "/bin/false 'no check_users installed...'");
+    }
     rc = run_check(cmd, &result, &error);
     cmp_ok(rc, "==", 0, "pclose for cmd '%s' returned rc %d", cmd, rc);
     rrc = real_exit_code(rc);
     cmp_ok(rrc, "==", 0, "cmd '%s' returned rc %d", cmd, rrc);
-    like(result, "^OK", "returned result string");
+    like(result, "^USERS OK", "returned result string");
     like(error, "", "returned no errors");
     free(result);
     free(error);
