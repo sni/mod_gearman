@@ -1,0 +1,28 @@
+language: c
+compiler:
+  - gcc
+before_install:
+  - sudo apt-get update
+  - sudo apt-get install apt-transport-https
+  - sudo sh -c "echo 'deb https://labs.consol.de/repo/stable/ubuntu precise main' >> /etc/apt/sources.list"
+  - gpg --keyserver keys.gnupg.net --recv-keys F8C1CA08A57B9ED7
+  - gpg --armor --export F8C1CA08A57B9ED7 | sudo apt-key add -
+  - sudo apt-get update
+  - sudo apt-get install help2man nagios-plugins-basic autoconf automake libltdl-dev libtool libncurses5-dev devscripts pkg-config libperl-dev build-essential devscripts cppcheck valgrind
+  - sudo apt-get install gearman-job-server libgearman-dev
+  - git config --global user.email "travis@localhost"
+  - git config --global user.name "Travis Testuser"
+install:
+  - ./autogen.sh
+script:
+  - ./configure --enable-debug           || exit 1
+  - make                                 || exit 1
+  - make install DESTDIR=$(pwd)/_install || exit 1
+  - make fulltest                        || exit 1
+  - make clean                           || exit 1
+  - ./configure --enable-embedded-perl --enable-debug || exit 1
+  - make                                 || exit 1
+  - make test                            || exit 1
+notifications:
+  email:
+    - sven@nierlein.de
