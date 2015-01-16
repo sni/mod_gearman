@@ -122,6 +122,7 @@ int main (int argc, char **argv, char **env) {
     deinit_embedded_perl(0);
 #endif
     unlink(worker_logfile);
+    free(worker_logfile);
     return(exit_status());
 }
 

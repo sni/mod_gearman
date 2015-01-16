@@ -258,6 +258,7 @@ void *dummy( gearman_job_st *job, void *context, size_t *result_size, gearman_re
     context     = context;
     result_size = 0;
     ret_ptr     = ret_ptr;
+    result_size = result_size;
 
     return NULL;
 }
