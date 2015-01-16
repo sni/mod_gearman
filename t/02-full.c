@@ -616,7 +616,6 @@ int main (int argc, char **argv, char **env) {
 
     free(last_result);
     free(worker_logfile);
-    mod_gm_free_opt(mod_gm_opt);
     endskip;
     mod_gm_free_opt(mod_gm_opt);
     return exit_status();
