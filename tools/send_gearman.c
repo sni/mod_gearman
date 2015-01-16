@@ -200,9 +200,8 @@ void print_usage() {
 
 /* send message to job server */
 int send_result() {
-    char buffer[GM_BUFFERSIZE] = "";
-    int size;
     char *ptr1, *ptr2, *ptr3, *ptr4;
+    char buffer[GM_BUFFERSIZE];
 
     gm_log( GM_LOG_TRACE, "send_result()\n" );
 
@@ -270,16 +269,8 @@ int send_result() {
     /* multi line plugin output */
     else if(mod_gm_opt->message == NULL) {
         /* get all lines from stdin */
-        alarm(mod_gm_opt->timeout);
         mod_gm_opt->message = malloc(GM_BUFFERSIZE);
-        strcpy(buffer,"");
-        size = GM_MAX_OUTPUT;
-        while(size > 0 && fgets(buffer,sizeof(buffer)-1,stdin)){
-            alarm(0);
-            strncat(mod_gm_opt->message, buffer, size);
-            size -= strlen(buffer);
-        }
-        alarm(0);
+        read_filepointer(&mod_gm_opt->message, stdin);
     }
     return(submit_result());
 }
@@ -287,11 +278,12 @@ int send_result() {
 /* submit result */
 int submit_result() {
     char * buf;
-    char temp_buffer1[GM_BUFFERSIZE];
-    char temp_buffer2[GM_BUFFERSIZE];
+    char * temp_buffer;
+    char * result;
     struct timeval now;
     struct timeval starttime;
     struct timeval finishtime;
+    int resultsize;
 
     gettimeofday(&now, NULL);
     if(mod_gm_opt->has_starttime == FALSE) {
@@ -318,8 +310,9 @@ int submit_result() {
     free(buf);
 
     gm_log( GM_LOG_TRACE, "queue: %s\n", mod_gm_opt->result_queue );
-    temp_buffer1[0]='\x0';
-    snprintf( temp_buffer1, sizeof( temp_buffer1 )-1, "type=%s\nhost_name=%s\nstart_time=%i.%i\nfinish_time=%i.%i\nlatency=%i.%i\nreturn_code=%i\n",
+    resultsize = sizeof(char) * strlen(mod_gm_opt->message) + GM_BUFFERSIZE;
+    result = malloc(resultsize);
+    snprintf( result, resultsize-1, "type=%s\nhost_name=%s\nstart_time=%i.%i\nfinish_time=%i.%i\nlatency=%i.%i\nreturn_code=%i\n",
               mod_gm_opt->active == GM_ENABLED ? "active" : "passive",
               mod_gm_opt->host,
               (int)starttime.tv_sec,
@@ -331,30 +324,31 @@ int submit_result() {
               mod_gm_opt->return_code
             );
 
+    temp_buffer = malloc(resultsize);
     if(mod_gm_opt->service != NULL) {
-        temp_buffer2[0]='\x0';
-        strncat(temp_buffer2, "service_description=", (sizeof(temp_buffer2)-1));
-        strncat(temp_buffer2, mod_gm_opt->service, (sizeof(temp_buffer2)-1));
-        strncat(temp_buffer2, "\n", (sizeof(temp_buffer2)-1));
-        strncat(temp_buffer1, temp_buffer2, (sizeof(temp_buffer1)-1));
+        temp_buffer[0]='\x0';
+        strcat(temp_buffer, "service_description=");
+        strcat(temp_buffer, mod_gm_opt->service);
+        strcat(temp_buffer, "\n");
+        strcat(result, temp_buffer);
     }
 
     if(mod_gm_opt->message != NULL) {
-        temp_buffer2[0]='\x0';
-        strncat(temp_buffer2, "output=", (sizeof(temp_buffer2)-1));
-        strncat(temp_buffer2, mod_gm_opt->message, (sizeof(temp_buffer2)-1));
-        strncat(temp_buffer2, "\n", (sizeof(temp_buffer2)-1));
-        strncat(temp_buffer1, temp_buffer2, (sizeof(temp_buffer1)-1));
+        temp_buffer[0]='\x0';
+        strcat(temp_buffer, "output=");
+        strcat(temp_buffer, mod_gm_opt->message);
+        strcat(temp_buffer, "\n");
+        strcat(result, temp_buffer);
     }
-    strncat(temp_buffer1, "\n", (sizeof(temp_buffer1)-2));
+    strcat(result, "\n");
 
-    gm_log( GM_LOG_TRACE, "data:\n%s\n", temp_buffer1);
+    gm_log( GM_LOG_TRACE, "data:\n%s\n", result);
 
     if(add_job_to_queue( &client,
                          mod_gm_opt->server_list,
                          mod_gm_opt->result_queue,
                          NULL,
-                         temp_buffer1,
+                         result,
                          GM_JOB_PRIO_NORMAL,
                          GM_DEFAULT_JOB_RETRIES,
                          mod_gm_opt->transportmode,
@@ -367,7 +361,7 @@ int submit_result() {
                                  mod_gm_opt->dupserver_list,
                                  mod_gm_opt->result_queue,
                                  NULL,
-                                 temp_buffer1,
+                                 result,
                                  GM_JOB_PRIO_NORMAL,
                                  GM_DEFAULT_JOB_RETRIES,
                                  mod_gm_opt->transportmode,
@@ -382,8 +376,12 @@ int submit_result() {
     }
     else {
         gm_log( GM_LOG_TRACE, "send_result_back() finished unsuccessfully\n" );
+        free(result);
+        free(temp_buffer);
         return( STATE_UNKNOWN );
     }
+    free(result);
+    free(temp_buffer);
     return( STATE_OK );
 }
 

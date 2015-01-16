@@ -77,20 +77,16 @@ char *nr2signal(int sig) {
 
 /* extract check result */
 char *extract_check_result(FILE *fp, int trimmed) {
-    int size;
-    char buffer[GM_BUFFERSIZE] = "";
-    char output[GM_BUFFERSIZE] = "";
+    char *output;
+    char *escaped;
 
-    /* get all lines of plugin output - escape newlines */
-    strcpy(buffer,"");
-    strcpy(output,"");
-    size = GM_MAX_OUTPUT;
-    while(size > 0 && fgets(buffer,sizeof(buffer)-1,fp)){
-        strncat(output, buffer, size);
-        size -= strlen(buffer);
-    }
+    output   = malloc(GM_BUFFERSIZE);
+    output[0]='\x0';
+    read_filepointer(&output, fp);
 
-    return(gm_escape_newlines(output, trimmed));
+    escaped  = gm_escape_newlines(output, trimmed);
+    free(output);
+    return(escaped);
 }
 
 

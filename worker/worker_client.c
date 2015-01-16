@@ -184,7 +184,7 @@ void *get_job( gearman_job_st *job, void *context, size_t *result_size, gearman_
     /* get the data */
     current_gearman_job = job;
     wsize = gearman_job_workload_size(job);
-    workload = malloc(sizeof(char)*wsize+1);
+    workload = malloc(sizeof(char*)*wsize+1);
     strncpy(workload, (const char*)gearman_job_workload(job), wsize);
     workload[wsize] = '\0';
     gm_log( GM_LOG_TRACE, "got new job %s\n", gearman_job_handle( job ) );

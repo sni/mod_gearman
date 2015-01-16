@@ -43,7 +43,7 @@ print $fh "return_code=2\n";
 print $fh "service_description=test\n";
 print $fh "output=";
 print $fh "x"x$PAYLOADSIZE;
-print $fh "\n";
+print $fh "yz\n";
 close($fh);
 
 ################################################################################

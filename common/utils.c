@@ -29,9 +29,6 @@
 #include "popenRWE.h"
 #include "polarssl/md5.h"
 
-char temp_buffer1[GM_BUFFERSIZE];
-char temp_buffer2[GM_BUFFERSIZE];
-
 #ifdef EMBEDDEDPERL
 #include "epn_utils.h"
 int enable_embedded_perl         = GM_ENABLED;
@@ -1702,6 +1699,9 @@ int check_param_server(gm_server_t * new_server, gm_server_t * server_list[GM_LI
 
 /* send results back */
 void send_result_back(gm_job_t * exec_job) {
+    char * temp_buffer1;
+    char * temp_buffer2;
+    int result_size;
     gm_log( GM_LOG_TRACE, "send_result_back()\n" );
 
     /* avoid duplicate returned results */
@@ -1728,9 +1728,13 @@ void send_result_back(gm_job_t * exec_job) {
         return;
     }
 
+    result_size  = strlen(exec_job->output)+GM_BUFFERSIZE;
+    temp_buffer1 = malloc(sizeof(char*)*result_size);
+    temp_buffer2 = malloc(sizeof(char*)*result_size);
+
     gm_log( GM_LOG_TRACE, "queue: %s\n", exec_job->result_queue );
     temp_buffer1[0]='\x0';
-    snprintf( temp_buffer1, sizeof( temp_buffer1 )-1, "host_name=%s\ncore_start_time=%i.%i\nstart_time=%i.%i\nfinish_time=%i.%i\nreturn_code=%i\nexited_ok=%i\n",
+    snprintf( temp_buffer1, result_size-1, "host_name=%s\ncore_start_time=%i.%i\nstart_time=%i.%i\nfinish_time=%i.%i\nreturn_code=%i\nexited_ok=%i\n",
               exec_job->host_name,
               ( int )exec_job->next_check.tv_sec,
               ( int )exec_job->next_check.tv_usec,
@@ -1741,39 +1745,39 @@ void send_result_back(gm_job_t * exec_job) {
               exec_job->return_code,
               exec_job->exited_ok
             );
-    temp_buffer1[sizeof( temp_buffer1 )-1]='\x0';
+    temp_buffer1[result_size-1]='\x0';
 
     if(exec_job->service_description != NULL) {
         temp_buffer2[0]='\x0';
-        strncat(temp_buffer2, "service_description=", (sizeof(temp_buffer2)-1));
-        strncat(temp_buffer2, exec_job->service_description, (sizeof(temp_buffer2)-1));
-        strncat(temp_buffer2, "\n", (sizeof(temp_buffer2)-1));
+        strcat(temp_buffer2, "service_description=");
+        strcat(temp_buffer2, exec_job->service_description);
+        strcat(temp_buffer2, "\n");
 
-        strncat(temp_buffer1, temp_buffer2, (sizeof(temp_buffer1)-1));
+        strcat(temp_buffer1, temp_buffer2);
     }
-    temp_buffer1[sizeof( temp_buffer1 )-1]='\x0';
+    temp_buffer1[result_size]='\x0';
 
     if(exec_job->output != NULL) {
         temp_buffer2[0]='\x0';
-        strncat(temp_buffer2, "output=", (sizeof(temp_buffer2)-1));
+        strcat(temp_buffer2, "output=");
         if(mod_gm_opt->debug_result) {
-            strncat(temp_buffer2, "(", (sizeof(temp_buffer2)-1));
-            strncat(temp_buffer2, hostname, (sizeof(temp_buffer2)-1));
-            strncat(temp_buffer2, ") - ", (sizeof(temp_buffer2)-1));
+            strcat(temp_buffer2, "(");
+            strcat(temp_buffer2, hostname);
+            strcat(temp_buffer2, ") - ");
         }
-        strncat(temp_buffer2, exec_job->output, (sizeof(temp_buffer2)-1));
+        strcat(temp_buffer2, exec_job->output);
         if(mod_gm_opt->show_error_output && exec_job->error != NULL && strlen(exec_job->error) > 0) {
             if(strlen(exec_job->output) > 0)
-                strncat(temp_buffer2, "\\n", (sizeof(temp_buffer2)-1));
-            strncat(temp_buffer2, "[", (sizeof(temp_buffer2)-1));
-            strncat(temp_buffer2, exec_job->error, (sizeof(temp_buffer2)-1));
-            strncat(temp_buffer2, "] ", (sizeof(temp_buffer2)-1));
+                strcat(temp_buffer2, "\\n");
+            strcat(temp_buffer2, "[");
+            strcat(temp_buffer2, exec_job->error);
+            strcat(temp_buffer2, "] ");
         }
-        strncat(temp_buffer2, "\n\n\n", (sizeof(temp_buffer2)-1));
-        strncat(temp_buffer1, temp_buffer2, (sizeof(temp_buffer1)-1));
+        strcat(temp_buffer2, "\n\n\n");
+        strcat(temp_buffer1, temp_buffer2);
     }
-    strncat(temp_buffer1, "\n", (sizeof(temp_buffer1)-2));
-    temp_buffer1[sizeof( temp_buffer1 )-1]='\x0';
+    strcat(temp_buffer1, "\n");
+    temp_buffer1[result_size]='\x0';
 
     gm_log( GM_LOG_TRACE, "data:\n%s\n", temp_buffer1);
 
@@ -1795,10 +1799,10 @@ void send_result_back(gm_job_t * exec_job) {
 
     if( mod_gm_opt->dupserver_num ) {
         if(mod_gm_opt->dup_results_are_passive) {
-            strncpy(temp_buffer2, "type=passive\n", (sizeof(temp_buffer1)-2));
+            strcat(temp_buffer2, "type=passive\n");
         }
-        strncat(temp_buffer2, temp_buffer1, (sizeof(temp_buffer2)-2));
-        temp_buffer2[sizeof( temp_buffer2 )-1]='\x0';
+        strcat(temp_buffer2, temp_buffer1);
+        temp_buffer2[result_size]='\x0';
         if( add_job_to_queue( current_client_dup,
                               mod_gm_opt->dupserver_list,
                               exec_job->result_queue,
@@ -1818,7 +1822,8 @@ void send_result_back(gm_job_t * exec_job) {
     else {
         gm_log( GM_LOG_TRACE, "send_result_back() has no duplicate servers to send to.\n" );
     }
-
+    free(temp_buffer1);
+    free(temp_buffer2);
     return;
 }
 
@@ -1873,4 +1878,28 @@ int starts_with(const char *pre, const char *str) {
     size_t lenpre = strlen(pre),
            lenstr = strlen(str);
     return lenstr < lenpre ? FALSE : strncmp(pre, str, lenpre) == 0;
+}
+
+
+/* read from filepointer as long as it has data and return size of string */
+int read_filepointer(char **target, FILE* input) {
+    char buffer[GM_BUFFERSIZE] = "";
+    int bytes, size, total;
+    alarm(mod_gm_opt->timeout);
+    strcpy(buffer,"");
+    size  = GM_BUFFERSIZE;
+    total = size;
+    while(fgets(buffer,sizeof(buffer)-1, input)){
+        alarm(0);
+        bytes = strlen(buffer);
+        if(total < bytes + size) {
+            *target = realloc(*target, total+GM_BUFFERSIZE);
+            total += GM_BUFFERSIZE;
+        }
+        size += bytes;
+        strncat(*target, buffer, bytes);
+        alarm(mod_gm_opt->timeout);
+    }
+    alarm(0);
+    return(size);
 }
