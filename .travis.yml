@@ -10,6 +10,7 @@ before_install:
   - sudo apt-get update
   - sudo apt-get install help2man nagios-plugins-basic autoconf automake libltdl-dev libtool libncurses5-dev devscripts pkg-config libperl-dev build-essential devscripts cppcheck valgrind
   - sudo apt-get install gearman-job-server libgearman-dev
+  - sudo chmod u+s /usr/lib/nagios/plugins/check_icmp
   - git config --global user.email "travis@localhost"
   - git config --global user.name "Travis Testuser"
 install:
