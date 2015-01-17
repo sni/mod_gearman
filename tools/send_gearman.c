@@ -40,7 +40,7 @@ int main (int argc, char **argv) {
      */
     if(parse_arguments(argc, argv) != GM_OK) {
         print_usage();
-        _exit( STATE_UNKNOWN );
+        exit( STATE_UNKNOWN );
     }
 
     /* set logging */
@@ -57,13 +57,13 @@ int main (int argc, char **argv) {
     /* create client */
     if ( create_client( mod_gm_opt->server_list, &client ) != GM_OK ) {
         printf( "send_gearman UNKNOWN: cannot start client\n" );
-        _exit( STATE_UNKNOWN );
+        exit( STATE_UNKNOWN );
     }
 
     /* create duplicate client */
     if ( create_client_dup( mod_gm_opt->dupserver_list, &client_dup ) != GM_OK ) {
         printf( "send_gearman UNKNOWN: cannot start client for duplicate server\n" );
-        _exit( STATE_UNKNOWN );
+        exit( STATE_UNKNOWN );
     }
 
     /* send result message */
@@ -75,7 +75,7 @@ int main (int argc, char **argv) {
         gearman_client_free( &client_dup );
     mod_gm_free_opt(mod_gm_opt);
 
-    _exit( rc );
+    exit( rc );
 }
 
 
@@ -194,7 +194,7 @@ void print_usage() {
     printf("\n");
 
     mod_gm_free_opt(mod_gm_opt);
-    _exit( STATE_UNKNOWN );
+    exit( STATE_UNKNOWN );
 }
 
 
@@ -392,7 +392,7 @@ void alarm_sighandler(int sig) {
 
     printf("got no input after %i seconds! Either send plugin output to stdin or use --message=...\n", mod_gm_opt->timeout);
 
-    _exit( STATE_UNKNOWN );
+    exit( STATE_UNKNOWN );
 }
 
 
@@ -400,7 +400,7 @@ void alarm_sighandler(int sig) {
 void print_version() {
     printf("send_gearman: version %s running on libgearman %s\n", GM_VERSION, gearman_version());
     printf("\n");
-    _exit( STATE_UNKNOWN );
+    exit( STATE_UNKNOWN );
 }
 
 
