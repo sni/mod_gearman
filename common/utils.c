@@ -47,14 +47,14 @@ char *gm_escape_newlines(char *rawbuf, int trimmed) {
     if(rawbuf==NULL)
         return NULL;
 
-    tmpbuf     = strdup(rawbuf);
+    tmpbuf     = gm_strdup(rawbuf);
     tmpbuf_dup = tmpbuf;
     if ( trimmed == GM_ENABLED ) {
         tmpbuf = trim(tmpbuf);
     }
 
     /* allocate enough memory to escape all chars if necessary */
-    if((newbuf=malloc((strlen(tmpbuf)*2)+1))==NULL) {
+    if((newbuf=gm_malloc((strlen(tmpbuf)*2)+1))==NULL) {
         free(tmpbuf);
         return NULL;
     }
@@ -121,12 +121,12 @@ int mod_gm_encrypt(char ** encrypted, char * text, int mode) {
         size = mod_gm_aes_encrypt(&crypted, text);
     }
     else {
-        crypted = (unsigned char*)strdup(text);
+        crypted = (unsigned char*)gm_strdup(text);
         size    = strlen(text);
     }
 
     /* now encode in base64 */
-    base64 = malloc(size*2);
+    base64 = gm_malloc(size*2);
     base64[0] = 0;
     base64_encode(crypted, size, base64, size*2);
     free(*encrypted);
@@ -140,11 +140,11 @@ int mod_gm_encrypt(char ** encrypted, char * text, int mode) {
 void mod_gm_decrypt(char ** decrypted, char * text, int mode) {
     char *test;
     int input_size = strlen(text);
-    unsigned char * buffer = malloc(sizeof(unsigned char) * input_size * 2);
+    unsigned char * buffer = gm_malloc(sizeof(unsigned char) * input_size * 2);
 
     /* first decode from base64 */
     size_t bsize = base64_decode(text, buffer, input_size);
-    test = strndup(buffer, 5);
+    test = gm_strndup(buffer, 5);
     if(mode == GM_ENCODE_AND_ENCRYPT || (mode == GM_ENCODE_ACCEPT_ALL && strcmp(test, "type="))) {
         /* then decrypt */
         mod_gm_aes_decrypt(decrypted, buffer, bsize);
@@ -228,7 +228,7 @@ int set_default_options(mod_gm_opt_t *opt) {
     opt->logmode            = GM_LOG_MODE_AUTO;
     opt->logfile_fp         = NULL;
     opt->message            = NULL;
-    opt->delimiter          = strdup("\t");
+    opt->delimiter          = gm_strdup("\t");
     opt->return_code        = 0;
     opt->timeout            = 10;
     opt->debug_level        = GM_LOG_INFO;
@@ -299,7 +299,7 @@ int set_default_options(mod_gm_opt_t *opt) {
         opt->local_servicegroups_list[i] = NULL;
     for(i=0;i<GM_NEBTYPESSIZE;i++) {
         mod_gm_exp_t *mod_gm_exp;
-        mod_gm_exp              = malloc(sizeof(mod_gm_exp_t));
+        mod_gm_exp              = gm_malloc(sizeof(mod_gm_exp_t));
         mod_gm_exp->elem_number = 0;
         opt->exports[i]         = mod_gm_exp;
     }
@@ -373,7 +373,7 @@ int parse_args_line(mod_gm_opt_t *opt, char * arg, int recursion_level) {
         opt->daemon_mode = parse_yes_or_no(value, GM_ENABLED);
         if(value != NULL) {
             free(opt->delimiter);
-            opt->delimiter = strdup( value );
+            opt->delimiter = gm_strdup( value );
         }
         return(GM_OK);
     }
@@ -565,30 +565,30 @@ int parse_args_line(mod_gm_opt_t *opt, char * arg, int recursion_level) {
 
     /* result_queue */
     else if (   !strcmp( key, "result_queue" ) ) {
-        opt->result_queue = strdup( value );
+        opt->result_queue = gm_strdup( value );
     }
 
     /* message */
     else if (   !strcmp( key, "message" )
              || !strcmp( key, "m" )
             ) {
-        opt->message = strdup( value );
+        opt->message = gm_strdup( value );
     }
 
     /* delimiter */
     else if (   !strcmp( key, "delimiter" ) ) {
         free(opt->delimiter);
-        opt->delimiter = strdup( value );
+        opt->delimiter = gm_strdup( value );
     }
 
     /* host */
     else if (   !strcmp( key, "host" ) ) {
-        opt->host = strdup( value );
+        opt->host = gm_strdup( value );
     }
 
     /* service */
     else if (   !strcmp( key, "service" ) ) {
-        opt->service = strdup( value );
+        opt->service = gm_strdup( value );
     }
 
     /* latency */
@@ -624,29 +624,29 @@ int parse_args_line(mod_gm_opt_t *opt, char * arg, int recursion_level) {
     else if (   !strcmp( key, "key" )
              || !strcmp( key, "password" )
             ) {
-        opt->crypt_key = strdup( value );
+        opt->crypt_key = gm_strdup( value );
     }
 
     /* keyfile / passwordfile */
     else if (   !strcmp( key, "keyfile" )
              || !strcmp( key, "passwordfile" )
             ) {
-        opt->keyfile = strdup( value );
+        opt->keyfile = gm_strdup( value );
     }
 
     /* pidfile */
     else if ( !strcmp( key, "pidfile" ) ) {
-        opt->pidfile = strdup( value );
+        opt->pidfile = gm_strdup( value );
     }
 
     /* logfile */
     else if ( !strcmp( key, "logfile" ) ) {
-        opt->logfile = strdup( value );
+        opt->logfile = gm_strdup( value );
     }
 
     /* identifier */
     else if ( !strcmp( key, "identifier" ) ) {
-        opt->identifier = strdup( value );
+        opt->identifier = gm_strdup( value );
     }
 
     /* timeout */
@@ -768,7 +768,7 @@ int parse_args_line(mod_gm_opt_t *opt, char * arg, int recursion_level) {
                 if(strlen(groupname) > 50) {
                     gm_log( GM_LOG_ERROR, "servicegroup name '%s' is too long, please use a maximum of 50 characters\n", groupname );
                 } else {
-                    opt->servicegroups_list[opt->servicegroups_num] = strdup(groupname);
+                    opt->servicegroups_list[opt->servicegroups_num] = gm_strdup(groupname);
                     opt->servicegroups_num++;
                     opt->set_queues_by_hand++;
                 }
@@ -786,7 +786,7 @@ int parse_args_line(mod_gm_opt_t *opt, char * arg, int recursion_level) {
                 if(strlen(groupname) > 50) {
                     gm_log( GM_LOG_ERROR, "hostgroup name '%s' is too long, please use a maximum of 50 characters\n", groupname );
                 } else {
-                    opt->hostgroups_list[opt->hostgroups_num] = strdup(groupname);
+                    opt->hostgroups_list[opt->hostgroups_num] = gm_strdup(groupname);
                     opt->hostgroups_num++;
                     opt->set_queues_by_hand++;
                 }
@@ -802,7 +802,7 @@ int parse_args_line(mod_gm_opt_t *opt, char * arg, int recursion_level) {
         while ( (groupname = strsep( &value, "," )) != NULL ) {
             groupname = trim(groupname);
             if ( strcmp( groupname, "" ) ) {
-                opt->local_servicegroups_list[opt->local_servicegroups_num] = strdup(groupname);
+                opt->local_servicegroups_list[opt->local_servicegroups_num] = gm_strdup(groupname);
                 opt->local_servicegroups_num++;
             }
         }
@@ -815,7 +815,7 @@ int parse_args_line(mod_gm_opt_t *opt, char * arg, int recursion_level) {
         while ( (groupname = strsep( &value, "," )) != NULL ) {
             groupname = trim(groupname);
             if ( strcmp( groupname, "" ) ) {
-                opt->local_hostgroups_list[opt->local_hostgroups_num] = strdup(groupname);
+                opt->local_hostgroups_list[opt->local_hostgroups_num] = gm_strdup(groupname);
                 opt->local_hostgroups_num++;
             }
         }
@@ -827,7 +827,7 @@ int parse_args_line(mod_gm_opt_t *opt, char * arg, int recursion_level) {
         for(x = 0; value[x] != '\x0'; x++) {
             value[x] = toupper(value[x]);
         }
-        opt->queue_cust_var = strdup( value );
+        opt->queue_cust_var = gm_strdup( value );
     }
 
     /* export queues */
@@ -859,7 +859,7 @@ int parse_args_line(mod_gm_opt_t *opt, char * arg, int recursion_level) {
                 }
 
                 number = opt->exports[callback_num]->elem_number;
-                opt->exports[callback_num]->name[number]        = strdup(export_queue);
+                opt->exports[callback_num]->name[number]        = gm_strdup(export_queue);
                 opt->exports[callback_num]->return_code[number] = return_code_num;
                 opt->exports[callback_num]->elem_number++;
             }
@@ -870,15 +870,15 @@ int parse_args_line(mod_gm_opt_t *opt, char * arg, int recursion_level) {
     /* p1_file */
     else if ( !strcmp( key, "p1_file" ) ) {
 #ifdef EMBEDDEDPERL
-        opt->p1_file = strdup( value );
+        opt->p1_file = gm_strdup( value );
         free(p1_file);
-        p1_file = strdup(opt->p1_file);
+        p1_file = gm_strdup(opt->p1_file);
 #endif
     }
 
     /* restrict_path */
     else if ( !strcmp( key, "restrict_path" ) || !strcmp( key, "restrictpath" )) {
-        opt->restrict_path[opt->restrict_path_num] = strdup(value);
+        opt->restrict_path[opt->restrict_path_num] = gm_strdup(value);
         opt->restrict_path_num++;
     }
 
@@ -909,7 +909,7 @@ int read_config_file(mod_gm_opt_t *opt, char*filename, int recursion_level) {
         return GM_ERROR;
     }
 
-    line = malloc(GM_BUFFERSIZE);
+    line = gm_malloc(GM_BUFFERSIZE);
     line_c = line;
     line[0] = '\0';
     while(fgets(line, GM_BUFFERSIZE, fp) != NULL) {
@@ -1114,7 +1114,7 @@ int read_keyfile(mod_gm_opt_t *opt) {
     }
     if(opt->crypt_key != NULL)
         free(opt->crypt_key);
-    opt->crypt_key = malloc(GM_BUFFERSIZE);
+    opt->crypt_key = gm_malloc(GM_BUFFERSIZE);
 
     if(!fgets(opt->crypt_key, 33, fp)) {
         fclose(fp);
@@ -1139,7 +1139,7 @@ void string2timeval(char * value, struct timeval *t) {
     if(value == NULL)
         return;
 
-    v = strdup(value);
+    v = gm_strdup(value);
     v_c = v;
 
     s = strsep( &v, "." );
@@ -1256,7 +1256,7 @@ char *escapestring(char *rawbuf) {
         return NULL;
 
     /* allocate enough memory to escape all chars if necessary */
-    if((newbuf=malloc((strlen(rawbuf)*2)+1))==NULL)
+    if((newbuf=gm_malloc((strlen(rawbuf)*2)+1))==NULL)
         return NULL;
 
     for(x=0,y=0;rawbuf[x]!=(char)'\x0';x++){
@@ -1332,7 +1332,7 @@ char *replace_str(const char *str, const char *old, const char *new) {
     } else
         retlen = strlen(str);
 
-    if ((ret = malloc(retlen + 1)) == NULL)
+    if ((ret = gm_malloc(retlen + 1)) == NULL)
         return NULL;
 
     for (r = ret, p = str; (q = strstr(p, old)) != NULL; p = q + oldlen) {
@@ -1353,149 +1353,149 @@ char *replace_str(const char *str, const char *old, const char *new) {
 char * nebtype2str(int i) {
     switch(i) {
         case 0:
-            return strdup("NEBTYPE_NONE"); break;
+            return gm_strdup("NEBTYPE_NONE"); break;
         case 1:
-            return strdup("NEBTYPE_HELLO"); break;
+            return gm_strdup("NEBTYPE_HELLO"); break;
         case 2:
-            return strdup("NEBTYPE_GOODBYE"); break;
+            return gm_strdup("NEBTYPE_GOODBYE"); break;
         case 3:
-            return strdup("NEBTYPE_INFO"); break;
+            return gm_strdup("NEBTYPE_INFO"); break;
         case 100:
-            return strdup("NEBTYPE_PROCESS_START"); break;
+            return gm_strdup("NEBTYPE_PROCESS_START"); break;
         case 101:
-            return strdup("NEBTYPE_PROCESS_DAEMONIZE"); break;
+            return gm_strdup("NEBTYPE_PROCESS_DAEMONIZE"); break;
         case 102:
-            return strdup("NEBTYPE_PROCESS_RESTART"); break;
+            return gm_strdup("NEBTYPE_PROCESS_RESTART"); break;
         case 103:
-            return strdup("NEBTYPE_PROCESS_SHUTDOWN"); break;
+            return gm_strdup("NEBTYPE_PROCESS_SHUTDOWN"); break;
         case 104:
-            return strdup("NEBTYPE_PROCESS_PRELAUNCH"); break;
+            return gm_strdup("NEBTYPE_PROCESS_PRELAUNCH"); break;
         case 105:
-            return strdup("NEBTYPE_PROCESS_EVENTLOOPSTART"); break;
+            return gm_strdup("NEBTYPE_PROCESS_EVENTLOOPSTART"); break;
         case 106:
-            return strdup("NEBTYPE_PROCESS_EVENTLOOPEND"); break;
+            return gm_strdup("NEBTYPE_PROCESS_EVENTLOOPEND"); break;
         case 200:
-            return strdup("NEBTYPE_TIMEDEVENT_ADD"); break;
+            return gm_strdup("NEBTYPE_TIMEDEVENT_ADD"); break;
         case 201:
-            return strdup("NEBTYPE_TIMEDEVENT_REMOVE"); break;
+            return gm_strdup("NEBTYPE_TIMEDEVENT_REMOVE"); break;
         case 202:
-            return strdup("NEBTYPE_TIMEDEVENT_EXECUTE"); break;
+            return gm_strdup("NEBTYPE_TIMEDEVENT_EXECUTE"); break;
         case 203:
-            return strdup("NEBTYPE_TIMEDEVENT_DELAY"); break;
+            return gm_strdup("NEBTYPE_TIMEDEVENT_DELAY"); break;
         case 204:
-            return strdup("NEBTYPE_TIMEDEVENT_SKIP"); break;
+            return gm_strdup("NEBTYPE_TIMEDEVENT_SKIP"); break;
         case 205:
-            return strdup("NEBTYPE_TIMEDEVENT_SLEEP"); break;
+            return gm_strdup("NEBTYPE_TIMEDEVENT_SLEEP"); break;
         case 300:
-            return strdup("NEBTYPE_LOG_DATA"); break;
+            return gm_strdup("NEBTYPE_LOG_DATA"); break;
         case 301:
-            return strdup("NEBTYPE_LOG_ROTATION"); break;
+            return gm_strdup("NEBTYPE_LOG_ROTATION"); break;
         case 400:
-            return strdup("NEBTYPE_SYSTEM_COMMAND_START"); break;
+            return gm_strdup("NEBTYPE_SYSTEM_COMMAND_START"); break;
         case 401:
-            return strdup("NEBTYPE_SYSTEM_COMMAND_END"); break;
+            return gm_strdup("NEBTYPE_SYSTEM_COMMAND_END"); break;
         case 500:
-            return strdup("NEBTYPE_EVENTHANDLER_START"); break;
+            return gm_strdup("NEBTYPE_EVENTHANDLER_START"); break;
         case 501:
-            return strdup("NEBTYPE_EVENTHANDLER_END"); break;
+            return gm_strdup("NEBTYPE_EVENTHANDLER_END"); break;
         case 600:
-            return strdup("NEBTYPE_NOTIFICATION_START"); break;
+            return gm_strdup("NEBTYPE_NOTIFICATION_START"); break;
         case 601:
-            return strdup("NEBTYPE_NOTIFICATION_END"); break;
+            return gm_strdup("NEBTYPE_NOTIFICATION_END"); break;
         case 602:
-            return strdup("NEBTYPE_CONTACTNOTIFICATION_START"); break;
+            return gm_strdup("NEBTYPE_CONTACTNOTIFICATION_START"); break;
         case 603:
-            return strdup("NEBTYPE_CONTACTNOTIFICATION_END"); break;
+            return gm_strdup("NEBTYPE_CONTACTNOTIFICATION_END"); break;
         case 604:
-            return strdup("NEBTYPE_CONTACTNOTIFICATIONMETHOD_START"); break;
+            return gm_strdup("NEBTYPE_CONTACTNOTIFICATIONMETHOD_START"); break;
         case 605:
-            return strdup("NEBTYPE_CONTACTNOTIFICATIONMETHOD_END"); break;
+            return gm_strdup("NEBTYPE_CONTACTNOTIFICATIONMETHOD_END"); break;
         case 700:
-            return strdup("NEBTYPE_SERVICECHECK_INITIATE"); break;
+            return gm_strdup("NEBTYPE_SERVICECHECK_INITIATE"); break;
         case 701:
-            return strdup("NEBTYPE_SERVICECHECK_PROCESSED"); break;
+            return gm_strdup("NEBTYPE_SERVICECHECK_PROCESSED"); break;
         case 702:
-            return strdup("NEBTYPE_SERVICECHECK_RAW_START"); break;
+            return gm_strdup("NEBTYPE_SERVICECHECK_RAW_START"); break;
         case 703:
-            return strdup("NEBTYPE_SERVICECHECK_RAW_END"); break;
+            return gm_strdup("NEBTYPE_SERVICECHECK_RAW_END"); break;
         case 704:
-            return strdup("NEBTYPE_SERVICECHECK_ASYNC_PRECHECK"); break;
+            return gm_strdup("NEBTYPE_SERVICECHECK_ASYNC_PRECHECK"); break;
         case 800:
-            return strdup("NEBTYPE_HOSTCHECK_INITIATE"); break;
+            return gm_strdup("NEBTYPE_HOSTCHECK_INITIATE"); break;
         case 801:
-            return strdup("NEBTYPE_HOSTCHECK_PROCESSED"); break;
+            return gm_strdup("NEBTYPE_HOSTCHECK_PROCESSED"); break;
         case 802:
-            return strdup("NEBTYPE_HOSTCHECK_RAW_START"); break;
+            return gm_strdup("NEBTYPE_HOSTCHECK_RAW_START"); break;
         case 803:
-            return strdup("NEBTYPE_HOSTCHECK_RAW_END"); break;
+            return gm_strdup("NEBTYPE_HOSTCHECK_RAW_END"); break;
         case 804:
-            return strdup("NEBTYPE_HOSTCHECK_ASYNC_PRECHECK"); break;
+            return gm_strdup("NEBTYPE_HOSTCHECK_ASYNC_PRECHECK"); break;
         case 805:
-            return strdup("NEBTYPE_HOSTCHECK_SYNC_PRECHECK"); break;
+            return gm_strdup("NEBTYPE_HOSTCHECK_SYNC_PRECHECK"); break;
         case 900:
-            return strdup("NEBTYPE_COMMENT_ADD"); break;
+            return gm_strdup("NEBTYPE_COMMENT_ADD"); break;
         case 901:
-            return strdup("NEBTYPE_COMMENT_DELETE"); break;
+            return gm_strdup("NEBTYPE_COMMENT_DELETE"); break;
         case 902:
-            return strdup("NEBTYPE_COMMENT_LOAD"); break;
+            return gm_strdup("NEBTYPE_COMMENT_LOAD"); break;
         case 1000:
-            return strdup("NEBTYPE_FLAPPING_START"); break;
+            return gm_strdup("NEBTYPE_FLAPPING_START"); break;
         case 1001:
-            return strdup("NEBTYPE_FLAPPING_STOP"); break;
+            return gm_strdup("NEBTYPE_FLAPPING_STOP"); break;
         case 1100:
-            return strdup("NEBTYPE_DOWNTIME_ADD"); break;
+            return gm_strdup("NEBTYPE_DOWNTIME_ADD"); break;
         case 1101:
-            return strdup("NEBTYPE_DOWNTIME_DELETE"); break;
+            return gm_strdup("NEBTYPE_DOWNTIME_DELETE"); break;
         case 1102:
-            return strdup("NEBTYPE_DOWNTIME_LOAD"); break;
+            return gm_strdup("NEBTYPE_DOWNTIME_LOAD"); break;
         case 1103:
-            return strdup("NEBTYPE_DOWNTIME_START"); break;
+            return gm_strdup("NEBTYPE_DOWNTIME_START"); break;
         case 1104:
-            return strdup("NEBTYPE_DOWNTIME_STOP"); break;
+            return gm_strdup("NEBTYPE_DOWNTIME_STOP"); break;
         case 1200:
-            return strdup("NEBTYPE_PROGRAMSTATUS_UPDATE"); break;
+            return gm_strdup("NEBTYPE_PROGRAMSTATUS_UPDATE"); break;
         case 1201:
-            return strdup("NEBTYPE_HOSTSTATUS_UPDATE"); break;
+            return gm_strdup("NEBTYPE_HOSTSTATUS_UPDATE"); break;
         case 1202:
-            return strdup("NEBTYPE_SERVICESTATUS_UPDATE"); break;
+            return gm_strdup("NEBTYPE_SERVICESTATUS_UPDATE"); break;
         case 1203:
-            return strdup("NEBTYPE_CONTACTSTATUS_UPDATE"); break;
+            return gm_strdup("NEBTYPE_CONTACTSTATUS_UPDATE"); break;
         case 1300:
-            return strdup("NEBTYPE_ADAPTIVEPROGRAM_UPDATE"); break;
+            return gm_strdup("NEBTYPE_ADAPTIVEPROGRAM_UPDATE"); break;
         case 1301:
-            return strdup("NEBTYPE_ADAPTIVEHOST_UPDATE"); break;
+            return gm_strdup("NEBTYPE_ADAPTIVEHOST_UPDATE"); break;
         case 1302:
-            return strdup("NEBTYPE_ADAPTIVESERVICE_UPDATE"); break;
+            return gm_strdup("NEBTYPE_ADAPTIVESERVICE_UPDATE"); break;
         case 1303:
-            return strdup("NEBTYPE_ADAPTIVECONTACT_UPDATE"); break;
+            return gm_strdup("NEBTYPE_ADAPTIVECONTACT_UPDATE"); break;
         case 1400:
-            return strdup("NEBTYPE_EXTERNALCOMMAND_START"); break;
+            return gm_strdup("NEBTYPE_EXTERNALCOMMAND_START"); break;
         case 1401:
-            return strdup("NEBTYPE_EXTERNALCOMMAND_END"); break;
+            return gm_strdup("NEBTYPE_EXTERNALCOMMAND_END"); break;
         case 1500:
-            return strdup("NEBTYPE_AGGREGATEDSTATUS_STARTDUMP"); break;
+            return gm_strdup("NEBTYPE_AGGREGATEDSTATUS_STARTDUMP"); break;
         case 1501:
-            return strdup("NEBTYPE_AGGREGATEDSTATUS_ENDDUMP"); break;
+            return gm_strdup("NEBTYPE_AGGREGATEDSTATUS_ENDDUMP"); break;
         case 1600:
-            return strdup("NEBTYPE_RETENTIONDATA_STARTLOAD"); break;
+            return gm_strdup("NEBTYPE_RETENTIONDATA_STARTLOAD"); break;
         case 1601:
-            return strdup("NEBTYPE_RETENTIONDATA_ENDLOAD"); break;
+            return gm_strdup("NEBTYPE_RETENTIONDATA_ENDLOAD"); break;
         case 1602:
-            return strdup("NEBTYPE_RETENTIONDATA_STARTSAVE"); break;
+            return gm_strdup("NEBTYPE_RETENTIONDATA_STARTSAVE"); break;
         case 1603:
-            return strdup("NEBTYPE_RETENTIONDATA_ENDSAVE"); break;
+            return gm_strdup("NEBTYPE_RETENTIONDATA_ENDSAVE"); break;
         case 1700:
-            return strdup("NEBTYPE_ACKNOWLEDGEMENT_ADD"); break;
+            return gm_strdup("NEBTYPE_ACKNOWLEDGEMENT_ADD"); break;
         case 1701:
-            return strdup("NEBTYPE_ACKNOWLEDGEMENT_REMOVE"); break;
+            return gm_strdup("NEBTYPE_ACKNOWLEDGEMENT_REMOVE"); break;
         case 1702:
-            return strdup("NEBTYPE_ACKNOWLEDGEMENT_LOAD"); break;
+            return gm_strdup("NEBTYPE_ACKNOWLEDGEMENT_LOAD"); break;
         case 1800:
-            return strdup("NEBTYPE_STATECHANGE_START"); break;
+            return gm_strdup("NEBTYPE_STATECHANGE_START"); break;
         case 1801:
-            return strdup("NEBTYPE_STATECHANGE_END"); break;
+            return gm_strdup("NEBTYPE_STATECHANGE_END"); break;
     }
-    return strdup("UNKNOWN");
+    return gm_strdup("UNKNOWN");
 }
 
 
@@ -1503,118 +1503,118 @@ char * nebtype2str(int i) {
 char * nebcallback2str(int i) {
     switch(i) {
         case 0:
-            return strdup("NEBCALLBACK_RESERVED0"); break;
+            return gm_strdup("NEBCALLBACK_RESERVED0"); break;
         case 1:
-            return strdup("NEBCALLBACK_RESERVED1"); break;
+            return gm_strdup("NEBCALLBACK_RESERVED1"); break;
         case 2:
-            return strdup("NEBCALLBACK_RESERVED2"); break;
+            return gm_strdup("NEBCALLBACK_RESERVED2"); break;
         case 3:
-            return strdup("NEBCALLBACK_RESERVED3"); break;
+            return gm_strdup("NEBCALLBACK_RESERVED3"); break;
         case 4:
-            return strdup("NEBCALLBACK_RESERVED4"); break;
+            return gm_strdup("NEBCALLBACK_RESERVED4"); break;
         case 5:
-            return strdup("NEBCALLBACK_RAW_DATA"); break;
+            return gm_strdup("NEBCALLBACK_RAW_DATA"); break;
         case 6:
-            return strdup("NEBCALLBACK_NEB_DATA"); break;
+            return gm_strdup("NEBCALLBACK_NEB_DATA"); break;
         case 7:
-            return strdup("NEBCALLBACK_PROCESS_DATA"); break;
+            return gm_strdup("NEBCALLBACK_PROCESS_DATA"); break;
         case 8:
-            return strdup("NEBCALLBACK_TIMED_EVENT_DATA"); break;
+            return gm_strdup("NEBCALLBACK_TIMED_EVENT_DATA"); break;
         case 9:
-            return strdup("NEBCALLBACK_LOG_DATA"); break;
+            return gm_strdup("NEBCALLBACK_LOG_DATA"); break;
         case 10:
-            return strdup("NEBCALLBACK_SYSTEM_COMMAND_DATA"); break;
+            return gm_strdup("NEBCALLBACK_SYSTEM_COMMAND_DATA"); break;
         case 11:
-            return strdup("NEBCALLBACK_EVENT_HANDLER_DATA"); break;
+            return gm_strdup("NEBCALLBACK_EVENT_HANDLER_DATA"); break;
         case 12:
-            return strdup("NEBCALLBACK_NOTIFICATION_DATA"); break;
+            return gm_strdup("NEBCALLBACK_NOTIFICATION_DATA"); break;
         case 13:
-            return strdup("NEBCALLBACK_SERVICE_CHECK_DATA"); break;
+            return gm_strdup("NEBCALLBACK_SERVICE_CHECK_DATA"); break;
         case 14:
-            return strdup("NEBCALLBACK_HOST_CHECK_DATA"); break;
+            return gm_strdup("NEBCALLBACK_HOST_CHECK_DATA"); break;
         case 15:
-            return strdup("NEBCALLBACK_COMMENT_DATA"); break;
+            return gm_strdup("NEBCALLBACK_COMMENT_DATA"); break;
         case 16:
-            return strdup("NEBCALLBACK_DOWNTIME_DATA"); break;
+            return gm_strdup("NEBCALLBACK_DOWNTIME_DATA"); break;
         case 17:
-            return strdup("NEBCALLBACK_FLAPPING_DATA"); break;
+            return gm_strdup("NEBCALLBACK_FLAPPING_DATA"); break;
         case 18:
-            return strdup("NEBCALLBACK_PROGRAM_STATUS_DATA"); break;
+            return gm_strdup("NEBCALLBACK_PROGRAM_STATUS_DATA"); break;
         case 19:
-            return strdup("NEBCALLBACK_HOST_STATUS_DATA"); break;
+            return gm_strdup("NEBCALLBACK_HOST_STATUS_DATA"); break;
         case 20:
-            return strdup("NEBCALLBACK_SERVICE_STATUS_DATA"); break;
+            return gm_strdup("NEBCALLBACK_SERVICE_STATUS_DATA"); break;
         case 21:
-            return strdup("NEBCALLBACK_ADAPTIVE_PROGRAM_DATA"); break;
+            return gm_strdup("NEBCALLBACK_ADAPTIVE_PROGRAM_DATA"); break;
         case 22:
-            return strdup("NEBCALLBACK_ADAPTIVE_HOST_DATA"); break;
+            return gm_strdup("NEBCALLBACK_ADAPTIVE_HOST_DATA"); break;
         case 23:
-            return strdup("NEBCALLBACK_ADAPTIVE_SERVICE_DATA"); break;
+            return gm_strdup("NEBCALLBACK_ADAPTIVE_SERVICE_DATA"); break;
         case 24:
-            return strdup("NEBCALLBACK_EXTERNAL_COMMAND_DATA"); break;
+            return gm_strdup("NEBCALLBACK_EXTERNAL_COMMAND_DATA"); break;
         case 25:
-            return strdup("NEBCALLBACK_AGGREGATED_STATUS_DATA"); break;
+            return gm_strdup("NEBCALLBACK_AGGREGATED_STATUS_DATA"); break;
         case 26:
-            return strdup("NEBCALLBACK_RETENTION_DATA"); break;
+            return gm_strdup("NEBCALLBACK_RETENTION_DATA"); break;
         case 27:
-            return strdup("NEBCALLBACK_CONTACT_NOTIFICATION_DATA"); break;
+            return gm_strdup("NEBCALLBACK_CONTACT_NOTIFICATION_DATA"); break;
         case 28:
-            return strdup("NEBCALLBACK_CONTACT_NOTIFICATION_METHOD_DATA"); break;
+            return gm_strdup("NEBCALLBACK_CONTACT_NOTIFICATION_METHOD_DATA"); break;
         case 29:
-            return strdup("NEBCALLBACK_ACKNOWLEDGEMENT_DATA"); break;
+            return gm_strdup("NEBCALLBACK_ACKNOWLEDGEMENT_DATA"); break;
         case 30:
-            return strdup("NEBCALLBACK_STATE_CHANGE_DATA"); break;
+            return gm_strdup("NEBCALLBACK_STATE_CHANGE_DATA"); break;
         case 31:
-            return strdup("NEBCALLBACK_CONTACT_STATUS_DATA"); break;
+            return gm_strdup("NEBCALLBACK_CONTACT_STATUS_DATA"); break;
         case 32:
-            return strdup("NEBCALLBACK_ADAPTIVE_CONTACT_DATA"); break;
+            return gm_strdup("NEBCALLBACK_ADAPTIVE_CONTACT_DATA"); break;
     }
-    return strdup("UNKNOWN");
+    return gm_strdup("UNKNOWN");
 }
 
 /* return human readable name for eventtype */
 char * eventtype2str(int i) {
     switch(i) {
         case 0:
-            return strdup("EVENT_SERVICE_CHECK"); break;
+            return gm_strdup("EVENT_SERVICE_CHECK"); break;
         case 1:
-            return strdup("EVENT_COMMAND_CHECK"); break;
+            return gm_strdup("EVENT_COMMAND_CHECK"); break;
         case 2:
-            return strdup("EVENT_LOG_ROTATION"); break;
+            return gm_strdup("EVENT_LOG_ROTATION"); break;
         case 3:
-            return strdup("EVENT_PROGRAM_SHUTDOWN"); break;
+            return gm_strdup("EVENT_PROGRAM_SHUTDOWN"); break;
         case 4:
-            return strdup("EVENT_PROGRAM_RESTART"); break;
+            return gm_strdup("EVENT_PROGRAM_RESTART"); break;
         case 5:
-            return strdup("EVENT_CHECK_REAPER"); break;
+            return gm_strdup("EVENT_CHECK_REAPER"); break;
         case 6:
-            return strdup("EVENT_ORPHAN_CHECK"); break;
+            return gm_strdup("EVENT_ORPHAN_CHECK"); break;
         case 7:
-            return strdup("EVENT_RETENTION_SAVE"); break;
+            return gm_strdup("EVENT_RETENTION_SAVE"); break;
         case 8:
-            return strdup("EVENT_STATUS_SAVE"); break;
+            return gm_strdup("EVENT_STATUS_SAVE"); break;
         case 9:
-            return strdup("EVENT_SCHEDULED_DOWNTIME"); break;
+            return gm_strdup("EVENT_SCHEDULED_DOWNTIME"); break;
         case 10:
-            return strdup("EVENT_SFRESHNESS_CHECK"); break;
+            return gm_strdup("EVENT_SFRESHNESS_CHECK"); break;
         case 11:
-            return strdup("EVENT_EXPIRE_DOWNTIME"); break;
+            return gm_strdup("EVENT_EXPIRE_DOWNTIME"); break;
         case 12:
-            return strdup("EVENT_HOST_CHECK"); break;
+            return gm_strdup("EVENT_HOST_CHECK"); break;
         case 13:
-            return strdup("EVENT_HFRESHNESS_CHECK"); break;
+            return gm_strdup("EVENT_HFRESHNESS_CHECK"); break;
         case 14:
-            return strdup("EVENT_RESCHEDULE_CHECKS"); break;
+            return gm_strdup("EVENT_RESCHEDULE_CHECKS"); break;
         case 15:
-            return strdup("EVENT_EXPIRE_COMMENT"); break;
+            return gm_strdup("EVENT_EXPIRE_COMMENT"); break;
         case 16:
-            return strdup("EVENT_CHECK_PROGRAM_UPDATE"); break;
+            return gm_strdup("EVENT_CHECK_PROGRAM_UPDATE"); break;
         case 98:
-            return strdup("EVENT_SLEEP"); break;
+            return gm_strdup("EVENT_SLEEP"); break;
         case 99:
-            return strdup("EVENT_USER_FUNCTION"); break;
+            return gm_strdup("EVENT_USER_FUNCTION"); break;
     }
-    return strdup("UNKNOWN");
+    return gm_strdup("UNKNOWN");
 }
 
 /* generic logger function */
@@ -1762,8 +1762,8 @@ void send_result_back(gm_job_t * exec_job) {
     }
 
     result_size  = strlen(exec_job->output)+GM_BUFFERSIZE;
-    temp_buffer1 = malloc(sizeof(char*)*result_size);
-    temp_buffer2 = malloc(sizeof(char*)*result_size);
+    temp_buffer1 = gm_malloc(sizeof(char*)*result_size);
+    temp_buffer2 = gm_malloc(sizeof(char*)*result_size);
 
     gm_log( GM_LOG_TRACE, "queue: %s\n", exec_job->result_queue );
     temp_buffer1[0]='\x0';
@@ -1868,7 +1868,7 @@ char *md5sum(char *text) {
     char *result=NULL;
 
     /* allocate enough memory to escape all chars if necessary */
-    if((result=malloc(33))==NULL)
+    if((result=gm_malloc(33))==NULL)
         return NULL;
 
     md5((unsigned char *)text, strlen(text), sum);
@@ -1881,7 +1881,7 @@ char *md5sum(char *text) {
 /* add parsed server to list */
 void add_server(int * server_num, gm_server_t * server_list[GM_LISTSIZE], char * servername) {
     gm_server_t *new_server;
-    char * server   = strdup( servername );
+    char * server   = gm_strdup( servername );
     char * server_c = server;
     char * host     = strsep( &server, ":" );
     char * port_val = strsep( &server, "\x0" );
@@ -1889,11 +1889,11 @@ void add_server(int * server_num, gm_server_t * server_list[GM_LISTSIZE], char *
     if(port_val != NULL) {
         port  = ( in_port_t ) atoi( port_val );
     }
-    new_server = malloc(sizeof(gm_server_t));
+    new_server = gm_malloc(sizeof(gm_server_t));
     if(!strcmp(host, "")) {
-        new_server->host = strdup("localhost");
+        new_server->host = gm_strdup("localhost");
     } else {
-        new_server->host = strdup(host);
+        new_server->host = gm_strdup(host);
     }
     new_server->port = port;
     if(check_param_server(new_server, server_list, *server_num) == GM_OK) {
@@ -1927,7 +1927,7 @@ int read_filepointer(char **target, FILE* input) {
         alarm(0);
         bytes = strlen(buffer);
         if(total < bytes + size) {
-            *target = realloc(*target, total+GM_BUFFERSIZE);
+            *target = gm_realloc(*target, total+GM_BUFFERSIZE);
             total += GM_BUFFERSIZE;
         }
         size += bytes;
@@ -1954,7 +1954,7 @@ int read_pipe(char **target, int input) {
         alarm(0);
         bytes = strlen(buffer);
         if(total < bytes + size) {
-            *target = realloc(*target, total+GM_BUFFERSIZE);
+            *target = gm_realloc(*target, total+GM_BUFFERSIZE);
             total += GM_BUFFERSIZE;
         }
         size += bytes;

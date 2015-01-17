@@ -49,7 +49,7 @@ int main (int argc, char **argv) {
     int i;
     struct sigaction sact;
 
-    mod_gm_opt = malloc(sizeof(mod_gm_opt_t));
+    mod_gm_opt = gm_malloc(sizeof(mod_gm_opt_t));
     set_default_options(mod_gm_opt);
 
     sigemptyset( &sact.sa_mask );
@@ -175,7 +175,7 @@ void print_usage() {
 
 /* print stats */
 void print_stats(char * hostnam) {
-    char * hst    = strdup(hostnam);
+    char * hst    = gm_strdup(hostnam);
     char * hst_c  = hst;
     char * server = NULL;
     char * port_c = NULL;
@@ -201,7 +201,7 @@ void print_stats(char * hostnam) {
         port = atoi(port_c);
 
     /* get stats */
-    stats = (mod_gm_server_status_t*)malloc(sizeof(mod_gm_server_status_t));
+    stats = (mod_gm_server_status_t*)gm_malloc(sizeof(mod_gm_server_status_t));
     stats->function_num = 0;
     stats->worker_num   = 0;
     rc = get_gearman_server_data(stats, &message, &version, server, port);
@@ -214,7 +214,7 @@ void print_stats(char * hostnam) {
     if(version != NULL && strcmp(version, "") != 0) {
         if(version_saved != NULL)
             free(version_saved);
-        version_saved = strdup(version);
+        version_saved = gm_strdup(version);
     }
 
     if(version_saved != NULL && strcmp(version_saved, "") != 0)

@@ -80,7 +80,7 @@ int nebmodule_init( int flags, char *args, nebmodule *handle ) {
     neb_set_module_info( gearman_module_handle, NEBMODULE_MODINFO_LICENSE, "GPL v3" );
     neb_set_module_info( gearman_module_handle, NEBMODULE_MODINFO_DESC,    "distribute host/service checks and eventhandler via gearman" );
 
-    mod_gm_opt = malloc(sizeof(mod_gm_opt_t));
+    mod_gm_opt = gm_malloc(sizeof(mod_gm_opt_t));
     set_default_options(mod_gm_opt);
 
     /* parse arguments */
@@ -589,16 +589,16 @@ static int handle_host_check( int event_type, void *data ) {
     /* orphaned check - submit fake result to mark host as orphaned */
     if(mod_gm_opt->orphan_host_checks == GM_ENABLED && check_options & CHECK_OPTION_ORPHAN_CHECK) {
         gm_log( GM_LOG_DEBUG, "host check for %s orphaned\n", hst->name );
-        if ( ( chk_result = ( check_result * )malloc( sizeof *chk_result ) ) == 0 )
+        if ( ( chk_result = ( check_result * )gm_malloc( sizeof *chk_result ) ) == 0 )
             return NEBERROR_CALLBACKCANCEL;
         snprintf( temp_buffer,GM_BUFFERSIZE-1,"(host check orphaned, is the mod-gearman worker on queue '%s' running?)\n", target_queue);
         init_check_result(chk_result);
-        chk_result->host_name           = strdup( hst->name );
+        chk_result->host_name           = gm_strdup( hst->name );
         chk_result->scheduled_check     = TRUE;
         chk_result->reschedule_check    = TRUE;
         chk_result->output_file         = 0;
         chk_result->output_file_fp      = NULL;
-        chk_result->output              = strdup(temp_buffer);
+        chk_result->output              = gm_strdup(temp_buffer);
         chk_result->return_code         = mod_gm_opt->orphan_return;
         chk_result->check_options       = CHECK_OPTION_NONE;
         chk_result->object_check_type   = HOST_CHECK;
@@ -762,17 +762,17 @@ static int handle_svc_check( int event_type, void *data ) {
     /* orphaned check - submit fake result to mark service as orphaned */
     if(mod_gm_opt->orphan_service_checks == GM_ENABLED && svc->check_options & CHECK_OPTION_ORPHAN_CHECK) {
         gm_log( GM_LOG_DEBUG, "service check for %s - %s orphaned\n", svc->host_name, svc->description );
-        if ( ( chk_result = ( check_result * )malloc( sizeof *chk_result ) ) == 0 )
+        if ( ( chk_result = ( check_result * )gm_malloc( sizeof *chk_result ) ) == 0 )
             return NEBERROR_CALLBACKCANCEL;
         snprintf( temp_buffer,GM_BUFFERSIZE-1,"(service check orphaned, is the mod-gearman worker on queue '%s' running?)\n", target_queue);
         init_check_result(chk_result);
-        chk_result->host_name           = strdup( svc->host_name );
-        chk_result->service_description = strdup( svc->description );
+        chk_result->host_name           = gm_strdup( svc->host_name );
+        chk_result->service_description = gm_strdup( svc->description );
         chk_result->scheduled_check     = TRUE;
         chk_result->reschedule_check    = TRUE;
         chk_result->output_file         = 0;
         chk_result->output_file_fp      = NULL;
-        chk_result->output              = strdup(temp_buffer);
+        chk_result->output              = gm_strdup(temp_buffer);
         chk_result->return_code         = mod_gm_opt->orphan_return;
         chk_result->check_options       = CHECK_OPTION_NONE;
         chk_result->object_check_type   = SERVICE_CHECK;
@@ -804,7 +804,7 @@ static int read_arguments( const char *args_orig ) {
         return GM_ERROR;
     }
 
-    args = strdup(args_orig);
+    args = gm_strdup(args_orig);
     args_c = args;
 
     while ( (ptr = strsep( &args, " " )) != NULL ) {

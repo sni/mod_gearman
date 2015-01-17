@@ -84,14 +84,14 @@ int parse_arguments(int argc, char **argv) {
     int i;
     int verify;
     int errors = 0;
-    mod_gm_opt = malloc(sizeof(mod_gm_opt_t));
+    mod_gm_opt = gm_malloc(sizeof(mod_gm_opt_t));
     set_default_options(mod_gm_opt);
 
     /* special default: encryption disabled */
     mod_gm_opt->encryption = GM_DISABLED;
 
     for(i=1;i<argc;i++) {
-        char * arg   = strdup( argv[i] );
+        char * arg   = gm_strdup( argv[i] );
         char * arg_c = arg;
         if ( !strcmp( arg, "version" ) || !strcmp( arg, "--version" )  || !strcmp( arg, "-V" ) ) {
             print_version();
@@ -246,15 +246,15 @@ int send_result() {
 
             /* host result */
             if(ptr4 == NULL) {
-                mod_gm_opt->host        = strdup(ptr1);
+                mod_gm_opt->host        = gm_strdup(ptr1);
                 mod_gm_opt->return_code = atoi(ptr2);
-                mod_gm_opt->message     = strdup(ptr3);
+                mod_gm_opt->message     = gm_strdup(ptr3);
             } else {
                 /* service result */
-                mod_gm_opt->host        = strdup(ptr1);
-                mod_gm_opt->service     = strdup(ptr2);
+                mod_gm_opt->host        = gm_strdup(ptr1);
+                mod_gm_opt->service     = gm_strdup(ptr2);
                 mod_gm_opt->return_code = atoi(ptr3);
-                mod_gm_opt->message     = strdup(ptr4);
+                mod_gm_opt->message     = gm_strdup(ptr4);
             }
             if(submit_result() == STATE_OK) {
                 results_sent++;
@@ -269,7 +269,7 @@ int send_result() {
     /* multi line plugin output */
     else if(mod_gm_opt->message == NULL) {
         /* get all lines from stdin */
-        mod_gm_opt->message = malloc(GM_BUFFERSIZE);
+        mod_gm_opt->message = gm_malloc(GM_BUFFERSIZE);
         read_filepointer(&mod_gm_opt->message, stdin);
     }
     return(submit_result());
@@ -306,12 +306,12 @@ int submit_result() {
     /* escape newline */
     buf = gm_escape_newlines(mod_gm_opt->message, GM_DISABLED);
     free(mod_gm_opt->message);
-    mod_gm_opt->message = strdup(buf);
+    mod_gm_opt->message = gm_strdup(buf);
     free(buf);
 
     gm_log( GM_LOG_TRACE, "queue: %s\n", mod_gm_opt->result_queue );
     resultsize = sizeof(char) * strlen(mod_gm_opt->message) + GM_BUFFERSIZE;
-    result = malloc(resultsize);
+    result = gm_malloc(resultsize);
     snprintf( result, resultsize-1, "type=%s\nhost_name=%s\nstart_time=%i.%i\nfinish_time=%i.%i\nlatency=%i.%i\nreturn_code=%i\nsource=send_gearman\n",
               mod_gm_opt->active == GM_ENABLED ? "active" : "passive",
               mod_gm_opt->host,
@@ -324,7 +324,7 @@ int submit_result() {
               mod_gm_opt->return_code
             );
 
-    temp_buffer = malloc(resultsize);
+    temp_buffer = gm_malloc(resultsize);
     if(mod_gm_opt->service != NULL) {
         temp_buffer[0]='\x0';
         strcat(temp_buffer, "service_description=");

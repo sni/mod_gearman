@@ -66,12 +66,12 @@ char *nr2signal(int sig) {
                  break;
         case 16: signame = "SIGURG";
                  break;
-        default: signame = malloc(20);
+        default: signame = gm_malloc(20);
                  snprintf(signame, 20, "signal %d", sig);
                  return signame;
                  break;
     }
-    return strdup(signame);
+    return gm_strdup(signame);
 }
 
 
@@ -80,7 +80,7 @@ char *extract_check_result(FILE *fp, int trimmed) {
     char *output;
     char *escaped;
 
-    output   = malloc(sizeof(char*)*GM_BUFFERSIZE);
+    output   = gm_malloc(sizeof(char*)*GM_BUFFERSIZE);
     output[0]='\x0';
     read_filepointer(&output, fp);
 
@@ -107,13 +107,13 @@ int run_check(char *processed_command, char **ret, char **err) {
      */
     if(mod_gm_opt->restrict_path_num) {
         if(*processed_command != '/') {
-            *err = strdup("");
-            asprintf(ret, "ERROR: restricted paths in affect, but command does not start with an absolute path: %.*s...\n", 8, processed_command);
+            *err = gm_strdup("");
+            gm_asprintf(ret, "ERROR: restricted paths in affect, but command does not start with an absolute path: %.*s...\n", 8, processed_command);
             return(GM_EXIT_UNKNOWN);
         }
         if(strpbrk(processed_command,"$&();<>`\"'|") != NULL) {
-            *err = strdup("");
-            asprintf(ret, "ERROR: restricted paths in affect, but command contains forbidden character(s): %.*s...\n", 8, processed_command);
+            *err = gm_strdup("");
+            gm_asprintf(ret, "ERROR: restricted paths in affect, but command contains forbidden character(s): %.*s...\n", 8, processed_command);
             return(GM_EXIT_UNKNOWN);
         }
         for(i=0;i<mod_gm_opt->restrict_path_num;i++) {
@@ -122,8 +122,8 @@ int run_check(char *processed_command, char **ret, char **err) {
             }
         }
         if(!restricted_ok) {
-            *err = strdup("");
-            asprintf(ret, "ERROR: command does not start with any of the restricted paths: %.*s...\n", 8, processed_command);
+            *err = gm_strdup("");
+            gm_asprintf(ret, "ERROR: command does not start with any of the restricted paths: %.*s...\n", 8, processed_command);
             return(GM_EXIT_UNKNOWN);
         }
     }
@@ -282,7 +282,7 @@ int execute_safe_command(gm_job_t * exec_job, int fork_exec, char * identifier) 
         if( pid == -1 ) {
             if(exec_job->output != NULL)
                 free(exec_job->output);
-            exec_job->output      = strdup("(Error On Fork)");
+            exec_job->output      = gm_strdup("(Error On Fork)");
             exec_job->return_code = 3;
             return(GM_ERROR);
         }
@@ -338,9 +338,9 @@ int execute_safe_command(gm_job_t * exec_job, int fork_exec, char * identifier) 
             waitpid(pid, &return_code, 0);
             gm_log( GM_LOG_TRACE, "finished check from pid: %d with status: %d\n", pid, return_code);
             /* get all lines of plugin output */
-            plugin_output = malloc(GM_BUFFERSIZE);
+            plugin_output = gm_malloc(GM_BUFFERSIZE);
             plugin_output[0]='\x0';
-            plugin_error  = malloc(GM_BUFFERSIZE);
+            plugin_error  = gm_malloc(GM_BUFFERSIZE);
             plugin_error[0]='\x0';
             read_pipe(&plugin_output, pipe_stdout[0]);
             read_pipe(&plugin_error, pipe_stderr[0]);
@@ -351,20 +351,20 @@ int execute_safe_command(gm_job_t * exec_job, int fork_exec, char * identifier) 
         if(return_code == 126) {
             return_code = STATE_CRITICAL;
             free(plugin_output);
-            asprintf(&plugin_output, "CRITICAL: Return code of 126 is out of bounds. Make sure the plugin you're trying to run is executable. (worker: %s)", identifier);
+            gm_asprintf(&plugin_output, "CRITICAL: Return code of 126 is out of bounds. Make sure the plugin you're trying to run is executable. (worker: %s)", identifier);
         }
         /* file not found errors? */
         else if(return_code == 127) {
             return_code = STATE_CRITICAL;
             free(plugin_output);
-            asprintf(&plugin_output, "CRITICAL: Return code of 127 is out of bounds. Make sure the plugin you're trying to run actually exists. (worker: %s)", identifier);
+            gm_asprintf(&plugin_output, "CRITICAL: Return code of 127 is out of bounds. Make sure the plugin you're trying to run actually exists. (worker: %s)", identifier);
         }
         /* signaled */
         else if(return_code >= 128 && return_code < 144) {
             char * signame = nr2signal((int)(return_code-128));
-            bufdup = strdup(plugin_output);
+            bufdup = gm_strdup(plugin_output);
             free(plugin_output);
-            asprintf(&plugin_output, "CRITICAL: Return code of %d is out of bounds. Plugin exited by signal %s. (worker: %s)\\n%s", (int)(return_code), signame, identifier, bufdup);
+            gm_asprintf(&plugin_output, "CRITICAL: Return code of %d is out of bounds. Plugin exited by signal %s. (worker: %s)\\n%s", (int)(return_code), signame, identifier, bufdup);
             return_code = STATE_CRITICAL;
             free(bufdup);
             free(signame);
@@ -373,9 +373,9 @@ int execute_safe_command(gm_job_t * exec_job, int fork_exec, char * identifier) 
         else if(return_code > 3) {
             gm_log( GM_LOG_DEBUG, "check exited with exit code > 3. Exit: %d\n", (int)(return_code));
             gm_log( GM_LOG_DEBUG, "stdout: %s\n", plugin_output);
-            bufdup = strdup(plugin_output);
+            bufdup = gm_strdup(plugin_output);
             free(plugin_output);
-            asprintf(&plugin_output, "CRITICAL: Return code of %d is out of bounds. (worker: %s)\\n%s", (int)(return_code), identifier, bufdup);
+            gm_asprintf(&plugin_output, "CRITICAL: Return code of %d is out of bounds. (worker: %s)\\n%s", (int)(return_code), identifier, bufdup);
             free(bufdup);
             if(return_code != 25 && mod_gm_opt->workaround_rc_25 == GM_DISABLED) {
                 return_code = STATE_CRITICAL;
@@ -404,17 +404,17 @@ int execute_safe_command(gm_job_t * exec_job, int fork_exec, char * identifier) 
         exec_job->early_timeout = 1;
         free(exec_job->output);
         if ( !strcmp( exec_job->type, "service" ) ) {
-            asprintf(&exec_job->output, "(Service Check Timed Out On Worker: %s)", identifier);
+            gm_asprintf(&exec_job->output, "(Service Check Timed Out On Worker: %s)", identifier);
         }
         else {
-            asprintf(&exec_job->output, "(Host Check Timed Out On Worker: %s)", identifier);
+            gm_asprintf(&exec_job->output, "(Host Check Timed Out On Worker: %s)", identifier);
         }
     }
 
     snprintf( source, sizeof( source )-1, "Mod-Gearman Worker @ %s", identifier);
     if(exec_job->source != NULL)
         free(exec_job->source);
-    exec_job->source = strdup(source);
+    exec_job->source = gm_strdup(source);
 
     return(GM_OK);
 }
@@ -510,7 +510,7 @@ void send_timeout_result(gm_job_t * exec_job) {
     if ( !strcmp( exec_job->type, "host" ) )
         snprintf( buffer, sizeof( buffer ) -1, "(Host Check Timed Out On Worker: %s)\n", mod_gm_opt->identifier);
     free(exec_job->output);
-    exec_job->output = strdup( buffer );
+    exec_job->output = gm_strdup( buffer );
 
     send_result_back(exec_job);
 
@@ -534,7 +534,7 @@ void send_failed_result(gm_job_t * exec_job, int sig) {
     signame = nr2signal(sig);
     snprintf( buffer, sizeof( buffer )-1, "(Return code of %d is out of bounds. Worker exited by signal %s on worker: %s)", sig, signame, mod_gm_opt->identifier);
     free(exec_job->output);
-    exec_job->output = strdup( buffer );
+    exec_job->output = gm_strdup( buffer );
     free(signame);
 
     send_result_back(exec_job);

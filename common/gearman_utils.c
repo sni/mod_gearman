@@ -156,14 +156,14 @@ int add_job_to_queue( gearman_client_st *client, gm_server_t * server_list[GM_LI
     gm_log( GM_LOG_TRACE, "add_job_to_queue(%s, %s, %d, %d, %d, %d)\n", queue, uniq, priority, retries, transport_mode, send_now );
     gm_log( GM_LOG_TRACE, "%d --->%s<---\n", strlen(data), data );
 
-    crypted_data = malloc(GM_BUFFERSIZE);
+    crypted_data = gm_malloc(GM_BUFFERSIZE);
     size = mod_gm_encrypt(&crypted_data, data, transport_mode);
     gm_log( GM_LOG_TRACE, "%d +++>\n%s\n<+++\n", size, crypted_data );
 
 #ifdef GM_DEBUG
     /* verify decrypted string is equal to the original */
     char * test;
-    test = malloc(GM_BUFFERSIZE);
+    test = gm_malloc(GM_BUFFERSIZE);
     mod_gm_decrypt(&test, crypted_data, transport_mode);
     gm_log( GM_LOG_TRACE, "%d ===>\n%s\n<===\n", size, test );
     if(strcmp(test, data)) {
@@ -283,7 +283,7 @@ int get_gearman_server_data(mod_gm_server_status_t *stats, char ** message, char
     char *total, *running, *worker, *output, *output_c, *line, *name;
     mod_gm_status_function_t *func;
 
-    *version  = malloc(GM_BUFFERSIZE);
+    *version  = gm_malloc(GM_BUFFERSIZE);
     snprintf(*version,  GM_BUFFERSIZE, "%s", "" );
 
     rc = send2gearmandadmin("status\nversion\n", hostnam, port, &output, message);
@@ -325,8 +325,8 @@ int get_gearman_server_data(mod_gm_server_status_t *stats, char ** message, char
         worker  = strsep(&line, "\x0");
         if(worker == NULL)
             break;
-        func = malloc(sizeof(mod_gm_status_function_t));
-        func->queue   = strdup(name);
+        func = gm_malloc(sizeof(mod_gm_status_function_t));
+        func->queue   = gm_strdup(name);
         func->running = atoi(running);
         func->total   = atoi(total);
         func->worker  = atoi(worker);
@@ -356,9 +356,9 @@ int send2gearmandadmin(char * cmd, char * hostnam, int port, char ** output, cha
     struct hostent *server;
     char buf[GM_BUFFERSIZE];
 
-    *error  = malloc(GM_BUFFERSIZE);
+    *error  = gm_malloc(GM_BUFFERSIZE);
     snprintf(*error,  GM_BUFFERSIZE, "%s", "" );
-    *output = malloc(GM_BUFFERSIZE);
+    *output = gm_malloc(GM_BUFFERSIZE);
     snprintf(*output,  GM_BUFFERSIZE, "%s", "" );
 
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
@@ -399,7 +399,7 @@ int send2gearmandadmin(char * cmd, char * hostnam, int port, char ** output, cha
     }
     buf[n] = '\x0';
     free(*output);
-    *output = strdup(buf);
+    *output = gm_strdup(buf);
     close(sockfd);
 
     return( STATE_OK );
