@@ -3,7 +3,6 @@
 use warnings;
 use strict;
 use Test::More;
-use File::Slurp qw/read_file/;
 use Data::Dumper;
 
 for my $file (split("\n", `find common/ include/ neb_module/ tools/ worker/ -type f`)) {
@@ -32,4 +31,13 @@ sub _replace_comments {
     my($comment) = @_;
     $comment =~ s/./ /gmx;
     return($comment);
+}
+
+sub read_file {
+    my($filename) = @_;
+    my $content = "";
+    open(my $fh, '<', $filename) or die("cannot read $filename: $!");
+    while(my $line = <$fh>) { $content .= $line; }
+    close($fh);
+    return($content);
 }
