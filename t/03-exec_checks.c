@@ -141,7 +141,7 @@ int main (int argc, char **argv, char **env) {
     rrc = real_exit_code(rc);
     cmp_ok(rrc, "==", 0, "cmd '%s' returned rc %d", cmd, rrc);
     like(result, "^USERS OK", "returned result string");
-    like(error, "", "returned no errors");
+    like(error, "^$", "returned no errors");
     free(result);
     free(error);
 
