@@ -184,17 +184,17 @@ void *get_job( gearman_job_st *job, void *context, size_t *result_size, gearman_
     /* get the data */
     current_gearman_job = job;
     wsize = gearman_job_workload_size(job);
-    workload = malloc(sizeof(char*)*wsize+1);
+    workload = gm_malloc(sizeof(char*)*wsize+1);
     strncpy(workload, (const char*)gearman_job_workload(job), wsize);
     workload[wsize] = '\0';
     gm_log( GM_LOG_TRACE, "got new job %s\n", gearman_job_handle( job ) );
     gm_log( GM_LOG_TRACE, "%d +++>\n%s\n<+++\n", strlen(workload), workload );
 
     /* decrypt data */
-    decrypted_data = malloc(wsize*2);
+    decrypted_data = gm_malloc(wsize*2);
     decrypted_data_c = decrypted_data;
     mod_gm_decrypt(&decrypted_data, workload, mod_gm_opt->transportmode);
-    decrypted_orig = strdup(decrypted_data);
+    decrypted_orig = gm_strdup(decrypted_data);
     free(workload);
 
     if(decrypted_data == NULL) {
@@ -207,7 +207,7 @@ void *get_job( gearman_job_st *job, void *context, size_t *result_size, gearman_
     /* set result pointer to success */
     *ret_ptr= GEARMAN_SUCCESS;
 
-    exec_job = ( gm_job_t * )malloc( sizeof *exec_job );
+    exec_job = ( gm_job_t * )gm_malloc( sizeof *exec_job );
     set_default_job(exec_job, mod_gm_opt);
 
     valid_lines = 0;
@@ -222,16 +222,16 @@ void *get_job( gearman_job_st *job, void *context, size_t *result_size, gearman_
             break;
 
         if ( !strcmp( key, "host_name" ) ) {
-            exec_job->host_name = strdup(value);
+            exec_job->host_name = gm_strdup(value);
             valid_lines++;
         } else if ( !strcmp( key, "service_description" ) ) {
-            exec_job->service_description = strdup(value);
+            exec_job->service_description = gm_strdup(value);
             valid_lines++;
         } else if ( !strcmp( key, "type" ) ) {
-            exec_job->type = strdup(value);
+            exec_job->type = gm_strdup(value);
             valid_lines++;
         } else if ( !strcmp( key, "result_queue" ) ) {
-            exec_job->result_queue = strdup(value);
+            exec_job->result_queue = gm_strdup(value);
             valid_lines++;
         } else if ( !strcmp( key, "check_options" ) ) {
             exec_job->check_options = atoi(value);
@@ -260,7 +260,7 @@ void *get_job( gearman_job_st *job, void *context, size_t *result_size, gearman_
             exec_job->timeout = atoi(value);
             valid_lines++;
         } else if ( !strcmp( key, "command_line" ) ) {
-            exec_job->command_line = strdup(value);
+            exec_job->command_line = gm_strdup(value);
             valid_lines++;
         }
     }
@@ -347,7 +347,7 @@ void do_exec_job( ) {
         exec_job->finish_time = end_time;
 
         if ( !strcmp( exec_job->type, "service" ) || !strcmp( exec_job->type, "host" ) ) {
-            exec_job->output = strdup("(Could Not Start Check In Time)");
+            exec_job->output = gm_strdup("(Could Not Start Check In Time)");
             send_result_back(exec_job);
         }
 
@@ -563,7 +563,7 @@ void *return_status( gearman_job_st *job, void *context, size_t *result_size, ge
     *ret_ptr= GEARMAN_SUCCESS;
 
     /* set size of result */
-    result = malloc(GM_BUFFERSIZE);
+    result = gm_malloc(GM_BUFFERSIZE);
     *result_size = GM_BUFFERSIZE;
 
     /* give us 10 seconds to get state */

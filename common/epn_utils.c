@@ -104,10 +104,10 @@ int run_epn_check(char *processed_command, char **ret, char **err) {
         (void) POPs ;
         perl_plugin_output=SvPVX(ERRSV);
         if(perl_plugin_output == NULL)
-            *ret = strdup("(Embedded Perl failed to compile)");
+            *ret = gm_strdup("(Embedded Perl failed to compile)");
         else
             *ret = gm_escape_newlines(perl_plugin_output, GM_ENABLED);
-        *err = strdup("");
+        *err = gm_strdup("");
         gm_log( GM_LOG_TRACE, "Embedded Perl failed to compile %s, compile error %s - skipping plugin\n", fname, perl_plugin_output);
         return(GM_EXIT_UNKNOWN);
     }
@@ -288,11 +288,11 @@ int init_embedded_perl(char **env){
     }
 
     else{
-        embedding=(void **)malloc(2*sizeof(char *));
+        embedding=(void **)gm_malloc(2*sizeof(char *));
         if(embedding==NULL)
             return GM_ERROR;
-        *embedding=strdup("");
-        *(embedding+1)=strdup(p1_file);
+        *embedding=gm_strdup("");
+        *(embedding+1)=gm_strdup(p1_file);
         use_embedded_perl=TRUE;
         PERL_SYS_INIT3(&argc,&embedding,&env);
         if((my_perl=perl_alloc())==NULL){

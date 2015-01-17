@@ -108,14 +108,14 @@ void *get_results( gearman_job_st *job, void *context, size_t *result_size, gear
 
     /* get the data */
     wsize = gearman_job_workload_size(job);
-    workload = malloc(sizeof(char*)*wsize+1);
+    workload = gm_malloc(sizeof(char*)*wsize+1);
     strncpy(workload, (const char*)gearman_job_workload(job), wsize);
     workload[wsize] = '\x0';
     gm_log( GM_LOG_TRACE, "got result %s\n", gearman_job_handle( job ));
     gm_log( GM_LOG_TRACE, "%d +++>\n%s\n<+++\n", strlen(workload), workload );
 
     /* decrypt data */
-    decrypted_data   = malloc(wsize*2);
+    decrypted_data   = gm_malloc(wsize*2);
     decrypted_data_c = decrypted_data;
 
     if(mod_gm_opt->transportmode == GM_ENCODE_AND_ENCRYPT && mod_gm_opt->accept_clear_results == GM_ENABLED) {
@@ -131,7 +131,7 @@ void *get_results( gearman_job_st *job, void *context, size_t *result_size, gear
     }
     gm_log( GM_LOG_TRACE, "%d --->\n%s\n<---\n", strlen(decrypted_data), decrypted_data );
 #ifdef GM_DEBUG
-    decrypted_orig   = strdup(decrypted_data);
+    decrypted_orig   = gm_strdup(decrypted_data);
 #endif
     free(workload);
 
@@ -151,7 +151,7 @@ void *get_results( gearman_job_st *job, void *context, size_t *result_size, gear
 #endif
 
     /* nagios will free it after processing */
-    if ( ( chk_result = ( check_result * )malloc( sizeof *chk_result ) ) == 0 ) {
+    if ( ( chk_result = ( check_result * )gm_malloc( sizeof *chk_result ) ) == 0 ) {
         *ret_ptr = GEARMAN_WORK_FAIL;
 #ifdef GM_DEBUG
     free(decrypted_orig);
@@ -176,10 +176,10 @@ void *get_results( gearman_job_st *job, void *context, size_t *result_size, gear
 
         if ( !strcmp( key, "output" ) ) {
             if ( value == NULL ) {
-                chk_result->output = strdup("(null)");
+                chk_result->output = gm_strdup("(null)");
             }
             else {
-                chk_result->output = strdup( value );
+                chk_result->output = gm_strdup( value );
             }
         }
 
@@ -187,9 +187,9 @@ void *get_results( gearman_job_st *job, void *context, size_t *result_size, gear
             break;
 
         if ( !strcmp( key, "host_name" ) ) {
-            chk_result->host_name = strdup( value );
+            chk_result->host_name = gm_strdup( value );
         } else if ( !strcmp( key, "service_description" ) ) {
-            chk_result->service_description = strdup( value );
+            chk_result->service_description = gm_strdup( value );
         } else if ( !strcmp( key, "check_options" ) ) {
             chk_result->check_options = atoi( value );
         } else if ( !strcmp( key, "scheduled_check" ) ) {

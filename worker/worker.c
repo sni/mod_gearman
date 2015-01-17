@@ -61,7 +61,7 @@ int main (int argc, char **argv) {
      * allocate options structure
      * and parse command line
      */
-    mod_gm_opt = malloc(sizeof(mod_gm_opt_t));
+    mod_gm_opt = gm_malloc(sizeof(mod_gm_opt_t));
     set_default_options(mod_gm_opt);
     if(parse_arguments(argc, argv) != GM_OK) {
         exit( EXIT_FAILURE );
@@ -354,10 +354,10 @@ int parse_arguments(int argc, char **argv) {
     int errors = 0;
     int verify;
     mod_gm_opt_t * mod_gm_new_opt;
-    mod_gm_new_opt = malloc(sizeof(mod_gm_opt_t));
+    mod_gm_new_opt = gm_malloc(sizeof(mod_gm_opt_t));
     set_default_options(mod_gm_new_opt);
     for(i=1;i<argc;i++) {
-        char * arg   = strdup( argv[i] );
+        char * arg   = gm_strdup( argv[i] );
         char * arg_c = arg;
         if ( !strcmp( arg, "version" ) || !strcmp( arg, "--version" )  || !strcmp( arg, "-V" ) ) {
             print_version();
@@ -376,7 +376,7 @@ int parse_arguments(int argc, char **argv) {
     /* set identifier to hostname unless specified */
     if(mod_gm_new_opt->identifier == NULL) {
         gethostname(hostname, GM_BUFFERSIZE-1);
-        mod_gm_new_opt->identifier = strdup(hostname);
+        mod_gm_new_opt->identifier = gm_strdup(hostname);
     }
 
     /* close old logfile */
@@ -752,7 +752,7 @@ int write_pid_file() {
         fp = fopen(mod_gm_opt->pidfile, "r");
         if(fp != NULL) {
             char *pid;
-            pid = malloc(GM_BUFFERSIZE);
+            pid = gm_malloc(GM_BUFFERSIZE);
             if(fgets(pid, GM_BUFFERSIZE, fp) == NULL)
                 perror("fgets");
             fclose(fp);

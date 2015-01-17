@@ -95,14 +95,14 @@ int parse_arguments(int argc, char **argv) {
     int i;
     int verify;
     int errors = 0;
-    mod_gm_opt = malloc(sizeof(mod_gm_opt_t));
+    mod_gm_opt = gm_malloc(sizeof(mod_gm_opt_t));
     set_default_options(mod_gm_opt);
 
     /* special default: encryption disabled */
     mod_gm_opt->encryption = GM_DISABLED;
 
     for(i=1;i<argc;i++) {
-        char * arg   = strdup( argv[i] );
+        char * arg   = gm_strdup( argv[i] );
         char * arg_c = arg;
         if ( !strcmp( arg, "version" ) || !strcmp( arg, "--version" )  || !strcmp( arg, "-V" ) ) {
             print_version();
@@ -209,7 +209,7 @@ int send_result() {
     /* escape newline */
     buf = gm_escape_newlines(mod_gm_opt->message, GM_DISABLED);
     free(mod_gm_opt->message);
-    mod_gm_opt->message = malloc(GM_BUFFERSIZE);
+    mod_gm_opt->message = gm_malloc(GM_BUFFERSIZE);
     snprintf(mod_gm_opt->message, GM_BUFFERSIZE, "%s", buf);
     free(buf);
 
@@ -410,7 +410,7 @@ int read_child_check(char *bufstart, char *bufend, struct timeval * end_time) {
     /* service description */
     if ((attribute=read_multi_attribute(bufstart,bufend,"name")) == NULL)
         return 0;
-    mod_gm_opt->service=strdup(attribute);
+    mod_gm_opt->service=gm_strdup(attribute);
     gm_log( GM_LOG_TRACE, "service_description: %s\n", mod_gm_opt->service);
 
     /* return code */
@@ -468,7 +468,7 @@ int read_child_check(char *bufstart, char *bufend, struct timeval * end_time) {
             snprintf( temp_buffer, sizeof( temp_buffer )-1, "%s%s|%s::%s::%s", decode_xml(attribute), decode_xml(error), mod_gm_opt->service, decode_xml(attribute3), decode_xml(attribute2));
         }
     }
-    mod_gm_opt->message=strdup(temp_buffer);
+    mod_gm_opt->message=gm_strdup(temp_buffer);
     gm_log( GM_LOG_TRACE, "mod_gm_opt->message: %s\n", mod_gm_opt->message);
 
     return 1;

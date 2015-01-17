@@ -63,7 +63,7 @@ int mod_gm_aes_encrypt(unsigned char ** encrypted, char * text) {
     if(size%BLOCKSIZE == 0) {
         size += BLOCKSIZE;
     }
-    enc       = (unsigned char *) malloc(sizeof(unsigned char)*totalsize);
+    enc       = (unsigned char *) gm_malloc(sizeof(unsigned char)*totalsize);
     while(size > 0) {
         unsigned char plaintext[BLOCKSIZE];
         unsigned char ciphertext[BLOCKSIZE];
@@ -96,7 +96,7 @@ void mod_gm_aes_decrypt(char ** text, unsigned char * encrypted, int size) {
     int nrounds;
     int i = 0;
 
-    decr = malloc(sizeof(char*)*size+GM_BUFFERSIZE);
+    decr = gm_malloc(sizeof(char*)*size+GM_BUFFERSIZE);
 
     assert(encryption_initialized == 1);
     nrounds = rijndaelSetupDecrypt(rk, key, KEYBITS);
