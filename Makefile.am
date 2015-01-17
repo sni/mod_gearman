@@ -42,6 +42,7 @@ common_SOURCES             = common/base64.c \
                              common/rijndael.c \
                              common/gearman_utils.c \
                              common/utils.c \
+                             common/gm_alloc.c \
                              common/md5.c
 
 common_check_SOURCES       = common/check_utils.c \

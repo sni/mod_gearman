@@ -46,6 +46,7 @@
  */
 
 #include <config.h>
+#include <gm_alloc.h>
 #include <stdio.h>
 #include <sys/time.h>
 #include <arpa/inet.h>
