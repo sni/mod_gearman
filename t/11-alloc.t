@@ -2,7 +2,7 @@
 
 use warnings;
 use strict;
-use Test::More;
+use Test::More tests => 37;
 use Data::Dumper;
 
 for my $file (split("\n", `find common/ include/ neb_module/ tools/ worker/ -type f`)) {
@@ -23,8 +23,7 @@ for my $file (split("\n", `find common/ include/ neb_module/ tools/ worker/ -typ
     }
     ok($errors == 0, $file." is ok");
 }
-
-done_testing();
+exit(0);
 
 # replace comments with space, so they don't match our pattern matches later
 sub _replace_comments {
