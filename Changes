@@ -1,6 +1,6 @@
 This file documents the revision history for mod_gearman.
 
-next:
+2.1.0 Sun Jan 18 17:17:10 CET 2015
           - add support for large plugin outputs
           - add --restrict_path option to restrict worker to certain paths
 

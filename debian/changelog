@@ -1,3 +1,9 @@
+mod-gearman2 (2.1.0) UNRELEASED; urgency=low
+
+  * new upstream release
+
+ -- Sven Nierlein <sven@consol.de>  Sun, 18 Jan 2015 21:43:28 +0100
+
 mod-gearman2 (2.0.0) UNRELEASED; urgency=low
 
   * new upstream release
