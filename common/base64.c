@@ -163,7 +163,7 @@ size_t base64_decode(char *source, unsigned char *target, size_t targetlen) {
     size_t converted = 0;
 
     /* concatinate '===' to the source to handle unpadded base64 data */
-    src = (char *)gm_malloc(strlen(source)+5);
+    src = (char *)malloc(strlen(source)+5);
     if (src == NULL)
         return -1;
     strcpy(src, source);
