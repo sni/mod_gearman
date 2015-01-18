@@ -9,7 +9,6 @@ for my $file (split("\n", `find common/ include/ neb_module/ tools/ worker/ -typ
     next if $file !~ m/\.(c|h)$/mx;
     next if $file =~ m/gm_alloc\.(c|h)/mx;
     next if $file =~ m/base64\.c/mx;
-    next if $file =~ m|include/nagios/|mx;
     my $content = read_file($file);
     $content =~ s|(/\*.*?\*/)|&_replace_comments($1)|gsmxe;
     $content =~ s|(//.*)$|&_replace_comments($1)|gmxe;
