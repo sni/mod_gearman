@@ -2,7 +2,7 @@
 
 use warnings;
 use strict;
-use Test::More tests => 37;
+use Test::More tests => 38;
 use Data::Dumper;
 
 for my $file (split("\n", `find common/ include/ neb_module/ tools/ worker/ -type f`)) {
