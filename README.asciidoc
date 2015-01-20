@@ -46,8 +46,8 @@ Features
 
 Download
 --------
- * Latest stable for Naemon http://www.mod-gearman.org/download2/v2.1.0/src/mod_gearman-2.1.0.tar.gz[version 2.1.0], released January 17 2015
- * Latest stable for Nagios 3 http://www.mod-gearman.org/download/v1.5.0/src/mod_gearman-1.5.0.tar.gz[version 1.5.0], released January 17 2015
+ * Latest stable for Naemon http://www.mod-gearman.org/download2/v2.1.1/src/mod_gearman-2.1.1.tar.gz[version 2.1.1], released January 20 2015
+ * Latest stable for Nagios 3 http://www.mod-gearman.org/download/v1.5.1/src/mod_gearman-1.5.1.tar.gz[version 1.5.1], released January 20 2015
  * Mod Gearman is available for download at: http://mod-gearman.org/download.html
  * Source is available on GitHub: http://github.com/sni/mod_gearman
  * Older versions are available in the <<_archive,download archive>>.
@@ -1322,8 +1322,13 @@ Hints
 Archive
 -------
 
-* http://www.mod-gearman.org/download/v2.1.0/src/mod_gearman-2.1.0.tar.gz[version 2.1.0 - January 17 2014]
-* http://www.mod-gearman.org/download/v2.0.0/src/mod_gearman-2.0.0.tar.gz[version 2.0.0 - December 11 2014]
+* http://www.mod-gearman.org/download/v2.1.1/src/mod_gearman-2.1.1.tar.gz[version 2.1.1 - January 20 2015]
+* http://www.mod-gearman.org/download/v2.1.0/src/mod_gearman-2.1.0.tar.gz[version 2.1.0 - January 17 2015]
+* http://www.mod-gearman.org/download/v2.0.0/src/mod_gearman-2.0.0.tar.gz[version 2.0.0 - December 11 2015]
+
+* http://www.mod-gearman.org/download/v1.5.1/src/mod_gearman-1.5.1.tar.gz[version 1.5.1 - January 20 2015]
+* http://www.mod-gearman.org/download/v1.5.0/src/mod_gearman-1.5.0.tar.gz[version 1.5.0 - January 17 2015]
+* http://www.mod-gearman.org/download/v1.4.18/src/mod_gearman-1.4.18.tar.gz[version 1.4.18 - December 15 2014]
 * http://www.mod-gearman.org/download/v1.4.16/src/mod_gearman-1.4.16.tar.gz[version 1.4.16 - December 11 2014]
 * http://www.mod-gearman.org/download/v1.4.14/src/mod_gearman-1.4.14.tar.gz[version 1.4.14 - November 15 2013]
 * http://www.mod-gearman.org/download/v1.4.12/src/mod_gearman-1.4.12.tar.gz[version 1.4.12 - November 05 2013]
