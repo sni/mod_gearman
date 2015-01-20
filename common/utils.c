@@ -1919,12 +1919,10 @@ int starts_with(const char *pre, const char *str) {
 int read_filepointer(char **target, FILE* input) {
     char buffer[GM_BUFFERSIZE] = "";
     int bytes, size, total;
-    alarm(mod_gm_opt->timeout);
     strcpy(buffer,"");
     size  = GM_BUFFERSIZE;
     total = size;
     while(fgets(buffer,sizeof(buffer)-1, input)){
-        alarm(0);
         bytes = strlen(buffer);
         if(total < bytes + size) {
             *target = gm_realloc(*target, total+GM_BUFFERSIZE);
@@ -1932,13 +1930,11 @@ int read_filepointer(char **target, FILE* input) {
         }
         size += bytes;
         strncat(*target, buffer, bytes);
-        alarm(mod_gm_opt->timeout);
         if(size >= GM_MAX_OUTPUT) {
             gm_log( GM_LOG_INFO, "plugin output exceeds %d bytes, cutting off\n", GM_MAX_OUTPUT );
             break;
         }
     }
-    alarm(0);
     return(size);
 }
 
@@ -1946,12 +1942,10 @@ int read_filepointer(char **target, FILE* input) {
 int read_pipe(char **target, int input) {
     char buffer[GM_BUFFERSIZE] = "";
     int bytes, size, total;
-    alarm(mod_gm_opt->timeout);
     strcpy(buffer,"");
     size  = GM_BUFFERSIZE;
     total = size;
     while(read(input, buffer, sizeof(buffer)-1)){
-        alarm(0);
         bytes = strlen(buffer);
         if(total < bytes + size) {
             *target = gm_realloc(*target, total+GM_BUFFERSIZE);
@@ -1959,12 +1953,10 @@ int read_pipe(char **target, int input) {
         }
         size += bytes;
         strncat(*target, buffer, bytes);
-        alarm(mod_gm_opt->timeout);
         if(size >= GM_MAX_OUTPUT) {
             gm_log( GM_LOG_INFO, "plugin output exceeds %d bytes, cutting off\n", GM_MAX_OUTPUT );
             break;
         }
     }
-    alarm(0);
     return(size);
 }

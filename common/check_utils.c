@@ -255,7 +255,7 @@ int execute_safe_command(gm_job_t * exec_job, int fork_exec, char * identifier) 
     pid_t pid    = 0;
     source[0]    = '\x0';
 
-    gm_log( GM_LOG_TRACE, "execute_safe_command()\n" );
+    gm_log( GM_LOG_TRACE, "execute_safe_command(%d, %s)\n", exec_job->timeout, exec_job->command_line );
 
     /* mark all filehandles to close on exec */
     for(x = 0; x<=64; x++)
