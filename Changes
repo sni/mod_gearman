@@ -1,5 +1,8 @@
 This file documents the revision history for mod_gearman.
 
+next:
+          - fix timeout handling
+
 1.5.0 Sun Jan 18 17:14:55 CET 2015
           - add support for large plugin outputs
           - add --restrict_path option to restrict worker to certain paths
