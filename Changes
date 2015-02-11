@@ -1,5 +1,8 @@
 This file documents the revision history for mod_gearman.
 
+next:
+          - fix sending results to dup server
+
 1.5.1 Tue Jan 20 10:15:14 CET 2015
           - fix timeout handling
 

@@ -1797,6 +1797,7 @@ void send_result_back(gm_job_t * exec_job) {
     }
 
     if( mod_gm_opt->dupserver_num ) {
+        temp_buffer2[0]='\x0';
         if(mod_gm_opt->dup_results_are_passive) {
             strcat(temp_buffer2, "type=passive\n");
         }
