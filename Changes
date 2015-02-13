@@ -1,6 +1,6 @@
 This file documents the revision history for mod_gearman.
 
-next:
+1.5.2 Fri Feb 13 13:36:17 CET 2015
           - fix sending results to dup server
 
 1.5.1 Tue Jan 20 10:15:14 CET 2015
