@@ -1,5 +1,8 @@
 This file documents the revision history for mod_gearman.
 
+next:
+          - fix segfault on too old host checks
+
 1.5.2 Fri Feb 13 13:36:17 CET 2015
           - fix sending results to dup server
 

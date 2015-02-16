@@ -338,7 +338,7 @@ void do_exec_job( ) {
         if ( !strcmp( exec_job->type, "service" ) ) {
             gm_log( GM_LOG_INFO, "discarded too old %s job: %i > %i (%s - %s)\n", exec_job->type, (int)age, mod_gm_opt->max_age, exec_job->host_name, exec_job->service_description);
         } else if ( !strcmp( exec_job->type, "host" ) ) {
-            gm_log( GM_LOG_INFO, "discarded too old %s job: %i > %i (%s - %s)\n", exec_job->type, (int)age, mod_gm_opt->max_age, exec_job->host_name);
+            gm_log( GM_LOG_INFO, "discarded too old %s job: %i > %i (%s)\n", exec_job->type, (int)age, mod_gm_opt->max_age, exec_job->host_name);
         } else {
             gm_log( GM_LOG_INFO, "discarded too old %s job: %i > %i\n", exec_job->type, (int)age, mod_gm_opt->max_age);
         }
