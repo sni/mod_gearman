@@ -885,6 +885,7 @@ int parse_args_line(mod_gm_opt_t *opt, char * arg, int recursion_level) {
 
     /* restrict_command_characters */
     else if ( !strcmp( key, "restrict_command_characters") ) {
+        free(opt->restrict_command_characters);
         opt->restrict_command_characters = gm_strdup(value);
     }
 
