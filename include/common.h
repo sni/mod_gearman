@@ -241,6 +241,7 @@ typedef struct mod_gm_opt_struct {
 #endif
     char         * restrict_path[GM_LISTSIZE];              /**< list of path restrictions */
     int            restrict_path_num;                       /**< number of path restrictions */
+    char         * restrict_command_characters;             /**< forbidden characters in command lines */
     int            workaround_rc_25;                        /**< optional workaround for plugins returning exit code 25 */
 /* send_gearman */
     int            timeout;                                 /**< timeout for waiting reading on stdin */

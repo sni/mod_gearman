@@ -111,7 +111,7 @@ int run_check(char *processed_command, char **ret, char **err) {
             gm_asprintf(ret, "ERROR: restricted paths in affect, but command does not start with an absolute path: %.*s...\n", 8, processed_command);
             return(GM_EXIT_UNKNOWN);
         }
-        if(strpbrk(processed_command,"$&();<>`\"'|") != NULL) {
+        if(strpbrk(processed_command,mod_gm_opt->restrict_command_characters) != NULL) {
             *err = gm_strdup("");
             gm_asprintf(ret, "ERROR: restricted paths in affect, but command contains forbidden character(s): %.*s...\n", 8, processed_command);
             return(GM_EXIT_UNKNOWN);

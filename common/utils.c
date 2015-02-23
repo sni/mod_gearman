@@ -267,7 +267,8 @@ int set_default_options(mod_gm_opt_t *opt) {
     opt->has_latency        = FALSE;
     opt->active             = GM_DISABLED;
 
-    opt->workaround_rc_25   = GM_DISABLED;
+    opt->restrict_command_characters = gm_strdup("$&();<>`\"'|");
+    opt->workaround_rc_25            = GM_DISABLED;
 
     opt->host               = NULL;
     opt->service            = NULL;
@@ -882,6 +883,11 @@ int parse_args_line(mod_gm_opt_t *opt, char * arg, int recursion_level) {
         opt->restrict_path_num++;
     }
 
+    /* restrict_command_characters */
+    else if ( !strcmp( key, "restrict_command_characters") ) {
+        opt->restrict_command_characters = gm_strdup(value);
+    }
+
     else {
         gm_log( GM_LOG_ERROR, "unknown option '%s'\n", key );
     }
@@ -979,6 +985,8 @@ void dumpconfig(mod_gm_opt_t *opt, int mode) {
         gm_log( GM_LOG_DEBUG, "p1_file:                         %s\n", opt->p1_file == NULL ? "not set" : opt->p1_file );
         for(i=0;i<opt->restrict_path_num;i++)
             gm_log( GM_LOG_DEBUG, "restricted path:                 %s\n", opt->restrict_path[i]);
+        if(opt->restrict_path_num > 0)
+            gm_log( GM_LOG_DEBUG, "restrict_command_characters:     %s\n", opt->restrict_command_characters);
 #endif
     }
     if(mode == GM_NEB_MODE) {
@@ -1080,6 +1088,7 @@ void mod_gm_free_opt(mod_gm_opt_t *opt) {
     for(i=0;i<opt->restrict_path_num;i++) {
         free(opt->restrict_path[i]);
     }
+    free(opt->restrict_command_characters);
     free(opt->crypt_key);
     free(opt->keyfile);
     free(opt->message);

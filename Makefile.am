@@ -291,6 +291,7 @@ test: check
 	@echo " All tests completed successfully"
 	@echo ""
 	@echo "################################################################"
+	@rm -f *.trs *.log t/*.log t/*.trs
 
 fulltest:
 	./t/test_all.pl
@@ -299,6 +300,7 @@ fulltest:
 	@echo " Full tests completed successfully"
 	@echo ""
 	@echo "################################################################"
+	@rm -f *.trs *.log t/*.log t/*.trs
 
 docs:
 	@if [ -z "$(DOS2UNIX)" ]; then \

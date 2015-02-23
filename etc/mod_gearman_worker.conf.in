@@ -169,9 +169,12 @@ p1_file=%P1FILE%
 # restrict_path allows you to restrict this worker to only execute plugins
 # from these particular folders. Can be used multiple times to specify more
 # than one folder.
-# Note that when this restriction is active, no shell will be spawned and
-# no shell characters ($`'"()|) are allowed in the command line itself.
 #restrict_path=/usr/local/plugins/
+
+# list of forbidden characters in command lines. Only active if 'restrict_path'
+# is in use.
+#restrict_command_characters=$&();<>`"'|
+
 
 # Workarounds
 
