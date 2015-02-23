@@ -89,14 +89,14 @@ check_PROGRAMS   = 01_utils 02_full 03_exec 04_log 05_neb 06_exec 07_epn
 07_epn_SOURCES   = $(common_SOURCES) t/tap.h t/tap.c t/07-epn.c $(common_check_SOURCES)
 # only used for performance tests
 06_exec_SOURCES  = $(common_SOURCES) t/tap.h t/tap.c t/06-execvp_vs_popen.c $(common_check_SOURCES)
-08_roundtrip_SOURCES  = $(common_SOURCES) t/08-roundtrip.c
-08_roundtrip_LDFLAGS = -Wl,--export-dynamic -rdynamic
+#08_roundtrip_SOURCES  = $(common_SOURCES) t/08-roundtrip.c
+#08_roundtrip_LDFLAGS = -Wl,--export-dynamic -rdynamic
 if USEBSD
 05_neb_LDADD=
-08_roundtrip_LDADD=
+#08_roundtrip_LDADD=
 else
 05_neb_LDADD=-ldl
-08_roundtrip_LDADD=-ldl
+#08_roundtrip_LDADD=-ldl
 endif
 TESTS            = $(check_PROGRAMS) t/09-benchmark.t t/10-large-result.t t/11-alloc.t t/12-cppcheck.t
 

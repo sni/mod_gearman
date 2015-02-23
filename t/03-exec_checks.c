@@ -24,7 +24,7 @@ int main (int argc, char **argv, char **env) {
     char cwd[1024];
     struct stat st;
 
-    plan(74);
+    plan(80);
 
     /* set hostname and cwd */
     gethostname(hostname, GM_BUFFERSIZE-1);
@@ -424,6 +424,31 @@ int main (int argc, char **argv, char **env) {
     rrc = real_exit_code(run_check(cmd, &result, &error));
     cmp_ok(rrc, "==", 3, "cmd '%s' returned rc %d", cmd, rrc);
     like(result, "ERROR: command does not start with any of the restricted paths: /forbidd...", "returned result string");
+    free(result);
+    free(error);
+
+    /*****************************************
+     * restricted paths (5)
+     */
+    snprintf(cmd, sizeof(cmd), "%s/t/ok.pl --test=\"blah\"", cwd);
+    rrc = real_exit_code(run_check(cmd, &result, &error));
+    cmp_ok(rrc, "==", 3, "cmd '%s' returned rc %d", cmd, rrc);
+    like(result, "ERROR: restricted paths in affect, but command contains forbidden character", "returned result string");
+    free(result);
+    free(error);
+
+    /*****************************************
+     * restricted paths (6)
+     */
+    char * restrict_command_characters="$&();<>`|";
+    snprintf(res, 150, "--restrict_command_characters=%s", restrict_command_characters);
+    rc = parse_args_line(mod_gm_opt, res, 0);
+    cmp_ok(rc, "==", GM_OK, "parsed %s option", res);
+    like(mod_gm_opt->restrict_command_characters, restrict_command_characters, "restricted command characters is set in opts: %s", mod_gm_opt->restrict_command_characters);
+    snprintf(cmd, sizeof(cmd), "%s/t/ok.pl --test=\"blah\"", cwd);
+    rrc = real_exit_code(run_check(cmd, &result, &error));
+    cmp_ok(rrc, "==", 0, "cmd '%s' returned rc %d", cmd, rrc);
+    like(result, "test plugin OK", "returned result string");
     free(result);
     free(error);
 
