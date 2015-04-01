@@ -257,6 +257,7 @@ typedef struct mod_gm_opt_struct {
     struct timeval finishtime;                              /**< time when the check finished */
     int            has_latency;                             /**< flag when latency is set */
     struct timeval latency;                                 /**< latency for this result */
+    int            gearman_connection_timeout;              /**< timeout on job submission */
 } mod_gm_opt_t;
 
 

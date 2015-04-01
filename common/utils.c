@@ -306,6 +306,7 @@ int set_default_options(mod_gm_opt_t *opt) {
     }
     opt->exports_count = 0;
     opt->restrict_path_num      = 0;
+    opt->gearman_connection_timeout = -1;
     for(i=0;i<GM_LISTSIZE;i++)
         opt->restrict_path[i] = NULL;
 
@@ -887,6 +888,11 @@ int parse_args_line(mod_gm_opt_t *opt, char * arg, int recursion_level) {
     else if ( !strcmp( key, "restrict_command_characters") ) {
         free(opt->restrict_command_characters);
         opt->restrict_command_characters = gm_strdup(value);
+    }
+
+    /* timeout while connecting to gearmand server*/
+    else if ( !strcmp( key, "gearman_connection_timeout" ) ) {
+        opt->gearman_connection_timeout = atoi( value );
     }
 
     else {
