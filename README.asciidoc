@@ -610,7 +610,15 @@ Default is On.
     use_uniq_jobs=on
 ====
 
+gearman_connection_timeout::
+Timeout in milliseconds when connecting to gearmand daemon. Default value is
+defined as 'no timeout'.
+Default is -1.
 
++
+====
+    gearman_connection_timeout=-1
+====
 
 Server Options
 ~~~~~~~~~~~~~~
