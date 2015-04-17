@@ -1,0 +1,83 @@
+#!/bin/bash
+#
+# worker_stats		This shell script takes care of starting and stopping worker_stats.pl
+#
+# chkconfig: - 58 74
+
+### BEGIN INIT INFO
+# Provides: ntpd
+# Required-Start: $network $local_fs $remote_fs
+# Required-Stop: $network $local_fs $remote_fs
+# Should-Start: $syslog $named ntpdate
+# Should-Stop: $syslog $named
+### END INIT INFO
+
+# Source function library.
+. /etc/init.d/functions
+
+# Source networking configuration.
+. /etc/sysconfig/network
+
+prog=worker_stats.pl
+lockfile=/var/lock/subsys/$prog
+PIDFILE=/var/run/nrpe/worker_stats.pid
+USER=nrpe
+
+# load extra environment variables
+if [ -f /etc/sysconfig/worker_stats ]; then
+        . /etc/sysconfig/worker_stats
+fi
+
+start() {
+	[ "$EUID" != "0" ] && exit 4
+	[ "$NETWORKING" = "no" ] && exit 1
+	[ -e /usr/local/bin/$prog ] || exit 5
+#	[ -e $lockfile ] || exit 6
+
+        # Start daemons.
+        echo -n $"Starting $prog: "
+        daemon --user=$USER /usr/local/bin/$prog $OPTIONS 
+	RETVAL=$?
+        echo
+	[ $RETVAL -eq 0 ] && touch $lockfile
+	return $RETVAL
+}
+
+stop() {
+	[ "$EUID" != "0" ] && exit 4
+        echo -n $"Shutting down $prog: "
+	killproc $prog
+	RETVAL=$?
+        echo
+	[ $RETVAL -eq 0 ] && rm -f $lockfile
+	return $RETVAL
+}
+
+# See how we were called.
+case "$1" in
+  start)
+	start
+	;;
+  stop)
+	stop
+	;;
+  status)
+	status $prog
+	;;
+  restart|force-reload)
+	stop
+	start
+	;;
+  try-restart|condrestart)
+	if status $prog > /dev/null; then
+	    stop
+	    start
+	fi
+	;;
+  reload)
+	exit 3
+	;;
+  *)
+	echo $"Usage: $0 {start|stop|status|restart|try-restart|force-reload}"
+	exit 2
+esac
