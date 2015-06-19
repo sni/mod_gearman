@@ -85,7 +85,7 @@ single thread, which monitors the 'check_results' where all results
 come in.
 
 ++++
-<a title="mod gearman architecture" rel="lightbox[mod_gm]" href="http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-e1284455350110.png"><img src="http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-e1284455350110.png" alt="mod_gearman architecture" width="480" height="300" style="float:none" /></a>
+<a title="mod gearman architecture" rel="lightbox[mod_gm]" href="http://labs.consol.de/nagios/mod-gearman/mod_gearman-e1284455350110.png"><img src="http://labs.consol.de/nagios/mod-gearman/mod_gearman-e1284455350110.png" alt="mod_gearman architecture" width="480" height="300" style="float:none" /></a>
 ++++
 
 A simple example queue would look like:
@@ -149,7 +149,7 @@ worker which covers the other queues. There can be more than one
 worker on each queue to share the load.
 
 ++++
-<a title="mod gearman queues" rel="lightbox[mod_gm]" href="http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman_queues.png"><img src="http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman_queues.png" alt="mod_gearman architecture " width="360" height="270" style="float:none" /></a>
+<a title="mod gearman queues" rel="lightbox[mod_gm]" href="http://labs.consol.de/nagios/mod-gearman/mod_gearman_queues.png"><img src="http://labs.consol.de/nagios/mod-gearman/mod_gearman_queues.png" alt="mod_gearman architecture " width="360" height="270" style="float:none" /></a>
 ++++
 
 
@@ -160,10 +160,7 @@ Load Balancing
 ~~~~~~~~~~~~~~
 
 ++++
-<a title="Load Balancing" rel="lightbox[mod_gm]"
-href="http://labs.consol.de/wp-content/uploads/2010/09/sample_load_balancing.png"><img
-src="http://labs.consol.de/wp-content/uploads/2010/09/sample_load_balancing.png"
-alt="Load Balancing" width="300" height="125" style="float:none" /></a>
+<a title="Load Balancing" rel="lightbox[mod_gm]" href="http://labs.consol.de/nagios/mod-gearman/sample_load_balancing.png"><img src="http://labs.consol.de/nagios/mod-gearman/sample_load_balancing.png" alt="Load Balancing" width="300" height="125" style="float:none" /></a>
 ++++
 
 The easiest variant is a simple load balancing. For example if your
@@ -186,7 +183,7 @@ Distributed Monitoring
 ~~~~~~~~~~~~~~~~~~~~~~
 
 ++++
-<a title="Distributed Monitoring" rel="lightbox[mod_gm]" href="http://labs.consol.de/wp-content/uploads/2010/09/sample_distributed.png"><img src="http://labs.consol.de/wp-content/uploads/2010/09/sample_distributed.png" alt="Distributed Monitoring" width="350" height="125" style="float:none" /></a>
+<a title="Distributed Monitoring" rel="lightbox[mod_gm]" href="http://labs.consol.de/nagios/mod-gearman/sample_distributed.png"><img src="http://labs.consol.de/nagios/mod-gearman/sample_distributed.png" alt="Distributed Monitoring" width="350" height="125" style="float:none" /></a>
 ++++
 
 If your checks have to be run from different network segments, then
@@ -210,7 +207,9 @@ Distributed Monitoring with Load Balancing
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ++++
-<a title="Distributed Monitoring with Load Balancing" rel="lightbox[mod_gm]" href="http://labs.consol.de/wp-content/uploads/2010/09/sample_distributed_load_balanced.png"><img src="http://labs.consol.de/wp-content/uploads/2010/09/sample_distributed_load_balanced.png" alt="Distributed Monitoring with Load Balancing" width="350" height="225" style="float:none" /></a>
+<a title="Distributed Monitoring with Load Balancing" rel="lightbox[mod_gm]"
+href="http://labs.consol.de/nagios/mod-gearman/sample_distributed_load_balanced.png"><img
+src="http://labs.consol.de/nagios/mod-gearman/sample_distributed_load_balanced.png" alt="Distributed Monitoring with Load Balancing" width="350" height="225" style="float:none" /></a>
 ++++
 
 Your distributed setup could easily be extended to a load balanced
@@ -232,7 +231,9 @@ NSCA Replacement
 ~~~~~~~~~~~~~~~~
 
 ++++
-<a title="NSCA Replacement" rel="lightbox[mod_gm]" href="http://labs.consol.de/wp-content/uploads/2010/09/nsca_replacement.png"><img src="http://labs.consol.de/wp-content/uploads/2010/09/nsca_replacement.png" alt="NSCA Replacement" width="300" height="220" style="float:none" /></a>
+<a title="NSCA Replacement" rel="lightbox[mod_gm]"
+href="http://labs.consol.de/nagios/mod-gearman/nsca_replacement.png"><img
+src="http://labs.consol.de/nagios/mod-gearman/nsca_replacement.png" alt="NSCA Replacement" width="300" height="220" style="float:none" /></a>
 ++++
 
 If you just want to replace a current NSCA solution, you could load
@@ -252,7 +253,7 @@ Distributed Setup With Remote Scheduler
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ++++
-<a title="Distributed Setup With Remote Scheduler" rel="lightbox[mod_gm]" href="http://labs.consol.de/wp-content/uploads/2010/09/advanced_distributed.png"><img src="http://labs.consol.de/wp-content/uploads/2010/09/advanced_distributed.png" alt="Distributed Setup With Remote Scheduler" width="360" height="270" style="float:none" /></a>
+<a title="Distributed Setup With Remote Scheduler" rel="lightbox[mod_gm]" href="http://labs.consol.de/nagios/mod-gearman/advanced_distributed.png"><img src="http://labs.consol.de/nagios/mod-gearman/advanced_distributed.png" alt="Distributed Setup With Remote Scheduler" width="360" height="270" style="float:none" /></a>
 ++++
 
 In case your network is unstable or you need a gui view from the
@@ -279,7 +280,7 @@ Gearman Proxy
 ~~~~~~~~~~~~~
 
 ++++
-<a title="Gearman Proxy" rel="lightbox[mod_gm]" href="http://labs.consol.de/wp-content/uploads/2010/09/gearman_proxy.png"><img src="http://labs.consol.de/wp-content/uploads/2010/09/gearman_proxy.png" alt="Gearman Proxy" width="360" height="270" style="float:none" /></a>
+<a title="Gearman Proxy" rel="lightbox[mod_gm]" href="http://labs.consol.de/nagios/mod-gearman/gearman_proxy.png"><img src="http://labs.consol.de/nagios/mod-gearman/gearman_proxy.png" alt="Gearman Proxy" width="360" height="270" style="float:none" /></a>
 ++++
 
 Sometimes you may need to reverse the direction of the initial
@@ -368,9 +369,9 @@ will fail. It may not be necessary for future gearman versions.
 
 Build/install Mod-Gearman rpms
 --------------------------------------
-#> wget http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.2.0.tar.gz
-#> rpmbuild -tb mod_gearman-1.2.0.tar.gz
-#> yum --nogpgcheck install /usr/src/redhat/RPMS/*/mod_gearman-1.2.0-1.*.rpm
+#> wget http://mod-gearman.org/download/v1.5.2/src/mod_gearman-1.5.2.tar.gz
+#> rpmbuild -tb mod_gearman-1.5.2.tar.gz
+#> yum --nogpgcheck install /usr/src/redhat/RPMS/*/mod_gearman-1.5.2-1.*.rpm
 --------------------------------------
 
 Finally start and check your installation
@@ -1092,11 +1093,11 @@ easily setup 100.000 services at a 5 minute interval with a single
 Nagios box. The amount of worker boxes depends on your check types.
 
 ++++
-<a title="mod gearman performance" rel="lightbox[mod_gm]" href="http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman_performance_2.png"><img src="http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman_performance_2.png" alt="mod_gearman performance" width="473" height="122" style="float:none" /></a>
-<a title="mod gearman performance" rel="lightbox[mod_gm]" href="http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman_performance_1.png"><img src="http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman_performance_1.png" alt="mod_gearman performance" width="424" height="176" style="float:none" /></a>
+<a title="mod gearman performance" rel="lightbox[mod_gm]" href="http://labs.consol.de/nagios/mod-gearman/mod_gearman_performance_2.png"><img src="http://labs.consol.de/nagios/mod-gearman/mod_gearman_performance_2.png" alt="mod_gearman performance" width="473" height="122" style="float:none" /></a>
+<a title="mod gearman performance" rel="lightbox[mod_gm]" href="http://labs.consol.de/nagios/mod-gearman/mod_gearman_performance_1.png"><img src="http://labs.consol.de/nagios/mod-gearman/mod_gearman_performance_1.png" alt="mod_gearman performance" width="424" height="176" style="float:none" /></a>
 ++++
 
-See this article about benchmarks with https://labs.consol.de/blog/nagios/monitoring-core-benchmarks/[Nagios3, Nagios4 and Mod-Gearman].
+See this article about benchmarks with https://labs.consol.de/mod-gearman/nagios/omd/2012/10/23/monitoring-core-benchmarks.html[Nagios3, Nagios4 and Mod-Gearman].
 
 
 Exports
@@ -1207,7 +1208,7 @@ After installing strawberry perl, you need to install the
 --------------------------------------
 
 Or just use the prebuild one from labs.consol.de:
-http://labs.consol.de/wp-content/uploads/2010/09/send_gearman.exe[send_gearman.exe].
+http://mod-gearman.org/archive/send_gearman.exed[send_gearman.exe].
 
 
 
@@ -1343,33 +1344,33 @@ Archive
 * http://www.mod-gearman.org/download/v1.4.8/src/mod_gearman-1.4.8.tar.gz[version 1.4.8 - July 27 2013]
 * http://www.mod-gearman.org/download/v1.4.6/src/mod_gearman-1.4.6.tar.gz[version 1.4.6 - June 04 2013]
 * http://www.mod-gearman.org/download/v1.4.4/src/mod_gearman-1.4.4.tar.gz[version 1.4.4 - May 03 2013]
-* http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.4.2.tar.gz[version 1.4.2 - January 10 2013]
-* http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.3.8.tar.gz[version 1.3.8 - August 19 2012]
-* http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.3.6.tar.gz[version 1.3.6 - July 19 2012]
-* http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.3.4.tar.gz[version 1.3.4 - June 19 2012]
-* http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.3.2.tar.gz[version 1.3.2 - May 27 2012]
-* http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.3.0.tar.gz[version 1.3.0 - April 27 2012]
-* http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.2.8.tar.gz[version 1.2.8 - April 12 2012]
-* http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.2.6.tar.gz[version 1.2.6 - March 15 2012]
-* http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.2.4.tar.gz[version 1.2.4 - February 27 2012]
-* http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.2.2.tar.gz[version 1.2.2 - February 07 2012]
-* http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.2.0.tar.gz[version 1.2.0 - January 08 2012]
-* http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.1.1.tar.gz[version 1.1.1 - November 10 2011]
-* http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.1.0.tar.gz[version 1.1.0 - October 12 2011]
-* http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.0.10.tar.gz[version 1.0.10 - August 28 2011]
-* http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.0.9.tar.gz[version 1.0.9 - August 16 2011]
-* http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.0.8.tar.gz[version 1.0.8 - July 22 2011]
-* http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.0.7.tar.gz[version 1.0.7 - July 03 2011]
-* http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.0.6.tar.gz[version 1.0.6 - June 04 2011]
-* http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.0.5.tar.gz[version 1.0.5 - May 17 2011]
-* http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.0.4.tar.gz[version 1.0.4 - April 17 2011]
-* http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.0.3.tar.gz[version 1.0.3 - March 23 2011]
-* http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.0.2.tar.gz[version 1.0.2 - March 13 2011]
-* http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.0.1.tar.gz[version 1.0.1 - March 05 2011]
-* http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-1.0.tar.gz[version 1.0 - February 08 2011]
-* http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-0.9.tar.gz[version 0.9 - January 17 2011]
-* http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-0.8.tar.gz[version 0.8 - November 17 2010]
-* http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-0.7.tar.gz[version 0.7 - November 03 2010]
-* http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-0.6.tar.gz[version 0.6 - October 13 2010]
-* http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-0.5.tar.gz[version 0.5 - October 01 2010]
-* http://labs.consol.de/wp-content/uploads/2010/09/mod_gearman-0.4.tar.gz[version 0.4 - September 25 2010]
+* http://mod-gearman.org/archive/mod_gearman-1.4.2.tar.gz[version 1.4.2 - January 10 2013]
+* http://mod-gearman.org/archive/mod_gearman-1.3.8.tar.gz[version 1.3.8 - August 19 2012]
+* http://mod-gearman.org/archive/mod_gearman-1.3.6.tar.gz[version 1.3.6 - July 19 2012]
+* http://mod-gearman.org/archive/mod_gearman-1.3.4.tar.gz[version 1.3.4 - June 19 2012]
+* http://mod-gearman.org/archive/mod_gearman-1.3.2.tar.gz[version 1.3.2 - May 27 2012]
+* http://mod-gearman.org/archive/mod_gearman-1.3.0.tar.gz[version 1.3.0 - April 27 2012]
+* http://mod-gearman.org/archive/mod_gearman-1.2.8.tar.gz[version 1.2.8 - April 12 2012]
+* http://mod-gearman.org/archive/mod_gearman-1.2.6.tar.gz[version 1.2.6 - March 15 2012]
+* http://mod-gearman.org/archive/mod_gearman-1.2.4.tar.gz[version 1.2.4 - February 27 2012]
+* http://mod-gearman.org/archive/mod_gearman-1.2.2.tar.gz[version 1.2.2 - February 07 2012]
+* http://mod-gearman.org/archive/mod_gearman-1.2.0.tar.gz[version 1.2.0 - January 08 2012]
+* http://mod-gearman.org/archive/mod_gearman-1.1.1.tar.gz[version 1.1.1 - November 10 2011]
+* http://mod-gearman.org/archive/mod_gearman-1.1.0.tar.gz[version 1.1.0 - October 12 2011]
+* http://mod-gearman.org/archive/mod_gearman-1.0.10.tar.gz[version 1.0.10 - August 28 2011]
+* http://mod-gearman.org/archive/mod_gearman-1.0.9.tar.gz[version 1.0.9 - August 16 2011]
+* http://mod-gearman.org/archive/mod_gearman-1.0.8.tar.gz[version 1.0.8 - July 22 2011]
+* http://mod-gearman.org/archive/mod_gearman-1.0.7.tar.gz[version 1.0.7 - July 03 2011]
+* http://mod-gearman.org/archive/mod_gearman-1.0.6.tar.gz[version 1.0.6 - June 04 2011]
+* http://mod-gearman.org/archive/mod_gearman-1.0.5.tar.gz[version 1.0.5 - May 17 2011]
+* http://mod-gearman.org/archive/mod_gearman-1.0.4.tar.gz[version 1.0.4 - April 17 2011]
+* http://mod-gearman.org/archive/mod_gearman-1.0.3.tar.gz[version 1.0.3 - March 23 2011]
+* http://mod-gearman.org/archive/mod_gearman-1.0.2.tar.gz[version 1.0.2 - March 13 2011]
+* http://mod-gearman.org/archive/mod_gearman-1.0.1.tar.gz[version 1.0.1 - March 05 2011]
+* http://mod-gearman.org/archive/mod_gearman-1.0.tar.gz[version 1.0 - February 08 2011]
+* http://mod-gearman.org/archive/mod_gearman-0.9.tar.gz[version 0.9 - January 17 2011]
+* http://mod-gearman.org/archive/mod_gearman-0.8.tar.gz[version 0.8 - November 17 2010]
+* http://mod-gearman.org/archive/mod_gearman-0.7.tar.gz[version 0.7 - November 03 2010]
+* http://mod-gearman.org/archive/mod_gearman-0.6.tar.gz[version 0.6 - October 13 2010]
+* http://mod-gearman.org/archive/mod_gearman-0.5.tar.gz[version 0.5 - October 01 2010]
+* http://mod-gearman.org/archive/mod_gearman-0.4.tar.gz[version 0.4 - September 25 2010]
