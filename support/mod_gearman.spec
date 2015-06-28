@@ -58,7 +58,7 @@ be bound to host and servicegroups.
 # Install systemd entry
 %{__install} -D -m 0644 -p worker/daemon-systemd %{buildroot}%{_unitdir}/mod_gearman_worker.service
 mkdir -p %{buildroot}%{_sysconfdir}/sysconfig
-touch %{buildroot}%{_sysconfdir}/sysconfig/mod-gearman-worker
+echo "NICELEVEL=0" > %{buildroot}%{_sysconfdir}/sysconfig/mod-gearman-worker
 # remove SystemV init-script
 %{__rm} -f %{buildroot}%{_initrddir}/mod_gearman_worker
 %endif
@@ -72,9 +72,33 @@ getent passwd nagios >/dev/null || \
     -c "nagios user" nagios
 exit 0
 
-%post -p /sbin/ldconfig
+%post
+/sbin/ldconfig
+%if 0%{?el7}%{?fc20}%{?fc21}%{?fc22}
+# on first installation only
+if [ $1 -eq 1 ]; then
+    systemctl enable mod_gearman_worker
+    systemctl start mod_gearman_worker
+else
+    systemctl try-restart mod_gearman_worker
+fi
+%else
+if test $1 = 1; then
+  /sbin/chkconfig --add mod_gearman_worker
+fi
+%endif
 
-%postun -p /sbin/ldconfig
+%preun
+%if 0%{?el7}%{?fc20}%{?fc21}%{?fc22}
+systemctl disable mod_gearman_worker
+%else
+if test $1 = 0; then
+  /sbin/chkconfig --del mod_gearman_worker
+fi
+%endif
+
+%postun
+/sbin/ldconfig
 
 %clean
 %{__rm} -rf %{buildroot}
