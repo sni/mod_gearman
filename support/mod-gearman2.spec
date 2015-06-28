@@ -58,7 +58,7 @@ be bound to host and servicegroups.
 # Install systemd entry
 %{__install} -D -m 0644 -p worker/daemon-systemd %{buildroot}%{_unitdir}/mod-gearman2-worker.service
 mkdir -p %{buildroot}%{_sysconfdir}/sysconfig
-touch %{buildroot}%{_sysconfdir}/sysconfig/mod-gearman2-worker
+echo "NICELEVEL=0" > %{buildroot}%{_sysconfdir}/sysconfig/mod-gearman2-worker
 # remove SystemV init-script
 %{__rm} -f %{buildroot}%{_initrddir}/mod-gearman2-worker
 %endif
@@ -72,9 +72,33 @@ getent passwd naemon >/dev/null || \
     -c "naemon user" naemon
 exit 0
 
-%post -p /sbin/ldconfig
+%post
+/sbin/ldconfig
+%if 0%{?el7}%{?fc20}%{?fc21}%{?fc22}
+# on first installation only
+if [ $1 -eq 1 ] ; then
+    systemctl enable mod-gearman2-worker
+    systemctl start mod-gearman2-worker
+else
+    systemctl try-restart mod-gearman2-worker
+fi
+%else
+if test $1 = 1; then
+  /sbin/chkconfig --add mod-gearman2-worker
+fi
+%endif
 
-%postun -p /sbin/ldconfig
+%preun
+%if 0%{?el7}%{?fc20}%{?fc21}%{?fc22}
+systemctl disable mod-gearman2-worker
+%else
+if test $1 = 0; then
+  /sbin/chkconfig --del mod-gearman2-worker
+fi
+%endif
+
+%postun
+/sbin/ldconfig
 
 %clean
 %{__rm} -rf %{buildroot}
