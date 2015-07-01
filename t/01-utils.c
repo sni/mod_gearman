@@ -103,7 +103,7 @@ int main(void) {
 
     /* encrypt */
     char * key       = "test1234";
-    char * encrypted = malloc(GM_BUFFERSIZE);
+    char * encrypted;
     char * text      = "test message";
     char * base      = "a7HqhQEE8TQBde9uknpPYQ==";
     mod_gm_crypt_init(key);
@@ -120,7 +120,7 @@ int main(void) {
     free(encrypted);
 
     /* base 64 */
-    char * base64 = malloc(GM_BUFFERSIZE);
+    char * base64;
     len = mod_gm_encrypt(&base64, text, GM_ENCODE_ONLY);
     ok(len == 16, "length of encode only");
     like(base64, "dGVzdCBtZXNzYWdl", "base64 only string");
