@@ -129,7 +129,6 @@ int mod_gm_encrypt(char ** encrypted, char * text, int mode) {
     base64 = gm_malloc(size*2);
     base64[0] = 0;
     base64_encode(crypted, size, base64, size*2);
-    free(*encrypted);
     free(crypted);
     *encrypted = base64;
     return strlen(base64);

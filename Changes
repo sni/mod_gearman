@@ -3,6 +3,7 @@ This file documents the revision history for mod_gearman.
 next:
           - add option for forbidden characters in command line
           - fix segfault on too old host checks
+          - fix segfault on gearmand server errors
 
 2.1.2 Fri Feb 13 13:40:25 CET 2015
           - fix sending results to dup server
