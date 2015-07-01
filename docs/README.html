@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
 <head>
 <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
-<meta name="generator" content="AsciiDoc 8.6.9" />
+<meta name="generator" content="AsciiDoc 8.6.6" />
 <title>Nagios Gearman Module</title>
 <style type="text/css">
 /* Shared CSS for AsciiDoc xhtml11 and html5 backends */
@@ -87,15 +87,9 @@ ul, ol, li > p {
 ul > li     { color: #aaa; }
 ul > li > * { color: black; }
 
-.monospaced, code, pre {
-  font-family: "Courier New", Courier, monospace;
-  font-size: inherit;
-  color: navy;
+pre {
   padding: 0;
   margin: 0;
-}
-pre {
-  white-space: pre-wrap;
 }
 
 #author {
@@ -225,7 +219,7 @@ div.exampleblock > div.content {
 }
 
 div.imageblock div.content { padding-left: 0; }
-span.image img { border-style: none; vertical-align: text-bottom; }
+span.image img { border-style: none; }
 a.image:visited { color: white; }
 
 dl {
@@ -355,7 +349,7 @@ div.colist td img {
   margin-bottom: 0.1em;
 }
 
-div.toclevel0, div.toclevel1, div.toclevel2, div.toclevel3, div.toclevel4 {
+div.toclevel1, div.toclevel2, div.toclevel3, div.toclevel4 {
   margin-top: 0;
   margin-bottom: 0;
 }
@@ -413,13 +407,17 @@ span.underline { text-decoration: underline; }
 span.overline { text-decoration: overline; }
 span.line-through { text-decoration: line-through; }
 
-div.unbreakable { page-break-inside: avoid; }
-
 
 /*
  * xhtml11 specific
  *
  * */
+
+tt {
+  font-family: monospace;
+  font-size: inherit;
+  color: navy;
+}
 
 div.tableblock {
   margin-top: 1.0em;
@@ -453,6 +451,12 @@ div.tableblock > table[frame="vsides"] {
  * html5 specific
  *
  * */
+
+.monospaced {
+  font-family: monospace;
+  font-size: inherit;
+  color: navy;
+}
 
 table.tableblock {
   margin-top: 1.0em;
@@ -533,8 +537,6 @@ body.manpage div.sectionbody {
 @media print {
   body.manpage div#toc { display: none; }
 }
-
-
 </style>
 
 </head>
@@ -691,12 +693,12 @@ Fast transport of passive check results with included tools like
 <div class="ulist"><ul>
 <li>
 <p>
-Latest stable for Naemon <a href="http://www.mod-gearman.org/download2/v2.1.2/src/mod_gearman-2.1.2.tar.gz">version 2.1.2</a>, released February 13 2015
+Latest stable for Naemon <a href="http://www.mod-gearman.org/download2/v2.1.3/src/mod_gearman-2.1.3.tar.gz">version 2.1.3</a>, released July 01 2015
 </p>
 </li>
 <li>
 <p>
-Latest stable for Nagios 3 <a href="http://www.mod-gearman.org/download/v1.5.2/src/mod_gearman-1.5.2.tar.gz">version 1.5.2</a>, released February 13 2015
+Latest stable for Nagios 3 / Icinga <a href="http://www.mod-gearman.org/download/v1.5.3/src/mod_gearman-1.5.3.tar.gz">version 1.5.3</a>, released July 01 2015
 </p>
 </li>
 <li>
@@ -794,14 +796,14 @@ come in.</p></div>
 <div class="paragraph"><p>A simple example queue would look like:</p></div>
 <div class="listingblock">
 <div class="content">
-<pre><code>+---------------+------------------+--------------+--------------+
+<pre><tt>+---------------+------------------+--------------+--------------+
 | Queue Name    | Worker Available | Jobs Waiting | Jobs Running |
 +---------------+------------------+--------------+--------------+
 | check_results | 1                | 0            | 0            |
 | eventhandler  | 50               | 0            | 0            |
 | host          | 50               | 0            | 1            |
 | service       | 50               | 0            | 13           |
-+---------------+------------------+--------------+--------------+</code></pre>
++---------------+------------------+--------------+--------------+</tt></pre>
 </div></div>
 <div class="paragraph"><p>There is one queue for the results and two for the checks plus the
 eventhandler queue.</p></div>
@@ -847,7 +849,7 @@ servicegroup for resource intensive selenium checks.</p></div>
 <div class="paragraph"><p>It would look like this:</p></div>
 <div class="listingblock">
 <div class="content">
-<pre><code>+-----------------------+------------------+--------------+--------------+
+<pre><tt>+-----------------------+------------------+--------------+--------------+
 | Queue Name            | Worker Available | Jobs Waiting | Jobs Running |
 +-----------------------+------------------+--------------+--------------+
 | check_results         | 1                | 0            | 0            |
@@ -856,7 +858,7 @@ servicegroup for resource intensive selenium checks.</p></div>
 | hostgroup_japan       | 3                | 1            | 3            |
 | service               | 50               | 0            | 13           |
 | servicegroup_selenium | 2                | 0            | 2            |
-+-----------------------+------------------+--------------+--------------+</code></pre>
++-----------------------+------------------+--------------+--------------+</tt></pre>
 </div></div>
 <div class="paragraph"><p>You still have the generic queues and in addition there are two queues
 for the specific groups.</p></div>
@@ -1065,7 +1067,7 @@ to <em>on</em>.</p></div>
 <div class="paragraph"><p>OMD is available for Debian, Ubuntu, Centos/Redhat and SLES.</p></div>
 <div class="listingblock">
 <div class="content">
-<pre><code>OMD[test]:~$ omd config set MOD_GEARMAN on</code></pre>
+<pre><tt>OMD[test]:~$ omd config set MOD_GEARMAN on</tt></pre>
 </div></div>
 <div class="admonitionblock">
 <table><tr>
@@ -1100,7 +1102,7 @@ available.</td>
 <div class="paragraph"><p>Build/install Gearmand rpms</p></div>
 <div class="listingblock">
 <div class="content">
-<pre><code>#&gt; yum install autoconf automake libtool boost141-devel boost141-program-options
+<pre><tt>#&gt; yum install autoconf automake libtool boost141-devel boost141-program-options
 #&gt; cd /tmp
 #&gt; wget http://launchpad.net/gearmand/trunk/0.33/+download/gearmand-0.33.tar.gz
 #&gt; tar zxf gearmand-0.33.tar.gz
@@ -1115,7 +1117,7 @@ available.</td>
    LD_LIBRARY_PATH=/usr/lib64/boost141:/usr/lib/boost141 \
    CPATH=/usr/include/boost141 \
    rpmbuild -tb gearmand-0.33.tar.gz
-#&gt; yum --nogpgcheck install /usr/src/redhat/RPMS/*/gearmand*-0.33-1*.rpm</code></pre>
+#&gt; yum --nogpgcheck install /usr/src/redhat/RPMS/*/gearmand*-0.33-1*.rpm</tt></pre>
 </div></div>
 <div class="admonitionblock">
 <table><tr>
@@ -1129,16 +1131,16 @@ will fail. It may not be necessary for future gearman versions.</td>
 <div class="paragraph"><p>Build/install Mod-Gearman rpms</p></div>
 <div class="listingblock">
 <div class="content">
-<pre><code>#&gt; wget http://mod-gearman.org/download/v1.5.2/src/mod_gearman-1.5.2.tar.gz
+<pre><tt>#&gt; wget http://mod-gearman.org/download/v1.5.2/src/mod_gearman-1.5.2.tar.gz
 #&gt; rpmbuild -tb mod_gearman-1.5.2.tar.gz
-#&gt; yum --nogpgcheck install /usr/src/redhat/RPMS/*/mod_gearman-1.5.2-1.*.rpm</code></pre>
+#&gt; yum --nogpgcheck install /usr/src/redhat/RPMS/*/mod_gearman-1.5.2-1.*.rpm</tt></pre>
 </div></div>
 <div class="paragraph"><p>Finally start and check your installation</p></div>
 <div class="listingblock">
 <div class="content">
-<pre><code>#&gt; /etc/init.d/gearmand start
+<pre><tt>#&gt; /etc/init.d/gearmand start
 #&gt; /etc/init.d/mod_gearman_worker start
-#&gt; gearman_top</code></pre>
+#&gt; gearman_top</tt></pre>
 </div></div>
 </div>
 <div class="sect2">
@@ -1177,22 +1179,22 @@ libgearman (&gt;= 0.14)
 <div class="paragraph"><p>Download the tarball and perform the following steps:</p></div>
 <div class="listingblock">
 <div class="content">
-<pre><code>#&gt; ./configure
+<pre><tt>#&gt; ./configure
 #&gt; make
-#&gt; make install</code></pre>
+#&gt; make install</tt></pre>
 </div></div>
 <div class="paragraph"><p>Then add the mod_gearman.o to your Nagios installation and add a
 broker line to your nagios.cfg:</p></div>
 <div class="listingblock">
 <div class="content">
-<pre><code>broker_module=.../mod_gearman.o server=localhost:4730 eventhandler=yes services=yes hosts=yes config=.../module.conf</code></pre>
+<pre><tt>broker_module=.../mod_gearman.o server=localhost:4730 eventhandler=yes services=yes hosts=yes config=.../module.conf</tt></pre>
 </div></div>
 <div class="paragraph"><p>see <a href="#_configuration">Configuration</a> for details on all parameters</p></div>
 <div class="paragraph"><p>The next step is to start one or more worker. You may use the same
 configuration file as for the neb module.</p></div>
 <div class="listingblock">
 <div class="content">
-<pre><code>./mod_gearman_worker --server=localhost:4730 --services --hosts</code></pre>
+<pre><tt>./mod_gearman_worker --server=localhost:4730 --services --hosts</tt></pre>
 </div></div>
 <div class="paragraph"><p>or use the supplied init script.</p></div>
 <div class="admonitionblock">
@@ -1206,14 +1208,14 @@ it can be started with</td>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre><code>/usr/sbin/gearmand -t 10 -j 0</code></pre>
+<pre><tt>/usr/sbin/gearmand -t 10 -j 0</tt></pre>
 </div></div>
 <div class="paragraph"><p>or a supplied init script (extras/gearmand-init). Command line
 arguments have change in recent gearman versions and you now should
 use something like:</p></div>
 <div class="listingblock">
 <div class="content">
-<pre><code>/usr/sbin/gearmand --threads=10 --job-retries=0</code></pre>
+<pre><tt>/usr/sbin/gearmand --threads=10 --job-retries=0</tt></pre>
 </div></div>
 <div class="sect3">
 <h4 id="_patch_nagios">Patch Nagios</h4>
@@ -1244,7 +1246,7 @@ no patch is needed.</p></div>
 <div class="paragraph"><p>A sample broker in your nagios.cfg could look like:</p></div>
 <div class="listingblock">
 <div class="content">
-<pre><code>broker_module=/usr/local/share/nagios/mod_gearman.o keyfile=/usr/local/share/nagios/secret.txt server=localhost eventhandler=yes hosts=yes services=yes config=.../module.conf</code></pre>
+<pre><tt>broker_module=/usr/local/share/nagios/mod_gearman.o keyfile=/usr/local/share/nagios/secret.txt server=localhost eventhandler=yes hosts=yes services=yes config=.../module.conf</tt></pre>
 </div></div>
 <div class="paragraph"><p>See the following list for a detailed explanation of available
 options:</p></div>
@@ -1265,7 +1267,7 @@ config
 <div class="content">
 <div class="literalblock">
 <div class="content">
-<pre><code>config=/etc/nagios3/mod_gm_worker.conf</code></pre>
+<pre><tt>config=/etc/nagios3/mod_gm_worker.conf</tt></pre>
 </div></div>
 </div></div>
 </dd>
@@ -1282,17 +1284,17 @@ debug
 <div class="ulist"><ul>
 <li>
 <p>
-<code>0</code>   - only errors
+<tt>0</tt>   - only errors
 </p>
 </li>
 <li>
 <p>
-<code>1-4</code> - debug verbosity
+<tt>1-4</tt> - debug verbosity
 </p>
 </li>
 <li>
 <p>
-<code>5</code>   - trace and all gearman related logs are going to stdout
+<tt>5</tt>   - trace and all gearman related logs are going to stdout
 </p>
 </li>
 </ul></div>
@@ -1302,7 +1304,7 @@ debug
 <div class="content">
 <div class="literalblock">
 <div class="content">
-<pre><code>debug=1</code></pre>
+<pre><tt>debug=1</tt></pre>
 </div></div>
 </div></div>
 </dd>
@@ -1319,29 +1321,29 @@ logmode
 <div class="ulist"><ul>
 <li>
 <p>
-<code>automatic</code> - logfile when a logfile is specified. stdout when
+<tt>automatic</tt> - logfile when a logfile is specified. stdout when
                     no logfile is given.
                     stdout for tools.
 </p>
 </li>
 <li>
 <p>
-<code>stdout</code>    - just print all messages to stdout
+<tt>stdout</tt>    - just print all messages to stdout
 </p>
 </li>
 <li>
 <p>
-<code>syslog</code>    - use syslog for all log events
+<tt>syslog</tt>    - use syslog for all log events
 </p>
 </li>
 <li>
 <p>
-<code>file</code>      - use logfile
+<tt>file</tt>      - use logfile
 </p>
 </li>
 <li>
 <p>
-<code>core</code>      - use Nagios internal loging (not thread safe! Use
+<tt>core</tt>      - use Nagios internal loging (not thread safe! Use
                     with care)
 </p>
 </li>
@@ -1352,7 +1354,7 @@ logmode
 <div class="content">
 <div class="literalblock">
 <div class="content">
-<pre><code>logmode=automatic</code></pre>
+<pre><tt>logmode=automatic</tt></pre>
 </div></div>
 </div></div>
 </dd>
@@ -1367,7 +1369,7 @@ Path to the logfile.
 <div class="content">
 <div class="literalblock">
 <div class="content">
-<pre><code>logfile=/path/to/log.file</code></pre>
+<pre><tt>logfile=/path/to/log.file</tt></pre>
 </div></div>
 </div></div>
 </dd>
@@ -1384,7 +1386,7 @@ the first server available.
 <div class="content">
 <div class="literalblock">
 <div class="content">
-<pre><code>server=localhost:4730,remote_host:4730</code></pre>
+<pre><tt>server=localhost:4730,remote_host:4730</tt></pre>
 </div></div>
 </div></div>
 </dd>
@@ -1400,7 +1402,7 @@ eventhandlers.
 <div class="content">
 <div class="literalblock">
 <div class="content">
-<pre><code>eventhandler=yes</code></pre>
+<pre><tt>eventhandler=yes</tt></pre>
 </div></div>
 </div></div>
 </dd>
@@ -1415,7 +1417,7 @@ defines if the module should distribute execution of service checks.
 <div class="content">
 <div class="literalblock">
 <div class="content">
-<pre><code>services=yes</code></pre>
+<pre><tt>services=yes</tt></pre>
 </div></div>
 </div></div>
 </dd>
@@ -1430,7 +1432,7 @@ defines if the module should distribute execution of host checks.
 <div class="content">
 <div class="literalblock">
 <div class="content">
-<pre><code>hosts=yes</code></pre>
+<pre><tt>hosts=yes</tt></pre>
 </div></div>
 </div></div>
 </dd>
@@ -1445,7 +1447,7 @@ sets a list of hostgroups which will go into seperate queues.
 <div class="content">
 <div class="literalblock">
 <div class="content">
-<pre><code>hostgroups=name1,name2,name3</code></pre>
+<pre><tt>hostgroups=name1,name2,name3</tt></pre>
 </div></div>
 </div></div>
 </dd>
@@ -1460,7 +1462,7 @@ sets a list of servicegroups which will go into seperate queues.
 <div class="content">
 <div class="literalblock">
 <div class="content">
-<pre><code>servicegroups=name1,name2,name3</code></pre>
+<pre><tt>servicegroups=name1,name2,name3</tt></pre>
 </div></div>
 </div></div>
 </dd>
@@ -1472,15 +1474,15 @@ encryption
 enables or disables encryption. It is strongly advised to not disable
 encryption. Anybody will be able to inject packages to your worker. Encryption
 is enabled by default and you have to explicitly disable it. When using
-encryption, you will either have to specify a shared password with <code>key=...</code> or
-a keyfile with <code>keyfile=...</code>.
+encryption, you will either have to specify a shared password with <tt>key=...</tt> or
+a keyfile with <tt>keyfile=...</tt>.
 Default is On.
 </p>
 <div class="exampleblock">
 <div class="content">
 <div class="literalblock">
 <div class="content">
-<pre><code>encryption=yes</code></pre>
+<pre><tt>encryption=yes</tt></pre>
 </div></div>
 </div></div>
 </dd>
@@ -1496,7 +1498,7 @@ least 8 bytes long. Maximum length is 32 characters.
 <div class="content">
 <div class="literalblock">
 <div class="content">
-<pre><code>key=secret</code></pre>
+<pre><tt>key=secret</tt></pre>
 </div></div>
 </div></div>
 </dd>
@@ -1513,7 +1515,7 @@ Whitespace to the right will be trimmed.
 <div class="content">
 <div class="literalblock">
 <div class="content">
-<pre><code>keyfile=/path/to/secret.file</code></pre>
+<pre><tt>keyfile=/path/to/secret.file</tt></pre>
 </div></div>
 </div></div>
 </dd>
@@ -1536,7 +1538,7 @@ Default is On.
 <div class="content">
 <div class="literalblock">
 <div class="content">
-<pre><code>use_uniq_jobs=on</code></pre>
+<pre><tt>use_uniq_jobs=on</tt></pre>
 </div></div>
 </div></div>
 </div>
@@ -1556,7 +1558,7 @@ passed through.
 <div class="content">
 <div class="literalblock">
 <div class="content">
-<pre><code>localhostgroups=name1,name2,name3</code></pre>
+<pre><tt>localhostgroups=name1,name2,name3</tt></pre>
 </div></div>
 </div></div>
 </dd>
@@ -1572,7 +1574,7 @@ just passed through.
 <div class="content">
 <div class="literalblock">
 <div class="content">
-<pre><code>localservicegroups=name1,name2,name3</code></pre>
+<pre><tt>localservicegroups=name1,name2,name3</tt></pre>
 </div></div>
 </div></div>
 </dd>
@@ -1593,7 +1595,7 @@ localhostgroups/localservicegroups).
 <div class="content">
 <div class="literalblock">
 <div class="content">
-<pre><code>queue_custom_variable=WORKER</code></pre>
+<pre><tt>queue_custom_variable=WORKER</tt></pre>
 </div></div>
 </div></div>
 </dd>
@@ -1608,13 +1610,13 @@ this option to disable hostchecks and still have the possibility to
 use hostgroups for easy configuration of your services.
 If set to yes, you still have to define which hostchecks should be
 processed by either using <em>hosts</em> or the <em>hostgroups</em> option.
-Default: <code>yes</code>
+Default: <tt>yes</tt>
 </p>
 <div class="exampleblock">
 <div class="content">
 <div class="literalblock">
 <div class="content">
-<pre><code>do_hostchecks=yes</code></pre>
+<pre><tt>do_hostchecks=yes</tt></pre>
 </div></div>
 </div></div>
 </dd>
@@ -1630,7 +1632,7 @@ value if your result queue is not processed fast enough.
 <div class="content">
 <div class="literalblock">
 <div class="content">
-<pre><code>result_workers=3</code></pre>
+<pre><tt>result_workers=3</tt></pre>
 </div></div>
 </div></div>
 </dd>
@@ -1645,7 +1647,7 @@ Defines if the module should distribute perfdata to gearman.
 <div class="content">
 <div class="literalblock">
 <div class="content">
-<pre><code>perfdata=yes</code></pre>
+<pre><tt>perfdata=yes</tt></pre>
 </div></div>
 </div></div>
 </dd>
@@ -1680,12 +1682,12 @@ perfdata_mode
 <div class="ulist"><ul>
 <li>
 <p>
-<code>1</code> - overwrite
+<tt>1</tt> - overwrite
 </p>
 </li>
 <li>
 <p>
-<code>2</code> - append
+<tt>2</tt> - append
 </p>
 </li>
 </ul></div>
@@ -1695,7 +1697,7 @@ perfdata_mode
 <div class="content">
 <div class="literalblock">
 <div class="content">
-<pre><code>perfdata_mode=1</code></pre>
+<pre><tt>perfdata_mode=1</tt></pre>
 </div></div>
 </div></div>
 </dd>
@@ -1705,13 +1707,13 @@ result_queue
 <dd>
 <p>
 sets the result queue. Necessary when putting jobs from several Nagios instances
-onto the same gearman queues. Default: <code>check_results</code>
+onto the same gearman queues. Default: <tt>check_results</tt>
 </p>
 <div class="exampleblock">
 <div class="content">
 <div class="literalblock">
 <div class="content">
-<pre><code>result_queue=check_results_nagios1</code></pre>
+<pre><tt>result_queue=check_results_nagios1</tt></pre>
 </div></div>
 </div></div>
 </dd>
@@ -1731,7 +1733,7 @@ Default is yes.
 <div class="content">
 <div class="literalblock">
 <div class="content">
-<pre><code>orphan_host_checks=yes</code></pre>
+<pre><tt>orphan_host_checks=yes</tt></pre>
 </div></div>
 </div></div>
 </dd>
@@ -1747,7 +1749,7 @@ Default is yes.
 <div class="content">
 <div class="literalblock">
 <div class="content">
-<pre><code>orphan_service_checks=yes</code></pre>
+<pre><tt>orphan_service_checks=yes</tt></pre>
 </div></div>
 </div></div>
 </dd>
@@ -1766,7 +1768,7 @@ Default is no.
 <div class="content">
 <div class="literalblock">
 <div class="content">
-<pre><code>accept_clear_results=yes</code></pre>
+<pre><tt>accept_clear_results=yes</tt></pre>
 </div></div>
 </div></div>
 </dd>
@@ -1789,7 +1791,7 @@ on a single host.  Defaults to the current hostname.
 <div class="content">
 <div class="literalblock">
 <div class="content">
-<pre><code>identifier=hostname_test</code></pre>
+<pre><tt>identifier=hostname_test</tt></pre>
 </div></div>
 </div></div>
 </dd>
@@ -1804,7 +1806,7 @@ Path to the pidfile.
 <div class="content">
 <div class="literalblock">
 <div class="content">
-<pre><code>pidfile=/path/to/pid.file</code></pre>
+<pre><tt>pidfile=/path/to/pid.file</tt></pre>
 </div></div>
 </div></div>
 </dd>
@@ -1822,7 +1824,7 @@ Default: 60
 <div class="content">
 <div class="literalblock">
 <div class="content">
-<pre><code>job_timeout=60</code></pre>
+<pre><tt>job_timeout=60</tt></pre>
 </div></div>
 </div></div>
 </dd>
@@ -1843,7 +1845,7 @@ Default: 0
 <div class="content">
 <div class="literalblock">
 <div class="content">
-<pre><code>max-age=600</code></pre>
+<pre><tt>max-age=600</tt></pre>
 </div></div>
 </div></div>
 </dd>
@@ -1858,7 +1860,7 @@ Minimum number of worker processes which should run at any time. Default: 1
 <div class="content">
 <div class="literalblock">
 <div class="content">
-<pre><code>min-worker=1</code></pre>
+<pre><tt>min-worker=1</tt></pre>
 </div></div>
 </div></div>
 </dd>
@@ -1876,7 +1878,7 @@ another. Default: 20
 <div class="content">
 <div class="literalblock">
 <div class="content">
-<pre><code>max-worker=20</code></pre>
+<pre><tt>max-worker=20</tt></pre>
 </div></div>
 </div></div>
 </dd>
@@ -1892,7 +1894,7 @@ waiting. Default: 1
 <div class="content">
 <div class="literalblock">
 <div class="content">
-<pre><code>spawn-rate=1</code></pre>
+<pre><tt>spawn-rate=1</tt></pre>
 </div></div>
 </div></div>
 </dd>
@@ -1910,7 +1912,7 @@ Default: no limit
 <div class="content">
 <div class="literalblock">
 <div class="content">
-<pre><code>load_limit1=0</code></pre>
+<pre><tt>load_limit1=0</tt></pre>
 </div></div>
 </div></div>
 </dd>
@@ -1926,7 +1928,7 @@ Default: no limit
 <div class="content">
 <div class="literalblock">
 <div class="content">
-<pre><code>load_limit5=0</code></pre>
+<pre><tt>load_limit5=0</tt></pre>
 </div></div>
 </div></div>
 </dd>
@@ -1942,7 +1944,7 @@ Default: no limit
 <div class="content">
 <div class="literalblock">
 <div class="content">
-<pre><code>load_limit15=0</code></pre>
+<pre><tt>load_limit15=0</tt></pre>
 </div></div>
 </div></div>
 </dd>
@@ -1959,7 +1961,7 @@ waiting. Set to 0 to disable the idle timeout. Default: 10
 <div class="content">
 <div class="literalblock">
 <div class="content">
-<pre><code>idle-timeout=30</code></pre>
+<pre><tt>idle-timeout=30</tt></pre>
 </div></div>
 </div></div>
 </dd>
@@ -1976,7 +1978,7 @@ Disabled when set to 0. Default: 1000
 <div class="content">
 <div class="literalblock">
 <div class="content">
-<pre><code>max-jobs=500</code></pre>
+<pre><tt>max-jobs=500</tt></pre>
 </div></div>
 </div></div>
 </dd>
@@ -1993,7 +1995,7 @@ cause trouble with unclean plugins. Default: no
 <div class="content">
 <div class="literalblock">
 <div class="content">
-<pre><code>fork_on_exec=no</code></pre>
+<pre><tt>fork_on_exec=no</tt></pre>
 </div></div>
 </div></div>
 </dd>
@@ -2010,7 +2012,7 @@ results for a reporting installation or remote gui.
 <div class="content">
 <div class="literalblock">
 <div class="content">
-<pre><code>dupserver=logserver:4730,logserver2:4730</code></pre>
+<pre><tt>dupserver=logserver:4730,logserver2:4730</tt></pre>
 </div></div>
 </div></div>
 </dd>
@@ -2027,7 +2029,7 @@ Default is yes.
 <div class="content">
 <div class="literalblock">
 <div class="content">
-<pre><code>show_error_output=yes</code></pre>
+<pre><tt>show_error_output=yes</tt></pre>
 </div></div>
 </div></div>
 </dd>
@@ -2044,7 +2046,7 @@ Default: 2
 <div class="content">
 <div class="literalblock">
 <div class="content">
-<pre><code>timeout_return=2</code></pre>
+<pre><tt>timeout_return=2</tt></pre>
 </div></div>
 </div></div>
 </dd>
@@ -2061,7 +2063,7 @@ Default is yes (passive).
 <div class="content">
 <div class="literalblock">
 <div class="content">
-<pre><code>dup_results_are_passive=yes</code></pre>
+<pre><tt>dup_results_are_passive=yes</tt></pre>
 </div></div>
 </div></div>
 </dd>
@@ -2079,7 +2081,7 @@ Default is off.
 <div class="content">
 <div class="literalblock">
 <div class="content">
-<pre><code>debug-result=yes</code></pre>
+<pre><tt>debug-result=yes</tt></pre>
 </div></div>
 </div></div>
 </dd>
@@ -2096,7 +2098,7 @@ See <a href="#_embedded_perl">Embedded Perl</a> for details on EPN.
 <div class="content">
 <div class="literalblock">
 <div class="content">
-<pre><code>enable_embedded_perl=on</code></pre>
+<pre><tt>enable_embedded_perl=on</tt></pre>
 </div></div>
 </div></div>
 </dd>
@@ -2114,7 +2116,7 @@ so its better to set the default to off.
 <div class="content">
 <div class="literalblock">
 <div class="content">
-<pre><code>use_embedded_perl_implicitly=off</code></pre>
+<pre><tt>use_embedded_perl_implicitly=off</tt></pre>
 </div></div>
 </div></div>
 </dd>
@@ -2132,7 +2134,7 @@ interpreter, but will not cache the compiled script.
 <div class="content">
 <div class="literalblock">
 <div class="content">
-<pre><code>use_perl_cache=on</code></pre>
+<pre><tt>use_perl_cache=on</tt></pre>
 </div></div>
 </div></div>
 </dd>
@@ -2151,7 +2153,7 @@ no shell characters ($&amp;();&lt;&gt;`"&#8217;|) are allowed in the command lin
 <div class="content">
 <div class="literalblock">
 <div class="content">
-<pre><code>restrict_path=/usr/local/plugins/</code></pre>
+<pre><tt>restrict_path=/usr/local/plugins/</tt></pre>
 </div></div>
 </div></div>
 </dd>
@@ -2171,7 +2173,7 @@ code 25 randomly. Default is off.
 <div class="content">
 <div class="literalblock">
 <div class="content">
-<pre><code>workaround_rc_25=off</code></pre>
+<pre><tt>workaround_rc_25=off</tt></pre>
 </div></div>
 </div></div>
 </dd>
@@ -2187,7 +2189,7 @@ gearman_top does this. It polls the gearman server every second
 and displays the current queue statistics.</p></div>
 <div class="listingblock">
 <div class="content">
-<pre><code>+-----------------------+--------+-------+-------+---------+
+<pre><tt>+-----------------------+--------+-------+-------+---------+
 | Name                  | Worker | Avail | Queue | Running |
 +-----------------------+--------+-------+-------+---------+
 | check_results         | 1      | 1     | 0     | 0       |
@@ -2196,7 +2198,7 @@ and displays the current queue statistics.</p></div>
 | eventhandler          | 3      | 3     | 0     | 0       |
 | servicegroup_jmx4perl | 3      | 3     | 0     | 0       |
 | hostgroup_japan       | 3      | 3     | 0     | 0       |
-+-----------------------+--------+-------+-------+---------+</code></pre>
++-----------------------+--------+-------+-------+---------+</tt></pre>
 </div></div>
 <div class="dlist"><dl>
 <dt class="hdlist1">
@@ -2228,7 +2230,7 @@ service
 <dd>
 <p>
 This is the queue for generic service checks. If you enable service
-checks with the <code>services=yes</code> switch. Before a service goes into this
+checks with the <tt>services=yes</tt> switch. Before a service goes into this
 queue it is checked against the local host- and service-groups. Then
 the normal host- and servicegroups are checked and if none matches,
 this queue is used.
@@ -2241,7 +2243,7 @@ hostgroup_&lt;name&gt;
 <p>
 This queue is created for every hostgroup which has been defined by
 the hostgroups=&#8230; option. Make sure you have at least one worker for
-every hostgroup you specify. Start the worker with <code>--hostgroups=...</code>
+every hostgroup you specify. Start the worker with <tt>--hostgroups=...</tt>
 to work on hostgroup queues. Note that this queue may also contain
 service checks if the hostgroup of a service matches.
 </p>
@@ -2252,7 +2254,7 @@ servicegroup_&lt;name&gt;
 <dd>
 <p>
 This queue is created for every servicegroup which has been defined by
-the <code>servicegroup=...</code> option.
+the <tt>servicegroup=...</tt> option.
 </p>
 </dd>
 <dt class="hdlist1">
@@ -2262,7 +2264,7 @@ eventhandler
 <p>
 This is the generic queue for all eventhandler. Make sure you have a
 worker for this queue if you have eventhandler enabled. Start the
-worker with <code>--events</code> to work on this queue.
+worker with <tt>--events</tt> to work on this queue.
 </p>
 </dd>
 <dt class="hdlist1">
@@ -2271,7 +2273,7 @@ perfdata
 <dd>
 <p>
 This is the generic queue for all performance data. It is created and
-used if you switch on <code>--perfdata=yes</code>. Performance data cannot be
+used if you switch on <tt>--perfdata=yes</tt>. Performance data cannot be
 processed by the gearman worker itself. You will need
 <a href="http://www.pnp4nagios.org">PNP4Nagios</a> therefor.
 </p>
@@ -2321,11 +2323,11 @@ are a list of callbacks for which you want to export json data.
 <div class="content">
 <div class="literalblock">
 <div class="content">
-<pre><code>export=&lt;queue&gt;:&lt;returncode&gt;:&lt;callback&gt;[,&lt;callback&gt;,...]</code></pre>
+<pre><tt>export=&lt;queue&gt;:&lt;returncode&gt;:&lt;callback&gt;[,&lt;callback&gt;,...]</tt></pre>
 </div></div>
 <div class="literalblock">
 <div class="content">
-<pre><code>export=log_queue:1:NEBCALLBACK_LOG_DATA</code></pre>
+<pre><tt>export=log_queue:1:NEBCALLBACK_LOG_DATA</tt></pre>
 </div></div>
 </div></div>
 </dd>
@@ -2341,7 +2343,7 @@ generally a big performance boost when you have lots of perl plugins.</p></div>
 --enable-embedded-perl</p></div>
 <div class="listingblock">
 <div class="content">
-<pre><code>  ./configure --enable-embedded-perl otheroptions...</code></pre>
+<pre><tt>  ./configure --enable-embedded-perl otheroptions...</tt></pre>
 </div></div>
 <div class="paragraph"><p>The --with-perlcache configure option has been replace by a runtime
 configure option <em>use_perl_cache</em>.</p></div>
@@ -2398,16 +2400,16 @@ time to time (see <em>max-jobs</em>).</td>
 Worker have a own queue for status requests.</p></div>
 <div class="listingblock">
 <div class="content">
-<pre><code>%&gt; ./check_gearman -H &lt;job server hostname&gt; -q worker_&lt;worker hostname&gt; -t 10 -s check
-check_gearman OK - localhost has 10 worker and is working on 1 jobs|worker=10 running=1 total_jobs_done=1508</code></pre>
+<pre><tt>%&gt; ./check_gearman -H &lt;job server hostname&gt; -q worker_&lt;worker hostname&gt; -t 10 -s check
+check_gearman OK - localhost has 10 worker and is working on 1 jobs|worker=10 running=1 total_jobs_done=1508</tt></pre>
 </div></div>
 <div class="paragraph"><p>This will send a test job to the given job server and the worker will
 respond with some statistical data.</p></div>
 <div class="paragraph"><p>Job server can be monitored with:</p></div>
 <div class="listingblock">
 <div class="content">
-<pre><code>%&gt; ./check_gearman -H localhost -t 20
-check_gearman OK - 6 jobs running and 0 jobs waiting.|check_results=0;0;1;10;100 host=0;0;9;10;100 service=0;6;9;10;100</code></pre>
+<pre><tt>%&gt; ./check_gearman -H localhost -t 20
+check_gearman OK - 6 jobs running and 0 jobs waiting.|check_results=0;0;1;10;100 host=0;0;9;10;100 service=0;6;9;10;100</tt></pre>
 </div></div>
 </div>
 <div class="sect2">
@@ -2417,7 +2419,7 @@ gearman job server where they will be processed just like a finished
 check would do.</p></div>
 <div class="listingblock">
 <div class="content">
-<pre><code>%&gt; ./send_gearman --server=&lt;job server&gt; --encryption=no --host="&lt;hostname&gt;" --service="&lt;service&gt;" --message="message"</code></pre>
+<pre><tt>%&gt; ./send_gearman --server=&lt;job server&gt; --encryption=no --host="&lt;hostname&gt;" --service="&lt;service&gt;" --message="message"</tt></pre>
 </div></div>
 </div>
 <div class="sect2">
@@ -2426,7 +2428,7 @@ check would do.</p></div>
 <em>PAR::Packer</em> module and run pp:</p></div>
 <div class="listingblock">
 <div class="content">
-<pre><code>  pp -z 9 -M Class::Load::XS -M Moose -M Nagios::Passive::Base -M Params::Validate::XS -o send_gearman.exe send_gearman.pl</code></pre>
+<pre><tt>  pp -z 9 -M Class::Load::XS -M Moose -M Nagios::Passive::Base -M Params::Validate::XS -o send_gearman.exe send_gearman.pl</tt></pre>
 </div></div>
 <div class="paragraph"><p>Or just use the prebuild one from labs.consol.de:
 <a href="http://mod-gearman.org/archive/send_gearman.exed">send_gearman.exe</a>.</p></div>
@@ -2440,13 +2442,13 @@ See more details about the feed_passive mode at:
 neb module:</p></div>
 <div class="listingblock">
 <div class="content">
-<pre><code>%&gt; check_multi -f multi.cmd -r 256 | ./send_multi --server=&lt;job server&gt; --encryption=no --host="&lt;hostname&gt;" --service="&lt;service&gt;"</code></pre>
+<pre><tt>%&gt; check_multi -f multi.cmd -r 256 | ./send_multi --server=&lt;job server&gt; --encryption=no --host="&lt;hostname&gt;" --service="&lt;service&gt;"</tt></pre>
 </div></div>
 <div class="paragraph"><p>If you want to use only check_multi and no other workers, you can
 achieve this with the following neb module settings:</p></div>
 <div class="literalblock">
 <div class="content">
-<pre><code>broker_module=/usr/local/share/nagios/mod_gearman.o server=localhost encryption=no eventhandler=no hosts=no services=no hostgroups=does_not_exist config=.../module.conf</code></pre>
+<pre><tt>broker_module=/usr/local/share/nagios/mod_gearman.o server=localhost encryption=no eventhandler=no hosts=no services=no hostgroups=does_not_exist config=.../module.conf</tt></pre>
 </div></div>
 <div class="admonitionblock">
 <table><tr>
@@ -2465,10 +2467,10 @@ configuration. Then adjust your nagios host/service configuration and
 add the custom variable:</p></div>
 <div class="listingblock">
 <div class="content">
-<pre><code>  define host {
+<pre><tt>  define host {
     ...
     _WORKER    hostgroup_test
-  }</code></pre>
+  }</tt></pre>
 </div></div>
 <div class="paragraph"><p>The test hostgroup does not have to exist, it is a virtual queue name
 which is used by the worker.</p></div>
@@ -2621,6 +2623,11 @@ Make sure all your worker have the Nagios-Plugins available under
 <h2 id="_archive">Archive</h2>
 <div class="sectionbody">
 <div class="ulist"><ul>
+<li>
+<p>
+<a href="http://www.mod-gearman.org/download/v1.5.3/src/mod_gearman-1.5.3.tar.gz">version 1.5.3 - July 01 2015</a>
+</p>
+</li>
 <li>
 <p>
 <a href="http://www.mod-gearman.org/download/v1.5.2/src/mod_gearman-1.5.2.tar.gz">version 1.5.2 - February 13 2015</a>
@@ -2833,7 +2840,7 @@ Make sure all your worker have the Nagios-Plugins available under
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-06-18 17:15:55 CEST
+Last updated 2015-07-01 13:54:02 CEST
 </div>
 </div>
 </body>
