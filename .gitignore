@@ -10,6 +10,7 @@ configure
 depcomp
 compile
 install-sh
+test-driver
 missing
 mod_gearman.o
 mod_gearman.so

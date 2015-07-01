@@ -92,7 +92,7 @@ if USEBSD
 else
 05_neb_LDADD=-ldl
 endif
-TESTS            = $(check_PROGRAMS) t/09-benchmark.t t/10-large-result.t t/11-alloc.t t/12-cppcheck.t
+TESTS            = $(check_PROGRAMS) t/09-benchmark.t t/10-large-result.t t/11-alloc.t t/12-cppcheck.t t/13-tools.t
 
 
 GEARMANDS=/usr/sbin/gearmand /opt/sbin/gearmand
