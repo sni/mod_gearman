@@ -1,6 +1,6 @@
 This file documents the revision history for mod_gearman.
 
-next:
+1.5.4 Fri Aug 28 15:20:18 CEST 2015
           - add perfdata=all option to override local process_performance_data setting
           - add check_interval to performance data
           - deprecate result_workers option
