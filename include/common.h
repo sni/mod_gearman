@@ -70,6 +70,8 @@
 #define GM_ERROR                        1
 #define GM_NO_EPN                      -1
 
+#define GM_PERFDATA_ALL                 2
+
 #define GM_EXIT_UNKNOWN               768   /* results in exit code 3 after processed by WEXITSTATUS() */
 
 /* log modes */
