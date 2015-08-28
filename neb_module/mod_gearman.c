@@ -1259,6 +1259,6 @@ int handle_export(int callback_type, void *data) {
 
 /* core log wrapper */
 void write_core_log(char *data) {
-    write_to_all_logs( data, NSLOG_INFO_MESSAGE );
+    nm_log( NSLOG_INFO_MESSAGE, data );
     return;
 }
