@@ -555,9 +555,12 @@ int parse_args_line(mod_gm_opt_t *opt, char * arg, int recursion_level) {
 
     /* result worker */
     else if ( !strcmp( key, "result_workers" ) ) {
+        gm_log( GM_LOG_ERROR, "result_workers is deprecated and is always set to 1.\n" );
+        /*
         opt->result_workers = atoi( value );
         if(opt->result_workers > GM_LISTSIZE) { opt->result_workers = GM_LISTSIZE; }
         if(opt->result_workers < 0) { opt->result_workers = 0; }
+        */
     }
 
     /* return code */
@@ -998,7 +1001,7 @@ void dumpconfig(mod_gm_opt_t *opt, int mode) {
     if(mode == GM_NEB_MODE) {
         gm_log( GM_LOG_DEBUG, "queue by cust var:               %s\n", opt->queue_cust_var == NULL ? "no" : opt->queue_cust_var);
         gm_log( GM_LOG_DEBUG, "debug result:                    %s\n", opt->debug_result == GM_ENABLED ? "yes" : "no");
-        gm_log( GM_LOG_DEBUG, "result_worker:                   %d\n", opt->result_workers);
+        //gm_log( GM_LOG_DEBUG, "result_worker:                   %d\n", opt->result_workers);
         gm_log( GM_LOG_DEBUG, "do_hostchecks:                   %s\n", opt->do_hostchecks == GM_ENABLED ? "yes" : "no");
         gm_log( GM_LOG_DEBUG, "route_eventhandler_like_checks:  %s\n", opt->route_eventhandler_like_checks == GM_ENABLED ? "yes" : "no");
     }
