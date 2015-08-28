@@ -3,6 +3,7 @@ This file documents the revision history for mod_gearman.
 next:
           - add perfdata=all option to override local process_performance_data setting
           - add check_interval to performance data
+          - deprecate result_workers option
 
 1.5.3 Wed Jul  1 13:54:11 CEST 2015
           - add option for forbidden characters in command line
