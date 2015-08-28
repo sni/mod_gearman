@@ -676,6 +676,9 @@ value if your result queue is not processed fast enough.
 
 perfdata::
 Defines if the module should distribute perfdata to gearman.
+Set perfdata=all to submit all performance data
+of all hosts and services regardless of if they
+have 'process_performance_data' enabled or not.
 +
 ====
     perfdata=yes

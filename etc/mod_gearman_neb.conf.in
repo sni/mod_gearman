@@ -148,6 +148,9 @@ result_workers=1
 # handling performance data. For example: pnp4nagios
 # Performance data is just written to the gearman
 # queue.
+# Set perfdata=all to submit all performance data
+# of all hosts and services regardless of if they
+# have 'process_performance_data' enabled or not.
 # Default: no
 perfdata=no
 

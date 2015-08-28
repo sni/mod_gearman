@@ -382,6 +382,12 @@ int parse_args_line(mod_gm_opt_t *opt, char * arg, int recursion_level) {
     else if (   !strcmp( key, "perfdata" ) ) {
         opt->set_queues_by_hand++;
         opt->perfdata = parse_yes_or_no(value, GM_ENABLED);
+        /* perfdata override to dump all performance values */
+        if(value != NULL) {
+            lc(value);
+            if(!strcmp( value, "all" ))
+                opt->perfdata = GM_PERFDATA_ALL;
+        }
         return(GM_OK);
     }
 

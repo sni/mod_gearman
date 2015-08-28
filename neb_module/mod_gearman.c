@@ -101,7 +101,7 @@ int nebmodule_init( int flags, char *args, nebmodule *handle ) {
         gm_log( GM_LOG_ERROR, "mod_gearman needs BROKER_TIMED_EVENTS (%i) event_broker_options enabled to work\n", BROKER_TIMED_EVENTS );
         broker_option_errors++;
     }
-    if(    (    mod_gm_opt->perfdata == GM_ENABLED
+    if(    (    mod_gm_opt->perfdata != GM_DISABLED
              || mod_gm_opt->hostgroups_num > 0
              || mod_gm_opt->hosts == GM_ENABLED
            )
@@ -109,7 +109,7 @@ int nebmodule_init( int flags, char *args, nebmodule *handle ) {
         gm_log( GM_LOG_ERROR, "mod_gearman needs BROKER_HOST_CHECKS (%i) event_broker_options enabled to work\n", BROKER_HOST_CHECKS );
         broker_option_errors++;
     }
-    if(    (    mod_gm_opt->perfdata == GM_ENABLED
+    if(    (    mod_gm_opt->perfdata != GM_DISABLED
              || mod_gm_opt->servicegroups_num > 0
              || mod_gm_opt->services == GM_ENABLED
            )
@@ -185,7 +185,7 @@ static void register_neb_callbacks(void) {
     if ( mod_gm_opt->events == GM_ENABLED )
         neb_register_callback( NEBCALLBACK_EVENT_HANDLER_DATA, gearman_module_handle, 0, handle_eventhandler );
 
-    if ( mod_gm_opt->perfdata == GM_ENABLED ) {
+    if ( mod_gm_opt->perfdata != GM_DISABLED ) {
         if(process_performance_data == 0)
             gm_log( GM_LOG_INFO, "Warning: process_performance_data is disabled globally, cannot process performance data\n" );
         neb_register_callback( NEBCALLBACK_HOST_CHECK_DATA, gearman_module_handle, 0, handle_perfdata );
@@ -217,7 +217,7 @@ int nebmodule_deinit( int flags, int reason ) {
     if ( mod_gm_opt->events == GM_ENABLED )
         neb_deregister_callback( NEBCALLBACK_EVENT_HANDLER_DATA, gearman_module_handle );
 
-    if ( mod_gm_opt->perfdata == GM_ENABLED ) {
+    if ( mod_gm_opt->perfdata != GM_DISABLED ) {
         neb_deregister_callback( NEBCALLBACK_HOST_CHECK_DATA, gearman_module_handle );
         neb_deregister_callback( NEBCALLBACK_SERVICE_CHECK_DATA, gearman_module_handle );
     }
@@ -1020,8 +1020,8 @@ int handle_perfdata(int event_type, void *data) {
                     break;
                 }
 
-                hst = find_host(hostchkdata->host_name);
-                if(hst->process_performance_data == 0) {
+                hst = (host *) hostchkdata->object_ptr;
+                if(hst->process_performance_data == 0 && mod_gm_opt->perfdata != GM_PERFDATA_ALL) {
                     gm_log( GM_LOG_TRACE, "handle_perfdata() process_performance_data disabled for: %s\n", hst->name );
                     break;
                 }
@@ -1041,11 +1041,13 @@ int handle_perfdata(int event_type, void *data) {
                             "HOSTPERFDATA::%s\t"
                             "HOSTCHECKCOMMAND::%s!%s\t"
                             "HOSTSTATE::%d\t"
-                            "HOSTSTATETYPE::%d\n",
+                            "HOSTSTATETYPE::%d\n"
+                            "HOSTINTERVAL::%f\n\n",
                             (int)hostchkdata->timestamp.tv_sec,
                             hostchkdata->host_name, perf_data,
                             hostchkdata->command_name, hostchkdata->command_args,
-                            hostchkdata->state, hostchkdata->state_type);
+                            hostchkdata->state, hostchkdata->state_type,
+                            hst->check_interval);
                 has_perfdata = TRUE;
             }
             break;
@@ -1059,8 +1061,8 @@ int handle_perfdata(int event_type, void *data) {
                 }
 
                 /* find the naemon service object for this service */
-                svc = find_service(srvchkdata->host_name, srvchkdata->service_description);
-                if(svc->process_performance_data == 0) {
+                svc = (service *) srvchkdata->object_ptr;
+                if(svc->process_performance_data == 0 && mod_gm_opt->perfdata != GM_PERFDATA_ALL) {
                     gm_log( GM_LOG_TRACE, "handle_perfdata() process_performance_data disabled for: %s - %s\n", svc->host_name, svc->description );
                     break;
                 }
@@ -1080,12 +1082,13 @@ int handle_perfdata(int event_type, void *data) {
                             "SERVICEPERFDATA::%s\t"
                             "SERVICECHECKCOMMAND::%s\t"
                             "SERVICESTATE::%d\t"
-                            "SERVICESTATETYPE::%d\n\n\n",
+                            "SERVICESTATETYPE::%d\n"
+                            "SERVICEINTERVAL::%f\n\n",
                             (int)srvchkdata->timestamp.tv_sec,
                             srvchkdata->host_name, srvchkdata->service_description,
                             perf_data, svc->check_command,
-                            srvchkdata->state, srvchkdata->state_type);
-                free(perf_data);
+                            srvchkdata->state, srvchkdata->state_type,
+                            svc->check_interval);
                 temp_buffer[GM_BUFFERSIZE-1]='\x0';
                 has_perfdata = TRUE;
             }
