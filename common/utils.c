@@ -555,12 +555,9 @@ int parse_args_line(mod_gm_opt_t *opt, char * arg, int recursion_level) {
 
     /* result worker */
     else if ( !strcmp( key, "result_workers" ) ) {
-        gm_log( GM_LOG_ERROR, "result_workers is deprecated and is always set to 1.\n" );
-        /*
         opt->result_workers = atoi( value );
-        if(opt->result_workers > GM_LISTSIZE) { opt->result_workers = GM_LISTSIZE; }
+        if(opt->result_workers > 1) { opt->result_workers = 1; }
         if(opt->result_workers < 0) { opt->result_workers = 0; }
-        */
     }
 
     /* return code */

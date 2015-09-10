@@ -677,11 +677,12 @@ Default: `yes`
 
 
 result_workers::
-Number of result worker threads. Usually one is enough. You may increase the
-value if your result queue is not processed fast enough.
+Enable or disable result worker thread. The default is one, but
+you can set it to zero to disabled result workers, for example
+if you only want to export performance data.
 +
 ====
-    result_workers=3
+    result_workers=0
 ====
 
 
