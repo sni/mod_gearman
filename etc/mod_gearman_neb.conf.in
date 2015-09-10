@@ -134,9 +134,9 @@ localservicegroups=
 # localhostgroups/localservicegroups).
 #queue_custom_variable=WORKER
 
-# Number of result worker threads. Usually one is
-# enough. You may increase the value if your
-# result queue is not processed fast enough.
+# Enable or disable result worker thread. The default is one, but
+# you can set it to zero to disabled result workers, for example
+# if you only want to export performance data.
 # Default: 1
 result_workers=1
 
