@@ -13,10 +13,12 @@ BuildRequires: libtool, libtool-ltdl-devel, libevent-devel
 BuildRequires: gearmand-devel
 Summary:       Gearman module for Naemon
 Requires(pre,post): /sbin/ldconfig
-Requires(pre): shadow-utils
 Requires:      gearmand, perl, logrotate
 %if 0%{?el7}%{?fc20}%{?fc21}%{?fc22}
 BuildRequires: systemd
+%endif
+%if 0%{?suse_version} < 1315
+Requires(pre): shadow-utils
 %endif
 
 Provides:      mod_gearman2
