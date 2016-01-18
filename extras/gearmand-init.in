@@ -86,7 +86,7 @@ case "$1" in
             exit 1;
         fi
 
-        CMD="$DAEMON -p $PORT -P $PIDFILE $OPTIONS --log-file=$LOGFILE --verbose=2 --listen=$LISTEN"
+        CMD="$DAEMON -p $PORT -P $PIDFILE $OPTIONS --log-file=$LOGFILE --verbose=NOTICE --listen=$LISTEN"
         if [ "$WHO" = "root" ]; then
             # try to exec commands as user
             su - $USER -c /bin/true
