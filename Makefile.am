@@ -156,18 +156,7 @@ initscript-local:
 	@$(replace_vars) worker/initscript.in > worker/initscript
 	@$(replace_vars) worker/daemon-systemd.in > worker/daemon-systemd
 
-gearmand-init-local:
-	@$(replace_vars) extras/gearmand-init.in > extras/gearmand-init
-	@if [ ! -z $$(which gearmand 2>/dev/null) ]; then \
-	    sed -i -e "s:%GEARMAND%:$$(which gearmand 2>/dev/null):g" extras/gearmand-init; \
-	fi
-	@for gearm in $(GEARMANDS); do \
-  	    test -f $$gearm && sed -i -e "s:%GEARMAND%:$$gearm:g" extras/gearmand-init ; \
-	done; echo done
-	@sed -i -e 's:%GEARMAND%:/usr/sbin/gearmand:g' extras/gearmand-init
-	@chmod 755 extras/gearmand-init
-
-all-local: mod_gearman2.o initscript-local mod_gearman_neb.conf-local mod_gearman_worker.conf-local gearmand-init-local $(EPN_BIN)
+all-local: mod_gearman2.o initscript-local mod_gearman_neb.conf-local mod_gearman_worker.conf-local $(EPN_BIN)
 	@echo ""
 	@echo "################################################################"
 	@echo ""
@@ -200,7 +189,6 @@ clean-local:
 	         rpm.topdir \
 	         *.o \
 	         */*.o \
-	         extras/gearmand-init \
 	         etc/mod_gearman_neb.conf \
 	         etc/mod_gearman_worker.conf \
 	         mod_gearman_mini_epn perlxsi.c
@@ -220,7 +208,6 @@ worker.static: worker
 install-exec-local: install-local-state-dir
 	$(install_sh_PROGRAM) -m 644 mod_gearman2.o $(DESTDIR)$(pkglibdir)/mod_gearman2.o
 	$(install_sh_PROGRAM) -m 755 worker/initscript $(DESTDIR)$(initrddir)/mod-gearman-worker
-	$(install_sh_PROGRAM) -m 755 extras/gearmand-init $(DESTDIR)$(initrddir)/gearmand
 
 install-local-state-dir:
 	$(install_sh_PROGRAM) -d $(DESTDIR)$(localstatedir)/mod_gearman2/
