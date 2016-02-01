@@ -43,8 +43,7 @@ Features
 
 Download
 --------
- * Latest stable for Naemon
-   http://www.mod-gearman.org/download2/v2.1.5/src/mod_gearman2-2.1.5.tar.gz[version 2.1.5], released September 30 2015
+ * Latest stable for Naemon http://www.mod-gearman.org/download2/v2.1.5/src/mod_gearman2-2.1.5.tar.gz[version 2.1.5], released September 30 2015
  * Latest stable for Nagios 3 / Icinga http://www.mod-gearman.org/download/v1.5.5/src/mod_gearman-1.5.5.tar.gz[version 1.5.5], released September 30 2015
  * Mod Gearman is available for download at: http://mod-gearman.org/download.html
  * Source is available on GitHub: http://github.com/sni/mod_gearman
@@ -429,7 +428,7 @@ it can be started with
 /usr/sbin/gearmand -t 10 -j 0
 --------------------------------------
 
-or a supplied init script (extras/gearmand-init). Command line
+or a supplied init script. Command line
 arguments have change in recent gearman versions and you now should
 use something like:
 --------------------------------------
