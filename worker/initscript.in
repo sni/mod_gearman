@@ -1,10 +1,10 @@
 #!/bin/sh
 
 # chkconfig: 2345 85 15
-# description: Mod-Gearman2 Worker Daemon
+# description: Mod-Gearman Worker Daemon
 
 ### BEGIN INIT INFO
-# Provides:          mod_gearman2_worker
+# Provides:          mod_gearman_worker
 # Required-Start:    $local_fs
 # Required-Stop:     $local_fs
 # Should-Start:
@@ -17,7 +17,7 @@
 
 PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 DAEMON=%WORKERBIN%
-NAME=mod_gearman2_worker
+NAME=mod_gearman_worker
 CONFIG=%CONFIG_WORKER%
 PIDFILE=%PIDFILE%
 LOCKFILE=/var/lock/subsys/$NAME
@@ -25,8 +25,8 @@ USER=%USER%
 USERID=`id -u`
 
 # load extra environment variables
-if [ -f /etc/sysconfig/mod_gearman_worker2 ]; then
-        . /etc/sysconfig/mod_gearman_worker2
+if [ -f /etc/sysconfig/mod_gearman_worker ]; then
+        . /etc/sysconfig/mod_gearman_worker
 fi
 
 # create state dir

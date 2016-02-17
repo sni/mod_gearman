@@ -1,22 +1,22 @@
 #!/bin/sh
 
 ### BEGIN INIT INFO
-# Provides:          mod_gearman2_worker
+# Provides:          mod_gearman_worker
 # Required-Start:    $local_fs $remote_fs
 # Required-Stop:     $local_fs $remote_fs
 # Should-Start:
 # Should-Stop:
 # Default-Start:     2 3 4 5
 # Default-Stop:      0 1 6
-# Short-Description: Control the mod-gearman2 worker daemon
+# Short-Description: Control the mod-gearman worker daemon
 ### END INIT INFO
 
 
 PATH=/usr/sbin:/usr/bin:/sbin:/bin
-NAME=mod_gearman2_worker
+NAME=mod_gearman_worker
 DAEMON=/usr/sbin/$NAME
-CONFIG=/etc/mod-gearman2/worker.conf
-PIDFILE=/var/run/mod-gearman2/worker.pid
+CONFIG=/etc/mod-gearman/worker.conf
+PIDFILE=/var/run/mod-gearman/worker.pid
 USER=naemon
 USERID=$(id -u)
 DAEMON_OPTS="-d --config=$CONFIG --pidfile=$PIDFILE"

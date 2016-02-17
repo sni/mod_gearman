@@ -42,7 +42,7 @@ void check_neb(char * nebargs) {
     process_performance_data         = 1;
 
     /* load neb module */
-    neb_handle=(void *)dlopen("./mod_gearman2.o",RTLD_LAZY|RTLD_GLOBAL);
+    neb_handle=(void *)dlopen("./mod_gearman.o",RTLD_LAZY|RTLD_GLOBAL);
     ok(neb_handle != NULL, "neb module loaded");
     err = dlerror(); if(err != NULL) { BAIL_OUT("cannot load module: %s\n", err ); }
     module_version_ptr=(int *)dlsym(neb_handle,"__neb_api_version");

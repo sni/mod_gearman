@@ -795,7 +795,7 @@ int main(void) {
     init_svc();
     init_svc_check();
 
-    neb_handle = load_neb("./mod_gearman2.o", test_nebargs[0]);
+    neb_handle = load_neb("./mod_gearman.o", test_nebargs[0]);
     neb_make_callbacks(NEBCALLBACK_PROCESS_DATA, &data_process_events);
 
     while (ok) {

@@ -1,4 +1,4 @@
-Source: mod-gearman2
+Source: mod-gearman
 Section: net
 Priority: extra
 Maintainer: Sven Nierlein <sven.nierlein@consol.de>
@@ -8,7 +8,7 @@ Homepage: http://labs.consol.de/nagios/mod-gearman/
 Vcs-Git: git://git.debian.org/pkg-nagios/pkg-mod-gearman
 Vcs-Browser: http://git.debian.org/?p=pkg-nagios/pkg-mod-gearman
 
-Package: mod-gearman2-doc
+Package: mod-gearman-doc
 Architecture: all
 Section: doc
 Depends: ${misc:Depends}
@@ -16,7 +16,7 @@ Description: Documentation and examples for Mod Gearman
  This package contains documentation and examples common to the
  mod-gearman-module and mod-gearman-worker packages.
 
-Package: mod-gearman2-module
+Package: mod-gearman-module
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: Event broker module to distribute service checks.
@@ -26,10 +26,10 @@ Description: Event broker module to distribute service checks.
  .
  There can be multiple equal gearman job servers.
 
-Package: mod-gearman2-worker
+Package: mod-gearman-worker
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
-Description: Worker agent for mod-gearman2
+Description: Worker agent for mod-gearman
  The worker agent for mod-geraman connects to a gearman job server,
  runs active Naemon service checks, and return the results.
  .
@@ -40,20 +40,20 @@ Description: Worker agent for mod-gearman2
  to Naemon via a gearman server, and a plugin to monitor the gearman
  job server itself.
 
-Package: mod-gearman2-tools
+Package: mod-gearman-tools
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
-Description: Tools for mod-gearman2
+Description: Tools for mod-gearman
  The Mod Gearman package contains tools to complement a mod gearman
  installation.
  .
  Such tools include:
  .
-  - check_gearman2 - Naemon service check to monitor the gearman job
+  - check_gearman - Naemon service check to monitor the gearman job
     server
-  - gearman_top2 - Monitor the gearman job server
-  - send_gearman2 - Submit active and passive check results to a
+  - gearman_top - Monitor the gearman job server
+  - send_gearman - Submit active and passive check results to a
     gearman job server
-  - send_multi2 - Submit check results from the check_multi to a gearman
+  - send_multi - Submit check results from the check_multi to a gearman
     job server
-  - mod_gearman_mini_epn2 - mini epn tester
+  - mod_gearman_mini_epn - mini epn tester

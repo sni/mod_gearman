@@ -1,11 +1,11 @@
-Name:          mod_gearman2
-Version:       2.1.5
+Name:          mod_gearman
+Version:       3.0.0
 Release:       1%{?dist}
 License:       GNU Public License version 2
 Packager:      Sven Nierlein <sven.nierlein@consol.de>
 Vendor:        Labs Consol
 URL:           http://labs.consol.de/nagios/mod-gearman/
-Source0:       mod_gearman2-%{version}.tar.gz
+Source0:       mod_gearman-%{version}.tar.gz
 Group:         Applications/Monitoring
 BuildRoot:     %{_tmppath}/%{name}-%{version}-root-%(%{__id_u} -n)
 BuildRequires: autoconf, automake, ncurses-devel
@@ -21,7 +21,7 @@ BuildRequires: systemd
 Requires(pre): shadow-utils
 %endif
 
-Provides:      mod_gearman2
+Provides:      mod_gearman
 
 %description
 Mod Gearman is a new way of distributing active Naemon (and compatible cores)
@@ -58,11 +58,11 @@ be bound to host and servicegroups.
 
 %if 0%{?el7}%{?fc20}%{?fc21}%{?fc22}
 # Install systemd entry
-%{__install} -D -m 0644 -p worker/daemon-systemd %{buildroot}%{_unitdir}/mod-gearman2-worker.service
+%{__install} -D -m 0644 -p worker/daemon-systemd %{buildroot}%{_unitdir}/mod-gearman-worker.service
 mkdir -p %{buildroot}%{_sysconfdir}/sysconfig
-echo "NICELEVEL=0" > %{buildroot}%{_sysconfdir}/sysconfig/mod-gearman2-worker
+echo "NICELEVEL=0" > %{buildroot}%{_sysconfdir}/sysconfig/mod-gearman-worker
 # remove SystemV init-script
-%{__rm} -f %{buildroot}%{_initrddir}/mod-gearman2-worker
+%{__rm} -f %{buildroot}%{_initrddir}/mod-gearman-worker
 %endif
 
 
@@ -70,7 +70,7 @@ echo "NICELEVEL=0" > %{buildroot}%{_sysconfdir}/sysconfig/mod-gearman2-worker
 %pre
 getent group naemon >/dev/null || groupadd -r naemon
 getent passwd naemon >/dev/null || \
-    useradd -r -g naemon -d %{_localstatedir}/mod_gearman2 -s /sbin/nologin \
+    useradd -r -g naemon -d %{_localstatedir}/mod_gearman -s /sbin/nologin \
     -c "naemon user" naemon
 exit 0
 
@@ -79,23 +79,23 @@ exit 0
 %if 0%{?el7}%{?fc20}%{?fc21}%{?fc22}
 # on first installation only
 if [ $1 -eq 1 ] ; then
-    systemctl enable mod-gearman2-worker
-    systemctl start mod-gearman2-worker
+    systemctl enable mod-gearman-worker
+    systemctl start mod-gearman-worker
 else
-    systemctl try-restart mod-gearman2-worker
+    systemctl try-restart mod-gearman-worker
 fi
 %else
 if test $1 = 1; then
-  /sbin/chkconfig --add mod-gearman2-worker
+  /sbin/chkconfig --add mod-gearman-worker
 fi
 %endif
 
 %preun
 %if 0%{?el7}%{?fc20}%{?fc21}%{?fc22}
-systemctl disable mod-gearman2-worker
+systemctl disable mod-gearman-worker
 %else
 if test $1 = 0; then
-  /sbin/chkconfig --del mod-gearman2-worker
+  /sbin/chkconfig --del mod-gearman-worker
 fi
 %endif
 
@@ -107,37 +107,40 @@ fi
 
 %files
 %if 0%{?el7}%{?fc20}%{?fc21}%{?fc22}
-  %attr(0644,root,root) %{_unitdir}/mod-gearman2-worker.service
-  %attr(0644,root,root) %{_sysconfdir}/sysconfig/mod-gearman2-worker
+  %attr(0644,root,root) %{_unitdir}/mod-gearman-worker.service
+  %attr(0644,root,root) %{_sysconfdir}/sysconfig/mod-gearman-worker
 %else
-  %attr(755,root,root) %{_initrddir}/mod-gearman2-worker
+  %attr(755,root,root) %{_initrddir}/mod-gearman-worker
 %endif
 
-%config(noreplace) %{_sysconfdir}/mod_gearman2/module.conf
-%config(noreplace) %{_sysconfdir}/mod_gearman2/worker.conf
-%config(noreplace) %{_sysconfdir}/logrotate.d/mod_gearman2
+%config(noreplace) %{_sysconfdir}/mod_gearman/module.conf
+%config(noreplace) %{_sysconfdir}/mod_gearman/worker.conf
+%config(noreplace) %{_sysconfdir}/logrotate.d/mod_gearman
 
-%{_datadir}/mod_gearman2/standalone_worker.conf
-%{_datadir}/mod_gearman2/shared.conf
-%{_datadir}/mod_gearman2/mod_gearman_p1.pl
-%{_datadir}/mod_gearman2/gearman_proxy.pl
+%{_datadir}/mod_gearman/standalone_worker.conf
+%{_datadir}/mod_gearman/shared.conf
+%{_datadir}/mod_gearman/mod_gearman_p1.pl
+%{_datadir}/mod_gearman/gearman_proxy.pl
 
-%{_bindir}/check_gearman2
-%{_bindir}/gearman_top2
-%{_bindir}/mod_gearman2_worker
-%{_bindir}/send_gearman2
+%{_bindir}/check_gearman
+%{_bindir}/gearman_top
+%{_bindir}/mod_gearman_worker
+%{_bindir}/send_gearman
 %{_bindir}/send_multi2
-%{_bindir}/mod_gearman2_mini_epn
+%{_bindir}/mod_gearman_mini_epn
 
-%{_libdir}/mod_gearman2/mod_gearman2.o
+%{_libdir}/mod_gearman/mod_gearman.o
 
-%attr(755,naemon,root) %{_localstatedir}/mod_gearman2
-%attr(755,naemon,root) %{_localstatedir}/log/mod_gearman2
+%attr(755,naemon,root) %{_localstatedir}/mod_gearman
+%attr(755,naemon,root) %{_localstatedir}/log/mod_gearman
 
 %defattr(-,root,root)
 %docdir %{_defaultdocdir}
 
 %changelog
+* Wed Feb 17 2016 Sven Nierlein <sven@consol.de>
+- prepare for mod-gearman 3
+
 * Mon Sep 08 2014 Sven Nierlein <sven@consol.de>
 - released mod-gearman 2.0
 

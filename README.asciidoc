@@ -10,8 +10,7 @@ increasing Naemon scalability. Mod-Gearman can even help to reduce the
 load on a single Naemon host, because its much smaller and more
 efficient in executing checks.
 
- * Mod-Gearman 1.x works with Nagios 3
- * Mod-Gearman 2.x works with Naemon (and might work with Nagios 4)
+ * Mod-Gearman 3.x works with Nagios 3 and Naemon (and might work with Nagios 4)
 
 It consists of three parts:
 
@@ -46,8 +45,7 @@ Features
 
 Download
 --------
- * Latest stable for Naemon http://www.mod-gearman.org/download2/v2.1.5/src/mod_gearman2-2.1.5.tar.gz[version 2.1.5], released September 30 2015
- * Latest stable for Nagios 3 / Icinga http://www.mod-gearman.org/download/v1.5.5/src/mod_gearman-1.5.5.tar.gz[version 1.5.5], released September 30 2015
+ * Latest stable release http://www.mod-gearman.org/download/v3.0.0/src/mod_gearman-3.0.0.tar.gz[version 3.0.0], released Februar 25 2016
  * Mod Gearman is available for download at: http://mod-gearman.org/download.html
  * Source is available on GitHub: http://github.com/sni/mod_gearman
  * Older versions are available in the <<_archive,download archive>>.
@@ -1278,15 +1276,15 @@ libgearman.
 
 Naemon
 ~~~~~~
-Mod-Gearman 2 works perfectly with all versions of the Naemon core.
-Use Naemon if unsure which core fits best.
+Mod-Gearman works perfectly with all versions of the Naemon core.
+
+ * http://naemon.org[Naemon]
 
 
 Nagios
 ~~~~~~
-Use Mod-Gearman 1 if you still use the Nagios Core. Preferable version 3.2.3
-or 3.5.1. Nagios core is not supported anymore. Use Naemon if you plan to upgrade
-to Nagios 4.
+Mod-Gearman works well with Nagios 3. Preferable version 3.2.3
+or 3.5.1.
 
  * http://nagios.org[Nagios]
 
@@ -1294,9 +1292,9 @@ to Nagios 4.
 
 Icinga
 ~~~~~~
-The Icinga core is not supported by Mod-Gearman. However, people have reported
-it works with Icinga 1.2.0, 1.8 and 1.10.1 but it seems like some statistics
-are not updated. Use Mod-Gearman 1 if you want to run it on Icinga core.
+The Icinga core is not really supported by Mod-Gearman. However, people have
+reported it works with Icinga 1.2.0, 1.8 and 1.10.1 but it seems like some
+statistics are not updated.
 
  * http://icinga.org[Icinga]
 

@@ -1,0 +1,4 @@
+debian/check_gearman.8
+debian/gearman_top.8
+debian/send_gearman.8
+debian/send_multi.8

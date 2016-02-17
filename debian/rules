@@ -22,44 +22,44 @@ override_dh_auto_install:
 	dh_auto_install
 	cp etc/mod_gearman_worker.conf debian/worker.conf
 	cp etc/mod_gearman_neb.conf debian/module.conf
-	cp worker/mod_gearman_p1.pl debian/tmp/usr/share/mod_gearman2/mod_gearman_p1.pl
-	rm -f debian/mod-gearman/usr/share/mod_gearman2/shared.conf
-	rm -f debian/mod-gearman/usr/share/mod_gearman2/standalone_worker.conf
+	cp worker/mod_gearman_p1.pl debian/tmp/usr/share/mod_gearman/mod_gearman_p1.pl
+	rm -f debian/mod-gearman/usr/share/mod_gearman/shared.conf
+	rm -f debian/mod-gearman/usr/share/mod_gearman/standalone_worker.conf
 
 	help2man --no-info --section=8 --version-string="mod_gearman_worker $(DEB_VERSION)" \
 		--help-option=-h --include=$(CURDIR)/debian/help2man.include \
                 -n "Agent that runs active checks from a gearman queue" \
-                $(CURDIR)/debian/tmp/usr/bin/mod_gearman2_worker \
-                > $(CURDIR)/debian/mod_gearman2_worker.8
+                $(CURDIR)/debian/tmp/usr/bin/mod_gearman_worker \
+                > $(CURDIR)/debian/mod_gearman_worker.8
 
 	help2man --no-info --section=8 --version-string="check_gearman $(DEB_VERSION)" \
 		--help-option=-h --include=$(CURDIR)/debian/help2man.include \
                 -n "Nagios service check to monitor the gearman job server" \
-                $(CURDIR)/debian/tmp/usr/bin/check_gearman2 \
-                > $(CURDIR)/debian/check_gearman2.8
+                $(CURDIR)/debian/tmp/usr/bin/check_gearman \
+                > $(CURDIR)/debian/check_gearman.8
 
 	help2man --no-info --section=8 --version-string="send_gearman $(DEB_VERSION)" \
 		--help-option=-h --include=$(CURDIR)/debian/help2man.include \
                 -n "Submit active and passive check results to a gearman job server" \
-                $(CURDIR)/debian/tmp/usr/bin/send_gearman2 \
-                > $(CURDIR)/debian/send_gearman2.8
+                $(CURDIR)/debian/tmp/usr/bin/send_gearman \
+                > $(CURDIR)/debian/send_gearman.8
 
 	help2man --no-info --section=8 --version-string="gearman_top $(DEB_VERSION)" \
 		--help-option=-h --include=$(CURDIR)/debian/help2man.include \
                 -n "Monitor the gearman job server" \
-                $(CURDIR)/debian/tmp/usr/bin/gearman_top2 \
-                > $(CURDIR)/debian/gearman_top2.8
+                $(CURDIR)/debian/tmp/usr/bin/gearman_top \
+                > $(CURDIR)/debian/gearman_top.8
 
 	help2man --no-info --section=8 --version-string="send_multi $(DEB_VERSION)" \
 		--help-option=-h --include=$(CURDIR)/debian/help2man.include \
                 -n "Submit check results from check_multi to a gearman job server" \
-                $(CURDIR)/debian/tmp/usr/bin/send_multi2 \
-                > $(CURDIR)/debian/send_multi2.8
+                $(CURDIR)/debian/tmp/usr/bin/send_multi \
+                > $(CURDIR)/debian/send_multi.8
 
 	help2man --no-info --section=8 --version-string="mod_gearman_mini_epn $(DEB_VERSION)" \
 		--help-option=-h --include=$(CURDIR)/debian/help2man.include \
                 -n "Monitor the gearman job server" \
-                $(CURDIR)/debian/tmp/usr/bin/mod_gearman2_mini_epn \
-                > $(CURDIR)/debian/mod_gearman2_mini_epn.8
+                $(CURDIR)/debian/tmp/usr/bin/mod_gearman_mini_epn \
+                > $(CURDIR)/debian/mod_gearman_mini_epn.8
 
 override_dh_auto_test:

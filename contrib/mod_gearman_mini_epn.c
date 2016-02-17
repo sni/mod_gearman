@@ -8,7 +8,7 @@
 
 #define MAX_INPUT_CHARS 1024
 
-#define P1FILE DATADIR"/mod_gearman2/mod_gearman_p1.pl"
+#define P1FILE DATADIR"/mod_gearman/mod_gearman_p1.pl"
 
 static PerlInterpreter *my_perl = NULL;
 
