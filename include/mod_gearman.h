@@ -50,8 +50,19 @@
  * @{
  */
 
+#ifdef USENAGIOS3
+/* include some Nagios stuff as well */
+#include "nagios/nagios.h"
+#include "nagios/neberrors.h"
+#include "nagios/nebstructs.h"
+#include "nagios/nebcallbacks.h"
+#include "nagios/broker.h"
+#include "nagios/macros.h"
+#endif
+#ifdef USENAEMON
 /* include naemon */
 #include "naemon/naemon.h"
+#endif
 
 /* include the gearman libs */
 #include <libgearman/gearman.h>
@@ -85,7 +96,12 @@ int nebmodule_deinit( int flags, int reason );
  *
  * @return nothing
  */
+#ifdef USENAEMON
 void mod_gm_add_result_to_list(check_result * newcheckresult);
+#endif
+#ifdef USENAGIOS3
+void mod_gm_add_result_to_list_3x(check_result * newcheckresult);
+#endif
 
 /**
  * @}

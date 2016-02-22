@@ -1,5 +1,8 @@
 This file documents the revision history for mod_gearman.
 
+3.x
+          - support ipv6 in gearman_top and check_gearman
+
 2.1.5 Wed Sep 30 11:49:17 CEST 2015
           - reintroduce result_workers option because it is required to disabled result workers
             but maximum is now one result worker.

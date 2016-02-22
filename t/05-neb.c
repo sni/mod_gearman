@@ -6,17 +6,33 @@
 #include <ltdl.h>
 #include <t/tap.h>
 
+#include <config.h>
+
+#ifdef USENAGIOS3
+#include "nagios/nagios.h"
+#include "nagios/nebmodules.h"
+#include "nagios/nebstructs.h"
+#include "nagios/nebcallbacks.h"
+#include "nagios/broker.h"
+#endif
+#ifdef USENAEMON
 #include "naemon/naemon.h"
 #include "naemon/nebmodules.h"
 #include "naemon/nebstructs.h"
 #include "naemon/nebcallbacks.h"
 #include "naemon/broker.h"
+#endif
 
 int service_check_timeout;
 int host_check_timeout;
 int currently_running_service_checks;
 int currently_running_host_checks;
+#ifdef USENAGIOS3
+int event_broker_options;
+#endif
+#ifdef USENAEMON
 unsigned long event_broker_options;
+#endif
 check_result *check_result_list;
 check_result check_result_info;
 int process_performance_data;

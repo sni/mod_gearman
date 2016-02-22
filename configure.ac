@@ -41,7 +41,6 @@ AC_CHECK_LIB([pthread], [pthread_create])
 AC_CHECK_HEADERS([stdlib.h string.h unistd.h pthread.h arpa/inet.h fcntl.h limits.h netdb.h netinet/in.h stddef.h sys/socket.h sys/time.h sys/timeb.h syslog.h],,AC_MSG_ERROR([Compiling Mod-Gearman requires standard unix headers files]))
 AC_CHECK_HEADERS([ltdl.h],,AC_MSG_ERROR([Compiling Mod-Gearman requires ltdl.h]))
 AC_CHECK_HEADERS([curses.h],,AC_MSG_ERROR([Compiling Mod-Gearman requires curses.h]))
-AC_CHECK_HEADERS([naemon/naemon.h],,AC_MSG_ERROR([Compiling Mod-Gearman requires naemon.h (hint: install naemon-dev pkg)]))
 
 AC_ARG_WITH(gearman,
  [  --with-gearman=DIR Specify the path to your gearman library],
@@ -103,6 +102,23 @@ if test "$USEPERL" = "yes"; then
     echo "Embedded Perl interpreter will be compiled in..."
     PERLLIBS="`perl -MExtUtils::Embed -e ccopts -e ldopts | tr -d '\n'`"
     AC_SUBST(PERLLIBS)
+fi
+
+##############################################
+USECORE=naemon;
+AC_ARG_WITH(neb-module,
+ [  --with-neb-module=CORE Specify which neb module should be build. Should be naemon or nagios3],
+ [ USECORE="$withval"; ]
+)
+
+if test "$USECORE" = "naemon"; then
+    AC_DEFINE_UNQUOTED(USENAEMON,,[Build naemon neb module])
+    AC_CHECK_HEADERS([naemon/naemon.h],,AC_MSG_ERROR([Compiling Mod-Gearman requires naemon.h (hint: install naemon-dev pkg)]))
+elif test "$USECORE" = "nagios3"; then
+    AC_DEFINE_UNQUOTED(USENAGIOS3,,[Build nagios3 neb module])
+else
+    echo '--with-neb-module must be either naemon or nagios3.'
+    exit 1;
 fi
 
 ##############################################

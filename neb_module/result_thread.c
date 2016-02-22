@@ -28,6 +28,7 @@
 #include "mod_gearman.h"
 #include "gearman_utils.h"
 
+#ifdef USENAEMON
 static const char *gearman_worker_source_name(void *source) {
     if(!source)
         return "unknown internal source (voodoo, perhaps?)";
@@ -40,6 +41,7 @@ struct check_engine mod_gearman_check_engine = {
     gearman_worker_source_name,
     NULL
 };
+#endif
 
 /* cleanup and exit this thread */
 static void cancel_worker_thread (void * data) {
@@ -169,7 +171,9 @@ void *get_results( gearman_job_st *job, void *context, size_t *result_size, gear
 #ifdef GM_DEBUG
     free(decrypted_orig);
 #endif
+#ifdef USENAEMON
         free(decrypted_data);
+#endif
         return NULL;
     }
     init_check_result(chk_result);
@@ -177,9 +181,9 @@ void *get_results( gearman_job_st *job, void *context, size_t *result_size, gear
     chk_result->reschedule_check    = TRUE;
     chk_result->output_file         = 0;
     chk_result->output_file_fp      = NULL;
-
+#ifdef USENAEMON
     chk_result->engine              = &mod_gearman_check_engine;
-
+#endif
     core_start_time.tv_sec          = 0;
     core_start_time.tv_usec         = 0;
 
@@ -195,8 +199,13 @@ void *get_results( gearman_job_st *job, void *context, size_t *result_size, gear
                 chk_result->output = gm_strdup("(null)");
             }
             else {
+#ifdef USENAGIOS3
+                chk_result->output = gm_strdup( value );
+#endif
+#ifdef USENAEMON
                 /* replace newlines with actual newlines */
                 chk_result->output = replace_str(value, "\\n", "\n");
+#endif
             }
         }
 
@@ -208,7 +217,9 @@ void *get_results( gearman_job_st *job, void *context, size_t *result_size, gear
         } else if ( !strcmp( key, "service_description" ) ) {
             chk_result->service_description = gm_strdup( value );
         } else if ( !strcmp( key, "source" ) ) {
+#ifdef USENAEMON
             chk_result->source = gm_strdup( value );
+#endif
         } else if ( !strcmp( key, "check_options" ) ) {
             chk_result->check_options = atoi( value );
         } else if ( !strcmp( key, "scheduled_check" ) ) {

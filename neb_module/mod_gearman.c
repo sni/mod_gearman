@@ -30,15 +30,33 @@
 NEB_API_VERSION( CURRENT_NEB_API_VERSION )
 
 /* import some global variables */
+#ifdef USENAGIOS3
+extern int            event_broker_options;
+#endif
+#ifdef USENAEMON
 extern unsigned long  event_broker_options;
+#endif
 extern int            currently_running_host_checks;
 extern int            currently_running_service_checks;
 extern int            service_check_timeout;
 extern int            host_check_timeout;
+#ifdef USENAGIOS3
+extern timed_event  * event_list_low;
+extern timed_event  * event_list_low_tail;
+#endif
 extern int            process_performance_data;
+#ifdef USENAGIOS3
+extern check_result   check_result_info;
+extern check_result * check_result_list;
+#endif
 
 /* global variables */
+#ifdef USENAGIOS3
+static check_result * mod_gm_result_list = 0;
+#endif
+#ifdef USENAEMON
 static objectlist * mod_gm_result_list = 0;
+#endif
 static pthread_mutex_t mod_gm_result_list_mutex = PTHREAD_MUTEX_INITIALIZER;
 void *gearman_module_handle=NULL;
 gearman_client_st client;
@@ -61,7 +79,13 @@ static void  set_target_queue( host *, service * );
 static int   handle_process_events( int, void * );
 static int   handle_timed_events( int, void * );
 static void  start_threads(void);
+#ifdef USENAGIOS3
+static check_result * merge_result_lists(check_result * lista, check_result * listb);
+static void move_results_to_core_3x(void);
+#endif
+#ifdef USENAEMON
 static void move_results_to_core(void);
+#endif
 
 int nebmodule_init( int flags, char *args, nebmodule *handle ) {
     int i;
@@ -266,13 +290,38 @@ static int handle_timed_events( int event_type, void *data ) {
 
     gm_log( GM_LOG_TRACE, "handle_timed_events(%i, data)\n", event_type, ted->event_type );
 
+#ifdef USENAGIOS3
+    move_results_to_core_3x();
+#endif
+#ifdef USENAEMON
     move_results_to_core();
+#endif
 
     return NEB_OK;
 }
 
+#ifdef USENAGIOS3
+/* merge results with core */
+static check_result * merge_result_lists(check_result * lista, check_result * listb) {
+    check_result * result = 0;
 
-/* insert results list into core */
+    check_result ** iter;
+    for (iter = &result; lista && listb; iter = &(*iter)->next) {
+        if (mod_gm_time_compare(&lista->finish_time, &listb->finish_time) <= 0) {
+            *iter = lista; lista = lista->next;
+        } else {
+            *iter = listb; listb = listb->next;
+        }
+    }
+
+    *iter = lista? lista: listb;
+
+    return result;
+}
+#endif
+
+/* insert results list into naemon core */
+#ifdef USENAEMON
 static void move_results_to_core() {
     /* safely save off currently local list */
     pthread_mutex_lock(&mod_gm_result_list_mutex);
@@ -290,15 +339,52 @@ static void move_results_to_core() {
 
     pthread_mutex_unlock(&mod_gm_result_list_mutex);
 }
+#endif
 
+/* insert results list into nagios 3 core */
+#ifdef USENAGIOS3
+static void move_results_to_core_3x() {
+   check_result * local;
+
+   /* safely save off currently local list */
+   pthread_mutex_lock(&mod_gm_result_list_mutex);
+   local = mod_gm_result_list;
+   mod_gm_result_list = 0;
+   pthread_mutex_unlock(&mod_gm_result_list_mutex);
+
+   /* merge local into check_result_list, store in check_result_list */
+   check_result_list = merge_result_lists(local, check_result_list);
+}
+#endif
 
 /* add list to gearman result list */
+#ifdef USENAEMON
 void mod_gm_add_result_to_list(check_result * newcr) {
     pthread_mutex_lock(&mod_gm_result_list_mutex);
     add_object_to_objectlist(&mod_gm_result_list, newcr);
     pthread_mutex_unlock(&mod_gm_result_list_mutex);
 }
+#endif
 
+/* add list to gearman result list (nagios3) */
+#ifdef USENAGIOS3
+void mod_gm_add_result_to_list_3x(check_result * newcr) {
+   check_result ** curp;
+
+   assert(newcr);
+
+   pthread_mutex_lock(&mod_gm_result_list_mutex);
+
+   for (curp = &mod_gm_result_list; *curp; curp = &(*curp)->next)
+      if (mod_gm_time_compare(&(*curp)->finish_time, &newcr->finish_time) >= 0)
+         break;
+
+   newcr->next = *curp;
+   *curp = newcr;
+
+   pthread_mutex_unlock(&mod_gm_result_list_mutex);
+}
+#endif
 
 /* handle process events */
 static int handle_process_events( int event_type, void *data ) {
@@ -509,7 +595,12 @@ static int handle_host_check( int event_type, void *data ) {
     hst->is_being_freshened=FALSE;
 
     /* adjust host check attempt */
+#ifdef USENAGIOS3
+    adjust_host_check_attempt_3x(hst,TRUE);
+#endif
+#ifdef USENAEMON
     adjust_host_check_attempt(hst,TRUE);
+#endif
 
     temp_buffer[0]='\x0';
 
@@ -518,7 +609,12 @@ static int handle_host_check( int event_type, void *data ) {
     grab_host_macros(hst);
 
     /* get the raw command line */
+#ifdef USENAGIOS3
+    get_raw_command_line(hst->check_command_ptr,hst->host_check_command,&raw_command,0);
+#endif
+#ifdef USENAEMON
     get_raw_command_line(hst->check_command_ptr,hst->check_command,&raw_command,0);
+#endif
     if(raw_command==NULL){
         gm_log( GM_LOG_ERROR, "Raw check command for host '%s' was NULL - aborting.\n",hst->name );
         return NEBERROR_CALLBACKCANCEL;
@@ -606,7 +702,12 @@ static int handle_host_check( int event_type, void *data ) {
         chk_result->start_time.tv_sec   = (unsigned long)time(NULL);
         chk_result->finish_time.tv_sec  = (unsigned long)time(NULL);
         chk_result->latency             = 0;
+#ifdef USENAGIOS3
+        mod_gm_add_result_to_list_3x( chk_result );
+#endif
+#ifdef USENAEMON
         mod_gm_add_result_to_list( chk_result );
+#endif
         chk_result = NULL;
     }
 
@@ -681,7 +782,12 @@ static int handle_svc_check( int event_type, void *data ) {
     grab_service_macros(svc);
 
     /* get the raw command line */
+#ifdef USENAGIOS3
+    get_raw_command_line(svc->check_command_ptr,svc->service_check_command,&raw_command,0);
+#endif
+#ifdef USENAEMON
     get_raw_command_line(svc->check_command_ptr,svc->check_command,&raw_command,0);
+#endif
     if(raw_command==NULL){
         gm_log( GM_LOG_ERROR, "Raw check command for service '%s' on host '%s' was NULL - aborting.\n", svc->description, svc->host_name );
         return NEBERROR_CALLBACKCANCEL;
@@ -726,7 +832,12 @@ static int handle_svc_check( int event_type, void *data ) {
     snprintf( uniq,GM_BUFFERSIZE-1,"%s-%s", svcdata->host_name, svcdata->service_description);
 
     /* execute forced checks with high prio as they are propably user requested */
+#ifdef USENAGIOS3
+    if(check_result_info.check_options & CHECK_OPTION_FORCE_EXECUTION)
+#endif
+#ifdef USENAEMON
     if(svc->check_options & CHECK_OPTION_FORCE_EXECUTION)
+#endif
         prio = GM_JOB_PRIO_HIGH;
 
     if(add_job_to_queue( &client,
@@ -780,7 +891,12 @@ static int handle_svc_check( int event_type, void *data ) {
         chk_result->start_time.tv_sec   = (unsigned long)time(NULL);
         chk_result->finish_time.tv_sec  = (unsigned long)time(NULL);
         chk_result->latency             = 0;
+#ifdef USENAGIOS3
+        mod_gm_add_result_to_list_3x( chk_result );
+#endif
+#ifdef USENAEMON
         mod_gm_add_result_to_list( chk_result );
+#endif
         chk_result = NULL;
     }
 
@@ -1001,7 +1117,9 @@ int handle_perfdata(int event_type, void *data) {
     host *hst        = NULL;
     service *svc     = NULL;
     int has_perfdata = FALSE;
+#ifdef USENAEMON
     char *perf_data;
+#endif
 
     gm_log( GM_LOG_TRACE, "handle_perfdata(%d)\n", event_type );
     if(process_performance_data == 0) {
@@ -1029,8 +1147,10 @@ int handle_perfdata(int event_type, void *data) {
                 uniq[0]='\x0';
                 snprintf( uniq,GM_BUFFERSIZE-1,"%s", hostchkdata->host_name);
 
+#ifdef USENAEMON
                 /* replace newlines with actual newlines */
                 perf_data = replace_str(hostchkdata->perf_data, "\\n", "\n");
+#endif
 
 
                 temp_buffer[0]='\x0';
@@ -1044,7 +1164,12 @@ int handle_perfdata(int event_type, void *data) {
                             "HOSTSTATETYPE::%d\n"
                             "HOSTINTERVAL::%f\n\n",
                             (int)hostchkdata->timestamp.tv_sec,
+#ifdef USENAGIOS3
+                            hostchkdata->host_name, hostchkdata->perf_data,
+#endif
+#ifdef USENAEMON
                             hostchkdata->host_name, perf_data,
+#endif
                             hostchkdata->command_name, hostchkdata->command_args,
                             hostchkdata->state, hostchkdata->state_type,
                             hst->check_interval);
@@ -1070,8 +1195,10 @@ int handle_perfdata(int event_type, void *data) {
                 uniq[0]='\x0';
                 snprintf( uniq,GM_BUFFERSIZE-1,"%s-%s", srvchkdata->host_name, srvchkdata->service_description);
 
+#ifdef USENAEMON
                 /* replace newlines with actual newlines */
                 perf_data = replace_str(srvchkdata->perf_data, "\\n", "\n");
+#endif
 
                 temp_buffer[0]='\x0';
                 snprintf( temp_buffer,GM_BUFFERSIZE-1,
@@ -1086,7 +1213,12 @@ int handle_perfdata(int event_type, void *data) {
                             "SERVICEINTERVAL::%f\n\n",
                             (int)srvchkdata->timestamp.tv_sec,
                             srvchkdata->host_name, srvchkdata->service_description,
+#ifdef USENAGIOS3
+                            srvchkdata->perf_data, svc->service_check_command,
+#endif
+#ifdef USENAEMON
                             perf_data, svc->check_command,
+#endif
                             srvchkdata->state, srvchkdata->state_type,
                             svc->check_interval);
                 temp_buffer[GM_BUFFERSIZE-1]='\x0';
@@ -1259,6 +1391,11 @@ int handle_export(int callback_type, void *data) {
 
 /* core log wrapper */
 void write_core_log(char *data) {
+#ifdef USENAEMON
     nm_log( NSLOG_INFO_MESSAGE, data );
+#endif
+#ifdef USENAGIOS3
+    write_to_all_logs( data, NSLOG_INFO_MESSAGE );
+#endif
     return;
 }
