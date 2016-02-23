@@ -225,12 +225,6 @@ install-data-local: install-local-state-dir $(install_epnfiles)
 	$(install_sh_PROGRAM) -m 644 extras/shared.conf            $(DESTDIR)$(datadir)/mod_gearman/shared.conf
 	$(install_sh_PROGRAM) -m 644 extras/standalone_worker.conf $(DESTDIR)$(datadir)/mod_gearman/standalone_worker.conf
 	$(install_sh_PROGRAM) -m 644 contrib/gearman_proxy.pl      $(DESTDIR)$(datadir)/mod_gearman/gearman_proxy.pl
-	mv -f $(DESTDIR)$(bindir)/mod_gearman_worker $(DESTDIR)$(bindir)/mod_gearman_worker
-	mv -f $(DESTDIR)$(initrddir)/mod-gearman-worker $(DESTDIR)$(initrddir)/mod-gearman-worker
-	mv -f $(DESTDIR)$(bindir)/gearman_top $(DESTDIR)$(bindir)/gearman_top
-	mv -f $(DESTDIR)$(bindir)/check_gearman $(DESTDIR)$(bindir)/check_gearman
-	mv -f $(DESTDIR)$(bindir)/send_gearman $(DESTDIR)$(bindir)/send_gearman
-	mv -f $(DESTDIR)$(bindir)/send_multi $(DESTDIR)$(bindir)/send_multi
 	@echo ""
 	@echo "################################################################"
 	@echo ""
