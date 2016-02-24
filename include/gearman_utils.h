@@ -118,6 +118,21 @@ int get_gearman_server_data(mod_gm_server_status_t *stats, char ** message, char
 
 int send2gearmandadmin(char * cmd, char * hostnam, int port, char ** output, char ** error);
 
+
+/**
+ * gm_net_connect
+ *
+ * open socket to ipv4 or ipv6 address
+ *
+ * @param[in] hostname - hostname to connect to
+ * @param[in] port - port to connect
+ * @param[out] socket - result socket
+ * @param[out] error - error message
+ *
+ * @return true on success
+ */
+int gm_net_connect (const char *host_name, int port, int *sd, char ** error);
+
 /**
  * free_mod_gm_status_server
  *

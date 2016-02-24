@@ -336,8 +336,6 @@ int get_gearman_server_data(mod_gm_server_status_t *stats, char ** message, char
 /* send gearman admin */
 int send2gearmandadmin(char * cmd, char * hostnam, int port, char ** output, char ** error) {
     int sockfd, n;
-    struct sockaddr_in serv_addr;
-    struct hostent *server;
     char buf[GM_BUFFERSIZE];
 
     *error  = gm_malloc(GM_BUFFERSIZE);
@@ -345,29 +343,11 @@ int send2gearmandadmin(char * cmd, char * hostnam, int port, char ** output, cha
     *output = gm_malloc(GM_BUFFERSIZE);
     snprintf(*output,  GM_BUFFERSIZE, "%s", "" );
 
-    sockfd = socket(AF_INET, SOCK_STREAM, 0);
-    if( sockfd < 0 ) {
-        snprintf(*error, GM_BUFFERSIZE, "failed to open socket: %s\n", strerror(errno));
-        return( STATE_CRITICAL );
+    if(gm_net_connect(hostnam, port, &sockfd, error) != GM_OK) {
+        return(STATE_CRITICAL);
     }
 
-    server = gethostbyname(hostnam);
-    if( server == NULL ) {
-        snprintf(*error, GM_BUFFERSIZE, "failed to resolve %s\n", hostnam);
-        close(sockfd);
-        return( STATE_CRITICAL );
-    }
-    serv_addr.sin_family = AF_INET;
-    bcopy((char *)server->h_addr,
-         (char *)&serv_addr.sin_addr.s_addr,
-         server->h_length);
-    serv_addr.sin_port = htons(port);
-    if (connect(sockfd,(const struct sockaddr *)&serv_addr,sizeof(serv_addr)) < 0) {
-        snprintf(*error, GM_BUFFERSIZE, "failed to connect to %s:%i - %s\n", hostnam, (int)port, strerror(errno));
-        close(sockfd);
-        return( STATE_CRITICAL );
-    }
-
+    gm_log( GM_LOG_TRACE, "sending '%s' to %s on port %i\n", cmd, hostnam, port );
     n = write(sockfd,cmd,strlen(cmd));
     if (n < 0) {
         snprintf(*error, GM_BUFFERSIZE, "failed to send to %s:%i - %s\n", hostnam, (int)port, strerror(errno));
@@ -383,10 +363,87 @@ int send2gearmandadmin(char * cmd, char * hostnam, int port, char ** output, cha
     }
     buf[n] = '\x0';
     free(*output);
+    gm_log( GM_LOG_TRACE, "got answer:\n%s\n", buf);
     *output = gm_strdup(buf);
     close(sockfd);
 
     return( STATE_OK );
+}
+
+/* opens a tcp connection to a remote host */
+int gm_net_connect (const char *host_name, int port, int *sd, char ** error) {
+    struct addrinfo hints;
+    struct addrinfo *r, *res;
+    char port_str[6], host[GM_MAX_HOST_ADDRESS_LENGTH];
+    size_t len;
+    int result;
+    int was_refused = FALSE;
+
+    memset (&hints, 0, sizeof (hints));
+    hints.ai_family   = AF_UNSPEC;
+    hints.ai_protocol = IPPROTO_TCP;
+    hints.ai_socktype = SOCK_STREAM;
+
+    len = strlen (host_name);
+    /* check for an [IPv6] address (and strip the brackets) */
+    if (len >= 2 && host_name[0] == '[' && host_name[len - 1] == ']') {
+        host_name++;
+        len -= 2;
+    }
+    if (len >= sizeof(host))
+        return GM_ERROR;
+    memcpy (host, host_name, len);
+    host[len] = '\0';
+    snprintf (port_str, sizeof (port_str), "%d", port);
+    result = getaddrinfo (host, port_str, &hints, &res);
+
+    if (result != 0) {
+        snprintf(*error, GM_BUFFERSIZE, "%s\n", gai_strerror (result));
+        return GM_ERROR;
+    }
+
+    r = res;
+    while (r) {
+        /* attempt to create a socket */
+        *sd = socket (r->ai_family, SOCK_STREAM, r->ai_protocol);
+
+        if (*sd < 0) {
+            snprintf(*error, GM_BUFFERSIZE, "%s\n", "Socket creation failed");
+            freeaddrinfo (r);
+            return GM_ERROR;
+        }
+
+        /* attempt to open a connection */
+        result = connect (*sd, r->ai_addr, r->ai_addrlen);
+
+        if (result == 0) {
+            was_refused = FALSE;
+            break;
+        }
+
+        if (result < 0) {
+            switch (errno) {
+            case ECONNREFUSED:
+                was_refused = TRUE;
+                break;
+            }
+        }
+
+        close (*sd);
+        r = r->ai_next;
+    }
+    freeaddrinfo (res);
+
+    if (result == 0)
+        return GM_OK;
+    else if (was_refused) {
+        snprintf(*error, GM_BUFFERSIZE, "failed to connect to address %s and port %d: %s\n", host_name, port, strerror(errno));
+        return GM_ERROR;
+    }
+    else {
+        snprintf(*error, GM_BUFFERSIZE, "failed to connect to address %s and port %d: %s\n", host_name, port, strerror(errno));
+        return GM_ERROR;
+    }
 }
 
 

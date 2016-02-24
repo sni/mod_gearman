@@ -62,6 +62,7 @@
 #define GM_MAX_OUTPUT             1048576   /* limit plugin output size to 1mb */
 #define GM_LISTSIZE                   512
 #define GM_NEBTYPESSIZE                33   /* maximum number of neb types */
+#define GM_MAX_HOST_ADDRESS_LENGTH    256   /* max size of a host address */
 
 #define GM_MIN_LIB_GEARMAN_VERSION   0.14
 #define GM_SERVER_DEFAULT_PORT       4730
