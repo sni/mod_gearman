@@ -239,10 +239,10 @@ install-data-local: install-local-state-dir $(install_epnfiles)
 	@echo " send bin:       $(DESTDIR)$(bindir)/send_gearman"
 	@echo " send multi bin: $(DESTDIR)$(bindir)/send_multi"
 	@echo ""
-	if test $$USECORE = "naemon"; then
-		@echo "just add the broker line to your naemon.cfg:"
-	elif test $$USECORE = "nagios3"; then
-		@echo "just add the broker line to your nagios.cfg:"
+	@if test "$$USECORE" = "naemon"; then \
+		echo "just add the broker line to your naemon.cfg:" \
+	elif test "$$USECORE" = "nagios3"; then \
+		echo "just add the broker line to your nagios.cfg:" \
 	fi
 	@echo "broker_module=$(DESTDIR)$(pkglibdir)/mod_gearman.o config=$(DESTDIR)$(sysconfdir)/mod_gearman/module.conf"
 	@echo ""
