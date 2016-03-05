@@ -105,20 +105,36 @@ if test "$USEPERL" = "yes"; then
 fi
 
 ##############################################
-USECORE=naemon;
-AC_ARG_WITH(neb-module,
- [  --with-neb-module=CORE Specify which neb module should be build. Should be naemon or nagios3],
- [ USECORE="$withval"; ]
-)
+AC_ARG_ENABLE(naemon,--disable-naemon will disable building the neb module for naemon,[
+    ENABLE_NAEMON=$enableval
+    ]
+    ,ENABLE_NAEMON=yes)
+AC_MSG_NOTICE([Building naemon neb module... $ENABLE_NAEMON])
+AM_CONDITIONAL(ENABLE_NAEMON, test "$ENABLE_NAEMON" = "yes")
 
-if test "$USECORE" = "naemon"; then
-    AC_DEFINE_UNQUOTED(USENAEMON,,[Build naemon neb module])
+AC_ARG_ENABLE(nagios3,--disable-nagios3 will disable building the neb module for nagios3,[
+    ENABLE_NAGIOS3=$enableval
+    ]
+    ,ENABLE_NAGIOS3=yes)
+AC_MSG_NOTICE([Building nagios3 neb module... $ENABLE_NAGIOS3])
+AM_CONDITIONAL(ENABLE_NAGIOS3, test "$ENABLE_NAGIOS3" = "yes")
+
+AC_ARG_ENABLE(nagios4,--disable-nagios4 will disable building the neb module for nagios4,[
+    ENABLE_NAGIOS4=$enableval
+    ]
+    ,ENABLE_NAGIOS4=yes)
+AC_MSG_NOTICE([Building nagios4 neb module... $ENABLE_NAGIOS4])
+AM_CONDITIONAL(ENABLE_NAGIOS4, test "$ENABLE_NAGIOS4" = "yes")
+
+if test "$ENABLE_NAEMON" = "yes"; then
     AC_CHECK_HEADERS([naemon/naemon.h],,AC_MSG_ERROR([Compiling Mod-Gearman requires naemon.h (hint: install naemon-dev pkg)]))
-elif test "$USECORE" = "nagios3"; then
-    AC_DEFINE_UNQUOTED(USENAGIOS3,,[Build nagios3 neb module])
-else
-    echo '--with-neb-module must be either naemon or nagios3.'
-    exit 1;
+    AC_DEFINE_UNQUOTED(ENABLE_NAEMON,,[Build naemon neb module])
+fi
+if test "$ENABLE_NAGIOS3" = "yes"; then
+    AC_DEFINE_UNQUOTED(ENABLE_NAGIOS3,,[Build nagios3 neb module])
+fi
+if test "$ENABLE_NAGIOS4" = "yes"; then
+    AC_DEFINE_UNQUOTED(ENABLE_NAGIOS4,,[Build nagios4 neb module])
 fi
 
 ##############################################

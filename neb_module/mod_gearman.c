@@ -1394,7 +1394,7 @@ void write_core_log(char *data) {
 #ifdef USENAEMON
     nm_log( NSLOG_INFO_MESSAGE, data );
 #endif
-#ifdef USENAGIOS3
+#if defined(USENAGIOS3) || defined(USENAGIOS4)
     write_to_all_logs( data, NSLOG_INFO_MESSAGE );
 #endif
     return;

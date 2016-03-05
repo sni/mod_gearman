@@ -14,6 +14,7 @@
 #include "nagios/nebstructs.h"
 #include "nagios/nebcallbacks.h"
 #include "nagios/broker.h"
+#define BROKER_MODULE "mod_gearman_nagios3.o"
 #endif
 #ifdef USENAEMON
 #include "naemon/naemon.h"
@@ -21,6 +22,7 @@
 #include "naemon/nebstructs.h"
 #include "naemon/nebcallbacks.h"
 #include "naemon/broker.h"
+#define BROKER_MODULE "mod_gearman_naemon.o"
 #endif
 
 int service_check_timeout;
@@ -58,7 +60,7 @@ void check_neb(char * nebargs) {
     process_performance_data         = 1;
 
     /* load neb module */
-    neb_handle=(void *)dlopen("./mod_gearman.o",RTLD_LAZY|RTLD_GLOBAL);
+    neb_handle=(void *)dlopen("./"BROKER_MODULE, RTLD_LAZY|RTLD_GLOBAL);
     ok(neb_handle != NULL, "neb module loaded");
     err = dlerror(); if(err != NULL) { BAIL_OUT("cannot load module: %s\n", err ); }
     module_version_ptr=(int *)dlsym(neb_handle,"__neb_api_version");
