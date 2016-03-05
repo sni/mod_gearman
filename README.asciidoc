@@ -404,12 +404,14 @@ Download the tarball and perform the following steps:
 #> make install
 --------------------------------------
 
-Then add the mod_gearman.o to your Naemon installation and add a
+Then add the mod_gearman_naemon.o to your Naemon installation and add a
 broker line to your naemon.cfg:
 
 --------------------------------------
-broker_module=.../mod_gearman.o server=localhost:4730 eventhandler=yes services=yes hosts=yes config=.../module.conf
+broker_module=.../mod_gearman_naemon.o server=localhost:4730 eventhandler=yes services=yes hosts=yes config=.../module.conf
 --------------------------------------
+
+NOTE: use mod_gearman_nagios3.o if you use nagios 3.
 
 see <<_configuration,Configuration>> for details on all parameters
 
@@ -448,7 +450,7 @@ Naemon Core
 A sample broker in your naemon.cfg could look like:
 
 --------------------------------------
-broker_module=/usr/local/share/naemon/mod_gearman.o keyfile=/usr/local/share/naemon/secret.txt server=localhost eventhandler=yes hosts=yes services=yes config=.../module.conf
+broker_module=/usr/local/share/naemon/mod_gearman_naemon.o keyfile=/usr/local/share/naemon/secret.txt server=localhost eventhandler=yes hosts=yes services=yes config=.../module.conf
 --------------------------------------
 
 See the following list for a detailed explanation of available
@@ -1220,7 +1222,7 @@ neb module:
 If you want to use only check_multi and no other workers, you can
 achieve this with the following neb module settings:
 
- broker_module=/usr/local/share/naemon/mod_gearman.o server=localhost encryption=no eventhandler=no hosts=no services=no hostgroups=does_not_exist config=.../module.conf
+ broker_module=/usr/local/share/naemon/mod_gearman_naemon.o server=localhost encryption=no eventhandler=no hosts=no services=no hostgroups=does_not_exist config=.../module.conf
 
 NOTE: encryption is not necessary if you both run the check_multi checks
 and the Naemon check_results queue on the same server.

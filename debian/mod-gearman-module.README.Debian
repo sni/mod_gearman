@@ -17,7 +17,7 @@ Naemon configuration
 
 Add the following stanza to /etc/naemon/naemon.cfg
 
-broker_module=/usr/lib/mod_gearman/mod_gearman.o config=/etc/mod-gearman/module.conf
+broker_module=/usr/lib/mod_gearman/mod_gearman_naemon.o config=/etc/mod-gearman/module.conf
 
 
 Restart Naemon
@@ -26,5 +26,5 @@ Restart Naemon
 Restart naemon, and check the log for warnings.  You should see the
 following message in your log:
 
-[...] Event broker module '/usr/lib/mod_gearman/mod_gearman.o' initialized successfully.
+[...] Event broker module '/usr/lib/mod_gearman/mod_gearman_naemon.o' initialized successfully.
 

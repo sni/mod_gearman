@@ -1184,12 +1184,20 @@ libgearman (&gt;= 0.14)
 #&gt; make
 #&gt; make install</code></pre>
 </div></div>
-<div class="paragraph"><p>Then add the mod_gearman.o to your Naemon installation and add a
+<div class="paragraph"><p>Then add the mod_gearman_naemon.o to your Naemon installation and add a
 broker line to your naemon.cfg:</p></div>
 <div class="listingblock">
 <div class="content">
-<pre><code>broker_module=.../mod_gearman.o server=localhost:4730 eventhandler=yes services=yes hosts=yes config=.../module.conf</code></pre>
+<pre><code>broker_module=.../mod_gearman_naemon.o server=localhost:4730 eventhandler=yes services=yes hosts=yes config=.../module.conf</code></pre>
 </div></div>
+<div class="admonitionblock">
+<table><tr>
+<td class="icon">
+<div class="title">Note</div>
+</td>
+<td class="content">use mod_gearman_nagios3.o if you use nagios 3.</td>
+</tr></table>
+</div>
 <div class="paragraph"><p>see <a href="#_configuration">Configuration</a> for details on all parameters</p></div>
 <div class="paragraph"><p>The next step is to start one or more worker. You may use the same
 configuration file as for the neb module.</p></div>
@@ -1229,7 +1237,7 @@ use something like:</p></div>
 <div class="paragraph"><p>A sample broker in your naemon.cfg could look like:</p></div>
 <div class="listingblock">
 <div class="content">
-<pre><code>broker_module=/usr/local/share/naemon/mod_gearman.o keyfile=/usr/local/share/naemon/secret.txt server=localhost eventhandler=yes hosts=yes services=yes config=.../module.conf</code></pre>
+<pre><code>broker_module=/usr/local/share/naemon/mod_gearman_naemon.o keyfile=/usr/local/share/naemon/secret.txt server=localhost eventhandler=yes hosts=yes services=yes config=.../module.conf</code></pre>
 </div></div>
 <div class="paragraph"><p>See the following list for a detailed explanation of available
 options:</p></div>
@@ -2435,7 +2443,7 @@ neb module:</p></div>
 achieve this with the following neb module settings:</p></div>
 <div class="literalblock">
 <div class="content">
-<pre><code>broker_module=/usr/local/share/naemon/mod_gearman.o server=localhost encryption=no eventhandler=no hosts=no services=no hostgroups=does_not_exist config=.../module.conf</code></pre>
+<pre><code>broker_module=/usr/local/share/naemon/mod_gearman_naemon.o server=localhost encryption=no eventhandler=no hosts=no services=no hostgroups=does_not_exist config=.../module.conf</code></pre>
 </div></div>
 <div class="admonitionblock">
 <table><tr>
@@ -2876,7 +2884,7 @@ Make sure all your worker have the Nagios-Plugins available under
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2016-02-17 12:23:00 CET
+ 2016-03-05 20:59:54 CET
 </div>
 </div>
 </body>

@@ -1,1 +1,2 @@
-debian/tmp/usr/lib/mod_gearman/mod_gearman.o
+debian/tmp/usr/lib/mod_gearman/mod_gearman_naemon.o
+debian/tmp/usr/lib/mod_gearman/mod_gearman_nagios3.o
