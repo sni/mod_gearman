@@ -178,3 +178,7 @@ orphan_service_checks=yes
 # Default is no.
 accept_clear_results=no
 
+# Gearman connection timeout(in milliseconds) while submitting jobs to
+# gearmand server
+# Default is -1(no timeout)
+# gearman_connection_timeout=-1
