@@ -28,7 +28,7 @@ int main(void) {
     lives_ok({gm_log(GM_LOG_INFO, "info message stdout\n");}, "info message in stdout mode");
 
     mod_gm_opt->logmode = GM_LOG_MODE_SYSLOG;
-    lives_ok({gm_log(GM_LOG_INFO, "info message syslog\n");}, "info message in syslog mode");
+    lives_ok({gm_log(GM_LOG_DEBUG, "info message syslog\n");}, "info message in syslog mode");
 
     mod_gm_opt->logmode = GM_LOG_MODE_CORE;
     lives_ok({gm_log(GM_LOG_INFO, "info message core\n");}, "info message in core mode");
