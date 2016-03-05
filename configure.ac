@@ -122,7 +122,7 @@ AM_CONDITIONAL(ENABLE_NAGIOS3, test "$ENABLE_NAGIOS3" = "yes")
 AC_ARG_ENABLE(nagios4,--disable-nagios4 will disable building the neb module for nagios4,[
     ENABLE_NAGIOS4=$enableval
     ]
-    ,ENABLE_NAGIOS4=yes)
+    ,ENABLE_NAGIOS4=no)
 AC_MSG_NOTICE([Building nagios4 neb module... $ENABLE_NAGIOS4])
 AM_CONDITIONAL(ENABLE_NAGIOS4, test "$ENABLE_NAGIOS4" = "yes")
 
