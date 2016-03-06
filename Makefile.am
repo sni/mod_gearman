@@ -151,10 +151,10 @@ replace_vars = sed -e 's:%CONFIG_WORKER%:$(sysconfdir)/mod_gearman/worker.conf:g
                -e 's:%WORKERBIN%:$(bindir)/mod_gearman_worker:g' \
                -e 's:%USER%:$(user):g'
 
-EXTRA_DIST = COPYING etc/*.in extras include \
+EXTRA_DIST = COPYING etc/*.in extras include neb_module \
              THANKS README docs/README.html Changes worker/initscript.in worker/daemon-systemd.in \
              support/mod-gearman.spec \
-             t/data/* t/rc t/both t/killer t/sleep t/*.pl t/*.t \
+             t/data/* t/rc t/both t/killer t/sleep t/*.pl t/*.t t/05-neb.c \
              worker/mod_gearman_p1.pl t/test_all.pl t/valgrind_suppress.cfg contrib \
              etc/mod_gearman_logrotate ./autogen.sh \
              debian
