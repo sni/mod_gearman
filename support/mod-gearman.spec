@@ -53,9 +53,6 @@ be bound to host and servicegroups.
      DESTDIR="%{buildroot}" \
      AM_INSTALL_PROGRAM_FLAGS=""
 
-# remove custom gearmand initscript
-%{__rm} -f %{buildroot}/%{_initrddir}/gearmand
-
 %if 0%{?el7}%{?fc20}%{?fc21}%{?fc22}
 # Install systemd entry
 %{__install} -D -m 0644 -p worker/daemon-systemd %{buildroot}%{_unitdir}/mod-gearman-worker.service

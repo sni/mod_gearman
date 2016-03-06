@@ -342,7 +342,9 @@ endif
 	else \
             make install-config; \
 	fi
-	$(RM) $(DESTDIR)$(pkglibdir)/mod_gearman.so
+	$(RM) $(DESTDIR)$(pkglibdir)/mod_gearman_naemon.so
+	$(RM) $(DESTDIR)$(pkglibdir)/mod_gearman_nagios3.so
+	$(RM) $(DESTDIR)$(pkglibdir)/mod_gearman_nagios4.so
 
 
 install-config:
