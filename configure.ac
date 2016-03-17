@@ -127,6 +127,8 @@ AC_MSG_NOTICE([Building nagios4 neb module... $ENABLE_NAGIOS4])
 AM_CONDITIONAL(ENABLE_NAGIOS4, test "$ENABLE_NAGIOS4" = "yes")
 
 if test "$ENABLE_NAEMON" = "yes"; then
+    PKG_CHECK_MODULES(NAEMON, [naemon >= 0.8])
+    CPPFLAGS=`pkg-config --cflags naemon`
     AC_CHECK_HEADERS([naemon/naemon.h],,AC_MSG_ERROR([Compiling Mod-Gearman requires naemon.h (hint: install naemon-dev pkg)]))
     AC_DEFINE_UNQUOTED(ENABLE_NAEMON,,[Build naemon neb module])
 fi
