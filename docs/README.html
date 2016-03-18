@@ -1532,6 +1532,26 @@ Default is On.
 <pre><code>use_uniq_jobs=on</code></pre>
 </div></div>
 </div></div>
+<div class="dlist"><dl>
+<dt class="hdlist1">
+gearman_connection_timeout
+</dt>
+<dd>
+<p>
+Timeout in milliseconds when connecting to gearmand daemon. Default value is
+defined as <em>no timeout</em>.
+Default is -1.
+</p>
+</dd>
+</dl></div>
+<div class="paragraph"><p>+</p></div>
+<div class="exampleblock">
+<div class="content">
+<div class="literalblock">
+<div class="content">
+<pre><code>gearman_connection_timeout=-1</code></pre>
+</div></div>
+</div></div>
 </div>
 <div class="sect2">
 <h3 id="_server_options">Server Options</h3>
@@ -2884,7 +2904,7 @@ Make sure all your worker have the Nagios-Plugins available under
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2016-03-05 20:59:54 CET
+ 2016-03-06 01:36:02 CET
 </div>
 </div>
 </body>
