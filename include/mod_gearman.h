@@ -21,6 +21,8 @@
  *
  *****************************************************************************/
 
+#include "config.h"
+
 #define MOD_GM_NEB  /**< set mod_gearman neb features */
 #define NSCORE      /**< enable core features         */
 

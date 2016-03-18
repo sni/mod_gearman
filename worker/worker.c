@@ -519,12 +519,14 @@ void print_usage() {
     printf("       --load_limit15=load15                        \n");
     printf("       --show_error_output                          \n");
     printf("\n");
+#ifdef EMBEDDEDPERL
     printf("Embedded Perl:\n");
     printf("       --enable_embedded_perl                      \n");
     printf("       --use_embedded_perl_implicitly              \n");
     printf("       --use_perl_cache                            \n");
     printf("       --p1_file                                   \n");
     printf("\n");
+#endif
     printf("Miscellaneous:\n");
     printf("       --workaround_rc_25\n");
     printf("\n");
