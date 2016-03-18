@@ -326,7 +326,12 @@ void *get_results( gearman_job_st *job, void *context, size_t *result_size, gear
     }
 
     /* add result to result list */
+#ifdef USENAGIOS3
+    mod_gm_add_result_to_list_3x( chk_result );
+#endif
+#ifdef USENAEMON
     mod_gm_add_result_to_list( chk_result );
+#endif
 
     /* reset pointer */
     chk_result = NULL;
