@@ -35,6 +35,7 @@ extern int            event_broker_options;
 #endif
 #ifdef USENAEMON
 extern unsigned long  event_broker_options;
+#define my_free nm_free
 #endif
 extern int            currently_running_host_checks;
 extern int            currently_running_service_checks;
@@ -77,14 +78,19 @@ static int   handle_perfdata(int e, void *);
 static int   handle_export(int e, void *);
 static void  set_target_queue( host *, service * );
 static int   handle_process_events( int, void * );
+#if defined(USENAGIOS3) || defined(USENAGIOS4)
 static int   handle_timed_events( int, void * );
+#endif
 static void  start_threads(void);
 #ifdef USENAGIOS3
 static check_result * merge_result_lists(check_result * lista, check_result * listb);
 static void move_results_to_core_3x(void);
 #endif
-#ifdef USENAEMON
+#ifdef USENAGIOS4
 static void move_results_to_core(void);
+#endif
+#ifdef USENAEMON
+static void move_results_to_core(struct nm_event_execution_properties *evprop);
 #endif
 
 int nebmodule_init( int flags, char *args, nebmodule *handle ) {
@@ -173,7 +179,12 @@ int nebmodule_init( int flags, char *args, nebmodule *handle ) {
 
     /* register callback for process event where everything else starts */
     neb_register_callback( NEBCALLBACK_PROCESS_DATA, gearman_module_handle, 0, handle_process_events );
+#if defined(USENAGIOS3) || defined(USENAGIOS4)
     neb_register_callback( NEBCALLBACK_TIMED_EVENT_DATA, gearman_module_handle, 0, handle_timed_events );
+#endif
+#ifdef USENAEMON
+    schedule_event(1, move_results_to_core, NULL);
+#endif
 
     /* register export callbacks */
     for(i=0;i<GM_NEBTYPESSIZE;i++) {
@@ -277,6 +288,7 @@ int nebmodule_deinit( int flags, int reason ) {
 
 
 /* handle timed events */
+#if defined(USENAGIOS3) || defined(USENAGIOS4)
 static int handle_timed_events( int event_type, void *data ) {
     nebstruct_timed_event_data * ted = (nebstruct_timed_event_data *)data;
 
@@ -293,12 +305,13 @@ static int handle_timed_events( int event_type, void *data ) {
 #ifdef USENAGIOS3
     move_results_to_core_3x();
 #endif
-#ifdef USENAEMON
+#ifdef USENAGIOS4
     move_results_to_core();
 #endif
 
     return NEB_OK;
 }
+#endif
 
 #ifdef USENAGIOS3
 /* merge results with core */
@@ -320,14 +333,22 @@ static check_result * merge_result_lists(check_result * lista, check_result * li
 }
 #endif
 
-/* insert results list into naemon core */
+/* insert results list into naemon/nagios4 core */
+#if defined(USENAEMON) || defined(USENAGIOS4)
 #ifdef USENAEMON
+static void move_results_to_core(struct nm_event_execution_properties *evprop) {
+#endif
+#ifdef USENAGIOS4
 static void move_results_to_core() {
+#endif
+#ifdef USENAEMON
+    if(evprop->execution_type == EVENT_EXEC_NORMAL) {
+#endif
     /* safely save off currently local list */
     pthread_mutex_lock(&mod_gm_result_list_mutex);
 
     objectlist *tmp_list = NULL;
-    for(mod_gm_result_list; mod_gm_result_list; mod_gm_result_list = mod_gm_result_list->next) {
+    for( ; mod_gm_result_list; mod_gm_result_list = mod_gm_result_list->next) {
         free(tmp_list);
         process_check_result(mod_gm_result_list->object_ptr);
         free_check_result(mod_gm_result_list->object_ptr);
@@ -338,6 +359,10 @@ static void move_results_to_core() {
     free(tmp_list);
 
     pthread_mutex_unlock(&mod_gm_result_list_mutex);
+#ifdef USENAEMON
+        schedule_event(1, move_results_to_core, NULL);
+    }
+#endif
 }
 #endif
 
@@ -542,11 +567,16 @@ static int handle_host_check( int event_type, void *data ) {
     char *raw_command=NULL;
     char *processed_command=NULL;
     host * hst;
+#if defined(USENAGIOS3) || defined(USENAGIOS4)
     check_result * chk_result;
     int check_options;
+#endif
     struct timeval core_time;
     struct tm next_check;
     char buffer1[GM_BUFFERSIZE];
+#ifdef USENAEMON
+    nagios_macros mac;
+#endif
 
     gettimeofday(&core_time,NULL);
 
@@ -587,9 +617,11 @@ static int handle_host_check( int event_type, void *data ) {
      * we have to do some host check logic here
      * taken from checks.c:
      */
+#if defined(USENAGIOS3) || defined(USENAGIOS4)
     /* clear check options - we don't want old check options retained */
     check_options = hst->check_options;
     hst->check_options = CHECK_OPTION_NONE;
+#endif
 
     /* unset the freshening flag, otherwise only the first freshness check would be run */
     hst->is_being_freshened=FALSE;
@@ -605,15 +637,22 @@ static int handle_host_check( int event_type, void *data ) {
     temp_buffer[0]='\x0';
 
     /* grab the host macro variables */
+#if defined(USENAGIOS3) || defined(USENAGIOS4)
     clear_volatile_macros();
     grab_host_macros(hst);
+#endif
+#ifdef USENAEMON
+    memset(&mac, 0, sizeof(mac));
+    clear_volatile_macros_r(&mac);
+    grab_host_macros_r(&mac, hst);
+#endif
 
     /* get the raw command line */
-#ifdef USENAGIOS3
+#if defined(USENAGIOS3) || defined(USENAGIOS4)
     get_raw_command_line(hst->check_command_ptr,hst->host_check_command,&raw_command,0);
 #endif
 #ifdef USENAEMON
-    get_raw_command_line(hst->check_command_ptr,hst->check_command,&raw_command,0);
+    get_raw_command_line_r(&mac, hst->check_command_ptr, hst->check_command, &raw_command, 0);
 #endif
     if(raw_command==NULL){
         gm_log( GM_LOG_ERROR, "Raw check command for host '%s' was NULL - aborting.\n",hst->name );
@@ -621,7 +660,12 @@ static int handle_host_check( int event_type, void *data ) {
     }
 
     /* process any macros contained in the argument */
+#if defined(USENAGIOS3) || defined(USENAGIOS4)
     process_macros(raw_command,&processed_command,0);
+#endif
+#ifdef USENAEMON
+    process_macros_r(&mac, raw_command, &processed_command, 0);
+#endif
     if(processed_command==NULL){
         gm_log( GM_LOG_ERROR, "Processed check command for host '%s' was NULL - aborting.\n",hst->name);
         return NEBERROR_CALLBACKCANCEL;
@@ -683,6 +727,7 @@ static int handle_host_check( int event_type, void *data ) {
     my_free(processed_command);
 
     /* orphaned check - submit fake result to mark host as orphaned */
+#if defined(USENAGIOS3) || defined(USENAGIOS4)
     if(mod_gm_opt->orphan_host_checks == GM_ENABLED && check_options & CHECK_OPTION_ORPHAN_CHECK) {
         gm_log( GM_LOG_DEBUG, "host check for %s orphaned\n", hst->name );
         if ( ( chk_result = ( check_result * )gm_malloc( sizeof *chk_result ) ) == 0 )
@@ -705,11 +750,9 @@ static int handle_host_check( int event_type, void *data ) {
 #ifdef USENAGIOS3
         mod_gm_add_result_to_list_3x( chk_result );
 #endif
-#ifdef USENAEMON
-        mod_gm_add_result_to_list( chk_result );
-#endif
         chk_result = NULL;
     }
+#endif
 
     /* tell naemon to not execute */
     gm_log( GM_LOG_TRACE, "handle_host_check() finished successfully -> %d\n", NEBERROR_CALLBACKOVERRIDE );
@@ -725,10 +768,15 @@ static int handle_svc_check( int event_type, void *data ) {
     char *processed_command=NULL;
     nebstruct_service_check_data * svcdata;
     int prio = GM_JOB_PRIO_LOW;
+#if defined(USENAGIOS3) || defined(USENAGIOS4)
     check_result * chk_result;
+#endif
     struct timeval core_time;
     struct tm next_check;
     char buffer1[GM_BUFFERSIZE];
+#ifdef USENAEMON
+    nagios_macros mac;
+#endif
 
     gettimeofday(&core_time,NULL);
 
@@ -777,16 +825,24 @@ static int handle_svc_check( int event_type, void *data ) {
     svc->is_being_freshened=FALSE;
 
     /* grab the host and service macro variables */
+#if defined(USENAGIOS3) || defined(USENAGIOS4)
     clear_volatile_macros();
     grab_host_macros(hst);
     grab_service_macros(svc);
+#endif
+#ifdef USENAEMON
+    memset(&mac, 0, sizeof(mac));
+    clear_volatile_macros_r(&mac);
+    grab_host_macros_r(&mac, hst);
+    grab_service_macros_r(&mac, svc);
+#endif
 
     /* get the raw command line */
 #ifdef USENAGIOS3
     get_raw_command_line(svc->check_command_ptr,svc->service_check_command,&raw_command,0);
 #endif
 #ifdef USENAEMON
-    get_raw_command_line(svc->check_command_ptr,svc->check_command,&raw_command,0);
+    get_raw_command_line_r(&mac, svc->check_command_ptr, svc->check_command, &raw_command, 0);
 #endif
     if(raw_command==NULL){
         gm_log( GM_LOG_ERROR, "Raw check command for service '%s' on host '%s' was NULL - aborting.\n", svc->description, svc->host_name );
@@ -794,7 +850,12 @@ static int handle_svc_check( int event_type, void *data ) {
     }
 
     /* process any macros contained in the argument */
-    process_macros(raw_command, &processed_command, 0);
+#if defined(USENAGIOS3) || defined(USENAGIOS4)
+    process_macros(raw_command,&processed_command,0);
+#endif
+#ifdef USENAEMON
+    process_macros_r(&mac, raw_command, &processed_command, 0);
+#endif
     if(processed_command==NULL) {
         gm_log( GM_LOG_ERROR, "Processed check command for service '%s' on host '%s' was NULL - aborting.\n", svc->description, svc->host_name);
         my_free(raw_command);
@@ -871,6 +932,7 @@ static int handle_svc_check( int event_type, void *data ) {
     my_free(processed_command);
 
     /* orphaned check - submit fake result to mark service as orphaned */
+#if defined(USENAGIOS3) || defined(USENAGIOS4)
     if(mod_gm_opt->orphan_service_checks == GM_ENABLED && svc->check_options & CHECK_OPTION_ORPHAN_CHECK) {
         gm_log( GM_LOG_DEBUG, "service check for %s - %s orphaned\n", svc->host_name, svc->description );
         if ( ( chk_result = ( check_result * )gm_malloc( sizeof *chk_result ) ) == 0 )
@@ -894,11 +956,9 @@ static int handle_svc_check( int event_type, void *data ) {
 #ifdef USENAGIOS3
         mod_gm_add_result_to_list_3x( chk_result );
 #endif
-#ifdef USENAEMON
-        mod_gm_add_result_to_list( chk_result );
-#endif
         chk_result = NULL;
     }
+#endif
 
     /* tell naemon to not execute */
     gm_log( GM_LOG_TRACE, "handle_svc_check() finished successfully -> %d\n", NEBERROR_CALLBACKOVERRIDE );
