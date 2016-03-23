@@ -1224,7 +1224,7 @@ int handle_perfdata(int event_type, void *data) {
                             "HOSTSTATETYPE::%d\n"
                             "HOSTINTERVAL::%f\n\n",
                             (int)hostchkdata->timestamp.tv_sec,
-#ifdef USENAGIOS3
+#if defined(USENAGIOS3) || defined(USENAGIOS4)
                             hostchkdata->host_name, hostchkdata->perf_data,
 #endif
 #ifdef USENAEMON
@@ -1273,7 +1273,7 @@ int handle_perfdata(int event_type, void *data) {
                             "SERVICEINTERVAL::%f\n\n",
                             (int)srvchkdata->timestamp.tv_sec,
                             srvchkdata->host_name, srvchkdata->service_description,
-#ifdef USENAGIOS3
+#if defined(USENAGIOS3) || defined(USENAGIOS4)
                             srvchkdata->perf_data, svc->service_check_command,
 #endif
 #ifdef USENAEMON

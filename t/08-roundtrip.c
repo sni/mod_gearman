@@ -649,7 +649,7 @@ int process_check_result(check_result * cr) {
         check_result_data* returned_result;
 
         check_idx = strtol(cr->service_description, &endptr, 10);
-        returned_result = malloc(sizeof(check_result_data));
+        returned_result = gm_malloc(sizeof(check_result_data));
         if (cr->host_name)
         {
             strncpy(returned_result->host_name, cr->host_name,
