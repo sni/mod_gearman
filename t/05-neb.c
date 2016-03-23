@@ -34,6 +34,7 @@ int event_broker_options;
 #endif
 #ifdef USENAEMON
 unsigned long event_broker_options;
+timed_event *schedule_event(time_t delay, event_callback callback, void *user_data) { delay = delay; callback = callback; user_data = user_data; return(NULL); }
 #endif
 check_result *check_result_list;
 check_result check_result_info;
