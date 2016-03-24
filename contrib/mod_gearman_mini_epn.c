@@ -69,6 +69,8 @@ int main(int argc, char **argv) {
 
 int run_epn(char *command_line) {
     SV *plugin_hndlr_cr;
+    STRLEN n_a;
+    int count = 0 ;
     char fname[MAX_INPUT_CHARS];
     char *args[] = {"", "0", "", "", NULL };
     int pclose_result;
@@ -99,7 +101,7 @@ int run_epn(char *command_line) {
 
     PUTBACK;
 
-    call_pv("Embed::Persistent::eval_file", G_SCALAR | G_EVAL);
+    count = call_pv("Embed::Persistent::eval_file", G_SCALAR | G_EVAL);
 
     SPAGAIN;
 
@@ -130,7 +132,7 @@ int run_epn(char *command_line) {
 
     PUTBACK;
 
-    perl_call_pv("Embed::Persistent::run_package", G_EVAL | G_ARRAY);
+    count = perl_call_pv("Embed::Persistent::run_package", G_EVAL | G_ARRAY);
 
     SPAGAIN;
 

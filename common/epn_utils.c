@@ -50,6 +50,7 @@ int run_epn_check(char *processed_command, char **ret, char **err) {
     char *args[5]={"",NULL, "", "", NULL };
     char *perl_plugin_output=NULL;
     SV *plugin_hndlr_cr;
+    int count;
     FILE *fp;
     pid_t pid;
     sigset_t mask;
@@ -162,7 +163,7 @@ int run_epn_check(char *processed_command, char **ret, char **err) {
         XPUSHs(plugin_hndlr_cr);
         XPUSHs(sv_2mortal(newSVpv(args[3],0)));
         PUTBACK;
-        call_pv("Embed::Persistent::run_package", G_ARRAY);
+        count=call_pv("Embed::Persistent::run_package", G_ARRAY);
         SPAGAIN;
         perl_plugin_output = POPpx;
         retval = POPi;
@@ -293,7 +294,7 @@ int init_embedded_perl(char **env){
         *embedding=gm_strdup("");
         *(embedding+1)=gm_strdup(p1_file);
         use_embedded_perl=TRUE;
-        PERL_SYS_INIT3(&argc,(char ***)&embedding,&env);
+        PERL_SYS_INIT3(&argc,&embedding,&env);
         if((my_perl=perl_alloc())==NULL){
             use_embedded_perl=FALSE;
             gm_log(GM_LOG_ERROR,"Error: Could not allocate memory for embedded Perl interpreter!\n");
@@ -319,7 +320,6 @@ int init_embedded_perl(char **env){
 #ifdef EMBEDDEDPERL
 /* catch sigsegv during deinitialzing and just exit */
 void deinit_segv( int sig ) {
-    sig = sig;
     _exit(deinit_rc);
 }
 #endif

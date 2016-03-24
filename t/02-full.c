@@ -30,10 +30,11 @@ char * last_result;
 /* start the gearmand server */
 void *start_gearmand(void*data);
 void *start_gearmand(void*data) {
+    int sid;
     data = data; // warning: unused parameter 'data'
     pid_t pid = fork();
     if(pid == 0) {
-        setsid();
+        sid = setsid();
         char port[30];
         snprintf(port, 30, "--port=%d", GEARMAND_TEST_PORT);
         /* for newer gearman versions */
@@ -58,10 +59,11 @@ void *start_gearmand(void*data) {
 /* start the test worker */
 void *start_worker(void*data);
 void *start_worker(void*data) {
+    int sid;
     char* key = (char*)data;
     pid_t pid = fork();
     if(pid == 0) {
-        setsid();
+        sid = setsid();
         char options[150];
         snprintf(options, 150, "server=127.0.0.1:%d", GEARMAND_TEST_PORT);
         char logf[150];

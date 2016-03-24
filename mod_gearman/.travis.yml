@@ -1,0 +1,40 @@
+language: c
+compiler:
+  - gcc
+before_install:
+  - sudo apt-get update
+  - sudo apt-get install apt-transport-https
+  - sudo sh -c "echo 'deb https://labs.consol.de/repo/testing/ubuntu precise main' >> /etc/apt/sources.list"
+  - wget -q "https://labs.consol.de/repo/testing/RPM-GPG-KEY" -O - | sudo apt-key add -
+  - sudo apt-get update
+  - sudo apt-get install help2man nagios-plugins-basic autoconf automake libltdl-dev libtool libncurses5-dev devscripts pkg-config libperl-dev build-essential devscripts cppcheck valgrind
+  - sudo apt-get install naemon-dev
+  - sudo apt-get install gearman-job-server gearman-tools libgearman-dev
+  - git config --global user.email "travis@localhost"
+  - git config --global user.name "Travis Testuser"
+install:
+  - ./autogen.sh
+  - ./configure --enable-debug           || exit 1
+  - make                                 || exit 1
+  - make install DESTDIR=$(pwd)/_install || exit 1
+script:
+  - make fulltest                        || exit 1
+  - make clean                           || exit 1
+  - ./configure --enable-embedded-perl --enable-debug || exit 1
+  - make                                 || exit 1
+  - make test                            || exit 1
+notifications:
+  email:
+    - sven@nierlein.de
+#env:
+#  global:
+#   - secure: "LGrZlR/I3OuwuHkJT4X/Ng8kfOLyDr43a22GOIsYzANdyJmICHqlT08er+wjpboFP0jO5Peyn8XpKCSEZu62MnR37La3vtcvzYcTUUiwNIN7ULPOgfv3AsstKsgSy4Z1P0gs7N3kxzrXUpZrmdY3yt+kls+iM92Z8+CKg0ki/Q0="
+#addons:
+#  coverity_scan:
+#    project:
+#      name: "sni/mod_gearman"
+#      description: "Distributed Monitoring with Naemon"
+#    notification_email: sven@nierlein.org
+#    build_command_prepend: ./autogen.sh && ./configure
+#    build_command: make
+#    branch_pattern: travistest

@@ -52,14 +52,22 @@
  * @{
  */
 
-#ifdef USENAGIOS3
 /* include some Nagios stuff as well */
-#include "nagios/nagios.h"
-#include "nagios/neberrors.h"
-#include "nagios/nebstructs.h"
-#include "nagios/nebcallbacks.h"
-#include "nagios/broker.h"
-#include "nagios/macros.h"
+#ifdef USENAGIOS3
+#include "nagios3/nagios.h"
+#include "nagios3/neberrors.h"
+#include "nagios3/nebstructs.h"
+#include "nagios3/nebcallbacks.h"
+#include "nagios3/broker.h"
+#include "nagios3/macros.h"
+#endif
+#ifdef USENAGIOS4
+#include "nagios4/nagios.h"
+#include "nagios4/neberrors.h"
+#include "nagios4/nebstructs.h"
+#include "nagios4/nebcallbacks.h"
+#include "nagios4/broker.h"
+#include "nagios4/macros.h"
 #endif
 #ifdef USENAEMON
 /* include naemon */
@@ -98,12 +106,7 @@ int nebmodule_deinit( int flags, int reason );
  *
  * @return nothing
  */
-#ifdef USENAEMON
 void mod_gm_add_result_to_list(check_result * newcheckresult);
-#endif
-#ifdef USENAGIOS3
-void mod_gm_add_result_to_list_3x(check_result * newcheckresult);
-#endif
 
 /**
  * @}

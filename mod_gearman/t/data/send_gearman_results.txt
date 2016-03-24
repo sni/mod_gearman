@@ -1,0 +1,4 @@
+host_name	svc_description	0	plugin_output
+host_name	svc_description	0	plugin_output
+host_name	1	plugin_output
+host_name	1	plugin_output

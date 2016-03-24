@@ -23,4 +23,5 @@
 
 /* include header */
 #define USENAGIOS3 1
+#define USENAGIOS 1
 #include "../neb_module/result_thread.c"

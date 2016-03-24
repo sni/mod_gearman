@@ -1,0 +1,266 @@
+This file documents the revision history for mod_gearman.
+
+3.x
+          - support ipv6 in gearman_top and check_gearman
+          - introduce configure options for --with-neb-module=naemon and --with-neb-module=nagios3
+            to determine which neb module to build. This obsoletes mod-gearman 1.x and 2.x.
+
+2.1.5 Wed Sep 30 11:49:17 CEST 2015
+          - reintroduce result_workers option because it is required to disabled result workers
+            but maximum is now one result worker.
+
+2.1.4 Fri Aug 28 15:58:55 CEST 2015
+          - add perfdata=all option to override local process_performance_data setting
+          - add check_interval to performance data
+          - deprecate result_workers option
+
+2.1.3 Wed Jul  1 13:54:11 CEST 2015
+          - add option for forbidden characters in command line
+          - fix segfault on too old host checks
+          - fix segfault on gearmand server errors
+
+2.1.2 Fri Feb 13 13:40:25 CET 2015
+          - fix sending results to dup server
+
+2.1.1 Tue Jan 20 13:48:50 CET 2015
+          - fix timeout handling
+
+2.1.0 Sun Jan 18 17:17:10 CET 2015
+          - add support for large plugin outputs
+          - add --restrict_path option to restrict worker to certain paths
+
+2.0.0 Thu Dec 11 23:46:11 CET 2014
+          - migrated mod-gearman into a naemon addon to continue the nagios 4 branch
+          - fixed some potential memory and filedescriptor leaks
+          - fixed memory leak while processing check results
+          - fixed unescaped newlines in performance data breaking pnp
+          - fixed using timeout return code (Scott Sanders)
+          - fixed running jobs twice when worker hits max-jobs (Tobias Deiminger)
+          - fixed init script exiting with 0 on errors (Adrián)
+
+
+
+
+1.4.14 Fri Nov 15 21:44:18 CET 2013
+          - fixed segfault when dupserver list was empty
+
+1.4.12 Tue Nov  5 10:26:07 CET 2013
+          - fixed send_gearman to send duplicate result to normal server (Brian Christiansen)
+          - ensure worker are running and doing jobs after reload/sighup
+
+1.4.10 Mon Aug  5 11:38:53 CEST 2013
+          - fixed segfault on empty arguments (Michael Friedrich)
+          - fixed commands containing quotes
+
+1.4.8 Sat Jul 27 13:42:11 CEST 2013
+          - ensure worker exits, even if shm blocks
+          - request proper macro escaping for nagios 4
+
+1.4.6 Tue Jun  4 17:03:57 CEST 2013
+          - kill complete process group on timeout
+          - close open filehandles before running check
+          - added new option 'orphan_return' to set return code of orphaned checks
+
+1.4.4 Thu May  3 15:48:34 CEST 2013
+          - added 'route_eventhandler_like_checks' option
+          - fixed leaking FDs on reloading neb
+          - install mini-epn when epn is enabled
+          - fixed executing only the first freshness check
+
+1.4.2 Thu Jan 10 10:56:37 CET 2013
+          - force check on orphaned events
+          - added mini epn
+          - added logrotate config (Ricardo Maraschini)
+          - added new option load_limit1,5,15 to prevent new workers from spawning under heavy load. (sponsored by Ovido GmbH)
+
+1.4.0 Thu Sep 25 22:14:31 CEST 2012
+          - implemented support for nagios 4
+
+1.3.8 Sun Aug 19 16:52:13 CEST 2012
+          - fixed sending 2 results back when hit timeout
+
+1.3.6 Mon Jul 19 17:08:19 CEST 2012
+          - added 'use_uniq_jobs' option
+          - allow gearman_top to display multiple servers (Thomas Dohl)
+          - fixed typo in 'timeout_return' docs
+          - added send_gearman.pl (Vincent Candeau)
+          - Bugfixes:
+            - removed newlines in perllib breaking build on opensuse
+
+1.3.4 Tue Jun 19 14:58:14 CEST 2012
+          - worker: added 'timeout_return' config option to
+                    set return code for checks running into timeout
+          - send_gearman: make timeout configurable
+          - send_gearman: added new mode which sends one result per line
+          - gearman_top: allow floating number for interval
+          - fixed killing worker on reload, worker now finishes current job
+          - fixed executing jobs while restarting worker
+          - fixed potential problem on deinitializing epn
+
+1.3.2  Sun May 27 11:39:55 CEST 2012
+          - fixed problem with commands containing ENV definitions
+
+1.3.0  Fri Apr 27 16:45:02 CEST 2012
+          - fixed setting queues by custom variables
+
+1.2.8  Thu Apr 12 13:37:20 CEST 2012
+          - add new new option 'accept_clear_results'
+          - added batch mode for gearman_top
+          - added gearman_proxy to package
+          - fixed problem when neb module is not reconnecting
+          - fixed gearman path detection on source installations
+
+1.2.6  Mon Mar 12 15:14:21 CET 2012
+          - set worker queue by custom variable
+          - disabled default max job age check
+          - added docs in sample config about max-age
+          - added usefull message when epn plugin does not call exit()
+          - added new option dup_results_are_passive
+          - fixed "Could Not Start Check In Time" problem
+
+1.2.4  Mon Feb 27 23:54:39 CET 2012
+          - fixed eventhandlers not being passed to worker
+          - fixed shared memory not beeing cleaned on exit
+          - internal changes to support freebsd
+
+1.2.2  Tue Feb  7 18:06:02 CET 2012
+          - orphaned hosts/services generate a fake result with useful error message
+          - bypass eventhandler from hosts/services in local host/servicegroups
+          - fixed NAGIOS_PLUGIN env in epn
+
+1.2.0  Sun Jan  8 18:42:56 CET 2012
+          - added embedded perl support (see README for details)
+          - added uniq key option for check_gearman (kgovande)
+          - added contrib folder
+            - added Gearman-Proxy to syncronize jobserver
+          - splitted default config in neb module and worker
+
+1.1.1  Thu Nov 10 11:15:48 CET 2011
+          - check_gearman can now send background jobs (Justin Kerr Sheckler)
+          - fixed problem which skipped some checks when they were rescheduled
+            by the core smart scheduler
+          - use md5sum as uniq key for long host/servicesnames
+            this fixes a possible lost jobs when 2 very long host/servicesnames
+            are scheduled at the same time
+
+1.1.0  Wed Oct 12 18:36:10 CEST 2011
+          - fixed send_multi performance data headers
+          - fixed segfault when worker runs into timeout
+
+1.0.10 Thu Aug 25 16:07:55 CEST 2011
+          - new option 'show_error_output' for worker
+          - fixed failed job when host+service > 64 chars
+          - fixed tests
+
+1.0.9  Mon Aug 15 16:05:23 CEST 2011
+          - nicer error messages for send_multi when zero results transmitted
+          - fixed sigsegv when reloading core in combination with exports options
+          - added optional workaround for plugins exiting with rc 25 because
+            of duplicate execution
+          - removed version output to stderr while reloading/starting the core
+          - check server definition for duplicates
+          - replace died workers to maintain the worker population
+          - better timeout handling when using fork_on_exec=off
+
+1.0.8  Fri Jul 22 22:21:34 CEST 2011
+          - use identifier for error messages if set
+          - fixed ld options (fixes debian bug #632431) thanks Ilya Barygin
+          - fixed memory leak in gearman_top
+          - fixed memory leak when reloading neb module
+
+1.0.7  Sun Jul  3 15:18:16 CEST 2011
+          - show plugin output for exit codes > 3
+          - fixed send_multi timestamps when client clock is screwed
+          - fixed send_multi for libgearman > 0.14
+
+1.0.6  Sat Jun  4 11:47:02 CEST 2011
+          - expand server definitions from :4730 to localhost:4730
+          - fixed latency calculation (was below zero sometimes)
+
+1.0.5  Tue May 17 17:46:36 CEST 2011
+          - added dupserver option to send_gearman and send_multi too
+          - removed warning for the passive only mode
+
+1.0.4  Sun Apr 17 17:58:47 CEST 2011
+          - added generic logger
+            - enables logging to stdout, file, syslog or nagios
+          - changed latency calculation (use time of next_check instead of time of job submission)
+          - added nsca replacements docs
+
+1.0.3  Wed Mar 23 21:53:09 CET 2011
+          - fixed worker handling exit codes > 127
+
+1.0.2  Fri Mar 11 10:30:21 CET 2011
+          - added new option do_hostchecks to completly disable hostchecks
+          - fixed reading keyfiles
+
+1.0.1  Sat Mar  5 15:47:22 CET 2011
+          - added spawn-rate option for worker
+          - added perfdata_mode option to prevent perfdata queue getting to big
+          - made gearmand init script work with old libevent versions
+          - fixed make dist
+          - fixed "make rpm" for SLES11
+
+1.0    Mon Feb  7 11:05:29 CET 2011
+          - added dupserver option (Mark Clarkson)
+          - added stderr to send_multi
+          - added missing performance data to send_multi
+          - added error message when using unknown option
+          - fixed handling of unusual exit codes
+
+0.9    Sun Jan 16 21:20:06 CET 2011
+          - prepared debian packaging (Stig Sandbeck Mathisen)
+          - increased max output to 64k
+          - fixed default paths in gearmand init script
+          - fixed problem with too low number of workers after running for a while
+          - fixed problem with uppercase service descriptions in send_gearman
+
+0.8    Wed Nov 17 14:11:54 CET 2010
+          - added send_multi (Matthias Flacke)
+          - fixed checks with popen/exec
+
+0.7    Wed Nov  3 14:01:23 CET 2010
+          - added identifier to worker config. Usefull when running more than one worker per host
+          - added spec file for building rpms
+          - removed duplicate errors about connection problems
+          - fixed logging when loaded after the livestatus module
+
+0.6    Wed Oct 13 09:25:14 CEST 2010
+          - added flexible column size for gearman_top
+          - fixed starting status worker on reload
+          - fixed graceful shutdown of gearmand
+          - fixed bug in latency calculation
+          - fixed bug in returing results
+
+0.5    Fri Oct  1 08:18:06 CEST 2010
+          - added check for minimum event broker options
+          - added worker thresholds to check_gearman
+          - added check in configure if users exists
+          - changed performance data for check_gearman
+          - initscript no uses su -s instead of su
+          - added chown of logfile dir to make install
+
+0.4    Sat Sep 25 23:15:26 CEST 2010
+          - added gearman_top
+          - added version to check_gearman and send_gearman
+          - added version to output of worker status
+          - added worker name to error output of plugins
+          - fixed daemon mode
+
+0.3    Mon Sep 20 09:43:55 CEST 2010
+          - added check_gearman to monitor job server and worker
+          - added send_gearman to submit passive results
+          - fixed make dist
+
+0.2    Tue Sep 14 09:30:31 CEST 2010
+          - added support for config files
+          - fixed sending perfdata even when disabled by "process_performance_data" setting
+
+0.1    Mon Aug 23 15:01:15 CEST 2010
+          - print warning if host/servicegroup does not exist
+          - added AES-256 encryption (with base64 transport)
+          - added host/servicegroup affinity
+          - added exclusion by local host/servicegroups
+          - added distribution of eventhandlers
+          - added result queue worker
+          - initial version
