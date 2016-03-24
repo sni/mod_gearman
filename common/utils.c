@@ -143,7 +143,7 @@ void mod_gm_decrypt(char ** decrypted, char * text, int mode) {
 
     /* first decode from base64 */
     size_t bsize = base64_decode(text, buffer, input_size);
-    test = gm_strndup(buffer, 5);
+    test = gm_strndup((char *)buffer, 5);
     if(mode == GM_ENCODE_AND_ENCRYPT || (mode == GM_ENCODE_ACCEPT_ALL && strcmp(test, "type="))) {
         /* then decrypt */
         mod_gm_aes_decrypt(decrypted, buffer, bsize);
