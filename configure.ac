@@ -17,7 +17,9 @@ CFLAGS="-Wall -W -Wstrict-prototypes -Wmissing-prototypes -Wnested-externs -O -f
 AC_ARG_ENABLE(debug,--enable-debug will enable debugging symbols,[
     CFLAGS="${CFLAGS} -pedantic -Wfatal-errors -Wshadow -Wpointer-arith -Wcast-qual -Wcast-align -g3"
     ],
-    CFLAGS="${CFLAGS} -s"
+    # do not strip binarys, this is done on packaging automatically and prevents debug packages to build properly
+    #CFLAGS="${CFLAGS} -s"
+    CFLAGS="${CFLAGS}"
 )
 
 ##############################################
