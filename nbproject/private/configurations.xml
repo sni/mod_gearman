@@ -1,0 +1,182 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configurationDescriptor version="97">
+  <logicalFolder name="root" displayName="root" projectFiles="true" kind="ROOT">
+    <df root="." name="0">
+      <df name="common">
+        <in>base64.c</in>
+        <in>check_utils.c</in>
+        <in>epn_utils.c</in>
+        <in>gearman_utils.c</in>
+        <in>gm_alloc.c</in>
+        <in>gm_crypt.c</in>
+        <in>md5.c</in>
+        <in>popenRWE.c</in>
+        <in>rijndael.c</in>
+        <in>utils.c</in>
+      </df>
+      <df name="contrib">
+        <in>mod_gearman_mini_epn.c</in>
+      </df>
+      <df name="debian">
+        <df name="source">
+        </df>
+      </df>
+      <df name="docs">
+      </df>
+      <df name="etc">
+      </df>
+      <df name="extras">
+        <df name="patches">
+        </df>
+      </df>
+      <df name="include">
+        <df name="nagios">
+          <in>broker.h</in>
+          <in>cgiauth.h</in>
+          <in>cgiutils.h</in>
+          <in>comments.h</in>
+          <in>common.h</in>
+          <in>config.h</in>
+          <in>downtime.h</in>
+          <in>epn_nagios.h</in>
+          <in>getcgi.h</in>
+          <in>locations.h</in>
+          <in>macros.h</in>
+          <in>nagios.h</in>
+          <in>nebcallbacks.h</in>
+          <in>neberrors.h</in>
+          <in>nebmods.h</in>
+          <in>nebmodules.h</in>
+          <in>nebstructs.h</in>
+          <in>netutils.h</in>
+          <in>objects.h</in>
+          <in>perfdata.h</in>
+          <in>skiplist.h</in>
+          <in>snprintf.h</in>
+          <in>sretention.h</in>
+          <in>statusdata.h</in>
+        </df>
+        <df name="polarssl">
+          <in>config.h</in>
+          <in>md5.h</in>
+        </df>
+        <in>base64.h</in>
+        <in>check_gearman.h</in>
+        <in>check_utils.h</in>
+        <in>common.h</in>
+        <in>epn_mod_gearman.h</in>
+        <in>epn_utils.h</in>
+        <in>gearman_top.h</in>
+        <in>gearman_utils.h</in>
+        <in>gm_alloc.h</in>
+        <in>gm_crypt.h</in>
+        <in>mod_gearman.h</in>
+        <in>popenRWE.h</in>
+        <in>result_thread.h</in>
+        <in>rijndael.h</in>
+        <in>send_gearman.h</in>
+        <in>send_multi.h</in>
+        <in>utils.h</in>
+        <in>worker.h</in>
+        <in>worker_client.h</in>
+      </df>
+      <df name="neb_module">
+        <in>mod_gearman.c</in>
+        <in>result_thread.c</in>
+      </df>
+      <df name="neb_module_naemon">
+        <in>mod_gearman.c</in>
+        <in>result_thread.c</in>
+      </df>
+      <df name="neb_module_nagios3">
+        <in>mod_gearman.c</in>
+        <in>result_thread.c</in>
+      </df>
+      <df name="neb_module_nagios4">
+        <in>mod_gearman.c</in>
+        <in>result_thread.c</in>
+      </df>
+      <df name="support">
+      </df>
+      <df name="t">
+        <df name="data">
+        </df>
+        <in>01-utils.c</in>
+        <in>02-full.c</in>
+        <in>03-exec_checks.c</in>
+        <in>04-log.c</in>
+        <in>05-neb.c</in>
+        <in>05-neb_naemon.c</in>
+        <in>05-neb_nagios3.c</in>
+        <in>05-neb_nagios4.c</in>
+        <in>06-execvp_vs_popen.c</in>
+        <in>07-epn.c</in>
+        <in>08-roundtrip.c</in>
+        <in>tap.c</in>
+        <in>tap.h</in>
+      </df>
+      <df name="tools">
+        <df name="devel">
+        </df>
+        <df name="perl">
+        </df>
+        <in>check_gearman.c</in>
+        <in>gearman_top.c</in>
+        <in>send_gearman.c</in>
+        <in>send_multi.c</in>
+      </df>
+      <df name="worker">
+        <in>worker.c</in>
+        <in>worker_client.c</in>
+      </df>
+    </df>
+  </logicalFolder>
+  <projectmakefile></projectmakefile>
+  <confs>
+    <conf name="Default" type="0">
+      <toolsSet>
+        <developmentServer>localhost</developmentServer>
+        <platform>2</platform>
+      </toolsSet>
+      <compile>
+        <compiledirpicklist>
+          <compiledirpicklistitem>.</compiledirpicklistitem>
+          <compiledirpicklistitem>${AUTO_FOLDER}</compiledirpicklistitem>
+        </compiledirpicklist>
+        <compiledir>${AUTO_FOLDER}</compiledir>
+        <compilecommandpicklist>
+          <compilecommandpicklistitem>${MAKE} ${ITEM_NAME}.o</compilecommandpicklistitem>
+          <compilecommandpicklistitem>${AUTO_COMPILE}</compilecommandpicklistitem>
+        </compilecommandpicklist>
+        <compilecommand>${AUTO_COMPILE}</compilecommand>
+      </compile>
+      <dbx_gdbdebugger version="1">
+        <gdb_pathmaps>
+        </gdb_pathmaps>
+        <gdb_interceptlist>
+          <gdbinterceptoptions gdb_all="false" gdb_unhandled="true" gdb_unexpected="true"/>
+        </gdb_interceptlist>
+        <gdb_options>
+          <DebugOptions>
+          </DebugOptions>
+        </gdb_options>
+        <gdb_buildfirst gdb_buildfirst_overriden="false" gdb_buildfirst_old="false"/>
+      </dbx_gdbdebugger>
+      <nativedebugger version="1">
+        <engine>gdb</engine>
+      </nativedebugger>
+      <runprofile version="9">
+        <runcommandpicklist>
+          <runcommandpicklistitem>"${OUTPUT_PATH}"</runcommandpicklistitem>
+        </runcommandpicklist>
+        <runcommand>"${OUTPUT_PATH}"</runcommand>
+        <rundir>.</rundir>
+        <buildfirst>false</buildfirst>
+        <terminal-type>0</terminal-type>
+        <remove-instrumentation>0</remove-instrumentation>
+        <environment>
+        </environment>
+      </runprofile>
+    </conf>
+  </confs>
+</configurationDescriptor>

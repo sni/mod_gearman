@@ -178,7 +178,7 @@ void *get_results( gearman_job_st *job, void *context, size_t *result_size, gear
     }
     init_check_result(chk_result);
     chk_result->scheduled_check     = TRUE;
-#if defined(USENAGIOS3) || defined(USENAGIOS4)
+#ifdef USENAGIOS
     chk_result->reschedule_check    = TRUE;
 #endif
     chk_result->output_file         = 0;
@@ -201,7 +201,7 @@ void *get_results( gearman_job_st *job, void *context, size_t *result_size, gear
                 chk_result->output = gm_strdup("(null)");
             }
             else {
-#ifdef USENAGIOS3
+#ifdef USENAGIOS
                 chk_result->output = gm_strdup( value );
 #endif
 #ifdef USENAEMON
@@ -229,7 +229,7 @@ void *get_results( gearman_job_st *job, void *context, size_t *result_size, gear
         } else if ( !strcmp( key, "type" ) && !strcmp( value, "passive" ) ) {
             active_check=FALSE;
         } else if ( !strcmp( key, "reschedule_check" ) ) {
-#if defined(USENAGIOS3) || defined(USENAGIOS4)
+#ifdef USENAGIOS
             chk_result->reschedule_check = atoi( value );
 #endif
         } else if ( !strcmp( key, "exited_ok" ) ) {
@@ -330,8 +330,8 @@ void *get_results( gearman_job_st *job, void *context, size_t *result_size, gear
     }
 
     /* add result to result list */
-#ifdef USENAGIOS3
-    mod_gm_add_result_to_list_3x( chk_result );
+#ifdef USENAGIOS
+    mod_gm_add_result_to_list( chk_result );
 #endif
 #ifdef USENAEMON
     mod_gm_add_result_to_list( chk_result );
