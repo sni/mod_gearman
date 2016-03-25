@@ -42,10 +42,14 @@ int event_broker_options;
 #endif
 #if defined(USENAEMON) || defined(USENAGIOS4)
 unsigned long event_broker_options;
+#ifdef USENAEMON
 timed_event *schedule_event(time_t delay, event_callback callback, void *user_data) { delay = delay; callback = callback; user_data = user_data; return(NULL); }
 #endif
+#endif
+#if defined(USENAGIOS3) || defined(USENAGIOS4)
 check_result *check_result_list;
 check_result check_result_info;
+#endif
 int process_performance_data;
 
 void check_neb(char * nebargs);
