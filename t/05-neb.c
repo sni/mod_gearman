@@ -68,8 +68,10 @@ void check_neb(char * nebargs) {
     currently_running_service_checks = 0;
     currently_running_host_checks    = 0;
     event_broker_options             = 1048575; /* BROKER_EVERYTHING */
+#if defined(USENAGIOS3) || defined(USENAGIOS4)
     check_result_list                = NULL;
     check_result_info.check_options  = 1;       /* CHECK_OPTION_FORCE_EXECUTION */
+#endif
     process_performance_data         = 1;
 
     /* load neb module */
