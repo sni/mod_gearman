@@ -9,12 +9,20 @@
 #include <config.h>
 
 #ifdef USENAGIOS3
-#include "nagios/nagios.h"
-#include "nagios/nebmodules.h"
-#include "nagios/nebstructs.h"
-#include "nagios/nebcallbacks.h"
-#include "nagios/broker.h"
+#include "nagios3/nagios.h"
+#include "nagios3/nebmodules.h"
+#include "nagios3/nebstructs.h"
+#include "nagios3/nebcallbacks.h"
+#include "nagios3/broker.h"
 #define BROKER_MODULE "mod_gearman_nagios3.o"
+#endif
+#ifdef USENAGIOS4
+#include "nagios4/nagios.h"
+#include "nagios4/nebmodules.h"
+#include "nagios4/nebstructs.h"
+#include "nagios4/nebcallbacks.h"
+#include "nagios4/broker.h"
+#define BROKER_MODULE "mod_gearman_nagios4.o"
 #endif
 #ifdef USENAEMON
 #include "naemon/naemon.h"
@@ -32,7 +40,7 @@ int currently_running_host_checks;
 #ifdef USENAGIOS3
 int event_broker_options;
 #endif
-#ifdef USENAEMON
+#if defined(USENAEMON) || defined(USENAGIOS4)
 unsigned long event_broker_options;
 timed_event *schedule_event(time_t delay, event_callback callback, void *user_data) { delay = delay; callback = callback; user_data = user_data; return(NULL); }
 #endif
