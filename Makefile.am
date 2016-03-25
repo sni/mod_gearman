@@ -279,7 +279,7 @@ if ENABLE_NAGIOS3
 	$(install_sh_PROGRAM) -m 644 mod_gearman_nagios3.o $(DESTDIR)$(pkglibdir)/mod_gearman_nagios3.o
 endif
 if ENABLE_NAGIOS4
-	 $(install_sh_PROGRAM) -m 644 mod_gearman_nagios4.o $(DESTDIR)$(pkglibdir)/mod_gearman_nagios4.o
+	$(install_sh_PROGRAM) -m 644 mod_gearman_nagios4.o $(DESTDIR)$(pkglibdir)/mod_gearman_nagios4.o
 endif
 	$(install_sh_PROGRAM) -m 755 worker/initscript $(DESTDIR)$(initrddir)/mod-gearman-worker
 
