@@ -31,7 +31,10 @@
 
 #include <libgearman/gearman.h>
 #ifdef USENAGIOS3
-#include "nagios/nagios.h"
+#include "nagios3/nagios.h"
+#endif
+#ifdef USENAGIOS4
+#include "nagios4/nagios.h"
 #endif
 
 void *result_worker(void *);

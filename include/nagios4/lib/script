@@ -1,0 +1,15 @@
+mv dontneedthese/lnag-utils.h .
+mv dontneedthese/fanout.h .
+mv dontneedthese/nsutils.h .
+mv dontneedthese/pqueue.h .
+mv dontneedthese/squeue.h .
+mv dontneedthese/kvvec.h .
+mv dontneedthese/iobroker.h .
+mv dontneedthese/iocache.h .
+mv dontneedthese/runcmd.h .
+mv dontneedthese/bitmap.h .
+mv dontneedthese/dkhash.h .
+mv dontneedthese/skiplist.h .
+mv dontneedthese/nsock.h .
+mv dontneedthese/nspath.h .
+mv dontneedthese/snprintf.h .
