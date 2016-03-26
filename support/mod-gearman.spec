@@ -126,8 +126,9 @@ fi
 %{_bindir}/send_multi
 %{_bindir}/mod_gearman_mini_epn
 
-%{_libdir}/mod_gearman/mod_gearman_nagios3.o
 %{_libdir}/mod_gearman/mod_gearman_naemon.o
+%{_libdir}/mod_gearman/mod_gearman_nagios3.o
+%{_libdir}/mod_gearman/mod_gearman_nagios4.o
 
 %attr(755,naemon,root) %{_localstatedir}/mod_gearman
 %attr(755,naemon,root) %{_localstatedir}/log/mod_gearman
