@@ -233,6 +233,7 @@ int set_default_options(mod_gm_opt_t *opt) {
     opt->debug_level        = GM_LOG_INFO;
     opt->perfdata           = GM_DISABLED;
     opt->perfdata_mode      = GM_PERFDATA_OVERWRITE;
+    opt->perfdata_send_all  = GM_DISABLED;
     opt->use_uniq_jobs      = GM_ENABLED;
     opt->do_hostchecks      = GM_ENABLED;
     opt->route_eventhandler_like_checks = GM_DISABLED;
@@ -285,6 +286,9 @@ int set_default_options(mod_gm_opt_t *opt) {
     opt->dupserver_num         = 0;
     for(i=0;i<GM_LISTSIZE;i++)
         opt->dupserver_list[i] = NULL;
+    opt->perfdata_queues_num = 0;
+    for(i=0;i<GM_LISTSIZE;i++)
+        opt->perfdata_queues_list[i] = NULL;
     opt->hostgroups_num     = 0;
     for(i=0;i<GM_LISTSIZE;i++)
         opt->hostgroups_list[i] = NULL;
@@ -380,16 +384,35 @@ int parse_args_line(mod_gm_opt_t *opt, char * arg, int recursion_level) {
     }
 
     /* perfdata */
-    else if (   !strcmp( key, "perfdata" ) ) {
+    else if ( !strcmp(key, "perfdata") && strlen(value) ) {
         opt->set_queues_by_hand++;
-        opt->perfdata = parse_yes_or_no(value, GM_ENABLED);
-        /* perfdata override to dump all performance values */
-        if(value != NULL) {
-            lc(value);
-            if(!strcmp( value, "all" ))
-                opt->perfdata = GM_PERFDATA_ALL;
+        opt->perfdata = parse_yes_or_no(value, -1);
+
+        if (opt->perfdata == GM_ENABLED) {
+            //bool, use default queue
+            opt->perfdata_queues_list[opt->perfdata_queues_num] = gm_strdup(GM_PERFDATA_QUEUE);
+            opt->perfdata_queues_num++;
+        }
+        else if (opt->perfdata == -1) {
+            //not a bool, use value string as queue name(s)
+            opt->perfdata = GM_ENABLED;
+
+            char *values, *values_original;
+            values_original = values = strdup(value);
+            char *name;
+            while ((name = strsep(&values, ",")) != NULL) {
+                opt->perfdata_queues_list[opt->perfdata_queues_num] = gm_strdup(name);
+                opt->perfdata_queues_num++;
+            }
+            free(values_original);
         }
         return(GM_OK);
+    }
+
+    /* perfdata_send_all */
+    else if ( !strcmp(key, "perfdata_send_all") ) {
+        /* perfdata override to dump all performance values */
+        opt->perfdata_send_all = parse_yes_or_no(value, GM_DISABLED);
     }
 
     /* hosts */

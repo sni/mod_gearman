@@ -71,8 +71,6 @@
 #define GM_ERROR                        1
 #define GM_NO_EPN                      -1
 
-#define GM_PERFDATA_ALL                 2
-
 #define GM_EXIT_UNKNOWN               768   /* results in exit code 3 after processed by WEXITSTATUS() */
 
 /* log modes */
@@ -205,6 +203,9 @@ typedef struct mod_gm_opt_struct {
     int            result_workers;                          /**< number of result worker threads started */
     int            perfdata;                                /**< flag whether perfdata will be distributed or not */
     int            perfdata_mode;                           /**< flag whether perfdata will be sent with/without uniq set */
+    int            perfdata_send_all;                       /**< flag whether perfdata will be sent to all queues */
+    char         * perfdata_queues_list[GM_LISTSIZE];       /**< list of perfdata queue names */
+    int            perfdata_queues_num;                     /**< number of perfdata queues */
     char         * local_hostgroups_list[GM_LISTSIZE];      /**< list of hostgroups which will not be distributed */
     int            local_hostgroups_num;                    /**< number of elements in local_hostgroups_list */
     char         * local_servicegroups_list[GM_LISTSIZE];   /**< list of group  which will not be distributed */

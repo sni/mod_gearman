@@ -1192,7 +1192,7 @@ int handle_perfdata(int event_type, void *data) {
                 }
 
                 hst = (host *) hostchkdata->object_ptr;
-                if(hst->process_performance_data == 0 && mod_gm_opt->perfdata != GM_PERFDATA_ALL) {
+                if(hst->process_performance_data == 0 && mod_gm_opt->perfdata_send_all == GM_DISABLED) {
                     gm_log( GM_LOG_TRACE, "handle_perfdata() process_performance_data disabled for: %s\n", hst->name );
                     break;
                 }
@@ -1240,7 +1240,7 @@ int handle_perfdata(int event_type, void *data) {
 
                 /* find the naemon service object for this service */
                 svc = (service *) srvchkdata->object_ptr;
-                if(svc->process_performance_data == 0 && mod_gm_opt->perfdata != GM_PERFDATA_ALL) {
+                if(svc->process_performance_data == 0 && mod_gm_opt->perfdata_send_all == GM_DISABLED) {
                     gm_log( GM_LOG_TRACE, "handle_perfdata() process_performance_data disabled for: %s - %s\n", svc->host_name, svc->description );
                     break;
                 }
@@ -1284,21 +1284,24 @@ int handle_perfdata(int event_type, void *data) {
     }
 
     if(has_perfdata == TRUE) {
-        /* add our job onto the queue */
-        if(add_job_to_queue( &client,
-                             mod_gm_opt->server_list,
-                             GM_PERFDATA_QUEUE,
-                             (mod_gm_opt->perfdata_mode == GM_PERFDATA_OVERWRITE ? uniq : NULL),
-                             temp_buffer,
-                             GM_JOB_PRIO_NORMAL,
-                             GM_DEFAULT_JOB_RETRIES,
-                             mod_gm_opt->transportmode,
-                             TRUE
-                            ) == GM_OK) {
-            gm_log( GM_LOG_TRACE, "handle_perfdata() finished successfully\n" );
-        }
-        else {
-            gm_log( GM_LOG_TRACE, "handle_perfdata() finished unsuccessfully\n" );
+        for (int i = 0; i < mod_gm_opt->perfdata_queues_num; i++) {
+            char *perfdata_queue = mod_gm_opt->perfdata_queues_list[i];
+            /* add our job onto the queue */
+            if(add_job_to_queue( &client,
+                                 mod_gm_opt->server_list,
+                                 perfdata_queue,
+                                 (mod_gm_opt->perfdata_mode == GM_PERFDATA_OVERWRITE ? uniq : NULL),
+                                 temp_buffer,
+                                 GM_JOB_PRIO_NORMAL,
+                                 GM_DEFAULT_JOB_RETRIES,
+                                 mod_gm_opt->transportmode,
+                                 TRUE
+                                ) == GM_OK) {
+                gm_log( GM_LOG_TRACE, "handle_perfdata() successfully added data to %s\n", perfdata_queue );
+            }
+            else {
+                gm_log( GM_LOG_TRACE, "handle_perfdata() failed to add data to %s\n", perfdata_queue );
+            }
         }
     }
 

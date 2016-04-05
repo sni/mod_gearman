@@ -35,8 +35,6 @@
 #include <unistd.h>
 #include <pthread.h>
 
-#define GM_PERFDATA_QUEUE    "perfdata"  /**< default performance data queue */
-
 /** @file
  *  @brief Mod-Gearman NEB Module
  *  @addtogroup mod_gearman_neb_module NEB Module

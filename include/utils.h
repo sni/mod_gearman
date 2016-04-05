@@ -44,6 +44,8 @@
 #include "polarssl/md5.h"
 #include "common.h"
 
+#define GM_PERFDATA_QUEUE    "perfdata"  /**< default performance data queue */
+
 /**
  * escpae newlines
  *
