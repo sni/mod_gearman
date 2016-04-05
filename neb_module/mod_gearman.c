@@ -1170,6 +1170,7 @@ int handle_perfdata(int event_type, void *data) {
     host *hst        = NULL;
     service *svc     = NULL;
     int has_perfdata = FALSE;
+    int i;
 #if defined(USENAEMON) || defined(USENAGIOS4)
     char *perf_data;
 #endif
@@ -1284,7 +1285,7 @@ int handle_perfdata(int event_type, void *data) {
     }
 
     if(has_perfdata == TRUE) {
-        for (int i = 0; i < mod_gm_opt->perfdata_queues_num; i++) {
+        for (i = 0; i < mod_gm_opt->perfdata_queues_num; i++) {
             char *perfdata_queue = mod_gm_opt->perfdata_queues_list[i];
             /* add our job onto the queue */
             if(add_job_to_queue( &client,
