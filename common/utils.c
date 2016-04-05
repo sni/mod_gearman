@@ -398,7 +398,7 @@ int parse_args_line(mod_gm_opt_t *opt, char * arg, int recursion_level) {
             opt->perfdata = GM_ENABLED;
 
             char *values, *values_original;
-            values_original = values = strdup(value);
+            values_original = values = gm_strdup(value);
             char *name;
             while ((name = strsep(&values, ",")) != NULL) {
                 opt->perfdata_queues_list[opt->perfdata_queues_num] = gm_strdup(name);
