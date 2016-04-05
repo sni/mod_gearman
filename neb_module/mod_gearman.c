@@ -629,7 +629,12 @@ static int handle_host_check( int event_type, void *data ) {
     hst->is_being_freshened=FALSE;
 
     /* adjust host check attempt */
+#ifdef USENAGIOS3
+    adjust_host_check_attempt_3x(hst,TRUE);
+#endif
+#if defined(USENAEMON) || defined(USENAGIOS4)
     adjust_host_check_attempt(hst,TRUE);
+#endif
 
     temp_buffer[0]='\x0';
 

@@ -556,7 +556,7 @@ void handle_service_flap_detection_disabled(service *);		/* handles the details 
 int perform_on_demand_host_check(host *,int *,int,int,unsigned long);
 int perform_scheduled_host_check(host *,int,double);
 int check_host_check_viability_3x(host *,int,int *,time_t *);
-int adjust_host_check_attempt(host *,int);
+int adjust_host_check_attempt_3x(host *,int);
 int determine_host_reachability(host *);
 int process_host_check_result_3x(host *,int,char *,int,int,int,unsigned long);
 int perform_on_demand_host_check_3x(host *,int *,int,int,unsigned long);
