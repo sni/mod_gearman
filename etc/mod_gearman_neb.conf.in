@@ -145,14 +145,18 @@ result_workers=1
 # to gearman.
 # Note: processing of perfdata is not part of
 # mod_gearman. You will need additional worker for
-# handling performance data. For example: pnp4nagios
+# handling performance data, like ex. pnp4nagios.
 # Performance data is just written to the gearman
-# queue.
-# Set perfdata=all to submit all performance data
+# queue and not further processed.
+# You can specify multiple queues by comma separated list.
+# Default: no
+perfdata=no
+
+# Set perfdata_send_all=yes to submit all performance data
 # of all hosts and services regardless of if they
 # have 'process_performance_data' enabled or not.
 # Default: no
-perfdata=no
+perfdata_send_all=no
 
 # perfdata mode overwrite helps preventing the perdata queue getting to big
 # 1 = overwrote

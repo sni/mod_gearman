@@ -5,6 +5,8 @@ This file documents the revision history for mod_gearman.
           - introduce configure options --enable-naemon-neb-module, --enable-nagios3-neb-module and --enable-nagios4-neb-module
             to determine which neb module to build. This obsoletes mod-gearman 1.x and 2.x and
             combines both into mod-gearman 3.x.
+          - moved perfdata=all to separate option perfdata_send_all=yes
+          - support multiple perfdata queues
 
 2.1.5 Wed Sep 30 11:49:17 CEST 2015
           - reintroduce result_workers option because it is required to disabled result workers

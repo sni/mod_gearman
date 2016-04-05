@@ -413,6 +413,7 @@ int parse_args_line(mod_gm_opt_t *opt, char * arg, int recursion_level) {
     else if ( !strcmp(key, "perfdata_send_all") ) {
         /* perfdata override to dump all performance values */
         opt->perfdata_send_all = parse_yes_or_no(value, GM_DISABLED);
+        return(GM_OK);
     }
 
     /* hosts */

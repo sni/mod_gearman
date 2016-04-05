@@ -685,9 +685,7 @@ if you only want to export performance data.
 
 perfdata::
 Defines if the module should distribute perfdata to gearman.
-Set perfdata=all to submit all performance data
-of all hosts and services regardless of if they
-have 'process_performance_data' enabled or not.
+Can be specified multiple times and accepts comma separated lists.
 +
 ====
     perfdata=yes
@@ -698,14 +696,25 @@ http://www.pnp4nagios.org[PNP4Nagios]. Performance data is just
 written to the gearman queue.
 
 
+perfdata_send_all::
+Set 'perfdata_send_all=yes' to submit all performance data
+of all hosts and services regardless of if they
+have 'process_performance_data' enabled or not.
+Default: `no`
++
+====
+    perfdata_send_all=yes
+====
+
+
 perfdata_mode::
-    There will be only a single job for each host or servier when putting
-    performance data onto the perfdata_queue in overwrite mode. In
-    append mode perfdata will be stored as long as there is memory
-    left. Setting this to 'overwrite' helps preventing the perf_data
-    queue from getting to big. Monitor your perfdata carefully when
-    using the 'append' mode.
-    Possible values are:
+There will be only a single job for each host or servier when putting
+performance data onto the perfdata_queue in overwrite mode. In
+append mode perfdata will be stored as long as there is memory
+left. Setting this to 'overwrite' helps preventing the perf_data
+queue from getting to big. Monitor your perfdata carefully when
+using the 'append' mode.
+Possible values are:
 +
 --
     * `1` - overwrite
