@@ -114,8 +114,6 @@ fi
 %config(noreplace) %{_sysconfdir}/mod_gearman/worker.conf
 %config(noreplace) %{_sysconfdir}/logrotate.d/mod_gearman
 
-%{_datadir}/mod_gearman/standalone_worker.conf
-%{_datadir}/mod_gearman/shared.conf
 %{_datadir}/mod_gearman/mod_gearman_p1.pl
 %{_datadir}/mod_gearman/gearman_proxy.pl
 
