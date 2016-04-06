@@ -15,6 +15,8 @@ DOS2UNIX=$(shell which dos2unix || which fromdos)
 AM_CPPFLAGS=-Iinclude
 CFLAGS +=-DDATADIR='"$(datadir)"'
 OS=$(shell uname)
+# disable parallel builds which sometime run into ranlib file not found errors
+MAKEFLAGS=-j1
 
 if USEPERL
 P1FILE           = worker/mod_gearman_p1.pl
