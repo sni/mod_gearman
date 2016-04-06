@@ -429,7 +429,6 @@ resetdaily:
 version:
 	if [ -z "$$NEWVERSION" ]; then NEWVERSION=$$(dialog --stdout --inputbox "New Version:" 0 0 "$(VERSION)"); fi; \
 	if [ -n "$$NEWVERSION" ] && [ "$$NEWVERSION" != "$(VERSION)" ]; then \
-		debversion=$${NEWVERSION:1}; \
 		sed -ri "s/$(VERSION)/$$NEWVERSION/" include/common.h configure.ac support/mod-gearman.spec; \
 		sed -i Changes -e "s/$(VERSION)/$$NEWVERSION $(shell date)\n          - ...\n\n$(VERSION)/"; \
 		$(MAKE) docs; \
@@ -439,7 +438,7 @@ version:
 		if [ "x$$DEBFULLNAME" = "x" ]; then \
 			DEBFULLNAME="Sven Nierlein"; \
 		fi; \
-		dch --newversion "$$debversion" --package "mod-gearman" -D "UNRELEASED" "new upstream release"; \
+		dch --newversion "$$NEWVERSION" --package "mod-gearman" -D "UNRELEASED" "new upstream release"; \
 	fi;
 
 dailydist: cleandist
