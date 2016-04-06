@@ -57,7 +57,7 @@ be bound to host and servicegroups.
 # Install systemd entry
 %{__install} -D -m 0644 -p worker/daemon-systemd %{buildroot}%{_unitdir}/mod-gearman-worker.service
 mkdir -p %{buildroot}%{_sysconfdir}/sysconfig
-echo "NICELEVEL=0" > %{buildroot}%{_sysconfdir}/sysconfig/mod-gearman-worker
+touch %{buildroot}%{_sysconfdir}/sysconfig/mod-gearman-worker
 # remove SystemV init-script
 %{__rm} -f %{buildroot}%{_initrddir}/mod-gearman-worker
 %endif

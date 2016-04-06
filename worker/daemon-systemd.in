@@ -11,7 +11,6 @@ ExecStart=%WORKERBIN% -d --config=%CONFIG_WORKER% --pidfile=%PIDFILE%
 ExecReload=/bin/kill -HUP $MAINPID
 User=%USER%
 Group=%USER%
-Nice=$NICELEVEL
 StandardOutput=journal
 StandardError=inherit
 
