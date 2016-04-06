@@ -1654,9 +1654,7 @@ perfdata
 <dd>
 <p>
 Defines if the module should distribute perfdata to gearman.
-Set perfdata=all to submit all performance data
-of all hosts and services regardless of if they
-have <em>process_performance_data</em> enabled or not.
+Can be specified multiple times and accepts comma separated lists.
 </p>
 <div class="exampleblock">
 <div class="content">
@@ -1680,17 +1678,35 @@ written to the gearman queue.</td>
 </div>
 <div class="dlist"><dl>
 <dt class="hdlist1">
+perfdata_send_all
+</dt>
+<dd>
+<p>
+Set <em>perfdata_send_all=yes</em> to submit all performance data
+of all hosts and services regardless of if they
+have <em>process_performance_data</em> enabled or not.
+Default: <code>no</code>
+</p>
+<div class="exampleblock">
+<div class="content">
+<div class="literalblock">
+<div class="content">
+<pre><code>perfdata_send_all=yes</code></pre>
+</div></div>
+</div></div>
+</dd>
+<dt class="hdlist1">
 perfdata_mode
 </dt>
 <dd>
 <p>
-    There will be only a single job for each host or servier when putting
-    performance data onto the perfdata_queue in overwrite mode. In
-    append mode perfdata will be stored as long as there is memory
-    left. Setting this to <em>overwrite</em> helps preventing the perf_data
-    queue from getting to big. Monitor your perfdata carefully when
-    using the <em>append</em> mode.
-    Possible values are:
+There will be only a single job for each host or servier when putting
+performance data onto the perfdata_queue in overwrite mode. In
+append mode perfdata will be stored as long as there is memory
+left. Setting this to <em>overwrite</em> helps preventing the perf_data
+queue from getting to big. Monitor your perfdata carefully when
+using the <em>append</em> mode.
+Possible values are:
 </p>
 <div class="openblock">
 <div class="content">
@@ -2904,7 +2920,7 @@ Make sure all your worker have the Nagios-Plugins available under
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2016-03-06 01:36:02 CET
+ 2016-04-06 00:23:14 CEST
 </div>
 </div>
 </body>
