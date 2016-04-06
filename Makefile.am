@@ -17,6 +17,7 @@ CFLAGS +=-DDATADIR='"$(datadir)"'
 OS=$(shell uname)
 # disable parallel builds which sometime run into ranlib file not found errors
 MAKEFLAGS=-j1
+DAILYVERSION=$(shell ./get_version)
 
 if USEPERL
 P1FILE           = worker/mod_gearman_p1.pl
@@ -412,13 +413,49 @@ deb:
 mrproper:
 	git clean -xfd
 
+versionprecheck:
+	[ -e .git ] || { echo "changing versions only works in git clones!"; exit 1; }
+	[ `git status | grep -c 'working directory clean'` -eq 1 ] || { echo "git project is not clean, cannot tag version"; exit 1; }
+
+newversion: versionprecheck
+	test -e .git
+	make NEWVERSION="$(DAILYVERSION)" version
+
+dailyversion: newversion
+	git checkout Changes
+
+resetdaily:
+	git reset --hard HEAD
+	git checkout .
+
 version:
 	if [ -z "$$NEWVERSION" ]; then NEWVERSION=$$(dialog --stdout --inputbox "New Version:" 0 0 "$(VERSION)"); fi; \
 	if [ -n "$$NEWVERSION" ] && [ "$$NEWVERSION" != "$(VERSION)" ]; then \
+		debversion=$${NEWVERSION:1}; \
 		sed -ri "s/$(VERSION)/$$NEWVERSION/" include/common.h configure.ac support/mod-gearman.spec; \
 		sed -i Changes -e "s/$(VERSION)/$$NEWVERSION $(shell date)\n          - ...\n\n$(VERSION)/"; \
 		$(MAKE) docs; \
+		if [ "x$$DEBEMAIL" = "x" ]; then \
+			DEBEMAIL="Sven Nierlein <sven@consol.de>"; \
+		fi; \
+		if [ "x$$DEBFULLNAME" = "x" ]; then \
+			DEBFULLNAME="Sven Nierlein"; \
+		fi; \
+		dch --newversion "$$debversion" --package "mod-gearman" -D "UNRELEASED" "new upstream release"; \
 	fi;
+
+dailydist: cleandist
+	$(MAKE) newversion
+	$(MAKE) dist
+	$(MAKE) resetdaily
+	ls -la *.gz
+
+cleandist:
+	rm -f *.gz
+
+releasedist: cleandist dist
+	git describe --tag --exact-match
+	ls -la *.gz
 
 # order does matter for perl libs/includes (at least on centos 5)
 mod_gearman_worker$(EXEEXT): $(mod_gearman_worker_OBJECTS) $(perl_objects) $(mod_gearman_worker_DEPENDENCIES)
