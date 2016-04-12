@@ -19,7 +19,7 @@ AC_ARG_ENABLE(debug,--enable-debug will enable debugging symbols,[
     ],
     # do not strip binarys, this is done on packaging automatically and prevents debug packages to build properly
     #CFLAGS="${CFLAGS} -s"
-    CFLAGS="${CFLAGS}"
+    CFLAGS="${CFLAGS} -g3"
 )
 
 ##############################################
