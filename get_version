@@ -21,6 +21,13 @@ if [ $? -eq 0 ]; then
   minor1=`echo $version | cut -d . -f 2`
   minor2=`echo $version | cut -d . -f 3`
 
+  # beta versions?
+  if [ $(echo "$minor2" | sed -e 's/b[0-9]*//') != "$minor2" ]; then
+    major=$((major-1))
+    minor1=99
+    minor2=-1
+  fi
+
   # do we have a even minor version?
   minor2=$((minor2+1))
   version="$major.$minor1.$minor2"
