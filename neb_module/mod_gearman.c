@@ -990,13 +990,13 @@ static int read_arguments( const char *args_orig ) {
 
     verify = verify_options(mod_gm_opt);
 
-    if(mod_gm_opt->debug_level >= GM_LOG_DEBUG) {
-        dumpconfig(mod_gm_opt, GM_NEB_MODE);
-    }
-
     /* read keyfile */
     if(mod_gm_opt->keyfile != NULL && read_keyfile(mod_gm_opt) != GM_OK) {
         errors++;
+    }
+
+    if(mod_gm_opt->debug_level >= GM_LOG_DEBUG) {
+        dumpconfig(mod_gm_opt, GM_NEB_MODE);
     }
 
     free(args_c);
