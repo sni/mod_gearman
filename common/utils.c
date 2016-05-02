@@ -1028,7 +1028,8 @@ void dumpconfig(mod_gm_opt_t *opt, int mode) {
     if(mode == GM_NEB_MODE) {
         gm_log( GM_LOG_DEBUG, "queue by cust var:               %s\n", opt->queue_cust_var == NULL ? "no" : opt->queue_cust_var);
         gm_log( GM_LOG_DEBUG, "debug result:                    %s\n", opt->debug_result == GM_ENABLED ? "yes" : "no");
-        //gm_log( GM_LOG_DEBUG, "result_worker:                   %d\n", opt->result_workers);
+        if(opt->result_workers != 1)
+            gm_log( GM_LOG_DEBUG, "result_worker:                   %d\n", opt->result_workers);
         gm_log( GM_LOG_DEBUG, "do_hostchecks:                   %s\n", opt->do_hostchecks == GM_ENABLED ? "yes" : "no");
         gm_log( GM_LOG_DEBUG, "route_eventhandler_like_checks:  %s\n", opt->route_eventhandler_like_checks == GM_ENABLED ? "yes" : "no");
     }
