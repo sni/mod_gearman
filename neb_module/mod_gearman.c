@@ -30,11 +30,13 @@
 NEB_API_VERSION( CURRENT_NEB_API_VERSION )
 
 /* import some global variables */
-#ifdef USENAGIOS
-/* extern int            event_broker_options; */
+#ifdef USENAGIOS3
+extern int            event_broker_options;
+#endif
+#if defined(USENAEMON) || defined(USENAGIOS4)
+extern unsigned long  event_broker_options;
 #endif
 #ifdef USENAEMON
-extern unsigned long  event_broker_options;
 #define my_free nm_free
 #endif
 extern int            currently_running_host_checks;
