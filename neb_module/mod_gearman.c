@@ -639,11 +639,11 @@ static int handle_host_check( int event_type, void *data ) {
     temp_buffer[0]='\x0';
 
     /* grab the host macro variables */
-#ifdef USENAGIOS
+#ifdef USENAGIOS3
     clear_volatile_macros();
     grab_host_macros(hst);
 #endif
-#ifdef USENAEMON
+#if defined(USENAEMON) || defined(USENAGIOS4)
     memset(&mac, 0, sizeof(mac));
     clear_volatile_macros_r(&mac);
     grab_host_macros_r(&mac, hst);
@@ -662,10 +662,10 @@ static int handle_host_check( int event_type, void *data ) {
     }
 
     /* process any macros contained in the argument */
-#ifdef USENAGIOS
+#ifdef USENAGIOS3
     process_macros(raw_command,&processed_command,0);
 #endif
-#ifdef USENAEMON
+#if defined(USENAEMON) || defined(USENAGIOS4)
     process_macros_r(&mac, raw_command, &processed_command, 0);
 #endif
     if(processed_command==NULL){
@@ -825,12 +825,12 @@ static int handle_svc_check( int event_type, void *data ) {
     svc->is_being_freshened=FALSE;
 
     /* grab the host and service macro variables */
-#ifdef USENAGIOS
+#ifdef USENAGIOS3
     clear_volatile_macros();
     grab_host_macros(hst);
     grab_service_macros(svc);
 #endif
-#ifdef USENAEMON
+#if defined(USENAEMON) || defined(USENAGIOS4)
     memset(&mac, 0, sizeof(mac));
     clear_volatile_macros_r(&mac);
     grab_host_macros_r(&mac, hst);
@@ -850,10 +850,10 @@ static int handle_svc_check( int event_type, void *data ) {
     }
 
     /* process any macros contained in the argument */
-#ifdef USENAGIOS
+#ifdef USENAGIOS3
     process_macros(raw_command,&processed_command,0);
 #endif
-#ifdef USENAEMON
+#if defined(USENAEMON) || defined(USENAGIOS4)
     process_macros_r(&mac, raw_command, &processed_command, 0);
 #endif
     if(processed_command==NULL) {
@@ -893,10 +893,10 @@ static int handle_svc_check( int event_type, void *data ) {
     snprintf( uniq,GM_BUFFERSIZE-1,"%s-%s", svcdata->host_name, svcdata->service_description);
 
     /* execute forced checks with high prio as they are propably user requested */
-#ifdef USENAGIOS
+#ifdef USENAGIOS3
     if(check_result_info.check_options & CHECK_OPTION_FORCE_EXECUTION)
 #endif
-#ifdef USENAEMON
+#if defined(USENAEMON) || defined(USENAGIOS4)
     if(svc->check_options & CHECK_OPTION_FORCE_EXECUTION)
 #endif
         prio = GM_JOB_PRIO_HIGH;
