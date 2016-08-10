@@ -119,8 +119,14 @@ void write_core_log(char *data) {
 
 /* fake some core functions */
 int neb_set_module_info(void *handle, int type, char *data) { handle=handle; type=type; data=data; return 0; }
+#if defined(USENAGIOS3) || defined(USENAGIOS4)
 int neb_register_callback(int callback_type, void *mod_handle, int priority, int (*callback_func)(int,void *)) { callback_type=callback_type; mod_handle=mod_handle; priority=priority; callback_func=callback_func; return 0; }
 int neb_deregister_callback(int callback_type, int (*callback_func)(int,void *)) { callback_type=callback_type; callback_func=callback_func; return 0; }
+#endif
+#ifdef USENAEMON
+int neb_register_callback(enum NEBCallbackType callback_type, void *mod_handle, int priority, int (*callback_func)(int, void *)) { return 0; }
+int neb_deregister_callback(enum NEBCallbackType callback_type, void *callback_func) { return 0; }
+#endif
 
 
 int main(void) {
