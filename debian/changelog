@@ -1,9 +1,8 @@
-mod-gearman (3.0.0b1) UNRELEASED; urgency=low
+mod-gearman (3.0.0b2) UNRELEASED; urgency=low
 
-  [ Sven Nierlein ]
   * new upstream release
 
- --  Sven Nierlein <sven@consol.de>  Wed, 06 Apr 2016 15:05:24 +0200
+ --  Sven Nierlein <sven@consol.de>  Wed, 10 Aug 2016 16:44:02 +0200
 
 mod-gearman (2.1.1) UNRELEASED; urgency=low
 
