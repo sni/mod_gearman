@@ -48,7 +48,7 @@ extern timed_event  * event_list_low;
 extern timed_event  * event_list_low_tail;
 #endif
 extern int            process_performance_data;
-#ifdef USENAGIOS
+#ifdef USENAGIOS3
 extern check_result   check_result_info;
 extern check_result * check_result_list;
 #endif

@@ -46,7 +46,7 @@ unsigned long event_broker_options;
 timed_event *schedule_event(time_t delay, event_callback callback, void *user_data) { delay = delay; callback = callback; user_data = user_data; return(NULL); }
 #endif
 #endif
-#if defined(USENAGIOS3) || defined(USENAGIOS4)
+#ifdef USENAGIOS3
 check_result *check_result_list;
 check_result check_result_info;
 #endif
@@ -68,7 +68,7 @@ void check_neb(char * nebargs) {
     currently_running_service_checks = 0;
     currently_running_host_checks    = 0;
     event_broker_options             = 1048575; /* BROKER_EVERYTHING */
-#if defined(USENAGIOS3) || defined(USENAGIOS4)
+#ifdef USENAGIOS3
     check_result_list                = NULL;
     check_result_info.check_options  = 1;       /* CHECK_OPTION_FORCE_EXECUTION */
 #endif

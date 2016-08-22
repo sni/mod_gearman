@@ -50,8 +50,10 @@ int event_broker_options;
 #ifdef USENAEMON
 unsigned long event_broker_options;
 #endif
+#ifdef USENAGIOS3
 check_result *check_result_list;
 check_result check_result_info;
+#endif
 int process_performance_data;
 
 nebcallback nebcb_process_data[MAX_NEB_CB];
@@ -79,8 +81,10 @@ static void init_externals(void) {
     currently_running_service_checks = 0;
     currently_running_host_checks = 0;
     event_broker_options = 1048575; /* BROKER_EVERYTHING */
+#ifdef USENAGIOS3
     check_result_list = NULL;
     check_result_info.check_options = 1; /* CHECK_OPTION_FORCE_EXECUTION */
+#endif
     process_performance_data = 1;
 }
 
