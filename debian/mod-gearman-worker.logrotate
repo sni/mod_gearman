@@ -5,4 +5,5 @@
     postrotate
         /etc/init.d/mod-gearman-worker reload > /dev/null 2>/dev/null || true
     endscript
+    compress
 }

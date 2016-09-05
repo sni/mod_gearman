@@ -5,10 +5,12 @@
     postrotate
         /etc/init.d/mod_gearman_worker reload > /dev/null 2>/dev/null || true
     endscript
+    compress
 }
 
 /var/log/mod_gearman/mod_gearman_neb.log {
     missingok
     notifempty
     copytruncate
+    compress
 }
