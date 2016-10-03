@@ -139,7 +139,7 @@ int add_job_to_queue( gearman_client_st *client, gm_server_t * server_list[GM_LI
     struct timeval now;
 
     /* check too long queue names */
-    if(strlen(queue) > 63) {
+    if(strlen(queue) > 511) {
         gm_log( GM_LOG_ERROR, "queue name too long: '%s'\n", queue );
         return GM_ERROR;
     }
