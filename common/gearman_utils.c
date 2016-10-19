@@ -139,14 +139,14 @@ int add_job_to_queue( gearman_client_st *client, gm_server_t * server_list[GM_LI
     struct timeval now;
 
     /* check too long queue names */
-    if(strlen(queue) > 511) {
+    if(strlen(queue) > GEARMAN_FUNCTION_MAX_SIZE - 1) {
         gm_log( GM_LOG_ERROR, "queue name too long: '%s'\n", queue );
         return GM_ERROR;
     }
 
     /* cut off to long uniq ids */
     free_uniq = 0;
-    if(uniq != NULL && strlen(uniq) > 63) {
+    if(uniq != NULL && strlen(uniq) > GEARMAN_MAX_UNIQUE_SIZE - 1) {
         uniq = md5sum(uniq);
         free_uniq = 1;
     }
