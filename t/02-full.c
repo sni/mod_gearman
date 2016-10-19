@@ -143,11 +143,11 @@ void send_big_jobs(int transportmode) {
               "/bin/hostname"
             );
     temp_buffer[sizeof( temp_buffer )-1]='\x0';
-    char * uniq = "something at least bigger than the 64 chars allowed by libgearman!";
+    char * uniq = "something at least bigger than the (GEARMAN_MAX_UNIQUE_SIZE) 64 chars allowed by libgearman!";
     int rt = add_job_to_queue( &client, mod_gm_opt->server_list, "service", uniq, temp_buffer, GM_JOB_PRIO_NORMAL, 1, transportmode, TRUE );
     ok(rt == GM_OK, "big uniq id sent successfully in mode %s", transportmode == GM_ENCODE_ONLY ? "base64" : "aes256");
 
-    char * queue = "something at least bigger than the 64 chars allowed by libgearman!";
+    char * queue = "something at least bigger than the (GEARMAN_FUNCTION_MAX_SIZE) 512 chars allowed by libgearman! aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
     rt = add_job_to_queue( &client, mod_gm_opt->server_list, queue, uniq, temp_buffer, GM_JOB_PRIO_NORMAL, 1, transportmode, TRUE );
     ok(rt == GM_ERROR, "big queue sent unsuccessfully in mode %s", transportmode == GM_ENCODE_ONLY ? "base64" : "aes256");
 
