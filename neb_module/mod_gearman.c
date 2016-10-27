@@ -1091,7 +1091,7 @@ static void set_target_queue( host *hst, service *svc ) {
     if ( svc ) {
         while ( mod_gm_opt->local_servicegroups_list[x] != NULL ) {
             servicegroup * temp_servicegroup = find_servicegroup( mod_gm_opt->local_servicegroups_list[x] );
-            if ( is_service_member_of_servicegroup( temp_servicegroup,svc )==TRUE ) {
+            if ( temp_servicegroup != NULL && is_service_member_of_servicegroup( temp_servicegroup,svc )==TRUE ) {
                 gm_log( GM_LOG_TRACE, "service is member of local servicegroup: %s\n", mod_gm_opt->local_servicegroups_list[x] );
                 return;
             }
@@ -1103,7 +1103,7 @@ static void set_target_queue( host *hst, service *svc ) {
     x = 0;
     while ( mod_gm_opt->local_hostgroups_list[x] != NULL ) {
         hostgroup * temp_hostgroup = find_hostgroup( mod_gm_opt->local_hostgroups_list[x] );
-        if ( is_host_member_of_hostgroup( temp_hostgroup,hst )==TRUE ) {
+        if ( temp_hostgroup != NULL && is_host_member_of_hostgroup( temp_hostgroup,hst )==TRUE ) {
             gm_log( GM_LOG_TRACE, "server is member of local hostgroup: %s\n", mod_gm_opt->local_hostgroups_list[x] );
             return;
         }
@@ -1115,7 +1115,7 @@ static void set_target_queue( host *hst, service *svc ) {
     if ( svc ) {
         while ( mod_gm_opt->servicegroups_list[x] != NULL ) {
             servicegroup * temp_servicegroup = find_servicegroup( mod_gm_opt->servicegroups_list[x] );
-            if ( is_service_member_of_servicegroup( temp_servicegroup,svc )==TRUE ) {
+            if ( temp_servicegroup != NULL && is_service_member_of_servicegroup( temp_servicegroup,svc )==TRUE ) {
                 gm_log( GM_LOG_TRACE, "service is member of servicegroup: %s\n", mod_gm_opt->servicegroups_list[x] );
                 snprintf( target_queue, GM_BUFFERSIZE-1, "servicegroup_%s", mod_gm_opt->servicegroups_list[x] );
                 return;
@@ -1128,7 +1128,7 @@ static void set_target_queue( host *hst, service *svc ) {
     x = 0;
     while ( mod_gm_opt->hostgroups_list[x] != NULL ) {
         hostgroup * temp_hostgroup = find_hostgroup( mod_gm_opt->hostgroups_list[x] );
-        if ( is_host_member_of_hostgroup( temp_hostgroup,hst )==TRUE ) {
+        if ( temp_hostgroup != NULL && is_host_member_of_hostgroup( temp_hostgroup,hst )==TRUE ) {
             gm_log( GM_LOG_TRACE, "server is member of hostgroup: %s\n", mod_gm_opt->hostgroups_list[x] );
             snprintf( target_queue, GM_BUFFERSIZE-1, "hostgroup_%s", mod_gm_opt->hostgroups_list[x] );
             return;
