@@ -672,6 +672,11 @@ static int handle_host_check( int event_type, void *data ) {
         gm_log( GM_LOG_ERROR, "Processed check command for host '%s' was NULL - aborting.\n",hst->name);
         return NEBERROR_CALLBACKCANCEL;
     }
+#if defined(USENAEMON)
+    // naemon sends unescaped newlines from ex.: the LONGPLUGINOUTPUT macro, so we have to escape
+    // them ourselves: https://github.com/naemon/naemon-core/issues/153
+    processed_command = replace_str(processed_command, "\n", "\\n");
+#endif
 
     /* log latency */
     if(mod_gm_opt->debug_level >= GM_LOG_DEBUG) {
@@ -861,6 +866,11 @@ static int handle_svc_check( int event_type, void *data ) {
         my_free(raw_command);
         return NEBERROR_CALLBACKCANCEL;
     }
+#if defined(USENAEMON)
+    // naemon sends unescaped newlines from ex.: the LONGPLUGINOUTPUT macro, so we have to escape
+    // them ourselves: https://github.com/naemon/naemon-core/issues/153
+    processed_command = replace_str(processed_command, "\n", "\\n");
+#endif
 
     /* log latency */
     if(mod_gm_opt->debug_level >= GM_LOG_DEBUG) {
