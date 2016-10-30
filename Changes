@@ -1,15 +1,19 @@
 This file documents the revision history for mod_gearman.
 
-3.x
-          - support ipv6 in gearman_top and check_gearman
+3.0.0 Mon Sun Oct 30 19:49:24 CET 2016
           - introduce configure options --enable-naemon-neb-module, --enable-nagios3-neb-module and --enable-nagios4-neb-module
             to determine which neb module to build. This obsoletes mod-gearman 1.x and 2.x and
             combines both into mod-gearman 3.x.
+          - support ipv6 in gearman_top and check_gearman
           - moved perfdata=all to separate option perfdata_send_all=yes
           - support multiple perfdata queues
           - fix crash when using nonexisting group in localhostgroup/localservicegroups (#100)
           - fix double escaping backslashes (#99)
           - add workaround for problem with hostchecks in naemon core
+
+          *** MIGRATION NOTE: ***
+          You have to change the neb module path after this update. There is no mod_gearman.o anymore but instead you have
+          choose the right module of: mod_gearman_nagios3.o, mod_gearman_nagios4.o and mod_gearman_naemon.o
 
 2.1.5 Wed Sep 30 11:49:17 CEST 2015
           - reintroduce result_workers option because it is required to disabled result workers

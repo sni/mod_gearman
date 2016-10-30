@@ -438,7 +438,7 @@ version:
 		if [ "x$$DEBFULLNAME" = "x" ]; then \
 			DEBFULLNAME="Sven Nierlein"; \
 		fi; \
-		dch --newversion "$$NEWVERSION" --package "mod-gearman" -D "UNRELEASED" "new upstream release"; \
+		dch -b --newversion "$$NEWVERSION" --package "mod-gearman" -D "UNRELEASED" "new upstream release"; \
 	fi;
 
 dailydist: cleandist

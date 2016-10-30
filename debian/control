@@ -28,7 +28,7 @@ Description: Event broker module to distribute service checks.
 
 Package: mod-gearman-worker
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}
+Depends: ${shlibs:Depends}, ${misc:Depends}, ${extra:Depends}
 Description: Worker agent for mod-gearman
  The worker agent for mod-geraman connects to a gearman job server,
  runs active Naemon service checks, and return the results.
