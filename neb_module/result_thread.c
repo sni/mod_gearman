@@ -328,6 +328,12 @@ void *get_results( gearman_job_st *job, void *context, size_t *result_size, gear
             return NULL;
         }
 #endif
+#if defined(USENAEMON)
+        if(active_check) {
+            host * hst = find_host( chk_result->host_name );
+            hst->is_executing = FALSE;
+        }
+#endif
         gm_log( GM_LOG_DEBUG, "host job completed: %s: %d\n", chk_result->host_name, chk_result->return_code );
     }
 
