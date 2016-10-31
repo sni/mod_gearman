@@ -26,6 +26,8 @@
 #include "utils.h"
 #include "gearman_utils.h"
 
+#include <worker_dummy_functions.c>
+
 int opt_verbose     = GM_DISABLED;
 int opt_quiet       = GM_DISABLED;
 int opt_batch       = GM_DISABLED;

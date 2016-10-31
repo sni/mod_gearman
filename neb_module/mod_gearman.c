@@ -675,8 +675,8 @@ static int handle_host_check( int event_type, void *data ) {
         return NEBERROR_CALLBACKCANCEL;
     }
 #if defined(USENAEMON)
-    // naemon sends unescaped newlines from ex.: the LONGPLUGINOUTPUT macro, so we have to escape
-    // them ourselves: https://github.com/naemon/naemon-core/issues/153
+    /* naemon sends unescaped newlines from ex.: the LONGPLUGINOUTPUT macro, so we have to escape
+     * them ourselves: https://github.com/naemon/naemon-core/issues/153 */
     char *tmp = replace_str(processed_command, "\n", "\\n");
     free(processed_command);
     processed_command = replace_str(tmp, "\n", "\\n");
@@ -872,8 +872,8 @@ static int handle_svc_check( int event_type, void *data ) {
         return NEBERROR_CALLBACKCANCEL;
     }
 #if defined(USENAEMON)
-    // naemon sends unescaped newlines from ex.: the LONGPLUGINOUTPUT macro, so we have to escape
-    // them ourselves: https://github.com/naemon/naemon-core/issues/153
+    /* naemon sends unescaped newlines from ex.: the LONGPLUGINOUTPUT macro, so we have to escape
+     * them ourselves: https://github.com/naemon/naemon-core/issues/153 */
     char *tmp = replace_str(processed_command, "\n", "\\n");
     free(processed_command);
     processed_command = tmp;
@@ -1484,4 +1484,259 @@ void write_core_log(char *data) {
     write_to_all_logs( data, NSLOG_INFO_MESSAGE );
 #endif
     return;
+}
+
+
+/* return human readable name for neb type */
+char * nebtype2str(int i) {
+    switch(i) {
+        case NEBTYPE_NONE:
+            return gm_strdup("NEBTYPE_NONE"); break;
+        case NEBTYPE_HELLO:
+            return gm_strdup("NEBTYPE_HELLO"); break;
+        case NEBTYPE_GOODBYE:
+            return gm_strdup("NEBTYPE_GOODBYE"); break;
+        case NEBTYPE_INFO:
+            return gm_strdup("NEBTYPE_INFO"); break;
+        case NEBTYPE_PROCESS_START:
+            return gm_strdup("NEBTYPE_PROCESS_START"); break;
+        case NEBTYPE_PROCESS_DAEMONIZE:
+            return gm_strdup("NEBTYPE_PROCESS_DAEMONIZE"); break;
+        case NEBTYPE_PROCESS_RESTART:
+            return gm_strdup("NEBTYPE_PROCESS_RESTART"); break;
+        case NEBTYPE_PROCESS_SHUTDOWN:
+            return gm_strdup("NEBTYPE_PROCESS_SHUTDOWN"); break;
+        case NEBTYPE_PROCESS_PRELAUNCH:
+            return gm_strdup("NEBTYPE_PROCESS_PRELAUNCH"); break;
+        case NEBTYPE_PROCESS_EVENTLOOPSTART:
+            return gm_strdup("NEBTYPE_PROCESS_EVENTLOOPSTART"); break;
+        case NEBTYPE_PROCESS_EVENTLOOPEND:
+            return gm_strdup("NEBTYPE_PROCESS_EVENTLOOPEND"); break;
+        case NEBTYPE_TIMEDEVENT_ADD:
+            return gm_strdup("NEBTYPE_TIMEDEVENT_ADD"); break;
+        case NEBTYPE_TIMEDEVENT_REMOVE:
+            return gm_strdup("NEBTYPE_TIMEDEVENT_REMOVE"); break;
+        case NEBTYPE_TIMEDEVENT_EXECUTE:
+            return gm_strdup("NEBTYPE_TIMEDEVENT_EXECUTE"); break;
+        case NEBTYPE_TIMEDEVENT_DELAY:
+            return gm_strdup("NEBTYPE_TIMEDEVENT_DELAY"); break;
+        case NEBTYPE_TIMEDEVENT_SKIP:
+            return gm_strdup("NEBTYPE_TIMEDEVENT_SKIP"); break;
+        case NEBTYPE_TIMEDEVENT_SLEEP:
+            return gm_strdup("NEBTYPE_TIMEDEVENT_SLEEP"); break;
+        case NEBTYPE_LOG_DATA:
+            return gm_strdup("NEBTYPE_LOG_DATA"); break;
+        case NEBTYPE_LOG_ROTATION:
+            return gm_strdup("NEBTYPE_LOG_ROTATION"); break;
+        case NEBTYPE_SYSTEM_COMMAND_START:
+            return gm_strdup("NEBTYPE_SYSTEM_COMMAND_START"); break;
+        case NEBTYPE_SYSTEM_COMMAND_END:
+            return gm_strdup("NEBTYPE_SYSTEM_COMMAND_END"); break;
+        case NEBTYPE_EVENTHANDLER_START:
+            return gm_strdup("NEBTYPE_EVENTHANDLER_START"); break;
+        case NEBTYPE_EVENTHANDLER_END:
+            return gm_strdup("NEBTYPE_EVENTHANDLER_END"); break;
+        case NEBTYPE_NOTIFICATION_START:
+            return gm_strdup("NEBTYPE_NOTIFICATION_START"); break;
+        case NEBTYPE_NOTIFICATION_END:
+            return gm_strdup("NEBTYPE_NOTIFICATION_END"); break;
+        case NEBTYPE_CONTACTNOTIFICATION_START:
+            return gm_strdup("NEBTYPE_CONTACTNOTIFICATION_START"); break;
+        case NEBTYPE_CONTACTNOTIFICATION_END:
+            return gm_strdup("NEBTYPE_CONTACTNOTIFICATION_END"); break;
+        case NEBTYPE_CONTACTNOTIFICATIONMETHOD_START:
+            return gm_strdup("NEBTYPE_CONTACTNOTIFICATIONMETHOD_START"); break;
+        case NEBTYPE_CONTACTNOTIFICATIONMETHOD_END:
+            return gm_strdup("NEBTYPE_CONTACTNOTIFICATIONMETHOD_END"); break;
+        case NEBTYPE_SERVICECHECK_INITIATE:
+            return gm_strdup("NEBTYPE_SERVICECHECK_INITIATE"); break;
+        case NEBTYPE_SERVICECHECK_PROCESSED:
+            return gm_strdup("NEBTYPE_SERVICECHECK_PROCESSED"); break;
+        case NEBTYPE_SERVICECHECK_RAW_START:
+            return gm_strdup("NEBTYPE_SERVICECHECK_RAW_START"); break;
+        case NEBTYPE_SERVICECHECK_RAW_END:
+            return gm_strdup("NEBTYPE_SERVICECHECK_RAW_END"); break;
+        case NEBTYPE_SERVICECHECK_ASYNC_PRECHECK:
+            return gm_strdup("NEBTYPE_SERVICECHECK_ASYNC_PRECHECK"); break;
+        case NEBTYPE_HOSTCHECK_INITIATE:
+            return gm_strdup("NEBTYPE_HOSTCHECK_INITIATE"); break;
+        case NEBTYPE_HOSTCHECK_PROCESSED:
+            return gm_strdup("NEBTYPE_HOSTCHECK_PROCESSED"); break;
+        case NEBTYPE_HOSTCHECK_RAW_START:
+            return gm_strdup("NEBTYPE_HOSTCHECK_RAW_START"); break;
+        case NEBTYPE_HOSTCHECK_RAW_END:
+            return gm_strdup("NEBTYPE_HOSTCHECK_RAW_END"); break;
+        case NEBTYPE_HOSTCHECK_ASYNC_PRECHECK:
+            return gm_strdup("NEBTYPE_HOSTCHECK_ASYNC_PRECHECK"); break;
+        case NEBTYPE_HOSTCHECK_SYNC_PRECHECK:
+            return gm_strdup("NEBTYPE_HOSTCHECK_SYNC_PRECHECK"); break;
+        case NEBTYPE_COMMENT_ADD:
+            return gm_strdup("NEBTYPE_COMMENT_ADD"); break;
+        case NEBTYPE_COMMENT_DELETE:
+            return gm_strdup("NEBTYPE_COMMENT_DELETE"); break;
+        case NEBTYPE_COMMENT_LOAD:
+            return gm_strdup("NEBTYPE_COMMENT_LOAD"); break;
+        case NEBTYPE_FLAPPING_START:
+            return gm_strdup("NEBTYPE_FLAPPING_START"); break;
+        case NEBTYPE_FLAPPING_STOP:
+            return gm_strdup("NEBTYPE_FLAPPING_STOP"); break;
+        case NEBTYPE_DOWNTIME_ADD:
+            return gm_strdup("NEBTYPE_DOWNTIME_ADD"); break;
+        case NEBTYPE_DOWNTIME_DELETE:
+            return gm_strdup("NEBTYPE_DOWNTIME_DELETE"); break;
+        case NEBTYPE_DOWNTIME_LOAD:
+            return gm_strdup("NEBTYPE_DOWNTIME_LOAD"); break;
+        case NEBTYPE_DOWNTIME_START:
+            return gm_strdup("NEBTYPE_DOWNTIME_START"); break;
+        case NEBTYPE_DOWNTIME_STOP:
+            return gm_strdup("NEBTYPE_DOWNTIME_STOP"); break;
+        case NEBTYPE_PROGRAMSTATUS_UPDATE:
+            return gm_strdup("NEBTYPE_PROGRAMSTATUS_UPDATE"); break;
+        case NEBTYPE_HOSTSTATUS_UPDATE:
+            return gm_strdup("NEBTYPE_HOSTSTATUS_UPDATE"); break;
+        case NEBTYPE_SERVICESTATUS_UPDATE:
+            return gm_strdup("NEBTYPE_SERVICESTATUS_UPDATE"); break;
+        case NEBTYPE_CONTACTSTATUS_UPDATE:
+            return gm_strdup("NEBTYPE_CONTACTSTATUS_UPDATE"); break;
+        case NEBTYPE_ADAPTIVEPROGRAM_UPDATE:
+            return gm_strdup("NEBTYPE_ADAPTIVEPROGRAM_UPDATE"); break;
+        case NEBTYPE_ADAPTIVEHOST_UPDATE:
+            return gm_strdup("NEBTYPE_ADAPTIVEHOST_UPDATE"); break;
+        case NEBTYPE_ADAPTIVESERVICE_UPDATE:
+            return gm_strdup("NEBTYPE_ADAPTIVESERVICE_UPDATE"); break;
+        case NEBTYPE_ADAPTIVECONTACT_UPDATE:
+            return gm_strdup("NEBTYPE_ADAPTIVECONTACT_UPDATE"); break;
+        case NEBTYPE_EXTERNALCOMMAND_START:
+            return gm_strdup("NEBTYPE_EXTERNALCOMMAND_START"); break;
+        case NEBTYPE_EXTERNALCOMMAND_END:
+            return gm_strdup("NEBTYPE_EXTERNALCOMMAND_END"); break;
+        case NEBTYPE_AGGREGATEDSTATUS_STARTDUMP:
+            return gm_strdup("NEBTYPE_AGGREGATEDSTATUS_STARTDUMP"); break;
+        case NEBTYPE_AGGREGATEDSTATUS_ENDDUMP:
+            return gm_strdup("NEBTYPE_AGGREGATEDSTATUS_ENDDUMP"); break;
+        case NEBTYPE_RETENTIONDATA_STARTLOAD:
+            return gm_strdup("NEBTYPE_RETENTIONDATA_STARTLOAD"); break;
+        case NEBTYPE_RETENTIONDATA_ENDLOAD:
+            return gm_strdup("NEBTYPE_RETENTIONDATA_ENDLOAD"); break;
+        case NEBTYPE_RETENTIONDATA_STARTSAVE:
+            return gm_strdup("NEBTYPE_RETENTIONDATA_STARTSAVE"); break;
+        case NEBTYPE_RETENTIONDATA_ENDSAVE:
+            return gm_strdup("NEBTYPE_RETENTIONDATA_ENDSAVE"); break;
+        case NEBTYPE_ACKNOWLEDGEMENT_ADD:
+            return gm_strdup("NEBTYPE_ACKNOWLEDGEMENT_ADD"); break;
+        case NEBTYPE_ACKNOWLEDGEMENT_REMOVE:
+            return gm_strdup("NEBTYPE_ACKNOWLEDGEMENT_REMOVE"); break;
+        case NEBTYPE_ACKNOWLEDGEMENT_LOAD:
+            return gm_strdup("NEBTYPE_ACKNOWLEDGEMENT_LOAD"); break;
+        case NEBTYPE_STATECHANGE_START:
+            return gm_strdup("NEBTYPE_STATECHANGE_START"); break;
+        case NEBTYPE_STATECHANGE_END:
+            return gm_strdup("NEBTYPE_STATECHANGE_END"); break;
+    }
+    return gm_strdup("UNKNOWN");
+}
+
+
+/* return human readable name for nebcallback */
+char * nebcallback2str(int i) {
+    switch(i) {
+        case NEBCALLBACK_PROCESS_DATA:
+            return gm_strdup("NEBCALLBACK_PROCESS_DATA"); break;
+        case NEBCALLBACK_TIMED_EVENT_DATA:
+            return gm_strdup("NEBCALLBACK_TIMED_EVENT_DATA"); break;
+        case NEBCALLBACK_LOG_DATA:
+            return gm_strdup("NEBCALLBACK_LOG_DATA"); break;
+        case NEBCALLBACK_SYSTEM_COMMAND_DATA:
+            return gm_strdup("NEBCALLBACK_SYSTEM_COMMAND_DATA"); break;
+        case NEBCALLBACK_EVENT_HANDLER_DATA:
+            return gm_strdup("NEBCALLBACK_EVENT_HANDLER_DATA"); break;
+        case NEBCALLBACK_NOTIFICATION_DATA:
+            return gm_strdup("NEBCALLBACK_NOTIFICATION_DATA"); break;
+        case NEBCALLBACK_SERVICE_CHECK_DATA:
+            return gm_strdup("NEBCALLBACK_SERVICE_CHECK_DATA"); break;
+        case NEBCALLBACK_HOST_CHECK_DATA:
+            return gm_strdup("NEBCALLBACK_HOST_CHECK_DATA"); break;
+        case NEBCALLBACK_COMMENT_DATA:
+            return gm_strdup("NEBCALLBACK_COMMENT_DATA"); break;
+        case NEBCALLBACK_DOWNTIME_DATA:
+            return gm_strdup("NEBCALLBACK_DOWNTIME_DATA"); break;
+        case NEBCALLBACK_FLAPPING_DATA:
+            return gm_strdup("NEBCALLBACK_FLAPPING_DATA"); break;
+        case NEBCALLBACK_PROGRAM_STATUS_DATA:
+            return gm_strdup("NEBCALLBACK_PROGRAM_STATUS_DATA"); break;
+        case NEBCALLBACK_HOST_STATUS_DATA:
+            return gm_strdup("NEBCALLBACK_HOST_STATUS_DATA"); break;
+        case NEBCALLBACK_SERVICE_STATUS_DATA:
+            return gm_strdup("NEBCALLBACK_SERVICE_STATUS_DATA"); break;
+        case NEBCALLBACK_ADAPTIVE_PROGRAM_DATA:
+            return gm_strdup("NEBCALLBACK_ADAPTIVE_PROGRAM_DATA"); break;
+        case NEBCALLBACK_ADAPTIVE_HOST_DATA:
+            return gm_strdup("NEBCALLBACK_ADAPTIVE_HOST_DATA"); break;
+        case NEBCALLBACK_ADAPTIVE_SERVICE_DATA:
+            return gm_strdup("NEBCALLBACK_ADAPTIVE_SERVICE_DATA"); break;
+        case NEBCALLBACK_EXTERNAL_COMMAND_DATA:
+            return gm_strdup("NEBCALLBACK_EXTERNAL_COMMAND_DATA"); break;
+        case NEBCALLBACK_AGGREGATED_STATUS_DATA:
+            return gm_strdup("NEBCALLBACK_AGGREGATED_STATUS_DATA"); break;
+        case NEBCALLBACK_RETENTION_DATA:
+            return gm_strdup("NEBCALLBACK_RETENTION_DATA"); break;
+        case NEBCALLBACK_CONTACT_NOTIFICATION_DATA:
+            return gm_strdup("NEBCALLBACK_CONTACT_NOTIFICATION_DATA"); break;
+        case NEBCALLBACK_CONTACT_NOTIFICATION_METHOD_DATA:
+            return gm_strdup("NEBCALLBACK_CONTACT_NOTIFICATION_METHOD_DATA"); break;
+        case NEBCALLBACK_ACKNOWLEDGEMENT_DATA:
+            return gm_strdup("NEBCALLBACK_ACKNOWLEDGEMENT_DATA"); break;
+        case NEBCALLBACK_STATE_CHANGE_DATA:
+            return gm_strdup("NEBCALLBACK_STATE_CHANGE_DATA"); break;
+        case NEBCALLBACK_CONTACT_STATUS_DATA:
+            return gm_strdup("NEBCALLBACK_CONTACT_STATUS_DATA"); break;
+        case NEBCALLBACK_ADAPTIVE_CONTACT_DATA:
+            return gm_strdup("NEBCALLBACK_ADAPTIVE_CONTACT_DATA"); break;
+    }
+    return gm_strdup("UNKNOWN");
+}
+
+/* return human readable name for eventtype */
+char * eventtype2str(int i) {
+    switch(i) {
+        case 0:
+            return gm_strdup("EVENT_SERVICE_CHECK"); break;
+        case 1:
+            return gm_strdup("EVENT_COMMAND_CHECK"); break;
+        case 2:
+            return gm_strdup("EVENT_LOG_ROTATION"); break;
+        case 3:
+            return gm_strdup("EVENT_PROGRAM_SHUTDOWN"); break;
+        case 4:
+            return gm_strdup("EVENT_PROGRAM_RESTART"); break;
+        case 5:
+            return gm_strdup("EVENT_CHECK_REAPER"); break;
+        case 6:
+            return gm_strdup("EVENT_ORPHAN_CHECK"); break;
+        case 7:
+            return gm_strdup("EVENT_RETENTION_SAVE"); break;
+        case 8:
+            return gm_strdup("EVENT_STATUS_SAVE"); break;
+        case 9:
+            return gm_strdup("EVENT_SCHEDULED_DOWNTIME"); break;
+        case 10:
+            return gm_strdup("EVENT_SFRESHNESS_CHECK"); break;
+        case 11:
+            return gm_strdup("EVENT_EXPIRE_DOWNTIME"); break;
+        case 12:
+            return gm_strdup("EVENT_HOST_CHECK"); break;
+        case 13:
+            return gm_strdup("EVENT_HFRESHNESS_CHECK"); break;
+        case 14:
+            return gm_strdup("EVENT_RESCHEDULE_CHECKS"); break;
+        case 15:
+            return gm_strdup("EVENT_EXPIRE_COMMENT"); break;
+        case 16:
+            return gm_strdup("EVENT_CHECK_PROGRAM_UPDATE"); break;
+        case 98:
+            return gm_strdup("EVENT_SLEEP"); break;
+        case 99:
+            return gm_strdup("EVENT_USER_FUNCTION"); break;
+    }
+    return gm_strdup("UNKNOWN");
 }

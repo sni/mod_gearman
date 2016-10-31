@@ -10,6 +10,7 @@
 #include <common.h>
 #include <utils.h>
 
+#include <worker_dummy_functions.c>
 
 mod_gm_opt_t *mod_gm_opt;
 

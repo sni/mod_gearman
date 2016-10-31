@@ -26,6 +26,8 @@
 #include "utils.h"
 #include "gearman_utils.h"
 
+#include <worker_dummy_functions.c>
+
 gearman_client_st client;
 gearman_client_st client_dup;
 int results_sent = 0;

@@ -8,6 +8,7 @@
 #include <utils.h>
 #include <check_utils.h>
 
+#include <worker_dummy_functions.c>
 
 void printf_hex(char*, int);
 void printf_hex(char* text, int length) {

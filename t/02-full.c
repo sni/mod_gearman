@@ -18,6 +18,8 @@
 
 #define GEARMAND_TEST_PORT   54730
 
+#include <worker_dummy_functions.c>
+
 char * worker_logfile;
 int gearmand_pid;
 int worker_pid;

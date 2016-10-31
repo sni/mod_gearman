@@ -26,6 +26,8 @@
 #include "utils.h"
 #include "gearman_utils.h"
 
+#include <worker_dummy_functions.c>
+
 int opt_verbose         =   0;
 int opt_timeout         =  10;
 int opt_job_warning     =  10;

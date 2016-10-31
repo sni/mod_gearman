@@ -33,6 +33,8 @@
 #define BROKER_MODULE "mod_gearman_naemon.o"
 #endif
 
+#include <worker_dummy_functions.c>
+
 int service_check_timeout;
 int host_check_timeout;
 int currently_running_service_checks;

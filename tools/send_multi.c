@@ -27,6 +27,8 @@
 #include "utils.h"
 #include "gearman_utils.h"
 
+#include <worker_dummy_functions.c>
+
 gearman_client_st client;
 gearman_client_st client_dup;
 
@@ -458,7 +460,7 @@ int read_child_check(char *bufstart, char *bufend, struct timeval * end_time) {
         attribute2 = trim(attribute2);
         attribute2 = decode_xml(attribute2);
 
-        /* do we have a single quote performance label? 
+        /* do we have a single quote performance label?
            then single quote the whole multi header */
         if (*attribute2 == '\'') {
             attribute2++;
@@ -525,3 +527,4 @@ void write_core_log(char *data) {
     printf("core logger is not available for tools: %s", data);
     return;
 }
+

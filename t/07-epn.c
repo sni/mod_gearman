@@ -12,6 +12,8 @@
 #include <epn_utils.h>
 #endif
 
+#include <worker_dummy_functions.c>
+
 mod_gm_opt_t *mod_gm_opt;
 
 #ifdef EMBEDDEDPERL
