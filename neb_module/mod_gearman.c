@@ -354,6 +354,8 @@ static void move_results_to_core() {
         free(tmp_list);
         process_check_result(mod_gm_result_list->object_ptr);
         free_check_result(mod_gm_result_list->object_ptr);
+        check_result *info = mod_gm_result_list->object_ptr;
+        my_free(info->source);
         free(mod_gm_result_list->object_ptr);
         tmp_list = mod_gm_result_list;
     }
@@ -675,7 +677,10 @@ static int handle_host_check( int event_type, void *data ) {
 #if defined(USENAEMON)
     // naemon sends unescaped newlines from ex.: the LONGPLUGINOUTPUT macro, so we have to escape
     // them ourselves: https://github.com/naemon/naemon-core/issues/153
-    processed_command = replace_str(processed_command, "\n", "\\n");
+    char *tmp = replace_str(processed_command, "\n", "\\n");
+    free(processed_command);
+    processed_command = replace_str(tmp, "\n", "\\n");
+    free(tmp);
 #endif
 
     /* log latency */
@@ -869,7 +874,9 @@ static int handle_svc_check( int event_type, void *data ) {
 #if defined(USENAEMON)
     // naemon sends unescaped newlines from ex.: the LONGPLUGINOUTPUT macro, so we have to escape
     // them ourselves: https://github.com/naemon/naemon-core/issues/153
-    processed_command = replace_str(processed_command, "\n", "\\n");
+    char *tmp = replace_str(processed_command, "\n", "\\n");
+    free(processed_command);
+    processed_command = tmp;
 #endif
 
     /* log latency */
@@ -1243,6 +1250,10 @@ int handle_perfdata(int event_type, void *data) {
                             hostchkdata->state, hostchkdata->state_type,
                             hst->check_interval);
                 has_perfdata = TRUE;
+#if defined(USENAEMON) || defined(USENAGIOS4)
+                free(perf_data);
+#endif
+
             }
             break;
 
@@ -1292,6 +1303,9 @@ int handle_perfdata(int event_type, void *data) {
                             svc->check_interval);
                 temp_buffer[GM_BUFFERSIZE-1]='\x0';
                 has_perfdata = TRUE;
+#if defined(USENAEMON) || defined(USENAGIOS4)
+                free(perf_data);
+#endif
             }
             break;
 

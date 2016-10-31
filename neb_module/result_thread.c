@@ -206,9 +206,10 @@ void *get_results( gearman_job_st *job, void *context, size_t *result_size, gear
 #endif
 #ifdef USENAEMON
                 /* replace newlines with actual newlines */
-                chk_result->output = replace_str(value, "\\n", "\n");
+                char *tmp = replace_str(value, "\\n", "\n");
                 /* replace backslashes with actual backslashes */
-                chk_result->output = replace_str(chk_result->output, "\\\\", "\\");
+                chk_result->output = replace_str(tmp, "\\\\", "\\");
+                free(tmp);
 #endif
             }
         }
