@@ -1,6 +1,6 @@
 This file documents the revision history for mod_gearman.
 
-next:
+3.0.1 Sat Nov  5 10:17:41 CET 2016
           - fix segfault on receiving host result for non-existing host with naemon core
           - fix memory leak when using naemon core (#106 Jean-François Rameau)
 
