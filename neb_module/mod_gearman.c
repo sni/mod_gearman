@@ -723,6 +723,7 @@ static int handle_host_check( int event_type, void *data ) {
     else {
         my_free(raw_command);
         my_free(processed_command);
+        clear_volatile_macros_r(&mac);
 
         /* unset the execution flag */
         hst->is_executing=FALSE;
@@ -947,6 +948,7 @@ static int handle_svc_check( int event_type, void *data ) {
     /* clean up */
     my_free(raw_command);
     my_free(processed_command);
+    clear_volatile_macros_r(&mac);
 
     /* orphaned check - submit fake result to mark service as orphaned */
 #ifdef USENAGIOS
