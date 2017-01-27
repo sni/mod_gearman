@@ -723,7 +723,9 @@ static int handle_host_check( int event_type, void *data ) {
     else {
         my_free(raw_command);
         my_free(processed_command);
-
+#if defined(USENAEMON)
+        clear_volatile_macros_r(&mac);
+#endif
         /* unset the execution flag */
         hst->is_executing=FALSE;
 
@@ -947,7 +949,10 @@ static int handle_svc_check( int event_type, void *data ) {
     /* clean up */
     my_free(raw_command);
     my_free(processed_command);
-
+#if defined(USENAEMON)
+    clear_volatile_macros_r(&mac);
+#endif
+    
     /* orphaned check - submit fake result to mark service as orphaned */
 #ifdef USENAGIOS
     if(mod_gm_opt->orphan_service_checks == GM_ENABLED && svc->check_options & CHECK_OPTION_ORPHAN_CHECK) {
