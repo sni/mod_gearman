@@ -2,6 +2,7 @@ This file documents the revision history for mod_gearman.
 
 next:
           - fix segfault on receiving host result for non-existing host with naemon core
+          - fix memory leak when using naemon core (#106 Jean-François Rameau)
 
 3.0.0 Mon Sun Oct 30 19:49:24 CET 2016
           - introduce configure options --enable-naemon-neb-module, --enable-nagios3-neb-module and --enable-nagios4-neb-module
