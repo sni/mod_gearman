@@ -726,6 +726,7 @@ static int handle_host_check( int event_type, void *data ) {
 #if defined(USENAEMON)
         clear_volatile_macros_r(&mac);
 #endif
+        
         /* unset the execution flag */
         hst->is_executing=FALSE;
 
@@ -739,6 +740,9 @@ static int handle_host_check( int event_type, void *data ) {
     /* clean up */
     my_free(raw_command);
     my_free(processed_command);
+#if defined(USENAEMON)
+        clear_volatile_macros_r(&mac);
+#endif
 
     /* orphaned check - submit fake result to mark host as orphaned */
 #ifdef USENAGIOS
@@ -935,6 +939,9 @@ static int handle_svc_check( int event_type, void *data ) {
     else {
         my_free(raw_command);
         my_free(processed_command);
+#if defined(USENAEMON)
+        clear_volatile_macros_r(&mac);
+#endif
 
         /* unset the execution flag */
         svc->is_executing=FALSE;
