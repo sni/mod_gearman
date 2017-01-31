@@ -32,7 +32,7 @@ if [ $? -eq 0 ]; then
   minor2=$((minor2+1))
   version="$major.$minor1.$minor2"
 
-  echo ${version}_beta_${date} | tr -d 'v'
+  echo ${version}.${date} | tr -d 'v'
   exit 0
 fi
 
