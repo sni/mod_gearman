@@ -1201,6 +1201,7 @@ static void start_threads(void) {
 int handle_perfdata(int event_type, void *data) {
     nebstruct_host_check_data *hostchkdata   = NULL;
     nebstruct_service_check_data *srvchkdata = NULL;
+    char custom_variables_buffer[GM_BUFFERSIZE] = "";
     host *hst        = NULL;
     service *svc     = NULL;
     int has_perfdata = FALSE;
@@ -1242,6 +1243,21 @@ int handle_perfdata(int event_type, void *data) {
 
 
                 temp_buffer[0]='\x0';
+
+                /* iterate host custom variables creating a string of format _KEY::VALUE to add to perfdata */
+                hst = (host *) hostchkdata->object_ptr;
+                customvariablesmember *temp_customvariablesmember = NULL;
+                temp_customvariablesmember = hst->custom_variables;
+
+                char *cur = custom_variables_buffer;
+                char *const end = custom_variables_buffer + sizeof custom_variables_buffer;
+
+                for(; temp_customvariablesmember != NULL; temp_customvariablesmember = temp_customvariablesmember->next) {
+                    if (cur < end) {
+                        cur += snprintf(cur, end-cur, "_HOST%s::%s\n", temp_customvariablesmember->variable_name, temp_customvariablesmember->variable_value );
+                    }
+                }
+
                 snprintf( temp_buffer,GM_BUFFERSIZE-1,
                             "DATATYPE::HOSTPERFDATA\t"
                             "TIMET::%d\t"
@@ -1250,7 +1266,8 @@ int handle_perfdata(int event_type, void *data) {
                             "HOSTCHECKCOMMAND::%s!%s\t"
                             "HOSTSTATE::%d\t"
                             "HOSTSTATETYPE::%d\n"
-                            "HOSTINTERVAL::%f\n\n",
+                            "HOSTINTERVAL::%f\n"
+                            "%s\n",
                             (int)hostchkdata->timestamp.tv_sec,
 #ifdef USENAGIOS3
                             hostchkdata->host_name, hostchkdata->perf_data,
@@ -1260,7 +1277,9 @@ int handle_perfdata(int event_type, void *data) {
 #endif
                             hostchkdata->command_name, hostchkdata->command_args,
                             hostchkdata->state, hostchkdata->state_type,
-                            hst->check_interval);
+                            hst->check_interval,
+                            custom_variables_buffer);
+
                 has_perfdata = TRUE;
 #if defined(USENAEMON) || defined(USENAGIOS4)
                 free(perf_data);
@@ -1292,6 +1311,29 @@ int handle_perfdata(int event_type, void *data) {
                 perf_data = replace_str(srvchkdata->perf_data, "\\n", "\n");
 #endif
 
+                /* iterate service custom variables creating a string of format _SERVICEKEY::VALUE to add to perfdata */
+                customvariablesmember *temp_customvariablesmember = NULL;
+                temp_customvariablesmember = svc->custom_variables;
+
+                char *cur = custom_variables_buffer;
+                char *const end = custom_variables_buffer + sizeof custom_variables_buffer;
+
+                for(; temp_customvariablesmember != NULL; temp_customvariablesmember = temp_customvariablesmember->next) {
+                    if (cur < end) {
+                        cur += snprintf(cur, end-cur, "_SERVICE%s::%s\n", temp_customvariablesmember->variable_name, temp_customvariablesmember->variable_value );
+                    }
+                }
+
+                /* iterate custom variables creating a string of format _KEY::VALUE to add to perfdata */
+                hst = (host *) svc->host_ptr;
+                temp_customvariablesmember = hst->custom_variables;
+
+                for(; temp_customvariablesmember != NULL; temp_customvariablesmember = temp_customvariablesmember->next) {
+                    if (cur < end) {
+                        cur += snprintf(cur, end-cur, "_HOST%s::%s\n", temp_customvariablesmember->variable_name, temp_customvariablesmember->variable_value );
+                    }
+                }
+
                 temp_buffer[0]='\x0';
                 snprintf( temp_buffer,GM_BUFFERSIZE-1,
                             "DATATYPE::SERVICEPERFDATA\t"
@@ -1302,7 +1344,8 @@ int handle_perfdata(int event_type, void *data) {
                             "SERVICECHECKCOMMAND::%s\t"
                             "SERVICESTATE::%d\t"
                             "SERVICESTATETYPE::%d\n"
-                            "SERVICEINTERVAL::%f\n\n",
+                            "SERVICEINTERVAL::%f\n"
+                            "%s\n",
                             (int)srvchkdata->timestamp.tv_sec,
                             srvchkdata->host_name, srvchkdata->service_description,
 #ifdef USENAGIOS3
@@ -1312,7 +1355,8 @@ int handle_perfdata(int event_type, void *data) {
                             perf_data, svc->check_command,
 #endif
                             srvchkdata->state, srvchkdata->state_type,
-                            svc->check_interval);
+                            svc->check_interval,
+                            custom_variables_buffer);
                 temp_buffer[GM_BUFFERSIZE-1]='\x0';
                 has_perfdata = TRUE;
 #if defined(USENAEMON) || defined(USENAGIOS4)
