@@ -708,7 +708,7 @@ Default: `no`
 
 
 perfdata_mode::
-There will be only a single job for each host or servier when putting
+There will be only a single job for each host or service when putting
 performance data onto the perfdata_queue in overwrite mode. In
 append mode perfdata will be stored as long as there is memory
 left. Setting this to 'overwrite' helps preventing the perf_data
