@@ -25,12 +25,8 @@
 #ifndef _NEBCALLBACKS_H
 #define _NEBCALLBACKS_H
 
-#include "config.h"
+#include "compat.h"
 #include "nebmodules.h"
-
-#ifdef __cplusplus
-  extern "C" {
-#endif
 
 
 /***** CALLBACK TYPES *****/
@@ -75,14 +71,11 @@
 
 
 /***** CALLBACK FUNCTIONS *****/
+NAGIOS_BEGIN_DECL
 
-int neb_register_callback(int callback_type, void *mod_handle, int priority, int (*callback_func)(int,void *));
-int neb_deregister_callback(int callback_type, int (*callback_func)(int,void *));
+int neb_register_callback(int callback_type, void *mod_handle, int priority, int (*callback_func)(int, void *));
+int neb_deregister_callback(int callback_type, int (*callback_func)(int, void *));
 int neb_deregister_module_callbacks(nebmodule *);
 
-#ifdef __cplusplus
-}
-#endif
-
-
+NAGIOS_END_DECL
 #endif

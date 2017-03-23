@@ -24,30 +24,30 @@
 #ifndef __GNUC__
 # define __attribute__(x) /* nothing */
 #endif
+#ifndef NSCORE
+# define NSCORE
+#endif
 
-#include "config.h"
+#include "compat.h"
+#include "logging.h"
 #include "common.h"
 #include "locations.h"
 #include "objects.h"
+#include "macros.h"
 
-#ifdef __cplusplus
-extern "C" { 
-#endif
+	/************* MISC LENGTH/SIZE DEFINITIONS ***********/
 
-
-/************* MISC LENGTH/SIZE DEFINITIONS ***********/
-
-/* 
-   NOTE: Plugin length is artificially capped at 8k to prevent runaway plugins from returning MBs/GBs of data
-   back to Nagios.  If you increase the 8k cap by modifying this value, make sure you also increase the value
-   of MAX_EXTERNAL_COMMAND_LENGTH in common.h to allow for passive checks results received through the external
-   command file. EG 10/19/07
-*/
+	/*
+	   NOTE: Plugin length is artificially capped at 8k to prevent runaway plugins from returning MBs/GBs of data
+	   back to Nagios.  If you increase the 8k cap by modifying this value, make sure you also increase the value
+	   of MAX_EXTERNAL_COMMAND_LENGTH in common.h to allow for passive checks results received through the external
+	   command file. EG 10/19/07
+	*/
 #define MAX_PLUGIN_OUTPUT_LENGTH                8192    /* max length of plugin output (including perf data) */
 
 
 
-/******************* DEFAULT VALUES *******************/
+	/******************* DEFAULT VALUES *******************/
 
 #define DEFAULT_LOG_LEVEL					1	/* log all events to main log file */
 #define DEFAULT_USE_SYSLOG					1	/* log events to syslog? 1=yes, 0=no */
@@ -133,98 +133,38 @@ extern "C" {
 #define BASE_UPDATE_CHECK_RETRY_INTERVAL                        60*60*1  /* 1 hour base retry interval */
 #define UPDATE_CHECK_RETRY_INTERVAL_WOBBLE                      60*60*3  /* 3 hour wobble on top of base retry interval */
 
+#define DEFAULT_ALLOW_EMPTY_HOSTGROUP_ASSIGNMENT                          0        /* Do not allow empty hostgroups by default */
 
-/******************* LOGGING TYPES ********************/
-
-#define NSLOG_RUNTIME_ERROR		1
-#define NSLOG_RUNTIME_WARNING		2
-
-#define NSLOG_VERIFICATION_ERROR	4
-#define NSLOG_VERIFICATION_WARNING	8
-
-#define NSLOG_CONFIG_ERROR		16
-#define NSLOG_CONFIG_WARNING		32
-
-#define NSLOG_PROCESS_INFO		64
-#define NSLOG_EVENT_HANDLER		128
-/*#define NSLOG_NOTIFICATION		256*/	/* NOT USED ANYMORE - CAN BE REUSED */
-#define NSLOG_EXTERNAL_COMMAND		512
-
-#define NSLOG_HOST_UP      		1024
-#define NSLOG_HOST_DOWN			2048
-#define NSLOG_HOST_UNREACHABLE		4096
-
-#define NSLOG_SERVICE_OK		8192
-#define NSLOG_SERVICE_UNKNOWN		16384
-#define NSLOG_SERVICE_WARNING		32768
-#define NSLOG_SERVICE_CRITICAL		65536
-
-#define NSLOG_PASSIVE_CHECK		131072
-
-#define NSLOG_INFO_MESSAGE		262144
-
-#define NSLOG_HOST_NOTIFICATION		524288
-#define NSLOG_SERVICE_NOTIFICATION	1048576
-
-
-/***************** DEBUGGING LEVELS *******************/
-
-#define DEBUGL_ALL                      -1
-#define DEBUGL_NONE                     0
-#define DEBUGL_FUNCTIONS                1
-#define DEBUGL_CONFIG			2
-#define DEBUGL_PROCESS                  4
-#define DEBUGL_STATUSDATA               4
-#define DEBUGL_RETENTIONDATA            4
-#define DEBUGL_EVENTS                   8
-#define DEBUGL_CHECKS                   16
-#define DEBUGL_IPC                      16
-#define DEBUGL_FLAPPING                 16
-#define DEBUGL_EVENTHANDLERS            16
-#define DEBUGL_PERFDATA                 16
-#define DEBUGL_NOTIFICATIONS            32
-#define DEBUGL_EVENTBROKER              64
-#define DEBUGL_EXTERNALCOMMANDS         128
-#define DEBUGL_COMMANDS                 256
-#define DEBUGL_DOWNTIME                 512
-#define DEBUGL_COMMENTS                 1024
-#define DEBUGL_MACROS                   2048
-
-#define DEBUGV_BASIC                    0
-#define DEBUGV_MORE			1
-#define DEBUGV_MOST                     2
-
-
-/******************** HOST STATUS *********************/
+	/******************** HOST STATUS *********************/
 
 #define HOST_UP				0
 #define HOST_DOWN			1
-#define HOST_UNREACHABLE		2	
+#define HOST_UNREACHABLE		2
 
 
 
-/******************* STATE LOGGING TYPES **************/
+	/******************* STATE LOGGING TYPES **************/
 
 #define INITIAL_STATES                  1
 #define CURRENT_STATES                  2
 
 
 
-/************ SERVICE DEPENDENCY VALUES ***************/
+	/************ SERVICE DEPENDENCY VALUES ***************/
 
 #define DEPENDENCIES_OK			0
 #define DEPENDENCIES_FAILED		1
 
 
 
-/*********** ROUTE CHECK PROPAGATION TYPES ************/
+	/*********** ROUTE CHECK PROPAGATION TYPES ************/
 
 #define PROPAGATE_TO_PARENT_HOSTS	1
 #define PROPAGATE_TO_CHILD_HOSTS	2
 
 
 
-/****************** SERVICE STATES ********************/
+	/****************** SERVICE STATES ********************/
 
 #define STATE_OK			0
 #define STATE_WARNING			1
@@ -233,21 +173,21 @@ extern "C" {
 
 
 
-/****************** FLAPPING TYPES ********************/
+	/****************** FLAPPING TYPES ********************/
 
 #define HOST_FLAPPING                   0
 #define SERVICE_FLAPPING                1
 
 
 
-/**************** NOTIFICATION TYPES ******************/
+	/**************** NOTIFICATION TYPES ******************/
 
 #define HOST_NOTIFICATION               0
 #define SERVICE_NOTIFICATION            1
 
 
 
-/************* NOTIFICATION REASON TYPES ***************/
+	/************* NOTIFICATION REASON TYPES ***************/
 
 #define NOTIFICATION_NORMAL             0
 #define NOTIFICATION_ACKNOWLEDGEMENT    1
@@ -261,7 +201,7 @@ extern "C" {
 
 
 
-/**************** EVENT HANDLER TYPES *****************/
+	/**************** EVENT HANDLER TYPES *****************/
 
 #define HOST_EVENTHANDLER               0
 #define SERVICE_EVENTHANDLER            1
@@ -270,20 +210,20 @@ extern "C" {
 
 
 
-/***************** STATE CHANGE TYPES *****************/
+	/***************** STATE CHANGE TYPES *****************/
 
 #define HOST_STATECHANGE                0
 #define SERVICE_STATECHANGE             1
 
 
 
-/***************** OBJECT CHECK TYPES *****************/
+	/***************** OBJECT CHECK TYPES *****************/
 #define SERVICE_CHECK                   0
 #define HOST_CHECK                      1
 
 
 
-/******************* EVENT TYPES **********************/
+	/******************* EVENT TYPES **********************/
 
 #define EVENT_SERVICE_CHECK		0	/* active service check */
 #define EVENT_COMMAND_CHECK		1	/* external command check */
@@ -305,9 +245,31 @@ extern "C" {
 #define EVENT_SLEEP                     98      /* asynchronous sleep event that occurs when event queues are empty */
 #define EVENT_USER_FUNCTION             99      /* USER-defined function (modules) */
 
+#define EVENT_TYPE_STR( type)  ( \
+	type == EVENT_SERVICE_CHECK ? "EVENT_SERVICE_CHECK" : \
+	type == EVENT_COMMAND_CHECK ? "EVENT_COMMAND_CHECK" : \
+	type == EVENT_LOG_ROTATION ? "EVENT_LOG_ROTATION" : \
+	type == EVENT_PROGRAM_SHUTDOWN ? "EVENT_PROGRAM_SHUTDOWN" : \
+	type == EVENT_PROGRAM_RESTART ? "EVENT_PROGRAM_RESTART" : \
+	type == EVENT_CHECK_REAPER ? "EVENT_CHECK_REAPER" : \
+	type == EVENT_ORPHAN_CHECK ? "EVENT_ORPHAN_CHECK" : \
+	type == EVENT_RETENTION_SAVE ? "EVENT_RETENTION_SAVE" : \
+	type == EVENT_STATUS_SAVE ? "EVENT_STATUS_SAVE" : \
+	type == EVENT_SCHEDULED_DOWNTIME ? "EVENT_SCHEDULED_DOWNTIME" : \
+	type == EVENT_SFRESHNESS_CHECK ? "EVENT_SFRESHNESS_CHECK" : \
+	type == EVENT_EXPIRE_DOWNTIME ? "EVENT_EXPIRE_DOWNTIME" : \
+	type == EVENT_HOST_CHECK ? "EVENT_HOST_CHECK" : \
+	type == EVENT_HFRESHNESS_CHECK ? "EVENT_HFRESHNESS_CHECK" : \
+	type == EVENT_RESCHEDULE_CHECKS ? "EVENT_RESCHEDULE_CHECKS" : \
+	type == EVENT_EXPIRE_COMMENT ? "EVENT_EXPIRE_COMMENT" : \
+	type == EVENT_CHECK_PROGRAM_UPDATE ? "EVENT_CHECK_PROGRAM_UPDATE" : \
+	type == EVENT_SLEEP ? "EVENT_SLEEP" : \
+	type == EVENT_USER_FUNCTION ? "EVENT_USER_FUNCTION" : \
+	"UNKNOWN_EVENT_TYPE" \
+)
 
 
-/******* INTER-CHECK DELAY CALCULATION TYPES **********/
+	/******* INTER-CHECK DELAY CALCULATION TYPES **********/
 
 #define ICD_NONE			0	/* no inter-check delay */
 #define ICD_DUMB			1	/* dumb delay of 1 second */
@@ -316,24 +278,26 @@ extern "C" {
 
 
 
-/******* INTERLEAVE FACTOR CALCULATION TYPES **********/
+	/******* INTERLEAVE FACTOR CALCULATION TYPES **********/
 
 #define ILF_USER			0	/* user-specified interleave factor */
 #define ILF_SMART			1	/* smart interleave */
 
 
 
-/************ SCHEDULED DOWNTIME TYPES ****************/
+	/************ SCHEDULED DOWNTIME TYPES ****************/
 
 #define ACTIVE_DOWNTIME                 0       /* active downtime - currently in effect */
 #define PENDING_DOWNTIME                1       /* pending downtime - scheduled for the future */
 
 
 
-/****************** DATA STRUCTURES *******************/
+	/****************** DATA STRUCTURES *******************/
+
+NAGIOS_BEGIN_DECL
 
 /* TIMED_EVENT structure */
-typedef struct timed_event_struct{
+typedef struct timed_event_struct {
 	int event_type;
 	time_t run_time;
 	int recurring;
@@ -343,25 +307,25 @@ typedef struct timed_event_struct{
 	void *event_data;
 	void *event_args;
 	int event_options;
-        struct timed_event_struct *next;
-        struct timed_event_struct *prev;
-        }timed_event;
+	struct timed_event_struct *next;
+	struct timed_event_struct *prev;
+	} timed_event;
 
 
 /* NOTIFY_LIST structure */
-typedef struct notify_list_struct{
+typedef struct notify_list_struct {
 	contact *contact;
 	struct notify_list_struct *next;
-        }notification;
+	} notification;
 
 
 /* CHECK_RESULT structure */
-typedef struct check_result_struct{
+typedef struct check_result_struct {
 	int object_check_type;                          /* is this a service or a host check? */
 	char *host_name;                                /* host name */
 	char *service_description;                      /* service description */
 	int check_type;					/* was this an active or passive service check? */
-	int check_options;         
+	int check_options;
 	int scheduled_check;                            /* was this a scheduled or an on-demand check? */
 	int reschedule_check;                           /* should we reschedule the next check */
 	char *output_file;                              /* what file is the output stored in? */
@@ -375,11 +339,11 @@ typedef struct check_result_struct{
 	int return_code;				/* plugin return code */
 	char *output;	                                /* plugin output */
 	struct check_result_struct *next;
-	}check_result;
+	} check_result;
 
 
 /* SCHED_INFO structure */
-typedef struct sched_info_struct{
+typedef struct sched_info_struct {
 	int total_services;
 	int total_scheduled_services;
 	int total_hosts;
@@ -402,11 +366,11 @@ typedef struct sched_info_struct{
 	time_t last_service_check;
 	time_t first_host_check;
 	time_t last_host_check;
-        }sched_info;
+	} sched_info;
 
 
 /* PASSIVE_CHECK_RESULT structure */
-typedef struct passive_check_result_struct{
+typedef struct passive_check_result_struct {
 	int object_check_type;
 	char *host_name;
 	char *service_description;
@@ -415,11 +379,11 @@ typedef struct passive_check_result_struct{
 	time_t check_time;
 	double latency;
 	struct passive_check_result_struct *next;
-	}passive_check_result;
+	} passive_check_result;
 
 
 /* CIRCULAR_BUFFER structure - used by worker threads */
-typedef struct circular_buffer_struct{
+typedef struct circular_buffer_struct {
 	void            **buffer;
 	int             tail;
 	int             head;
@@ -427,48 +391,36 @@ typedef struct circular_buffer_struct{
 	int		high;		/* highest number of items that has ever been stored in buffer */
 	unsigned long   overflow;
 	pthread_mutex_t buffer_lock;
-        }circular_buffer;
-
-
-/* MMAPFILE structure - used for reading files via mmap() */
-typedef struct mmapfile_struct{
-	char *path;
-	int mode;
-	int fd;
-	unsigned long file_size;
-	unsigned long current_position;
-	unsigned long current_line;
-	void *mmap_buf;
-        }mmapfile;
+	} circular_buffer;
 
 
 /* DBUF structure - dynamic string storage */
-typedef struct dbuf_struct{
+typedef struct dbuf_struct {
 	char *buf;
 	unsigned long used_size;
 	unsigned long allocated_size;
 	unsigned long chunk_size;
-        }dbuf;
+	} dbuf;
 
 
 #define CHECK_STATS_BUCKETS                  15
 
 /* used for tracking host and service check statistics */
-typedef struct check_stats_struct{
+typedef struct check_stats_struct {
 	int current_bucket;
 	int bucket[CHECK_STATS_BUCKETS];
 	int overflow_bucket;
 	int minute_stats[3];
 	time_t last_update;
-        }check_stats;
+	} check_stats;
 
 
 /******************* THREAD STUFF ********************/
 
-/* slots in circular buffers */
+	/* slots in circular buffers */
 #define DEFAULT_EXTERNAL_COMMAND_BUFFER_SLOTS     4096
 
-/* worker threads */
+	/* worker threads */
 #define TOTAL_WORKER_THREADS              1
 
 #define COMMAND_WORKER_THREAD		  0
@@ -485,63 +437,66 @@ int read_all_object_data(char *);				/* reads all object config data */
 
 /**** Setup Functions ****/
 int pre_flight_check(void);                          		/* try and verify the configuration data */
-int pre_flight_object_check(int *,int *);               	/* verify object relationships and settings */
-int pre_flight_circular_check(int *,int *);             	/* detects circular dependencies and paths */
+int pre_flight_object_check(int *, int *);               	/* verify object relationships and settings */
+int pre_flight_circular_check(int *, int *);             	/* detects circular dependencies and paths */
 void init_timing_loop(void);                         		/* setup the initial scheduling queue */
 void setup_sighandler(void);                         		/* trap signals */
 void reset_sighandler(void);                         		/* reset signals to default action */
+extern void handle_sigxfsz(int);				/* handle SIGXFSZ */
 int daemon_init(void);				     		/* switches to daemon mode */
-int drop_privileges(char *,char *);				/* drops privileges before startup */
+int drop_privileges(char *, char *);				/* drops privileges before startup */
 void display_scheduling_info(void);				/* displays service check scheduling information */
 
 
 /**** Event Queue Functions ****/
-int schedule_new_event(int,int,time_t,int,unsigned long,void *,int,void *,void *,int);	/* schedules a new timed event */
-void reschedule_event(timed_event *,timed_event **,timed_event **);   		/* reschedules an event */
-void add_event(timed_event *,timed_event **,timed_event **);     		/* adds an event to the execution queue */
-void remove_event(timed_event *,timed_event **,timed_event **);     		/* remove an event from the execution queue */
+int schedule_new_event(int, int, time_t, int, unsigned long, void *, int, void *, void *, int);	/* schedules a new timed event */
+void reschedule_event(timed_event *, timed_event **, timed_event **);   		/* reschedules an event */
+void add_event(timed_event *, timed_event **, timed_event **);     		/* adds an event to the execution queue */
+void remove_event(timed_event *, timed_event **, timed_event **);     		/* remove an event from the execution queue */
 int event_execution_loop(void);                      		/* main monitoring/event handler loop */
 int handle_timed_event(timed_event *);		     		/* top level handler for timed events */
 void adjust_check_scheduling(void);		        	/* auto-adjusts scheduling of host and service checks */
-void compensate_for_system_time_change(unsigned long,unsigned long);	/* attempts to compensate for a change in the system time */
-void adjust_timestamp_for_time_change(time_t,time_t,unsigned long,time_t *); /* adjusts a timestamp variable for a system time change */
-void resort_event_list(timed_event **,timed_event **);                 	/* resorts event list by event run time for system time changes */
+void compensate_for_system_time_change(unsigned long, unsigned long);	/* attempts to compensate for a change in the system time */
+void adjust_timestamp_for_time_change(time_t, time_t, unsigned long, time_t *); /* adjusts a timestamp variable for a system time change */
+void resort_event_list(timed_event **, timed_event **);                 	/* resorts event list by event run time for system time changes */
 
 
 /**** IPC Functions ****/
 int move_check_result_to_queue(char *);
 int process_check_result_queue(char *);
-int process_check_result_file(char *);
-int add_check_result_to_list(check_result *);
-check_result *read_check_result(void);                  	/* reads a host/service check result from the list in memory */
+int find_executing_checks(char *);
+int process_check_result_file(char *, check_result **, int, int);
+int add_check_result_to_list(check_result **, check_result *);
+check_result *read_check_result(check_result **);                  	/* reads a host/service check result from the list in memory */
 int delete_check_result_file(char *);
-int free_check_result_list(void);
+int free_check_result_list(check_result **);
 int init_check_result(check_result *);
 int free_check_result(check_result *);                  	/* frees memory associated with a host/service check result */
-int parse_check_output(char *,char **,char **,char **,int,int);
+int parse_check_output(char *, char **, char **, char **, int, int);
 int open_command_file(void);					/* creates the external command file as a named pipe (FIFO) and opens it for reading */
 int close_command_file(void);					/* closes and deletes the external command file (FIFO) */
 
 
 /**** Monitoring/Event Handler Functions ****/
-int check_service_dependencies(service *,int);          	/* checks service dependencies */
-int check_host_dependencies(host *,int);                	/* checks host dependencies */
+int check_service_dependencies(service *, int);          	/* checks service dependencies */
+int check_host_dependencies(host *, int);                	/* checks host dependencies */
 void check_for_orphaned_services(void);				/* checks for orphaned services */
 void check_for_orphaned_hosts(void);				/* checks for orphaned hosts */
 void check_service_result_freshness(void);              	/* checks the "freshness" of service check results */
-int is_service_result_fresh(service *,time_t,int);              /* determines if a service's check results are fresh */
+int is_service_result_fresh(service *, time_t, int);            /* determines if a service's check results are fresh */
 void check_host_result_freshness(void);                 	/* checks the "freshness" of host check results */
-int is_host_result_fresh(host *,time_t,int);                    /* determines if a host's check results are fresh */
-int my_system(char *,int,int *,double *,char **,int);         	/* executes a command via popen(), but also protects against timeouts */
+int is_host_result_fresh(host *, time_t, int);                  /* determines if a host's check results are fresh */
+int my_system(char *, int, int *, double *, char **, int);         	/* executes a command via popen(), but also protects against timeouts */
+int my_system_r(nagios_macros *mac, char *, int, int *, double *, char **, int); /* thread-safe version of the above */
 
 
 /**** Flap Detection Functions ****/
-void check_for_service_flapping(service *,int,int);	        /* determines whether or not a service is "flapping" between states */
-void check_for_host_flapping(host *,int,int,int);		/* determines whether or not a host is "flapping" between states */
-void set_service_flap(service *,double,double,double,int);	/* handles a service that is flapping */
-void clear_service_flap(service *,double,double,double);	/* handles a service that has stopped flapping */
-void set_host_flap(host *,double,double,double,int);		/* handles a host that is flapping */
-void clear_host_flap(host *,double,double,double);		/* handles a host that has stopped flapping */
+void check_for_service_flapping(service *, int, int);	      /* determines whether or not a service is "flapping" between states */
+void check_for_host_flapping(host *, int, int, int);		/* determines whether or not a host is "flapping" between states */
+void set_service_flap(service *, double, double, double, int);	/* handles a service that is flapping */
+void clear_service_flap(service *, double, double, double);	/* handles a service that has stopped flapping */
+void set_host_flap(host *, double, double, double, int);		/* handles a host that is flapping */
+void clear_host_flap(host *, double, double, double);		/* handles a host that has stopped flapping */
 void enable_flap_detection_routines(void);			/* enables flap detection on a program-wide basis */
 void disable_flap_detection_routines(void);			/* disables flap detection on a program-wide basis */
 void enable_host_flap_detection(host *);			/* enables flap detection for a particular host */
@@ -553,30 +508,29 @@ void handle_service_flap_detection_disabled(service *);		/* handles the details 
 
 
 /**** Route/Host Check Functions ****/
-int perform_on_demand_host_check(host *,int *,int,int,unsigned long);
-int perform_scheduled_host_check(host *,int,double);
-int check_host_check_viability_3x(host *,int,int *,time_t *);
-int adjust_host_check_attempt_3x(host *,int);
+int perform_on_demand_host_check(host *, int *, int, int, unsigned long);
+int perform_scheduled_host_check(host *, int, double);
+int check_host_check_viability_3x(host *, int, int *, time_t *);
+int adjust_host_check_attempt_3x(host *, int);
 int determine_host_reachability(host *);
-int process_host_check_result_3x(host *,int,char *,int,int,int,unsigned long);
-int perform_on_demand_host_check_3x(host *,int *,int,int,unsigned long);
-int run_sync_host_check_3x(host *,int *,int,int,unsigned long);
+int process_host_check_result_3x(host *, int, char *, int, int, int, unsigned long);
+int perform_on_demand_host_check_3x(host *, int *, int, int, unsigned long);
+int run_sync_host_check_3x(host *, int *, int, int, unsigned long);
 int execute_sync_host_check_3x(host *);
-int run_scheduled_host_check_3x(host *,int,double);
-int run_async_host_check_3x(host *,int,double,int,int,int *,time_t *);
-int handle_async_host_check_result_3x(host *,check_result *);
+int run_scheduled_host_check_3x(host *, int, double);
+int run_async_host_check_3x(host *, int, double, int, int, int *, time_t *);
+int handle_async_host_check_result_3x(host *, check_result *);
 
 
 /**** Service Check Functions ****/
-int check_service_check_viability(service *,int,int *,time_t *);
-int run_scheduled_service_check(service *,int,double);
-int run_async_service_check(service *,int,double,int,int,int *,time_t *);
-int handle_async_service_check_result(service *,check_result *);
+int check_service_check_viability(service *, int, int *, time_t *);
+int run_scheduled_service_check(service *, int, double);
+int run_async_service_check(service *, int, double, int, int, int *, time_t *);
+int handle_async_service_check_result(service *, check_result *);
 
 
 /**** Event Handler Functions ****/
 int handle_host_state(host *);               			/* top level host state handler */
-
 
 
 /**** Common Check Fucntions *****/
@@ -585,74 +539,47 @@ int reap_check_results(void);
 
 /**** Check Statistics Functions ****/
 int init_check_stats(void);
-int update_check_stats(int,time_t);
+int update_check_stats(int, time_t);
 int generate_check_stats(void);
-
 
 
 /**** Event Handler Functions ****/
 int obsessive_compulsive_service_check_processor(service *);	/* distributed monitoring craziness... */
 int obsessive_compulsive_host_check_processor(host *);		/* distributed monitoring craziness... */
 int handle_service_event(service *);				/* top level service event logic */
-int run_service_event_handler(service *);			/* runs the event handler for a specific service */
-int run_global_service_event_handler(service *);		/* runs the global service event handler */
+int run_service_event_handler(nagios_macros *mac, service *);			/* runs the event handler for a specific service */
+int run_global_service_event_handler(nagios_macros *mac, service *);		/* runs the global service event handler */
 int handle_host_event(host *);					/* top level host event logic */
-int run_host_event_handler(host *);				/* runs the event handler for a specific host */
-int run_global_host_event_handler(host *);			/* runs the global host event handler */
+int run_host_event_handler(nagios_macros *mac, host *);				/* runs the event handler for a specific host */
+int run_global_host_event_handler(nagios_macros *mac, host *);			/* runs the global host event handler */
 
 
 /**** Notification Functions ****/
-int check_service_notification_viability(service *,int,int);			/* checks viability of notifying all contacts about a service */
-int is_valid_escalation_for_service_notification(service *,serviceescalation *,int);	/* checks if an escalation entry is valid for a particular service notification */
+int check_service_notification_viability(service *, int, int);			/* checks viability of notifying all contacts about a service */
+int is_valid_escalation_for_service_notification(service *, serviceescalation *, int);	/* checks if an escalation entry is valid for a particular service notification */
 int should_service_notification_be_escalated(service *);			/* checks if a service notification should be escalated */
-int service_notification(service *,int,char *,char *,int);                     	/* notify all contacts about a service (problem or recovery) */
-int check_contact_service_notification_viability(contact *,service *,int,int);	/* checks viability of notifying a contact about a service */ 
-int notify_contact_of_service(contact *,service *,int,char *,char *,int,int);  	/* notify a single contact about a service */
-int check_host_notification_viability(host *,int,int);				/* checks viability of notifying all contacts about a host */
-int is_valid_escalation_for_host_notification(host *,hostescalation *,int);	/* checks if an escalation entry is valid for a particular host notification */
+int service_notification(service *, int, char *, char *, int);                     	/* notify all contacts about a service (problem or recovery) */
+int check_contact_service_notification_viability(contact *, service *, int, int);	/* checks viability of notifying a contact about a service */
+int notify_contact_of_service(nagios_macros *mac, contact *, service *, int, char *, char *, int, int);  	/* notify a single contact about a service */
+int check_host_notification_viability(host *, int, int);				/* checks viability of notifying all contacts about a host */
+int is_valid_escalation_for_host_notification(host *, hostescalation *, int);	/* checks if an escalation entry is valid for a particular host notification */
 int should_host_notification_be_escalated(host *);				/* checks if a host notification should be escalated */
-int host_notification(host *,int,char *,char *,int);                           	/* notify all contacts about a host (problem or recovery) */
-int check_contact_host_notification_viability(contact *,host *,int,int);	/* checks viability of notifying a contact about a host */ 
-int notify_contact_of_host(contact *,host *,int,char *,char *,int,int);        	/* notify a single contact about a host */
-int create_notification_list_from_host(host *,int,int *);         		/* given a host, create list of contacts to be notified (remove duplicates) */
-int create_notification_list_from_service(service *,int,int *);    		/* given a service, create list of contacts to be notified (remove duplicates) */
-int add_notification(contact *);						/* adds a notification instance */
+int host_notification(host *, int, char *, char *, int);                           	/* notify all contacts about a host (problem or recovery) */
+int check_contact_host_notification_viability(contact *, host *, int, int);	/* checks viability of notifying a contact about a host */
+int notify_contact_of_host(nagios_macros *mac, contact *, host *, int, char *, char *, int, int);        	/* notify a single contact about a host */
+int create_notification_list_from_host(nagios_macros *mac, host *,int,int *,int);         		/* given a host, create list of contacts to be notified (remove duplicates) */
+int create_notification_list_from_service(nagios_macros *mac, service *,int,int *,int);    		/* given a service, create list of contacts to be notified (remove duplicates) */
+int add_notification(nagios_macros *mac, contact *);						/* adds a notification instance */
 notification *find_notification(contact *);					/* finds a notification object */
-time_t get_next_host_notification_time(host *,time_t);				/* calculates nex acceptable re-notification time for a host */
-time_t get_next_service_notification_time(service *,time_t);			/* calculates nex acceptable re-notification time for a service */
-
-
-/**** Logging Functions ****/
-void logit(int,int,const char *, ...)
-	__attribute__((__format__(__printf__, 3, 4)));
-int write_to_logs_and_console(char *,unsigned long,int);	/* writes a string to screen and logs */
-int write_to_console(char *);                           /* writes a string to screen */
-int write_to_all_logs(char *,unsigned long);            /* writes a string to main log file and syslog facility */
-int write_to_all_logs_with_timestamp(char *,unsigned long,time_t *);	/* writes a string to main log file and syslog facility */
-int write_to_log(char *,unsigned long,time_t *);       	/* write a string to the main log file */
-int write_to_syslog(char *,unsigned long);             	/* write a string to the syslog facility */
-int log_service_event(service *);			/* logs a service event */
-int log_host_event(host *);				/* logs a host event */
-int log_host_states(int,time_t *);	                /* logs initial/current host states */
-int log_service_states(int,time_t *);                   /* logs initial/current service states */
-int rotate_log_file(time_t);			     	/* rotates the main log file */
-int write_log_file_info(time_t *); 			/* records log file/version info */
-int open_debug_log(void);
-int log_debug_info(int,int,const char *,...)
-	__attribute__((__format__(__printf__, 3, 4)));
-int close_debug_log(void);
+time_t get_next_host_notification_time(host *, time_t);				/* calculates nex acceptable re-notification time for a host */
+time_t get_next_service_notification_time(service *, time_t);			/* calculates nex acceptable re-notification time for a service */
 
 
 /**** Cleanup Functions ****/
 void cleanup(void);                                  	/* cleanup after ourselves (before quitting or restarting) */
-void free_memory(void);                              	/* free memory allocated to all linked lists in memory */
+void free_memory(nagios_macros *mac);                              	/* free memory allocated to all linked lists in memory */
 int reset_variables(void);                           	/* reset all global variables */
 void free_notification_list(void);		     	/* frees all memory allocated to the notification list */
-
-
-/**** Hash Functions ****/
-int hashfunc(const char *name1, const char *name2, int hashslots);
-int compare_hashdata(const char *,const char *,const char *,const char *);
 
 
 /**** Miscellaneous Functions ****/
@@ -660,92 +587,95 @@ void sighandler(int);                                	/* handles signals */
 void service_check_sighandler(int);                     /* handles timeouts when executing service checks */
 void host_check_sighandler(int);                        /* handles timeouts when executing host checks */
 void my_system_sighandler(int);				/* handles timeouts when executing commands via my_system() */
-void file_lock_sighandler(int);				/* handles timeouts while waiting for file locks */
-void strip(char *);                                  	/* strips whitespace from string */  
-char *my_strtok(char *,char *);                      	/* my replacement for strtok() function (doesn't skip consecutive tokens) */
-char *my_strsep(char **,const char *);		     	/* Solaris doesn't have strsep(), so I took this from the glibc source code */
-#ifdef REMOVED_10182007
-int my_free(void **);                                   /* my wrapper for free() */
-#endif
 char *get_next_string_from_buf(char *buf, int *start_index, int bufsize);
-int compare_strings(char *,char *);                     /* compares two strings for equality */
+int compare_strings(char *, char *);                    /* compares two strings for equality */
 char *escape_newlines(char *);
 int contains_illegal_object_chars(char *);		/* tests whether or not an object name (host, service, etc.) contains illegal characters */
-int my_rename(char *,char *);                           /* renames a file - works across filesystems */
-int my_fcopy(char *,char *);                            /* copies a file - works across filesystems */
-int get_raw_command_line(command *,char *,char **,int);    	/* given a raw command line, determine the actual command to run */
-int check_time_against_period(time_t,timeperiod *);	/* check to see if a specific time is covered by a time period */
+int my_rename(char *, char *);                          /* renames a file - works across filesystems */
+int my_fcopy(char *, char *);                           /* copies a file - works across filesystems */
+int my_fdcopy(char *, char *, int);                     /* copies a named source to an already opened destination file */
+
+/* thread-safe version of get_raw_command_line_r() */
+extern int get_raw_command_line_r(nagios_macros *mac, command *, char *, char **, int);
+
+/*
+ * given a raw command line, determine the actual command to run
+ * Manipulates global_macros.argv and is thus not threadsafe
+ */
+extern int get_raw_command_line(command *, char *, char **, int);
+
+int check_time_against_period(time_t, timeperiod *);	/* check to see if a specific time is covered by a time period */
 int is_daterange_single_day(daterange *);
-time_t calculate_time_from_weekday_of_month(int,int,int,int);	/* calculates midnight time of specific (3rd, last, etc.) weekday of a particular month */
-time_t calculate_time_from_day_of_month(int,int,int);	/* calculates midnight time of specific (1st, last, etc.) day of a particular month */
-void get_next_valid_time(time_t, time_t *,timeperiod *);	/* get the next valid time in a time period */
-void get_datetime_string(time_t *,char *,int,int);	/* get a date/time string for use in output */
-void get_time_breakdown(unsigned long,int *,int *,int *, int *);
+time_t calculate_time_from_weekday_of_month(int, int, int, int);	/* calculates midnight time of specific (3rd, last, etc.) weekday of a particular month */
+time_t calculate_time_from_day_of_month(int, int, int);	/* calculates midnight time of specific (1st, last, etc.) day of a particular month */
+void get_next_valid_time(time_t, time_t *, timeperiod *);	/* get the next valid time in a time period */
 time_t get_next_log_rotation_time(void);	     	/* determine the next time to schedule a log rotation */
 int init_embedded_perl(char **);			/* initialized embedded perl interpreter */
 int deinit_embedded_perl(void);				/* cleans up embedded perl */
 int file_uses_embedded_perl(char *);			/* tests whether or not the embedded perl interpreter should be used on a file */
-int dbuf_init(dbuf *,int);
+int dbuf_init(dbuf *, int);
 int dbuf_free(dbuf *);
-int dbuf_strcat(dbuf *,char *);
-int set_environment_var(char *,char *,int);             /* sets/clears and environment variable */
-int check_for_nagios_updates(int,int);                  /* checks to see if new version of Nagios are available */
+int dbuf_strcat(dbuf *, char *);
+int set_environment_var(char *, char *, int);           /* sets/clears and environment variable */
+int check_for_nagios_updates(int, int);                 /* checks to see if new version of Nagios are available */
 int query_update_api(void);                             /* checks to see if new version of Nagios are available */
 
 
 /**** External Command Functions ****/
 int check_for_external_commands(void);			/* checks for any external commands */
 int process_external_command1(char *);                  /* top-level external command processor */
-int process_external_command2(int,time_t,char *);	/* process an external command */
-int process_external_commands_from_file(char *,int);    /* process external commands in a file */
-int process_host_command(int,time_t,char *);            /* process an external host command */
-int process_hostgroup_command(int,time_t,char *);       /* process an external hostgroup command */
-int process_service_command(int,time_t,char *);         /* process an external service command */
-int process_servicegroup_command(int,time_t,char *);    /* process an external servicegroup command */
-int process_contact_command(int,time_t,char *);         /* process an external contact command */
-int process_contactgroup_command(int,time_t,char *);    /* process an external contactgroup command */
+int process_external_command2(int, time_t, char *);	/* process an external command */
+int process_external_commands_from_file(char *, int);   /* process external commands in a file */
+int process_host_command(int, time_t, char *);          /* process an external host command */
+int process_hostgroup_command(int, time_t, char *);     /* process an external hostgroup command */
+int process_service_command(int, time_t, char *);       /* process an external service command */
+int process_servicegroup_command(int, time_t, char *);  /* process an external servicegroup command */
+int process_contact_command(int, time_t, char *);       /* process an external contact command */
+int process_contactgroup_command(int, time_t, char *);  /* process an external contactgroup command */
 
 
 /**** External Command Implementations ****/
-int cmd_add_comment(int,time_t,char *);				/* add a service or host comment */
-int cmd_delete_comment(int,char *);				/* delete a service or host comment */
-int cmd_delete_all_comments(int,char *);			/* delete all comments associated with a host or service */
-int cmd_delay_notification(int,char *);				/* delay a service or host notification */
-int cmd_schedule_service_check(int,char *,int);			/* schedule an immediate or delayed service check */
-int cmd_schedule_check(int,char *);				/* schedule an immediate or delayed host check */
-int cmd_schedule_host_service_checks(int,char *,int);		/* schedule an immediate or delayed checks of all services on a host */
-int cmd_signal_process(int,char *);				/* schedules a program shutdown or restart */
-int cmd_process_service_check_result(int,time_t,char *);	/* processes a passive service check */
-int cmd_process_host_check_result(int,time_t,char *);		/* processes a passive host check */
-int cmd_acknowledge_problem(int,char *);			/* acknowledges a host or service problem */
-int cmd_remove_acknowledgement(int,char *);			/* removes a host or service acknowledgement */
-int cmd_schedule_downtime(int,time_t,char *);                   /* schedules host or service downtime */
-int cmd_delete_downtime(int,char *);				/* cancels active/pending host or service scheduled downtime */
-int cmd_change_object_int_var(int,char *);                      /* changes host/svc (int) variable */
-int cmd_change_object_char_var(int,char *);			/* changes host/svc (char) variable */
-int cmd_change_object_custom_var(int,char *);                   /* changes host/svc custom variable */
-int cmd_process_external_commands_from_file(int,char *);        /* process external commands from a file */
+int cmd_add_comment(int, time_t, char *);				/* add a service or host comment */
+int cmd_delete_comment(int, char *);				/* delete a service or host comment */
+int cmd_delete_all_comments(int, char *);			/* delete all comments associated with a host or service */
+int cmd_delay_notification(int, char *);				/* delay a service or host notification */
+int cmd_schedule_check(int, char *);				/* schedule an immediate or delayed host check */
+int cmd_schedule_host_service_checks(int, char *, int);		/* schedule an immediate or delayed checks of all services on a host */
+int cmd_signal_process(int, char *);				/* schedules a program shutdown or restart */
+int cmd_process_service_check_result(int, time_t, char *);	/* processes a passive service check */
+int cmd_process_host_check_result(int, time_t, char *);		/* processes a passive host check */
+int cmd_acknowledge_problem(int, char *);			/* acknowledges a host or service problem */
+int cmd_remove_acknowledgement(int, char *);			/* removes a host or service acknowledgement */
+int cmd_schedule_downtime(int, time_t, char *);                 /* schedules host or service downtime */
+int cmd_delete_downtime(int, char *);				/* cancels active/pending host or service scheduled downtime */
+int cmd_change_object_int_var(int, char *);                     /* changes host/svc (int) variable */
+int cmd_change_object_char_var(int, char *);			/* changes host/svc (char) variable */
+int cmd_change_object_custom_var(int, char *);                  /* changes host/svc custom variable */
+int cmd_process_external_commands_from_file(int, char *);       /* process external commands from a file */
+int cmd_delete_downtime_by_start_time_comment(int, char *);
+int cmd_delete_downtime_by_host_name(int, char *);
+int cmd_delete_downtime_by_hostgroup_name(int, char *);
 
-int process_passive_service_check(time_t,char *,char *,int,char *);
-int process_passive_host_check(time_t,char *,int,char *);
+int process_passive_service_check(time_t, char *, char *, int, char *);
+int process_passive_host_check(time_t, char *, int, char *);
 
 
 /**** Internal Command Implementations ****/
 void disable_service_checks(service *);			/* disables a service check */
 void enable_service_checks(service *);			/* enables a service check */
-void schedule_service_check(service *,time_t,int);	/* schedules an immediate or delayed service check */
-void schedule_host_check(host *,time_t,int);		/* schedules an immediate or delayed host check */
+void schedule_service_check(service *, time_t, int);	/* schedules an immediate or delayed service check */
+void schedule_host_check(host *, time_t, int);		/* schedules an immediate or delayed host check */
 void enable_all_notifications(void);                    /* enables notifications on a program-wide basis */
 void disable_all_notifications(void);                   /* disables notifications on a program-wide basis */
 void enable_service_notifications(service *);		/* enables service notifications */
 void disable_service_notifications(service *);		/* disables service notifications */
 void enable_host_notifications(host *);			/* enables host notifications */
 void disable_host_notifications(host *);		/* disables host notifications */
-void enable_and_propagate_notifications(host *,int,int,int,int);	/* enables notifications for all hosts and services beyond a given host */
-void disable_and_propagate_notifications(host *,int,int,int,int);	/* disables notifications for all hosts and services beyond a given host */
-void schedule_and_propagate_downtime(host *,time_t,char *,char *,time_t,time_t,int,unsigned long,unsigned long); /* schedules downtime for all hosts beyond a given host */
-void acknowledge_host_problem(host *,char *,char *,int,int,int);	/* acknowledges a host problem */
-void acknowledge_service_problem(service *,char *,char *,int,int,int);	/* acknowledges a service problem */
+void enable_and_propagate_notifications(host *, int, int, int, int);	/* enables notifications for all hosts and services beyond a given host */
+void disable_and_propagate_notifications(host *, int, int, int, int);	/* disables notifications for all hosts and services beyond a given host */
+void schedule_and_propagate_downtime(host *, time_t, char *, char *, time_t, time_t, int, unsigned long, unsigned long); /* schedules downtime for all hosts beyond a given host */
+void acknowledge_host_problem(host *, char *, char *, int, int, int);	/* acknowledges a host problem */
+void acknowledge_service_problem(service *, char *, char *, int, int, int);	/* acknowledges a service problem */
 void remove_host_acknowledgement(host *);		/* removes a host acknowledgement */
 void remove_service_acknowledgement(service *);		/* removes a service acknowledgement */
 void start_executing_service_checks(void);		/* starts executing service checks */
@@ -785,37 +715,24 @@ void start_obsessing_over_service(service *);		/* start obsessing about specific
 void stop_obsessing_over_service(service *);		/* stop obsessing about specific service check results */
 void start_obsessing_over_host(host *);			/* start obsessing about specific host check results */
 void stop_obsessing_over_host(host *);			/* stop obsessing about specific host check results */
-void set_host_notification_number(host *,int);		/* sets current notification number for a specific host */
-void set_service_notification_number(service *,int);	/* sets current notification number for a specific service */
+void set_host_notification_number(host *, int);		/* sets current notification number for a specific host */
+void set_service_notification_number(service *, int);	/* sets current notification number for a specific service */
 void enable_contact_host_notifications(contact *);      /* enables host notifications for a specific contact */
 void disable_contact_host_notifications(contact *);     /* disables host notifications for a specific contact */
 void enable_contact_service_notifications(contact *);   /* enables service notifications for a specific contact */
 void disable_contact_service_notifications(contact *);  /* disables service notifications for a specific contact */
-
-int init_check_result_worker_thread(void);
-int shutdown_check_result_worker_thread(void);
-void * check_result_worker_thread(void *);
-void cleanup_check_result_worker_thread(void *);
 
 int init_command_file_worker_thread(void);
 int shutdown_command_file_worker_thread(void);
 void * command_file_worker_thread(void *);
 void cleanup_command_file_worker_thread(void *);
 
-int submit_external_command(char *,int *);
-int submit_raw_external_command(char *,time_t *,int *);
+int submit_external_command(char *, int *);
+int submit_raw_external_command(char *, time_t *, int *);
 
 char *get_program_version(void);
 char *get_program_modification_date(void);
 
-mmapfile *mmap_fopen(char *);				/* open a file read-only via mmap() */
-int mmap_fclose(mmapfile *);
-char *mmap_fgets(mmapfile *);
-char *mmap_fgets_multiline(mmapfile *);
-
-
-#ifdef __cplusplus
-}
-#endif
+NAGIOS_END_DECL
 #endif
 

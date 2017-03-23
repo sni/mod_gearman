@@ -25,27 +25,25 @@
 #ifndef _NEBSTRUCTS_H
 #define _NEBSTRUCTS_H
 
-#include "config.h"
+#include "compat.h"
 #include "objects.h"
 #include "nagios.h"
 
-#ifdef __cplusplus
-  extern "C" {
-#endif
+NAGIOS_BEGIN_DECL
 
 /****** STRUCTURES *************************/
 
 /* process data structure */
-typedef struct nebstruct_process_struct{
+typedef struct nebstruct_process_struct {
 	int             type;
 	int             flags;
 	int             attr;
 	struct timeval  timestamp;
-        }nebstruct_process_data;
+	} nebstruct_process_data;
 
 
 /* timed event data structure */
-typedef struct nebstruct_timed_event_struct{
+typedef struct nebstruct_timed_event_struct {
 	int             type;
 	int             flags;
 	int             attr;
@@ -57,11 +55,11 @@ typedef struct nebstruct_timed_event_struct{
 	void            *event_data;
 
 	void            *event_ptr;
-        }nebstruct_timed_event_data;
+	} nebstruct_timed_event_data;
 
 
 /* log data structure */
-typedef struct nebstruct_log_struct{
+typedef struct nebstruct_log_struct {
 	int             type;
 	int             flags;
 	int             attr;
@@ -70,11 +68,11 @@ typedef struct nebstruct_log_struct{
 	time_t          entry_time;
 	int             data_type;
 	char            *data;
-        }nebstruct_log_data;
+	} nebstruct_log_data;
 
 
 /* system command structure */
-typedef struct nebstruct_system_command_struct{
+typedef struct nebstruct_system_command_struct {
 	int             type;
 	int             flags;
 	int             attr;
@@ -88,11 +86,11 @@ typedef struct nebstruct_system_command_struct{
 	double          execution_time;
 	int             return_code;
 	char            *output;
-        }nebstruct_system_command_data;
+	} nebstruct_system_command_data;
 
 
 /* event handler structure */
-typedef struct nebstruct_event_handler_struct{
+typedef struct nebstruct_event_handler_struct {
 	int             type;
 	int             flags;
 	int             attr;
@@ -115,11 +113,11 @@ typedef struct nebstruct_event_handler_struct{
 	char            *output;
 
 	void            *object_ptr;
-        }nebstruct_event_handler_data;
+	} nebstruct_event_handler_data;
 
 
 /* host check structure */
-typedef struct nebstruct_host_check_struct{
+typedef struct nebstruct_host_check_struct {
 	int             type;
 	int             flags;
 	int             attr;
@@ -146,11 +144,11 @@ typedef struct nebstruct_host_check_struct{
 	char            *perf_data;
 
 	void            *object_ptr;
-        }nebstruct_host_check_data;
+	} nebstruct_host_check_data;
 
 
 /* service check structure */
-typedef struct nebstruct_service_check_struct{
+typedef struct nebstruct_service_check_struct {
 	int             type;
 	int             flags;
 	int             attr;
@@ -178,11 +176,11 @@ typedef struct nebstruct_service_check_struct{
 	char            *perf_data;
 
 	void            *object_ptr;
-        }nebstruct_service_check_data;
+	} nebstruct_service_check_data;
 
 
 /* comment data structure */
-typedef struct nebstruct_comment_struct{
+typedef struct nebstruct_comment_struct {
 	int             type;
 	int             flags;
 	int             attr;
@@ -202,11 +200,11 @@ typedef struct nebstruct_comment_struct{
 	unsigned long   comment_id;
 
 	void            *object_ptr; /* not implemented yet */
-        }nebstruct_comment_data;
+	} nebstruct_comment_data;
 
 
 /* downtime data structure */
-typedef struct nebstruct_downtime_struct{
+typedef struct nebstruct_downtime_struct {
 	int             type;
 	int             flags;
 	int             attr;
@@ -226,11 +224,11 @@ typedef struct nebstruct_downtime_struct{
 	unsigned long   downtime_id;
 
 	void            *object_ptr; /* not implemented yet */
-        }nebstruct_downtime_data;
+	} nebstruct_downtime_data;
 
 
 /* flapping data structure */
-typedef struct nebstruct_flapping_struct{
+typedef struct nebstruct_flapping_struct {
 	int             type;
 	int             flags;
 	int             attr;
@@ -245,11 +243,11 @@ typedef struct nebstruct_flapping_struct{
 	unsigned long   comment_id;
 
 	void            *object_ptr;
-        }nebstruct_flapping_data;
+	} nebstruct_flapping_data;
 
 
 /* program status structure */
-typedef struct nebstruct_program_status_struct{
+typedef struct nebstruct_program_status_struct {
 	int             type;
 	int             flags;
 	int             attr;
@@ -275,44 +273,44 @@ typedef struct nebstruct_program_status_struct{
 	unsigned long   modified_service_attributes;
 	char            *global_host_event_handler;
 	char            *global_service_event_handler;
-        }nebstruct_program_status_data;
+	} nebstruct_program_status_data;
 
 
 /* host status structure */
-typedef struct nebstruct_host_status_struct{
+typedef struct nebstruct_host_status_struct {
 	int             type;
 	int             flags;
 	int             attr;
 	struct timeval  timestamp;
 
 	void            *object_ptr;
-        }nebstruct_host_status_data;
+	} nebstruct_host_status_data;
 
 
 /* service status structure */
-typedef struct nebstruct_service_status_struct{
+typedef struct nebstruct_service_status_struct {
 	int             type;
 	int             flags;
 	int             attr;
 	struct timeval  timestamp;
 
 	void            *object_ptr;
-        }nebstruct_service_status_data;
+	} nebstruct_service_status_data;
 
 
 /* contact status structure */
-typedef struct nebstruct_contact_status_struct{
+typedef struct nebstruct_contact_status_struct {
 	int             type;
 	int             flags;
 	int             attr;
 	struct timeval  timestamp;
 
 	void            *object_ptr;
-        }nebstruct_contact_status_data;
+	} nebstruct_contact_status_data;
 
 
 /* notification data structure */
-typedef struct nebstruct_notification_struct{
+typedef struct nebstruct_notification_struct {
 	int             type;
 	int             flags;
 	int             attr;
@@ -332,11 +330,11 @@ typedef struct nebstruct_notification_struct{
 	int             contacts_notified;
 
 	void            *object_ptr;
-        }nebstruct_notification_data;
+	} nebstruct_notification_data;
 
 
 /* contact notification data structure */
-typedef struct nebstruct_contact_notification_struct{
+typedef struct nebstruct_contact_notification_struct {
 	int             type;
 	int             flags;
 	int             attr;
@@ -357,11 +355,11 @@ typedef struct nebstruct_contact_notification_struct{
 
 	void            *object_ptr;
 	void            *contact_ptr;
-        }nebstruct_contact_notification_data;
+	} nebstruct_contact_notification_data;
 
 
 /* contact notification method data structure */
-typedef struct nebstruct_contact_notification_method_struct{
+typedef struct nebstruct_contact_notification_method_struct {
 	int             type;
 	int             flags;
 	int             attr;
@@ -384,11 +382,11 @@ typedef struct nebstruct_contact_notification_method_struct{
 
 	void            *object_ptr;
 	void            *contact_ptr;
-        }nebstruct_contact_notification_method_data;
+	} nebstruct_contact_notification_method_data;
 
 
 /* adaptive program data structure */
-typedef struct nebstruct_adaptive_program_data_struct{
+typedef struct nebstruct_adaptive_program_data_struct {
 	int             type;
 	int             flags;
 	int             attr;
@@ -399,11 +397,11 @@ typedef struct nebstruct_adaptive_program_data_struct{
 	unsigned long   modified_host_attributes;
 	unsigned long   modified_service_attribute;
 	unsigned long   modified_service_attributes;
-        }nebstruct_adaptive_program_data;
+	} nebstruct_adaptive_program_data;
 
 
 /* adaptive host data structure */
-typedef struct nebstruct_adaptive_host_data_struct{
+typedef struct nebstruct_adaptive_host_data_struct {
 	int             type;
 	int             flags;
 	int             attr;
@@ -414,11 +412,11 @@ typedef struct nebstruct_adaptive_host_data_struct{
 	unsigned long   modified_attributes;
 
 	void            *object_ptr;
-        }nebstruct_adaptive_host_data;
+	} nebstruct_adaptive_host_data;
 
 
 /* adaptive service data structure */
-typedef struct nebstruct_adaptive_service_data_struct{
+typedef struct nebstruct_adaptive_service_data_struct {
 	int             type;
 	int             flags;
 	int             attr;
@@ -429,11 +427,11 @@ typedef struct nebstruct_adaptive_service_data_struct{
 	unsigned long   modified_attributes;
 
 	void            *object_ptr;
-        }nebstruct_adaptive_service_data;
+	} nebstruct_adaptive_service_data;
 
 
 /* adaptive contact data structure */
-typedef struct nebstruct_adaptive_contact_data_struct{
+typedef struct nebstruct_adaptive_contact_data_struct {
 	int             type;
 	int             flags;
 	int             attr;
@@ -448,11 +446,11 @@ typedef struct nebstruct_adaptive_contact_data_struct{
 	unsigned long   modified_service_attributes;
 
 	void            *object_ptr;
-        }nebstruct_adaptive_contact_data;
+	} nebstruct_adaptive_contact_data;
 
 
 /* external command data structure */
-typedef struct nebstruct_external_command_struct{
+typedef struct nebstruct_external_command_struct {
 	int             type;
 	int             flags;
 	int             attr;
@@ -462,31 +460,31 @@ typedef struct nebstruct_external_command_struct{
 	time_t          entry_time;
 	char            *command_string;
 	char            *command_args;
-        }nebstruct_external_command_data;
+	} nebstruct_external_command_data;
 
 
 /* aggregated status data structure */
-typedef struct nebstruct_aggregated_status_struct{
+typedef struct nebstruct_aggregated_status_struct {
 	int             type;
 	int             flags;
 	int             attr;
 	struct timeval  timestamp;
 
-        }nebstruct_aggregated_status_data;
+	} nebstruct_aggregated_status_data;
 
 
 /* retention data structure */
-typedef struct nebstruct_retention_struct{
+typedef struct nebstruct_retention_struct {
 	int             type;
 	int             flags;
 	int             attr;
 	struct timeval  timestamp;
 
-        }nebstruct_retention_data;
+	} nebstruct_retention_data;
 
 
 /* acknowledgement structure */
-typedef struct nebstruct_acknowledgement_struct{
+typedef struct nebstruct_acknowledgement_struct {
 	int             type;
 	int             flags;
 	int             attr;
@@ -503,11 +501,11 @@ typedef struct nebstruct_acknowledgement_struct{
 	int             notify_contacts;
 
 	void            *object_ptr;
-        }nebstruct_acknowledgement_data;
+	} nebstruct_acknowledgement_data;
 
 
 /* state change structure */
-typedef struct nebstruct_statechange_struct{
+typedef struct nebstruct_statechange_struct {
 	int             type;
 	int             flags;
 	int             attr;
@@ -523,10 +521,7 @@ typedef struct nebstruct_statechange_struct{
 	char            *output;
 
 	void            *object_ptr;
-        }nebstruct_statechange_data;
+	} nebstruct_statechange_data;
 
-#ifdef __cplusplus
-  }
-#endif
-
+NAGIOS_END_DECL
 #endif

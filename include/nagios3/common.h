@@ -20,9 +20,10 @@
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  ************************************************************************/
 
+#include "shared.h"
 
-#define PROGRAM_VERSION "3.2.1"
-#define PROGRAM_MODIFICATION_DATE "03-09-2010"
+#define PROGRAM_VERSION "3.5.1"
+#define PROGRAM_MODIFICATION_DATE "08-30-2013"
 
 /*#define DEBUG_CHECK_IPC 1 */
 /*#define DEBUG_CHECK_IPC2 1*/
@@ -43,7 +44,7 @@
 #undef USE_MEMORY_PERFORMANCE_TWEAKS
 
 /* my_free has been freed from bondage as a function */
-#define my_free(ptr) { if(ptr) { free(ptr); ptr = NULL; } }
+#define my_free(ptr) do { if(ptr) { free(ptr); ptr = NULL; } } while(0)
 
 
 
@@ -264,7 +265,7 @@
 #define CMD_SET_SVC_NOTIFICATION_NUMBER                 143
 
 /* new commands in Nagios 3.x found below... */
-#define CMD_CHANGE_HOST_CHECK_TIMEPERIOD                144  
+#define CMD_CHANGE_HOST_CHECK_TIMEPERIOD                144
 #define CMD_CHANGE_SVC_CHECK_TIMEPERIOD                 145
 
 #define CMD_PROCESS_FILE                                146
@@ -299,6 +300,10 @@
 #define CMD_CHANGE_CONTACT_MODHATTR                     168
 #define CMD_CHANGE_CONTACT_MODSATTR                     169
 
+#define CMD_DEL_DOWNTIME_BY_HOST_NAME                   170
+#define CMD_DEL_DOWNTIME_BY_HOSTGROUP_NAME              171
+#define CMD_DEL_DOWNTIME_BY_START_TIME_COMMENT          172
+
 /* custom command introduced in Nagios 3.x */
 #define CMD_CUSTOM_COMMAND                              999
 
@@ -318,7 +323,7 @@
 
 /************************ SERVICE STATE TYPES ****************************/
 
-#define SOFT_STATE			0	
+#define SOFT_STATE			0
 #define HARD_STATE			1
 
 
@@ -364,7 +369,7 @@
 
 /**************************** PROGRAM MODES ******************************/
 
-#define STANDBY_MODE		0	
+#define STANDBY_MODE		0
 #define ACTIVE_MODE		1
 
 
@@ -446,7 +451,7 @@
 #define DATERANGE_MONTH_DAY      2  /* day 21 (generic month) */
 #define DATERANGE_MONTH_WEEK_DAY 3  /* 3rd thursday (specific month) */
 #define DATERANGE_WEEK_DAY       4  /* 3rd thursday (generic month) */
-#define DATERANGE_TYPES          5 
+#define DATERANGE_TYPES          5
 
 
 /************************** DATE/TIME TYPES *****************************/
@@ -496,5 +501,3 @@
 #define MODATTR_CHECK_TIMEPERIOD                16384
 #define MODATTR_CUSTOM_VARIABLE                 32768
 #define MODATTR_NOTIFICATION_TIMEPERIOD         65536
-
-	

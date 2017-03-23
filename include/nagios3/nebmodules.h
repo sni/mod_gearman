@@ -25,18 +25,17 @@
 #ifndef _NEBMODULES_H
 #define _NEBMODULES_H
 
-#ifdef __cplusplus
-  extern "C" {
-#endif
+#include "compat.h"
+NAGIOS_BEGIN_DECL
 
-/***** MODULE VERSION INFORMATION *****/
+	/***** MODULE VERSION INFORMATION *****/
 
 #define NEB_API_VERSION(x) int __neb_api_version = x;
 #define CURRENT_NEB_API_VERSION    3
 
 
 
-/***** MODULE INFORMATION *****/
+	/***** MODULE INFORMATION *****/
 
 #define NEBMODULE_MODINFO_NUMITEMS  6
 #define NEBMODULE_MODINFO_TITLE     0
@@ -48,7 +47,7 @@
 
 
 
-/***** MODULE LOAD/UNLOAD OPTIONS *****/
+	/***** MODULE LOAD/UNLOAD OPTIONS *****/
 
 #define NEBMODULE_NORMAL_LOAD       0    /* module is being loaded normally */
 #define NEBMODULE_REQUEST_UNLOAD    0    /* request module to unload (but don't force it) */
@@ -56,7 +55,7 @@
 
 
 
-/***** MODULES UNLOAD REASONS *****/
+	/***** MODULES UNLOAD REASONS *****/
 
 #define NEBMODULE_NEB_SHUTDOWN      1    /* event broker is shutting down */
 #define NEBMODULE_NEB_RESTART       2    /* event broker is restarting */
@@ -69,7 +68,7 @@
 /***** MODULE STRUCTURES *****/
 
 /* NEB module structure */
-typedef struct nebmodule_struct{
+typedef struct nebmodule_struct {
 	char            *filename;
 	char            *args;
 	char            *info[NEBMODULE_MODINFO_NUMITEMS];
@@ -88,15 +87,11 @@ typedef struct nebmodule_struct{
 	pthread_t       thread_id;
 #endif
 	struct nebmodule_struct *next;
-        }nebmodule;
-
+	} nebmodule;
 
 
 /***** MODULE FUNCTIONS *****/
-int neb_set_module_info(void *,int,char *);
+int neb_set_module_info(void *, int, char *);
 
-#ifdef __cplusplus
-  }
-#endif
-
+NAGIOS_END_DECL
 #endif
