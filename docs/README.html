@@ -576,7 +576,7 @@ body.manpage div.sectionbody {
 <div class='toclevel2'><a href='#_how_to_build_send_gearman_exe'>How to build send_gearman.exe</a></div>
 <div class='toclevel2'><a href='#_how_to_submit_check_multi_results'>How to Submit check_multi Results</a></div>
 <div class='toclevel2'><a href='#_how_to_set_queue_by_custom_variable'>How to Set Queue by Custom Variable</a></div>
-<div class='toclevel1'><a href='#_what_about_notifications'>What About Notifications</a></div>
+<div class='toclevel1'><a href='#_notifications'>Notifications</a></div>
 <div class='toclevel1'><a href='#_supported_dependencies'>Supported Dependencies</a></div>
 <div class='toclevel2'><a href='#_lib_gearman'>Lib-Gearman</a></div>
 <div class='toclevel2'><a href='#_naemon'>Naemon</a></div>
@@ -2512,12 +2512,40 @@ in the <em>hostgroup_test</em> queue.</p></div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_what_about_notifications">What About Notifications</h2>
+<h2 id="_notifications">Notifications</h2>
 <div class="sectionbody">
-<div class="paragraph"><p>Notifications are currently not possible to distribute via
-Mod-Gearman. The Naemon core would have to be patched to support this.
-And i think its not very useful at all. So don&#8217;t expect this feature
-to be implemented in the near future.</p></div>
+<div class="paragraph"><p>Starting with version 3.0.2 Mod-Gearman does distribute Notifications as well.
+All Notifications (except bypassed by local groups) are send into the notifications
+queue and processed from there.</p></div>
+<div class="paragraph"><p>Mod-Gearman does not support environment macros, except two plugin output related
+ones.</p></div>
+<div class="paragraph"><p>It does set</p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+NAGIOS_SERVICEOUTPUT
+</p>
+</li>
+<li>
+<p>
+NAGIOS_LONGSERVICEOUTPUT
+</p>
+</li>
+</ul></div>
+<div class="paragraph"><p>for service notifications and</p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+NAGIOS_HOSTOUTPUT
+</p>
+</li>
+<li>
+<p>
+NAGIOS_LONGHOSTOUTPUT
+</p>
+</li>
+</ul></div>
+<div class="paragraph"><p>for host notifications.</p></div>
 </div>
 </div>
 <div class="sect1">
@@ -2930,7 +2958,7 @@ Make sure all your worker have the Nagios-Plugins available under
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2017-02-23 17:25:50 CET
+ 2017-03-23 14:33:37 CET
 </div>
 </div>
 </body>

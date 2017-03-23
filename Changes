@@ -1,5 +1,8 @@
 This file documents the revision history for mod_gearman.
 
+next:
+          - add distribution of notifications
+
 3.0.1 Mon Jan 30 13:00:47 CET 2017
           - fix segfault on receiving host result for non-existing host with naemon core
           - fix memory leak when using naemon core (#106 Jean-François Rameau)

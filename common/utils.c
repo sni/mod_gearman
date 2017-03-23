@@ -240,6 +240,7 @@ int set_default_options(mod_gm_opt_t *opt) {
     opt->hosts              = GM_DISABLED;
     opt->services           = GM_DISABLED;
     opt->events             = GM_DISABLED;
+    opt->notifications      = GM_DISABLED;
     opt->job_timeout        = GM_DEFAULT_JOB_TIMEOUT;
     opt->encryption         = GM_ENABLED;
     opt->pidfile            = NULL;
@@ -436,6 +437,15 @@ int parse_args_line(mod_gm_opt_t *opt, char * arg, int recursion_level) {
             ) {
         opt->set_queues_by_hand++;
         opt->events = parse_yes_or_no(value, GM_ENABLED);
+        return(GM_OK);
+    }
+
+    /* notifications */
+    else if (   !strcmp( key, "notifications" )
+             || !strcmp( key, "notification" )
+            ) {
+        opt->set_queues_by_hand++;
+        opt->notifications = parse_yes_or_no(value, GM_ENABLED);
         return(GM_OK);
     }
 
@@ -1050,9 +1060,10 @@ void dumpconfig(mod_gm_opt_t *opt, int mode) {
         gm_log( GM_LOG_DEBUG, "perfdata mode:                   %s\n", opt->perfdata_mode == GM_PERFDATA_OVERWRITE ? "overwrite" : "append");
     }
     if(mode == GM_NEB_MODE || mode == GM_WORKER_MODE) {
-        gm_log( GM_LOG_DEBUG, "hosts:                           %s\n", opt->hosts        == GM_ENABLED ? "yes" : "no");
-        gm_log( GM_LOG_DEBUG, "services:                        %s\n", opt->services     == GM_ENABLED ? "yes" : "no");
-        gm_log( GM_LOG_DEBUG, "eventhandler:                    %s\n", opt->events       == GM_ENABLED ? "yes" : "no");
+        gm_log( GM_LOG_DEBUG, "hosts:                           %s\n", opt->hosts         == GM_ENABLED ? "yes" : "no");
+        gm_log( GM_LOG_DEBUG, "services:                        %s\n", opt->services      == GM_ENABLED ? "yes" : "no");
+        gm_log( GM_LOG_DEBUG, "eventhandler:                    %s\n", opt->events        == GM_ENABLED ? "yes" : "no");
+        gm_log( GM_LOG_DEBUG, "notifications:                   %s\n", opt->notifications == GM_ENABLED ? "yes" : "no");
         for(i=0;i<opt->hostgroups_num;i++)
             gm_log( GM_LOG_DEBUG, "hostgroups:                      %s\n", opt->hostgroups_list[i]);
         for(i=0;i<opt->servicegroups_num;i++)
@@ -1241,6 +1252,7 @@ int set_default_job(gm_job_t *job, mod_gm_opt_t *opt) {
     job->command_line        = NULL;
     job->source              = NULL;
     job->output              = NULL;
+    job->long_output         = NULL;
     job->error               = NULL;
     job->exited_ok           = TRUE;
     job->scheduled_check     = TRUE;
@@ -1264,7 +1276,10 @@ int free_job(gm_job_t *job) {
     free(job->service_description);
     free(job->result_queue);
     free(job->command_line);
-    free(job->output);
+    if(job->output != NULL)
+        free(job->output);
+    if(job->long_output != NULL)
+        free(job->long_output);
     if(job->source != NULL)
         free(job->source);
     if(job->error != NULL)

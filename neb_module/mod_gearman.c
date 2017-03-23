@@ -52,6 +52,7 @@ extern int            process_performance_data;
 extern check_result   check_result_info;
 extern check_result * check_result_list;
 #endif
+extern int            log_notifications;
 
 /* global variables */
 #ifdef USENAGIOS3
@@ -76,6 +77,7 @@ static int   verify_options(mod_gm_opt_t *opt);
 static int   handle_host_check( int,void * );
 static int   handle_svc_check( int,void * );
 static int   handle_eventhandler( int,void * );
+static int   handle_notifications( int,void * );
 static int   handle_perfdata(int e, void *);
 static int   handle_export(int e, void *);
 static void  set_target_queue( host *, service * );
@@ -229,6 +231,9 @@ static void register_neb_callbacks(void) {
         neb_register_callback( NEBCALLBACK_SERVICE_CHECK_DATA, gearman_module_handle, 0, handle_perfdata );
     }
 
+    if ( mod_gm_opt->notifications == GM_ENABLED )
+        neb_register_callback( NEBCALLBACK_CONTACT_NOTIFICATION_METHOD_DATA, gearman_module_handle, 0, handle_notifications );
+
     gm_log( GM_LOG_DEBUG, "registered neb callbacks\n" );
 }
 
@@ -253,6 +258,9 @@ int nebmodule_deinit( int flags, int reason ) {
 
     if ( mod_gm_opt->events == GM_ENABLED )
         neb_deregister_callback( NEBCALLBACK_EVENT_HANDLER_DATA, gearman_module_handle );
+
+    if ( mod_gm_opt->notifications == GM_ENABLED )
+        neb_deregister_callback( NEBCALLBACK_CONTACT_NOTIFICATION_METHOD_DATA, gearman_module_handle );
 
     if ( mod_gm_opt->perfdata != GM_DISABLED ) {
         neb_deregister_callback( NEBCALLBACK_HOST_CHECK_DATA, gearman_module_handle );
@@ -343,18 +351,19 @@ static void move_results_to_core(struct nm_event_execution_properties *evprop) {
 #ifdef USENAGIOS4
 static void move_results_to_core() {
 #endif
+    objectlist *tmp_list = NULL;
+    check_result *info = NULL;
 #ifdef USENAEMON
     if(evprop->execution_type == EVENT_EXEC_NORMAL) {
 #endif
     /* safely save off currently local list */
     pthread_mutex_lock(&mod_gm_result_list_mutex);
 
-    objectlist *tmp_list = NULL;
     for( ; mod_gm_result_list; mod_gm_result_list = mod_gm_result_list->next) {
         free(tmp_list);
         process_check_result(mod_gm_result_list->object_ptr);
         free_check_result(mod_gm_result_list->object_ptr);
-        check_result *info = mod_gm_result_list->object_ptr;
+        info = mod_gm_result_list->object_ptr;
         my_free(info->source);
         free(mod_gm_result_list->object_ptr);
         tmp_list = mod_gm_result_list;
@@ -506,13 +515,13 @@ static int handle_eventhandler( int event_type, void *data ) {
             return NEB_OK;
         }
         if((hst=svc->host_ptr)==NULL) {
-            gm_log( GM_LOG_ERROR, "Service handler received NULL host object pointer.\n" );
+            gm_log( GM_LOG_ERROR, "Eventhandler handler received NULL host object pointer.\n" );
             return NEB_OK;
         }
     }
     else {
         if((hst=ds->object_ptr)==NULL) {
-            gm_log( GM_LOG_ERROR, "Host handler received NULL host object pointer.\n" );
+            gm_log( GM_LOG_ERROR, "Eventhandler handler received NULL host object pointer.\n" );
             return NEB_OK;
         }
     }
@@ -559,6 +568,337 @@ static int handle_eventhandler( int event_type, void *data ) {
     else {
         gm_log( GM_LOG_TRACE, "handle_eventhandler() finished unsuccessfully\n" );
     }
+
+    /* tell naemon to not execute */
+    return NEBERROR_CALLBACKOVERRIDE;
+}
+
+
+/* handle notifications events */
+static int handle_notifications( int event_type, void *data ) {
+    nebstruct_contact_notification_method_data * ds;
+    host * hst    = NULL;
+    service * svc = NULL;
+    char *raw_command = NULL;
+    char *processed_command=NULL;
+    command *temp_command = NULL;
+    contact *temp_contact = NULL;
+    char *log_buffer = NULL;
+    char *processed_buffer = NULL;
+    int macro_options = STRIP_ILLEGAL_MACRO_CHARS | ESCAPE_MACRO_CHARS;
+    nagios_macros mac;
+#if defined(USENAEMON)
+    char *tmp;
+#endif
+    struct timeval core_time;
+    gettimeofday(&core_time,NULL);
+
+    gm_log( GM_LOG_TRACE, "handle_notifications(%i, data)\n", event_type );
+
+    if ( event_type != NEBCALLBACK_CONTACT_NOTIFICATION_METHOD_DATA)
+        return NEB_OK;
+
+    ds = ( nebstruct_contact_notification_method_data * )data;
+
+    if ( ds->type != NEBTYPE_CONTACTNOTIFICATIONMETHOD_START) {
+        gm_log( GM_LOG_TRACE, "skiped type %i, expecting: %i\n", ds->type,  NEBTYPE_CONTACTNOTIFICATIONMETHOD_START);
+        return NEB_OK;
+    }
+
+    /* service event handler? */
+    if(ds->service_description != NULL) {
+        if((svc=ds->object_ptr)==NULL) {
+            gm_log( GM_LOG_ERROR, "Notification handler received NULL service object pointer.\n" );
+            return NEB_OK;
+        }
+        if((hst=svc->host_ptr)==NULL) {
+            gm_log( GM_LOG_ERROR, "Notification handler received NULL host object pointer.\n" );
+            return NEB_OK;
+        }
+        gm_log( GM_LOG_DEBUG, "got notifications event, service: %s - %s for contact %s\n", ds->host_name, ds->service_description, ds->contact_name );
+    }
+    else {
+        if((hst=ds->object_ptr)==NULL) {
+            gm_log( GM_LOG_ERROR, "Notification handler received NULL host object pointer.\n" );
+            return NEB_OK;
+        }
+        gm_log( GM_LOG_DEBUG, "got notifications event, host: %s for contact %s\n", ds->host_name, ds->contact_name );
+    }
+
+    /* local eventhandler? */
+    set_target_queue( hst, svc );
+    if(!strcmp( target_queue, "" )) {
+        if(svc != NULL) {
+            gm_log( GM_LOG_DEBUG, "passing by local service notification: %s - %s\n", svc->host_name, svc->description );
+        } else {
+            gm_log( GM_LOG_DEBUG, "passing by local host notification: %s\n", hst->name );
+        }
+        return NEB_OK;
+    }
+    target_queue[0] = '\x0';
+    snprintf( target_queue, GM_BUFFERSIZE-1, "notification" );
+
+    /* grab the host macro variables */
+    memset(&mac, 0, sizeof(mac));
+#ifdef USENAGIOS3
+    clear_volatile_macros();
+    grab_host_macros(hst);
+    if(svc != NULL)
+        grab_service_macros(svc);
+#endif
+#if defined(USENAEMON) || defined(USENAGIOS4)
+    clear_volatile_macros_r(&mac);
+    grab_host_macros_r(&mac, hst);
+    if(svc != NULL)
+        grab_service_macros_r(&mac, svc);
+#endif
+
+    /* get the raw command line */
+    temp_command = find_command(ds->command_name);
+#ifdef USENAGIOS3
+    get_raw_command_line(temp_command, ds->command_name, &raw_command,macro_options);
+#endif
+#if defined(USENAEMON) || defined(USENAGIOS4)
+    get_raw_command_line_r(&mac, temp_command, ds->command_name, &raw_command, macro_options);
+#endif
+    if(raw_command==NULL){
+        gm_log( GM_LOG_ERROR, "Raw check command for host '%s' was NULL - aborting.\n",hst->name );
+        return NEBERROR_CALLBACKCANCEL;
+    }
+
+    /* if this notification has an author, attempt to lookup the associated contact */
+    if(ds->ack_author != NULL) {
+        temp_contact = find_contact(ds->ack_author);
+    }
+
+    /* get author and comment macros */
+    if(ds->ack_author)
+        mac.x[MACRO_NOTIFICATIONAUTHOR] = gm_strdup(ds->ack_author);
+    if (temp_contact != NULL) {
+        mac.x[MACRO_NOTIFICATIONAUTHORNAME] = gm_strdup(temp_contact->name);
+        mac.x[MACRO_NOTIFICATIONAUTHORALIAS] = gm_strdup(temp_contact->alias);
+    }
+    if(ds->ack_data)
+        mac.x[MACRO_NOTIFICATIONCOMMENT] = gm_strdup(ds->ack_data);
+
+    /* NOTE: these macros are deprecated and will likely disappear in Nagios 4.x */
+    /* if this is an acknowledgement, get author and comment macros */
+    if(ds->reason_type == NOTIFICATION_ACKNOWLEDGEMENT) {
+        if(ds->ack_author)
+            mac.x[MACRO_SERVICEACKAUTHOR] = gm_strdup(ds->ack_author);
+
+        if (ds->ack_data)
+            mac.x[MACRO_SERVICEACKCOMMENT] = gm_strdup(ds->ack_data);
+
+        if (temp_contact != NULL) {
+            mac.x[MACRO_SERVICEACKAUTHORNAME] = gm_strdup(temp_contact->name);
+            mac.x[MACRO_SERVICEACKAUTHORALIAS] = gm_strdup(temp_contact->alias);
+        }
+    }
+
+    /* set the notification type macro */
+    if(ds->reason_type != NOTIFICATION_NORMAL) {
+        mac.x[MACRO_NOTIFICATIONTYPE] = gm_strdup(notification_reason_name(ds->reason_type));
+    }
+    else if(svc != NULL && svc->current_state == STATE_OK) {
+        mac.x[MACRO_NOTIFICATIONTYPE] = gm_strdup("RECOVERY");
+    }
+    else if(svc == NULL && hst->current_state == STATE_OK) {
+        mac.x[MACRO_NOTIFICATIONTYPE] = gm_strdup("RECOVERY");
+    }
+    else {
+        mac.x[MACRO_NOTIFICATIONTYPE] = gm_strdup("PROBLEM");
+    }
+
+
+    /* set the notification number macro */
+    if(svc != NULL) {
+        gm_asprintf(&mac.x[MACRO_SERVICENOTIFICATIONNUMBER], "%d", svc->current_notification_number);
+    } else {
+        gm_asprintf(&mac.x[MACRO_HOSTNOTIFICATIONNUMBER], "%d", hst->current_notification_number);
+    }
+
+    /* the $NOTIFICATIONNUMBER$ macro is maintained for backward compatibility */
+    if(svc != NULL)
+        mac.x[MACRO_NOTIFICATIONNUMBER] = gm_strdup(mac.x[MACRO_SERVICENOTIFICATIONNUMBER]);
+    else
+        mac.x[MACRO_NOTIFICATIONNUMBER] = gm_strdup(mac.x[MACRO_HOSTNOTIFICATIONNUMBER]);
+
+    /* set the notification id macro */
+    if(svc != NULL) {
+        gm_asprintf(&mac.x[MACRO_SERVICENOTIFICATIONID], "%lu", svc->current_notification_id);
+    } else {
+        gm_asprintf(&mac.x[MACRO_HOSTNOTIFICATIONID], "%lu", hst->current_notification_id);
+    }
+
+    /* process any macros contained in the argument */
+#ifdef USENAGIOS3
+    process_macros(raw_command,&processed_command,0);
+#endif
+#if defined(USENAEMON) || defined(USENAGIOS4)
+    process_macros_r(&mac, raw_command, &processed_command, 0);
+#endif
+    if(processed_command==NULL){
+        gm_log( GM_LOG_ERROR, "Processed check command for host '%s' was NULL - aborting.\n",hst->name);
+        return NEBERROR_CALLBACKCANCEL;
+    }
+#if defined(USENAEMON)
+    /* naemon sends unescaped newlines from ex.: the LONGPLUGINOUTPUT macro, so we have to escape
+     * them ourselves: https://github.com/naemon/naemon-core/issues/153 */
+    tmp = replace_str(processed_command, "\n", "\\n");
+    free(processed_command);
+    processed_command = replace_str(tmp, "\n", "\\n");
+    free(tmp);
+#endif
+
+    temp_buffer[0]='\x0';
+    snprintf( temp_buffer,GM_BUFFERSIZE-1,
+                "type=notification\nstart_time=%i.0\ncore_time=%i.%i\ncontact=%s\ncommand_line=%s\nplugin_output=%s\nlong_plugin_output=%s\n\n\n",
+                (int)ds->start_time.tv_sec,
+                (int)core_time.tv_sec,
+                (int)core_time.tv_usec,
+                ds->contact_name,
+                processed_command,
+                ds->output,
+                svc != NULL ? svc->long_plugin_output : hst->long_plugin_output
+    );
+
+    if(add_job_to_queue( &client,
+                         mod_gm_opt->server_list,
+                         target_queue,
+                         NULL,
+                         temp_buffer,
+                         GM_JOB_PRIO_HIGH,
+                         GM_DEFAULT_JOB_RETRIES,
+                         mod_gm_opt->transportmode,
+                         FALSE
+                        ) == GM_OK) {
+        gm_log( GM_LOG_TRACE, "handle_notifications() finished successfully\n" );
+    }
+    else {
+        gm_log( GM_LOG_TRACE, "handle_notifications() finished unsuccessfully\n" );
+    }
+
+    /* clean up */
+    my_free(raw_command);
+    my_free(processed_command);
+
+    /* log the notification to program log file */
+    if (log_notifications == TRUE) {
+#if defined(USENAEMON) || defined(USENAGIOS4)
+        if(svc != NULL) {
+            if(ds->reason_type != NOTIFICATION_NORMAL) {
+                gm_asprintf(&log_buffer, "SERVICE NOTIFICATION: %s;%s;%s;%s ($SERVICESTATE$);%s;**$SERVICEOUTPUT$;$NOTIFICATIONAUTHOR$;$NOTIFICATIONCOMMENT$\n", ds->contact_name, svc->host_name, svc->description, notification_reason_name(ds->reason_type), ds->command_name);
+            } else {
+                gm_asprintf(&log_buffer, "SERVICE NOTIFICATION: %s;%s;%s;$SERVICESTATE$;%s;**$SERVICEOUTPUT$\n", ds->contact_name, svc->host_name, svc->description, ds->command_name);
+            }
+            process_macros_r(&mac, log_buffer, &processed_buffer, 0);
+            log_core(NSLOG_SERVICE_NOTIFICATION, processed_buffer);
+        } else {
+            if(ds->reason_type != NOTIFICATION_NORMAL) {
+                gm_asprintf(&log_buffer, "HOST NOTIFICATION: %s;%s;%s ($HOSTSTATE$);%s;**$HOSTOUTPUT$;$NOTIFICATIONAUTHOR$;$NOTIFICATIONCOMMENT$\n", ds->contact_name, hst->name, notification_reason_name(ds->reason_type), ds->command_name);
+            } else {
+                gm_asprintf(&log_buffer, "HOST NOTIFICATION: %s;%s;$HOSTSTATE$;%s;**$HOSTOUTPUT$\n", ds->contact_name, hst->name, ds->command_name);
+            }
+            process_macros_r(&mac, log_buffer, &processed_buffer, 0);
+            log_core(NSLOG_HOST_NOTIFICATION, processed_buffer);
+        }
+        free(log_buffer);
+        free(processed_buffer);
+#endif
+#if defined(USENAGIOS3)
+        if(svc != NULL) {
+            switch(ds->reason_type) {
+                case NOTIFICATION_CUSTOM:
+                    gm_asprintf(&log_buffer, "SERVICE NOTIFICATION: %s;%s;%s;CUSTOM ($SERVICESTATE$);%s;$SERVICEOUTPUT$;$NOTIFICATIONAUTHOR$;$NOTIFICATIONCOMMENT$\n", ds->contact_name, svc->host_name, svc->description, ds->command_name);
+                    break;
+                case NOTIFICATION_ACKNOWLEDGEMENT:
+                    gm_asprintf(&log_buffer, "SERVICE NOTIFICATION: %s;%s;%s;ACKNOWLEDGEMENT ($SERVICESTATE$);%s;$SERVICEOUTPUT$;$NOTIFICATIONAUTHOR$;$NOTIFICATIONCOMMENT$\n", ds->contact_name, svc->host_name, svc->description, ds->command_name);
+                    break;
+                case NOTIFICATION_FLAPPINGSTART:
+                    gm_asprintf(&log_buffer, "SERVICE NOTIFICATION: %s;%s;%s;FLAPPINGSTART ($SERVICESTATE$);%s;$SERVICEOUTPUT$\n", ds->contact_name, svc->host_name, svc->description, ds->command_name);
+                    break;
+                case NOTIFICATION_FLAPPINGSTOP:
+                    gm_asprintf(&log_buffer, "SERVICE NOTIFICATION: %s;%s;%s;FLAPPINGSTOP ($SERVICESTATE$);%s;$SERVICEOUTPUT$\n", ds->contact_name, svc->host_name, svc->description, ds->command_name);
+                    break;
+                case NOTIFICATION_FLAPPINGDISABLED:
+                    gm_asprintf(&log_buffer, "SERVICE NOTIFICATION: %s;%s;%s;FLAPPINGDISABLED ($SERVICESTATE$);%s;$SERVICEOUTPUT$\n", ds->contact_name, svc->host_name, svc->description, ds->command_name);
+                    break;
+                case NOTIFICATION_DOWNTIMESTART:
+                    gm_asprintf(&log_buffer, "SERVICE NOTIFICATION: %s;%s;%s;DOWNTIMESTART ($SERVICESTATE$);%s;$SERVICEOUTPUT$\n", ds->contact_name, svc->host_name, svc->description, ds->command_name);
+                    break;
+                case NOTIFICATION_DOWNTIMEEND:
+                    gm_asprintf(&log_buffer, "SERVICE NOTIFICATION: %s;%s;%s;DOWNTIMEEND ($SERVICESTATE$);%s;$SERVICEOUTPUT$\n", ds->contact_name, svc->host_name, svc->description, ds->command_name);
+                    break;
+                case NOTIFICATION_DOWNTIMECANCELLED:
+                    gm_asprintf(&log_buffer, "SERVICE NOTIFICATION: %s;%s;%s;DOWNTIMECANCELLED ($SERVICESTATE$);%s;$SERVICEOUTPUT$\n", ds->contact_name, svc->host_name, svc->description, ds->command_name);
+                    break;
+                default:
+                    gm_asprintf(&log_buffer, "SERVICE NOTIFICATION: %s;%s;%s;$SERVICESTATE$;%s;$SERVICEOUTPUT$\n", ds->contact_name, svc->host_name, svc->description, ds->command_name);
+                    break;
+            }
+            process_macros_r(&mac, log_buffer, &processed_buffer, 0);
+            write_to_all_logs(processed_buffer, NSLOG_SERVICE_NOTIFICATION);
+        } else {
+            switch(ds->reason_type) {
+                case NOTIFICATION_CUSTOM:
+                    gm_asprintf(&log_buffer, "HOST NOTIFICATION: %s;%s;CUSTOM ($HOSTSTATE$);%s;$HOSTOUTPUT$;$NOTIFICATIONAUTHOR$;$NOTIFICATIONCOMMENT$\n", ds->contact_name, hst->name, ds->command_name);
+                    break;
+                case NOTIFICATION_ACKNOWLEDGEMENT:
+                    gm_asprintf(&log_buffer, "HOST NOTIFICATION: %s;%s;ACKNOWLEDGEMENT ($HOSTSTATE$);%s;$HOSTOUTPUT$;$NOTIFICATIONAUTHOR$;$NOTIFICATIONCOMMENT$\n", ds->contact_name, hst->name, ds->command_name);
+                    break;
+                case NOTIFICATION_FLAPPINGSTART:
+                    gm_asprintf(&log_buffer, "HOST NOTIFICATION: %s;%s;FLAPPINGSTART ($HOSTSTATE$);%s;$HOSTOUTPUT$\n", ds->contact_name, hst->name, ds->command_name);
+                    break;
+                case NOTIFICATION_FLAPPINGSTOP:
+                    gm_asprintf(&log_buffer, "HOST NOTIFICATION: %s;%s;FLAPPINGSTOP ($HOSTSTATE$);%s;$HOSTOUTPUT$\n", ds->contact_name, hst->name, ds->command_name);
+                    break;
+                case NOTIFICATION_FLAPPINGDISABLED:
+                    gm_asprintf(&log_buffer, "HOST NOTIFICATION: %s;%s;FLAPPINGDISABLED ($HOSTSTATE$);%s;$HOSTOUTPUT$\n", ds->contact_name, hst->name, ds->command_name);
+                    break;
+                case NOTIFICATION_DOWNTIMESTART:
+                    gm_asprintf(&log_buffer, "HOST NOTIFICATION: %s;%s;DOWNTIMESTART ($HOSTSTATE$);%s;$HOSTOUTPUT$\n", ds->contact_name, hst->name, ds->command_name);
+                    break;
+                case NOTIFICATION_DOWNTIMEEND:
+                    gm_asprintf(&log_buffer, "HOST NOTIFICATION: %s;%s;DOWNTIMEEND ($HOSTSTATE$);%s;$HOSTOUTPUT$\n", ds->contact_name, hst->name, ds->command_name);
+                    break;
+                case NOTIFICATION_DOWNTIMECANCELLED:
+                    gm_asprintf(&log_buffer, "HOST NOTIFICATION: %s;%s;DOWNTIMECANCELLED ($HOSTSTATE$);%s;$HOSTOUTPUT$\n", ds->contact_name, hst->name, ds->command_name);
+                    break;
+                default:
+                    gm_asprintf(&log_buffer, "HOST NOTIFICATION: %s;%s;$HOSTSTATE$;%s;$HOSTOUTPUT$\n", ds->contact_name, hst->name, ds->command_name);
+                    break;
+            }
+            process_macros_r(&mac, log_buffer, &processed_buffer, 0);
+            log_core(NSLOG_HOST_NOTIFICATION, processed_buffer);
+        }
+        free(log_buffer);
+        free(processed_buffer);
+#endif
+    }
+
+
+
+#if defined(USENAEMON)
+    clear_volatile_macros_r(&mac);
+#endif
+
+    /* clear out all macros we created */
+    free(mac.x[MACRO_NOTIFICATIONNUMBER]);
+    free(mac.x[MACRO_SERVICENOTIFICATIONNUMBER]);
+    free(mac.x[MACRO_SERVICENOTIFICATIONID]);
+    free(mac.x[MACRO_NOTIFICATIONCOMMENT]);
+    free(mac.x[MACRO_NOTIFICATIONTYPE]);
+    free(mac.x[MACRO_NOTIFICATIONAUTHOR]);
+    free(mac.x[MACRO_NOTIFICATIONAUTHORNAME]);
+    free(mac.x[MACRO_NOTIFICATIONAUTHORALIAS]);
+    free(mac.x[MACRO_SERVICEACKAUTHORNAME]);
+    free(mac.x[MACRO_SERVICEACKAUTHORALIAS]);
+    free(mac.x[MACRO_SERVICEACKAUTHOR]);
+    free(mac.x[MACRO_SERVICEACKCOMMENT]);
+
+    /* this gets set in add_notification() */
+    free(mac.x[MACRO_NOTIFICATIONRECIPIENTS]);
 
     /* tell naemon to not execute */
     return NEBERROR_CALLBACKOVERRIDE;
@@ -726,7 +1066,7 @@ static int handle_host_check( int event_type, void *data ) {
 #if defined(USENAEMON)
         clear_volatile_macros_r(&mac);
 #endif
-        
+
         /* unset the execution flag */
         hst->is_executing=FALSE;
 
@@ -741,7 +1081,7 @@ static int handle_host_check( int event_type, void *data ) {
     my_free(raw_command);
     my_free(processed_command);
 #if defined(USENAEMON)
-        clear_volatile_macros_r(&mac);
+    clear_volatile_macros_r(&mac);
 #endif
 
     /* orphaned check - submit fake result to mark host as orphaned */
@@ -959,7 +1299,7 @@ static int handle_svc_check( int event_type, void *data ) {
 #if defined(USENAEMON)
     clear_volatile_macros_r(&mac);
 #endif
-    
+
     /* orphaned check - submit fake result to mark service as orphaned */
 #ifdef USENAGIOS
     if(mod_gm_opt->orphan_service_checks == GM_ENABLED && svc->check_options & CHECK_OPTION_ORPHAN_CHECK) {
@@ -1498,6 +1838,16 @@ void write_core_log(char *data) {
     return;
 }
 
+/* core log wrapper with type */
+void log_core(int type, char *data) {
+#ifdef USENAEMON
+    nm_log( type, data );
+#endif
+#ifdef USENAGIOS
+    write_to_all_logs( data, type );
+#endif
+    return;
+}
 
 /* return human readable name for neb type */
 char * nebtype2str(int i) {

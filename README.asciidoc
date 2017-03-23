@@ -1266,12 +1266,26 @@ Adjust your Mod-Gearman worker configuration and put 'test' in the
 in the 'hostgroup_test' queue.
 
 
-What About Notifications
-------------------------
-Notifications are currently not possible to distribute via
-Mod-Gearman. The Naemon core would have to be patched to support this.
-And i think its not very useful at all. So don't expect this feature
-to be implemented in the near future.
+Notifications
+-------------
+Starting with version 3.0.2 Mod-Gearman does distribute Notifications as well.
+All Notifications (except bypassed by local groups) are send into the notifications
+queue and processed from there.
+
+Mod-Gearman does not support environment macros, except two plugin output related
+ones.
+
+It does set
+
+    - NAGIOS_SERVICEOUTPUT
+    - NAGIOS_LONGSERVICEOUTPUT
+
+for service notifications and
+
+    - NAGIOS_HOSTOUTPUT
+    - NAGIOS_LONGHOSTOUTPUT
+
+for host notifications.
 
 
 Supported Dependencies

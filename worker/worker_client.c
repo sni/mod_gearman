@@ -262,6 +262,12 @@ void *get_job( gearman_job_st *job, void *context, size_t *result_size, gearman_
         } else if ( !strcmp( key, "command_line" ) ) {
             exec_job->command_line = gm_strdup(value);
             valid_lines++;
+        } else if ( !strcmp( key, "plugin_output" ) ) {
+            exec_job->output = gm_strdup(value);
+            valid_lines++;
+        } else if ( !strcmp( key, "long_plugin_output" ) ) {
+            exec_job->long_output = gm_strdup(value);
+            valid_lines++;
         }
     }
 
@@ -269,6 +275,21 @@ void *get_job( gearman_job_st *job, void *context, size_t *result_size, gearman_
     if(exec_job->next_check.tv_sec < 10000)
         write_debug_file(&decrypted_orig);
 #endif
+
+    /* put plugin_output and long_plugin_output into the environment
+     * which is especcially useful for notifications
+     */
+    if(exec_job->service_description != NULL) {
+        if(exec_job->output != NULL)
+            setenv("NAGIOS_SERVICEOUTPUT",exec_job->output,1);
+        if(exec_job->long_output != NULL)
+            setenv("NAGIOS_LONGSERVICEOUTPUT",exec_job->output,1);
+    } else {
+        if(exec_job->output != NULL)
+            setenv("NAGIOS_HOSTOUTPUT",exec_job->output,1);
+        if(exec_job->long_output != NULL)
+            setenv("NAGIOS_LONGHOSTOUTPUT",exec_job->output,1);
+    }
 
     if(valid_lines == 0) {
         gm_log( GM_LOG_ERROR, "discarded invalid job (%s), check your encryption settings\n", gearman_job_handle( job ) );
@@ -284,6 +305,15 @@ void *get_job( gearman_job_st *job, void *context, size_t *result_size, gearman_
     free(decrypted_orig);
     free(decrypted_data_c);
     free_job(exec_job);
+
+    /* clear the environment */
+    if(exec_job->service_description != NULL) {
+        setenv("NAGIOS_SERVICEOUTPUT",NULL,1);
+        setenv("NAGIOS_LONGSERVICEOUTPUT",NULL,1);
+    } else {
+        setenv("NAGIOS_HOSTOUTPUT",NULL,1);
+        setenv("NAGIOS_LONGHOSTOUTPUT",NULL,1);
+    }
 
     /* send finish signal to parent */
     set_state(GM_JOB_END);
@@ -316,6 +346,9 @@ void do_exec_job( ) {
     }
     else if ( !strcmp( exec_job->type, "eventhandler" ) ) {
         gm_log( GM_LOG_DEBUG, "got eventhandler job\n");
+    }
+    else if ( !strcmp( exec_job->type, "notification" ) ) {
+        gm_log( GM_LOG_DEBUG, "got notification job\n");
     }
 
     /* check proper timeout value */
@@ -394,6 +427,9 @@ int set_worker( gearman_worker_st *w ) {
 
         if(mod_gm_opt->events == GM_ENABLED)
             worker_add_function( w, "eventhandler", get_job );
+
+        if(mod_gm_opt->notifications == GM_ENABLED)
+            worker_add_function( w, "notification", get_job );
 
         while ( mod_gm_opt->hostgroups_list[x] != NULL ) {
             char buffer[GM_BUFFERSIZE];

@@ -106,6 +106,15 @@ int nebmodule_deinit( int flags, int reason );
  */
 void mod_gm_add_result_to_list(check_result * newcheckresult);
 
+/** wraps the nm_log / write_to_all_logs core logger
+ *
+ * @param[in] type - type of the log event
+ * @param[in] data - actual text to log
+ *
+ * @return nothing
+ */
+void log_core(int type, char *data);
+
 /**
  * @}
  */

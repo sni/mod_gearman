@@ -36,6 +36,11 @@ eventhandler=yes
 
 
 # defines if the module should distribute execution of
+# notifications.
+notifications=yes
+
+
+# defines if the module should distribute execution of
 # service checks.
 services=yes
 

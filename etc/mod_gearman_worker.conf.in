@@ -37,6 +37,10 @@ server=localhost:4730
 eventhandler=yes
 
 
+# defines if the worker should execute notifications.
+notifications=yes
+
+
 # defines if the worker should execute
 # service checks.
 services=yes

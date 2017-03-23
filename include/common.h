@@ -191,6 +191,7 @@ typedef struct mod_gm_opt_struct {
     int            hosts;                                   /**< flag wheter host checks are distributed or not */
     int            services;                                /**< flag wheter service checks are distributed or not */
     int            events;                                  /**< flag wheter eventhandlers are distributed or not */
+    int            notifications;                           /**< flag wheter notifications are distributed or not */
     int            job_timeout;                             /**< override job timeout */
     int            encryption;                              /**< flag wheter messages are encrypted */
     int            transportmode;                           /**< flag for the transportmode, base64 only or base64 and encrypted  */
@@ -273,6 +274,7 @@ typedef struct gm_job_struct {
     char         * type;                /**< type of this job */
     char         * result_queue;        /**< name of the result queue */
     char         * output;              /**< output from the executed command line (stdout) */
+    char         * long_output;         /**< used for sending long_plugin_output to notification workers */
     char         * error;               /**< errors from the executed command line (stderr) */
     char         * source;              /**< source of this check */
     int            return_code;         /**< return code for this job */

@@ -444,17 +444,19 @@ int verify_options(mod_gm_opt_t *opt) {
     /* nothing set by hand -> defaults */
     if( opt->set_queues_by_hand == 0 ) {
         gm_log( GM_LOG_DEBUG, "starting client with default queues\n" );
-        opt->hosts    = GM_ENABLED;
-        opt->services = GM_ENABLED;
-        opt->events   = GM_ENABLED;
+        opt->hosts          = GM_ENABLED;
+        opt->services       = GM_ENABLED;
+        opt->events         = GM_ENABLED;
+        opt->notifications  = GM_ENABLED;
     }
 
     /* do we have queues to serve? */
     if(   opt->servicegroups_num == 0
        && opt->hostgroups_num    == 0
-       && opt->hosts    == GM_DISABLED
-       && opt->services == GM_DISABLED
-       && opt->events   == GM_DISABLED
+       && opt->hosts         == GM_DISABLED
+       && opt->services      == GM_DISABLED
+       && opt->events        == GM_DISABLED
+       && opt->notifications == GM_DISABLED
       ) {
         gm_log( GM_LOG_ERROR, "starting worker without any queues is useless\n" );
         return(GM_ERROR);
@@ -501,6 +503,7 @@ void print_usage() {
     printf("       --hosts                                      \n");
     printf("       --services                                   \n");
     printf("       --eventhandler                               \n");
+    printf("       --notifications                              \n");
     printf("       --hostgroup=<name>                           \n");
     printf("       --servicegroup=<name>                        \n");
     printf("       --do_hostchecks                              \n");

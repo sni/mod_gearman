@@ -53,6 +53,7 @@ check_result *check_result_list;
 check_result check_result_info;
 #endif
 int process_performance_data;
+int log_notifications;
 
 void check_neb(char * nebargs);
 void check_neb(char * nebargs) {
