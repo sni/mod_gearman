@@ -180,6 +180,13 @@ orphan_host_checks=yes
 # Default: yes
 orphan_service_checks=yes
 
+# Set return code of orphaned checks.
+# 0 = OK
+# 1 = WARNING
+# 2 = CRITICAL
+# 3 = UNKNOWN
+orphan_return=2
+
 # When accept_clear_results is enabled, the NEB module will accept unencrypted
 # results too. This is quite useful if you have lots of passive checks and make
 # use of send_gearman/send_multi where you would have to spread the shared key to
