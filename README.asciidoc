@@ -759,6 +759,24 @@ Default is yes.
 ====
 
 
+orphan_return::
+Set return code of orphaned checks.
+Possible values are:
++
+--
+    * `0` - OK
+    * `1` - WARNING
+    * `2` - CRITICAL
+    * `3` - UNKNOWN
+--
++
+Default is 2.
++
+====
+    orphan_return=2
+====
+
+
 accept_clear_results::
 When enabled, the NEB module will accept unencrypted results too. This
 is quite useful if you have lots of passive checks and make use of
