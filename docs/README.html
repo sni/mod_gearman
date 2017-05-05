@@ -1785,6 +1785,48 @@ Default is yes.
 </div></div>
 </dd>
 <dt class="hdlist1">
+orphan_return
+</dt>
+<dd>
+<p>
+Set return code of orphaned checks.
+Possible values are:
+</p>
+<div class="openblock">
+<div class="content">
+<div class="ulist"><ul>
+<li>
+<p>
+<code>0</code> - OK
+</p>
+</li>
+<li>
+<p>
+<code>1</code> - WARNING
+</p>
+</li>
+<li>
+<p>
+<code>2</code> - CRITICAL
+</p>
+</li>
+<li>
+<p>
+<code>3</code> - UNKNOWN
+</p>
+</li>
+</ul></div>
+</div></div>
+<div class="paragraph"><p>Default is 2.</p></div>
+<div class="exampleblock">
+<div class="content">
+<div class="literalblock">
+<div class="content">
+<pre><code>orphan_return=2</code></pre>
+</div></div>
+</div></div>
+</dd>
+<dt class="hdlist1">
 accept_clear_results
 </dt>
 <dd>
@@ -2958,7 +3000,7 @@ Make sure all your worker have the Nagios-Plugins available under
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2017-03-23 14:33:37 CET
+ 2017-05-05 01:36:06 CEST
 </div>
 </div>
 </body>
