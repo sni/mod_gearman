@@ -155,6 +155,8 @@ void *get_job( gearman_job_st *job, void *context, size_t *result_size, gearman_
     char * decrypted_data_c;
     char * decrypted_orig;
     char *ptr;
+    int is_notification_job = FALSE;
+    int is_eventhandler_job = FALSE;
 
     /* reset timeout for now, will be set befor execution again */
     alarm(0);
@@ -276,20 +278,33 @@ void *get_job( gearman_job_st *job, void *context, size_t *result_size, gearman_
         write_debug_file(&decrypted_orig);
 #endif
 
+    if(!strcmp( exec_job->type, "notification")) {
+        is_notification_job = TRUE;
+    }
+    else if ( !strcmp( exec_job->type, "eventhandler" ) ) {
+        is_eventhandler_job = TRUE;
+    }
+
     /* put plugin_output and long_plugin_output into the environment
      * which is especcially useful for notifications
      */
-    if(exec_job->service_description != NULL) {
-        if(exec_job->output != NULL)
-            setenv("NAGIOS_SERVICEOUTPUT",exec_job->output,1);
-        if(exec_job->long_output != NULL)
-            setenv("NAGIOS_LONGSERVICEOUTPUT",exec_job->output,1);
-    } else {
-        if(exec_job->output != NULL)
-            setenv("NAGIOS_HOSTOUTPUT",exec_job->output,1);
-        if(exec_job->long_output != NULL)
-            setenv("NAGIOS_LONGHOSTOUTPUT",exec_job->output,1);
+    if(is_notification_job == TRUE) {
+        if(exec_job->service_description != NULL) {
+            if(exec_job->output != NULL)
+                setenv("NAGIOS_SERVICEOUTPUT",exec_job->output,1);
+            if(exec_job->long_output != NULL)
+                setenv("NAGIOS_LONGSERVICEOUTPUT",exec_job->output,1);
+        } else {
+            if(exec_job->output != NULL)
+                setenv("NAGIOS_HOSTOUTPUT",exec_job->output,1);
+            if(exec_job->long_output != NULL)
+                setenv("NAGIOS_LONGHOSTOUTPUT",exec_job->output,1);
+        }
     }
+
+    /* will be overwritten */
+    if(exec_job->output != NULL)
+        free(exec_job->output);
 
     if(valid_lines == 0) {
         gm_log( GM_LOG_ERROR, "discarded invalid job (%s), check your encryption settings\n", gearman_job_handle( job ) );
@@ -302,17 +317,30 @@ void *get_job( gearman_job_st *job, void *context, size_t *result_size, gearman_
     /* start listening to SIGTERMs */
     sigprocmask(SIG_UNBLOCK, &block_mask, NULL);
 
+    /* log errors for notifications and eventhandler */
+    if((is_notification_job || is_eventhandler_job) && exec_job->return_code != 0) {
+        gm_log( GM_LOG_ERROR, "%s %s exited with return code %d\n",
+               exec_job->service_description != NULL ? "service" : "host",
+               exec_job->type,
+               exec_job->return_code
+        );
+        gm_log( GM_LOG_ERROR, "cmd: %s\n", exec_job->output );
+        gm_log( GM_LOG_ERROR, "output: %s\n" );
+    }
+
     free(decrypted_orig);
     free(decrypted_data_c);
     free_job(exec_job);
 
-    /* clear the environment */
-    if(exec_job->service_description != NULL) {
-        setenv("NAGIOS_SERVICEOUTPUT",NULL,1);
-        setenv("NAGIOS_LONGSERVICEOUTPUT",NULL,1);
-    } else {
-        setenv("NAGIOS_HOSTOUTPUT",NULL,1);
-        setenv("NAGIOS_LONGHOSTOUTPUT",NULL,1);
+    if(is_notification_job == TRUE) {
+        /* clear the environment */
+        if(exec_job->service_description != NULL) {
+            setenv("NAGIOS_SERVICEOUTPUT",NULL,1);
+            setenv("NAGIOS_LONGSERVICEOUTPUT",NULL,1);
+        } else {
+            setenv("NAGIOS_HOSTOUTPUT",NULL,1);
+            setenv("NAGIOS_LONGHOSTOUTPUT",NULL,1);
+        }
     }
 
     /* send finish signal to parent */
