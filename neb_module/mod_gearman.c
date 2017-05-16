@@ -698,7 +698,31 @@ static int handle_notifications( int event_type, void *data ) {
 
     /* set the notification type macro */
     if(ds->reason_type != NOTIFICATION_NORMAL) {
+#if defined(USENAEMON) || defined(USENAGIOS4)
         mac.x[MACRO_NOTIFICATIONTYPE] = gm_strdup(notification_reason_name(ds->reason_type));
+#endif
+#ifdef USENAGIOS3
+        if(ds->reason_type == NOTIFICATION_ACKNOWLEDGEMENT)
+            mac.x[MACRO_NOTIFICATIONTYPE] = gm_strdup("ACKNOWLEDGEMENT");
+        else if(ds->reason_type == NOTIFICATION_FLAPPINGSTART)
+            mac.x[MACRO_NOTIFICATIONTYPE] = gm_strdup("FLAPPINGSTART");
+        else if(ds->reason_type == NOTIFICATION_FLAPPINGSTOP)
+            mac.x[MACRO_NOTIFICATIONTYPE] = gm_strdup("FLAPPINGSTOP");
+        else if(ds->reason_type == NOTIFICATION_FLAPPINGDISABLED)
+            mac.x[MACRO_NOTIFICATIONTYPE] = gm_strdup("FLAPPINGDISABLED");
+        else if(ds->reason_type == NOTIFICATION_DOWNTIMESTART)
+            mac.x[MACRO_NOTIFICATIONTYPE] = gm_strdup("DOWNTIMESTART");
+        else if(ds->reason_type == NOTIFICATION_DOWNTIMEEND)
+            mac.x[MACRO_NOTIFICATIONTYPE] = gm_strdup("DOWNTIMEEND");
+        else if(ds->reason_type == NOTIFICATION_DOWNTIMECANCELLED)
+            mac.x[MACRO_NOTIFICATIONTYPE] = gm_strdup("DOWNTIMECANCELLED");
+        else if(ds->reason_type == NOTIFICATION_CUSTOM)
+            mac.x[MACRO_NOTIFICATIONTYPE] = gm_strdup("CUSTOM");
+        else if(svc->current_state == STATE_OK)
+            mac.x[MACRO_NOTIFICATIONTYPE] = gm_strdup("RECOVERY");
+        else
+            mac.x[MACRO_NOTIFICATIONTYPE] = gm_strdup("PROBLEM");
+#endif
     }
     else if(svc != NULL && svc->current_state == STATE_OK) {
         mac.x[MACRO_NOTIFICATIONTYPE] = gm_strdup("RECOVERY");
