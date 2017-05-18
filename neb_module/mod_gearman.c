@@ -65,7 +65,7 @@ static pthread_mutex_t mod_gm_result_list_mutex = PTHREAD_MUTEX_INITIALIZER;
 void *gearman_module_handle=NULL;
 gearman_client_st client;
 
-int send_now, result_threads_running;
+int send_now, result_threads_running, result_thread_num[GM_LISTSIZE];
 pthread_t result_thr[GM_LISTSIZE];
 char target_queue[GM_BUFFERSIZE];
 char temp_buffer[GM_BUFFERSIZE];
@@ -1555,7 +1555,8 @@ static void start_threads(void) {
         int x;
         for(x = 0; x < mod_gm_opt->result_workers; x++) {
             result_threads_running++;
-            pthread_create ( &result_thr[x], NULL, result_worker, (void *)&result_threads_running);
+            result_thread_num[x] = result_threads_running;
+            pthread_create ( &result_thr[x], NULL, result_worker, (void *)&result_thread_num[x]);
         }
     }
 }
