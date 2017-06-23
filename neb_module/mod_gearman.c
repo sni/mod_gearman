@@ -640,27 +640,14 @@ static int handle_notifications( int event_type, void *data ) {
 
     /* grab the host macro variables */
     memset(&mac, 0, sizeof(mac));
-#ifdef USENAGIOS3
-    clear_volatile_macros();
-    grab_host_macros(hst);
-    if(svc != NULL)
-        grab_service_macros(svc);
-#endif
-#if defined(USENAEMON) || defined(USENAGIOS4)
     clear_volatile_macros_r(&mac);
     grab_host_macros_r(&mac, hst);
     if(svc != NULL)
         grab_service_macros_r(&mac, svc);
-#endif
 
     /* get the raw command line */
     temp_command = find_command(ds->command_name);
-#ifdef USENAGIOS3
-    get_raw_command_line(temp_command, ds->command_name, &raw_command,macro_options);
-#endif
-#if defined(USENAEMON) || defined(USENAGIOS4)
     get_raw_command_line_r(&mac, temp_command, ds->command_name, &raw_command, macro_options);
-#endif
     if(raw_command==NULL){
         gm_log( GM_LOG_ERROR, "Raw check command for host '%s' was NULL - aborting.\n",hst->name );
         return NEBERROR_CALLBACKCANCEL;
@@ -756,12 +743,7 @@ static int handle_notifications( int event_type, void *data ) {
     }
 
     /* process any macros contained in the argument */
-#ifdef USENAGIOS3
-    process_macros(raw_command,&processed_command,0);
-#endif
-#if defined(USENAEMON) || defined(USENAGIOS4)
     process_macros_r(&mac, raw_command, &processed_command, 0);
-#endif
     if(processed_command==NULL){
         gm_log( GM_LOG_ERROR, "Processed check command for host '%s' was NULL - aborting.\n",hst->name);
         return NEBERROR_CALLBACKCANCEL;
@@ -809,28 +791,6 @@ static int handle_notifications( int event_type, void *data ) {
 
     /* log the notification to program log file */
     if (log_notifications == TRUE) {
-#if defined(USENAEMON) || defined(USENAGIOS4)
-        if(svc != NULL) {
-            if(ds->reason_type != NOTIFICATION_NORMAL) {
-                gm_asprintf(&log_buffer, "SERVICE NOTIFICATION: %s;%s;%s;%s ($SERVICESTATE$);%s;**$SERVICEOUTPUT$;$NOTIFICATIONAUTHOR$;$NOTIFICATIONCOMMENT$\n", ds->contact_name, svc->host_name, svc->description, notification_reason_name(ds->reason_type), ds->command_name);
-            } else {
-                gm_asprintf(&log_buffer, "SERVICE NOTIFICATION: %s;%s;%s;$SERVICESTATE$;%s;**$SERVICEOUTPUT$\n", ds->contact_name, svc->host_name, svc->description, ds->command_name);
-            }
-            process_macros_r(&mac, log_buffer, &processed_buffer, 0);
-            log_core(NSLOG_SERVICE_NOTIFICATION, processed_buffer);
-        } else {
-            if(ds->reason_type != NOTIFICATION_NORMAL) {
-                gm_asprintf(&log_buffer, "HOST NOTIFICATION: %s;%s;%s ($HOSTSTATE$);%s;**$HOSTOUTPUT$;$NOTIFICATIONAUTHOR$;$NOTIFICATIONCOMMENT$\n", ds->contact_name, hst->name, notification_reason_name(ds->reason_type), ds->command_name);
-            } else {
-                gm_asprintf(&log_buffer, "HOST NOTIFICATION: %s;%s;$HOSTSTATE$;%s;**$HOSTOUTPUT$\n", ds->contact_name, hst->name, ds->command_name);
-            }
-            process_macros_r(&mac, log_buffer, &processed_buffer, 0);
-            log_core(NSLOG_HOST_NOTIFICATION, processed_buffer);
-        }
-        free(log_buffer);
-        free(processed_buffer);
-#endif
-#if defined(USENAGIOS3)
         if(svc != NULL) {
             switch(ds->reason_type) {
                 case NOTIFICATION_CUSTOM:
@@ -862,7 +822,12 @@ static int handle_notifications( int event_type, void *data ) {
                     break;
             }
             process_macros_r(&mac, log_buffer, &processed_buffer, 0);
+#if defined(USENAEMON) || defined(USENAGIOS4)
+            log_core(NSLOG_SERVICE_NOTIFICATION, processed_buffer);
+#endif
+#if defined(USENAGIOS3)
             write_to_all_logs(processed_buffer, NSLOG_SERVICE_NOTIFICATION);
+#endif
         } else {
             switch(ds->reason_type) {
                 case NOTIFICATION_CUSTOM:
@@ -894,18 +859,18 @@ static int handle_notifications( int event_type, void *data ) {
                     break;
             }
             process_macros_r(&mac, log_buffer, &processed_buffer, 0);
+#if defined(USENAEMON) || defined(USENAGIOS4)
             log_core(NSLOG_HOST_NOTIFICATION, processed_buffer);
+#endif
+#if defined(USENAGIOS3)
+            write_to_all_logs(processed_buffer, NSLOG_HOST_NOTIFICATION);
+#endif
         }
         free(log_buffer);
         free(processed_buffer);
-#endif
     }
 
-
-
-#if defined(USENAEMON)
     clear_volatile_macros_r(&mac);
-#endif
 
     /* clear out all macros we created */
     free(mac.x[MACRO_NOTIFICATIONNUMBER]);
