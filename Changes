@@ -1,6 +1,6 @@
 This file documents the revision history for mod_gearman.
 
-next:
+3.0.4 Fri Jun 23 16:35:26 CEST 2017
           - fix issue with notification macros
           - fix corrupted check_source
 
