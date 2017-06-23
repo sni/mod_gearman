@@ -363,8 +363,6 @@ static void move_results_to_core() {
         free(tmp_list);
         process_check_result(mod_gm_result_list->object_ptr);
         free_check_result(mod_gm_result_list->object_ptr);
-        info = mod_gm_result_list->object_ptr;
-        my_free(info->source);
         free(mod_gm_result_list->object_ptr);
         tmp_list = mod_gm_result_list;
     }
