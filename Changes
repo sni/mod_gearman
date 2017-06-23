@@ -1,5 +1,9 @@
 This file documents the revision history for mod_gearman.
 
+next:
+          - fix issue with notification macros
+          - fix corrupted check_source
+
 3.0.3 Mon Jun 12 11:32:11 CEST 2017
           - fix undefined symbol notification_reason_name in nagios3 module
 
