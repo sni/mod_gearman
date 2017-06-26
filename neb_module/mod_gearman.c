@@ -792,6 +792,9 @@ static int handle_notifications( int event_type, void *data ) {
     if (log_notifications == TRUE) {
         if(svc != NULL) {
             switch(ds->reason_type) {
+#if defined(USENAGIOS3)
+                case 8: /* icinga uses a different constant here, so just hardcode the 8 which is not in use in nagios3 right now */
+#endif
                 case NOTIFICATION_CUSTOM:
                     gm_asprintf(&log_buffer, "SERVICE NOTIFICATION: %s;%s;%s;CUSTOM ($SERVICESTATE$);%s;$SERVICEOUTPUT$;$NOTIFICATIONAUTHOR$;$NOTIFICATIONCOMMENT$\n", ds->contact_name, svc->host_name, svc->description, ds->command_name);
                     break;
@@ -829,6 +832,9 @@ static int handle_notifications( int event_type, void *data ) {
 #endif
         } else {
             switch(ds->reason_type) {
+#if defined(USENAGIOS3)
+                case 8: /* icinga uses a different constant here, so just hardcode the 8 which is not in use in nagios3 right now */
+#endif
                 case NOTIFICATION_CUSTOM:
                     gm_asprintf(&log_buffer, "HOST NOTIFICATION: %s;%s;CUSTOM ($HOSTSTATE$);%s;$HOSTOUTPUT$;$NOTIFICATIONAUTHOR$;$NOTIFICATIONCOMMENT$\n", ds->contact_name, hst->name, ds->command_name);
                     break;
