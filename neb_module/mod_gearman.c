@@ -352,7 +352,6 @@ static void move_results_to_core(struct nm_event_execution_properties *evprop) {
 static void move_results_to_core() {
 #endif
     objectlist *tmp_list = NULL;
-    check_result *info = NULL;
 #ifdef USENAEMON
     if(evprop->execution_type == EVENT_EXEC_NORMAL) {
 #endif
@@ -703,7 +702,9 @@ static int handle_notifications( int event_type, void *data ) {
             mac.x[MACRO_NOTIFICATIONTYPE] = gm_strdup("DOWNTIMECANCELLED");
         else if(ds->reason_type == NOTIFICATION_CUSTOM)
             mac.x[MACRO_NOTIFICATIONTYPE] = gm_strdup("CUSTOM");
-        else if(svc->current_state == STATE_OK)
+        else if(svc != NULL && svc->current_state == STATE_OK)
+            mac.x[MACRO_NOTIFICATIONTYPE] = gm_strdup("RECOVERY");
+        else if(svc == NULL && hst->current_state == STATE_OK)
             mac.x[MACRO_NOTIFICATIONTYPE] = gm_strdup("RECOVERY");
         else
             mac.x[MACRO_NOTIFICATIONTYPE] = gm_strdup("PROBLEM");

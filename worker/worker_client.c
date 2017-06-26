@@ -335,11 +335,11 @@ void *get_job( gearman_job_st *job, void *context, size_t *result_size, gearman_
     if(is_notification_job == TRUE) {
         /* clear the environment */
         if(exec_job->service_description != NULL) {
-            setenv("NAGIOS_SERVICEOUTPUT",NULL,1);
-            setenv("NAGIOS_LONGSERVICEOUTPUT",NULL,1);
+            unsetenv("NAGIOS_SERVICEOUTPUT");
+            unsetenv("NAGIOS_LONGSERVICEOUTPUT");
         } else {
-            setenv("NAGIOS_HOSTOUTPUT",NULL,1);
-            setenv("NAGIOS_LONGHOSTOUTPUT",NULL,1);
+            unsetenv("NAGIOS_HOSTOUTPUT");
+            unsetenv("NAGIOS_LONGHOSTOUTPUT");
         }
     }
 
