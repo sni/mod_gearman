@@ -637,7 +637,9 @@ static int handle_notifications( int event_type, void *data ) {
 
     /* grab the host macro variables */
     memset(&mac, 0, sizeof(mac));
+#if defined(USENAEMON) || defined(USENAGIOS4)
     clear_volatile_macros_r(&mac);
+#endif
     grab_host_macros_r(&mac, hst);
     if(svc != NULL)
         grab_service_macros_r(&mac, svc);
@@ -875,7 +877,15 @@ static int handle_notifications( int event_type, void *data ) {
         free(processed_buffer);
     }
 
+#if defined(USENAEMON) || defined(USENAGIOS4)
     clear_volatile_macros_r(&mac);
+#endif
+#if defined(USENAGIOS3)
+    clear_summary_macros_r(&mac);
+    clear_argv_macros_r(&mac);
+    clear_host_macros_r(&mac);
+    clear_service_macros_r(&mac);
+#endif
 
     /* clear out all macros we created */
     free(mac.x[MACRO_NOTIFICATIONNUMBER]);
