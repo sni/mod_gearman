@@ -1385,6 +1385,9 @@ char *replace_str(const char *str, const char *old, const char *new) {
     size_t oldlen = strlen(old);
     size_t count, retlen, newlen = strlen(new);
 
+    if (str == NULL)
+        return NULL;
+    
     if (oldlen != newlen) {
         for (count = 0, p = str; (q = strstr(p, old)) != NULL; p = q + oldlen)
             count++;
