@@ -1232,11 +1232,11 @@ After installing strawberry perl, you need to install the
 'PAR::Packer' module and run pp:
 
 --------------------------------------
-  pp -z 9 -M Class::Load::XS -M Moose -M Nagios::Passive::Base -M Params::Validate::XS -o send_gearman.exe send_gearman.pl
+  pp -z 9 -o send_gearman.exe send_gearman.pl
 --------------------------------------
 
 Or just use the prebuild one from labs.consol.de:
-http://mod-gearman.org/archive/send_gearman.exed[send_gearman.exe].
+http://mod-gearman.org/archive/send_gearman.zip[send_gearman.exe].
 
 
 
