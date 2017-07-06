@@ -201,16 +201,19 @@ void *get_results( gearman_job_st *job, void *context, size_t *result_size, gear
                 chk_result->output = gm_strdup("(null)");
             }
             else {
-#ifdef USENAGIOS
-                chk_result->output = gm_strdup( value );
-#endif
-#ifdef USENAEMON
-                /* replace newlines with actual newlines */
-                char *tmp = replace_str(value, "\\n", "\n");
-                /* replace backslashes with actual backslashes */
-                chk_result->output = replace_str(tmp, "\\\\", "\\");
-                free(tmp);
-#endif
+
+                char *tmp_newline = replace_str(value, "\\n", "\n");
+                if (tmp_newline == NULL)
+                    chk_result->output = gm_strdup("(null)");
+
+                char *tmp_backslash = replace_str(tmp_newline, "\\\\", "\\");
+                if (tmp_backslash == NULL)
+                    chk_result->output = gm_strdup("(null)");
+                else
+                    chk_result->output = gm_strdup( tmp_backslash );
+
+                free(tmp_newline);
+                free(tmp_backslash);
             }
         }
 
