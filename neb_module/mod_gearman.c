@@ -644,6 +644,9 @@ static int handle_notifications( int event_type, void *data ) {
     if(svc != NULL)
         grab_service_macros_r(&mac, svc);
 
+    /* get contact macros */
+    grab_contact_macros_r(&mac, ds->contact_ptr);
+
     /* get the raw command line */
     temp_command = find_command(ds->command_name);
     get_raw_command_line_r(&mac, temp_command, ds->command_name, &raw_command, macro_options);
@@ -883,6 +886,7 @@ static int handle_notifications( int event_type, void *data ) {
 #if defined(USENAGIOS3)
     clear_summary_macros_r(&mac);
     clear_argv_macros_r(&mac);
+    clear_contact_macros_r(&mac);
     clear_host_macros_r(&mac);
     clear_service_macros_r(&mac);
 #endif
