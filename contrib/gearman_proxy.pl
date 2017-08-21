@@ -49,6 +49,7 @@ use threads;
 use Pod::Usage;
 use Getopt::Long;
 use Data::Dumper;
+use Socket qw(IPPROTO_TCP SOL_SOCKET SO_KEEPALIVE TCP_KEEPIDLE TCP_KEEPINTVL TCP_KEEPCNT);
 
 our $pidFile;
 our $logFile;
@@ -116,19 +117,15 @@ if($pidFile) {
 my $workers = {};
 for my $conf (keys %{$queues}) {
     my($server,$queue) = split/\//, $conf, 2;
-    my $worker = $workers->{$server};
-    unless( defined $worker) {
-        $worker = Gearman::Worker->new(job_servers => [ $server ]);
-        $workers->{$server} = $worker;
-    }
-    $worker->register_function($queue => sub { forward_job($queues->{$conf}, @_) } );
+    $workers->{$server} = [] unless defined $workers->{$server};
+    push @{$workers->{$server}}, { from => $queue, to => $queues->{$conf} };
 }
 my $clients = {};
 
 # start all worker
 my $threads = [];
-for my $worker (values %{$workers}) {
-    push @{$threads}, threads->create('worker', $worker);
+for my $server (keys %{$workers}) {
+    push @{$threads}, threads->create('worker', $server, $workers->{$server});
 }
 
 # wait till worker finish (hopefully never)
@@ -142,8 +139,20 @@ exit;
 # SUBS
 #################################################
 sub worker {
-    my $worker = shift;
-    $worker->work while 1;
+    my($server, $queues) = @_;
+
+    while(1) {
+        my $worker = Gearman::Worker->new(job_servers => [ $server ]);
+        for my $queue (@{$queues}) {
+            $worker->register_function($queue->{'from'} => sub { forward_job($queue->{'to'}, @_) } );
+        }
+
+        _enable_tcp_keepalive($worker);
+
+        while(1) {
+            $worker->work;
+        }
+    }
 }
 
 #################################################
@@ -157,9 +166,26 @@ sub forward_job {
     unless( defined $client) {
         $client = Gearman::Client->new(job_servers => [ $server ]);
         $clients->{$server} = $client;
+        _enable_tcp_keepalive($client);
     }
 
     $client->dispatch_background($queue, $job->arg, { uniq => $job->handle });
+    return;
+}
+
+#################################################
+sub _enable_tcp_keepalive {
+    my($gearman_obj) = @_;
+
+    # set tcp keepalive for our worker
+    if($gearman_obj->{'sock_cache'}) {
+        for my $sock (values %{$gearman_obj->{'sock_cache'}}) {
+            setsockopt($sock, SOL_SOCKET,  SO_KEEPALIVE,   1);
+            setsockopt($sock, IPPROTO_TCP, TCP_KEEPIDLE,  10); # The time (in seconds) the connection needs to remain idle before TCP starts sending keepalive probes
+            setsockopt($sock, IPPROTO_TCP, TCP_KEEPINTVL,  5); # The time (in seconds) between individual keepalive probes.
+            setsockopt($sock, IPPROTO_TCP, TCP_KEEPCNT,    3); # The maximum number of keepalive probes TCP should send before dropping the connection
+        }
+    }
     return;
 }
 
