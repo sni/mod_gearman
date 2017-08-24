@@ -1,4 +1,4 @@
-/var/log/mod_gearman/worker.log {
+/var/log/mod_gearman/mod_gearman_worker.log {
     missingok
     notifempty
     sharedscripts
