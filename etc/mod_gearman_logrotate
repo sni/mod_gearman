@@ -1,9 +1,9 @@
-/var/log/mod_gearman/mod_gearman_worker.log {
+/var/log/mod_gearman/worker.log {
     missingok
     notifempty
     sharedscripts
     postrotate
-        /etc/init.d/mod_gearman_worker reload > /dev/null 2>/dev/null || true
+        /etc/init.d/mod-gearman-worker reload > /dev/null 2>/dev/null || true
     endscript
     compress
 }
