@@ -33,7 +33,9 @@ static const char *gearman_worker_source_name(void *source) {
     if(!source)
         return "unknown internal source (voodoo, perhaps?)";
 
-    return (char*) source;
+    // we cannot return the source here as it would be never freed
+    //return (char*) source;
+    return "Mod-Gearman Worker";
 }
 
 struct check_engine mod_gearman_check_engine = {
@@ -226,7 +228,7 @@ void *get_results( gearman_job_st *job, void *context, size_t *result_size, gear
             chk_result->service_description = gm_strdup( value );
         } else if ( !strcmp( key, "source" ) ) {
 #ifdef USENAEMON
-            chk_result->source = gm_strdup( value );
+            chk_result->source = value;
 #endif
         } else if ( !strcmp( key, "check_options" ) ) {
             chk_result->check_options = atoi( value );
