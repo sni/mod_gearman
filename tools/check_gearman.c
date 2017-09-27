@@ -28,17 +28,18 @@
 
 #include <worker_dummy_functions.c>
 
-int opt_verbose         =   0;
-int opt_timeout         =  10;
-int opt_job_warning     =  10;
-int opt_job_critical    = 100;
-int opt_worker_warning  =  25;
-int opt_worker_critical =  50;
-char * opt_queue        = NULL;
-char * opt_send         = NULL;
-char * opt_expect       = NULL;
-char * opt_unique_id    = NULL;
-int send_async          = 0;
+int opt_verbose          =   0;
+int opt_timeout          =  10;
+int opt_job_warning      =  10;
+int opt_job_critical     = 100;
+int opt_worker_warning   =  25;
+int opt_worker_critical  =  50;
+char * opt_queue         = NULL;
+char * opt_send          = NULL;
+char * opt_expect        = NULL;
+char * opt_unique_id     = NULL;
+int opt_crit_zero_worker = 0;
+int send_async           = 0;
 
 gm_server_t  * server_list[GM_LISTSIZE];
 int server_list_num = 0;
@@ -57,7 +58,7 @@ int main (int argc, char **argv) {
     /*
      * and parse command line
      */
-    while((opt = getopt(argc, argv, "vVhaH:t:w:c:W:C:q:s:e:p:u:")) != -1) {
+    while((opt = getopt(argc, argv, "vVhaH:t:w:c:W:C:q:s:e:p:u:x")) != -1) {
         switch(opt) {
             case 'h':   print_usage();
                         break;
@@ -86,6 +87,8 @@ int main (int argc, char **argv) {
             case 'q':   opt_queue = optarg;
                         break;
             case 'u':   opt_unique_id = optarg;
+                        break;
+            case 'x':   opt_crit_zero_worker = 1;
                         break;
             case '?':   printf("Error - No such option: `%c'\n\n", optopt);
                         print_usage();
@@ -142,6 +145,7 @@ void print_usage() {
     printf("              [ -W=<worker warning level>    ]  default: %i\n", opt_worker_warning);
     printf("              [ -C=<worker critical level>   ]  default: %i\n", opt_worker_critical);
     printf("              [ -q=<queue>                   ]\n");
+    printf("              [ -x=<crit on zero worker>     ]  default: %i\n", opt_crit_zero_worker);
     printf("\n");
     printf("\n");
     printf("to send a test job:\n");
@@ -155,6 +159,7 @@ void print_usage() {
     printf("              [ -V           print version   ]\n");
     printf("\n");
     printf(" - You may set thresholds to 0 to disable them.\n");
+    printf(" - You may use -x to enable critical exit if there is no worker for specified queue.\n");
     printf(" - Thresholds are only for server checks, worker checks are availability only\n");
     printf("\n");
     printf("perfdata format when checking job server:\n");
@@ -179,6 +184,8 @@ void print_usage() {
     printf("\n");
     printf("%%> ./check_gearman -H <job server hostname> -q worker_<worker hostname> -t 10 -s check\n");
     printf("check_gearman OK - host has 5 worker and is working on 0 jobs\n");
+    printf("%%> ./check_gearman -H <job server hostname> -q perfdata -t 10 -x\n");
+    printf("check_gearman CRITICAL - Queue perfdata has 155 jobs without any worker. |'perfdata_waiting'=155;10;100;0 'perfdata_running'=0 'perfdata_worker'=0;25;50;0\n");
     printf("\n");
 
     exit( STATE_UNKNOWN );
@@ -234,6 +241,12 @@ int check_server(char * server, in_port_t port) {
                 rc = STATE_CRITICAL;
                 buf = (char*)gm_malloc(GM_BUFFERSIZE);
                 snprintf(buf, GM_BUFFERSIZE, "Queue %s has %i worker. ", stats->function[x]->queue, stats->function[x]->worker );
+                strncat(message, buf, GM_BUFFERSIZE);
+            }
+            else if(opt_crit_zero_worker == 1 && stats->function[x]->worker == 0) {
+                rc = STATE_CRITICAL;
+                buf = (char*)gm_malloc(GM_BUFFERSIZE);
+                snprintf(buf, GM_BUFFERSIZE, "Queue %s has no worker. ", stats->function[x]->queue, stats->function[x]->worker );
                 strncat(message, buf, GM_BUFFERSIZE);
             }
             else if(opt_job_warning > 0 && stats->function[x]->waiting >= opt_job_warning) {
