@@ -21,7 +21,7 @@ It consists of three parts:
    servicegroups.
  * And you need at least one http://gearman.org[Gearman Job Server]
    running.
- * See the <<_common_scenarios,common scenarios>> for some examples.
+ * See the <<common-scenarios,common scenarios>> for some examples.
 
 
 Presentations
@@ -62,7 +62,7 @@ Support
  * https://groups.google.com/group/mod_gearman[google groups mailinglist]
  * http://www.monitoring-portal.org[german monitoring portal]
  * Mod-Gearman has been succesfully tested with latest Naemon.
-   See <<_supported_dependencies,Supported Dependencies>> for details.
+   See <<supported-dependencies,Supported Dependencies>> for details.
  * There are no known bugs at the moment. Let me know if you find one.
 
 
