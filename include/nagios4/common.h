@@ -19,13 +19,13 @@
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  ************************************************************************/
 
-#ifndef INCLUDE_COMMON_H
-#define INCLUDE_COMMON_H
+#ifndef NAGIOS_COMMON_H_INCLUDED
+#define NAGIOS_COMMON_H_INCLUDED
 
 #include "shared.h"
 
-#define PROGRAM_VERSION "4.1.1"
-#define PROGRAM_MODIFICATION_DATE "08-19-2015"
+#define PROGRAM_VERSION "4.3.4"
+#define PROGRAM_MODIFICATION_DATE "2017-08-24"
 
 NAGIOS_BEGIN_DECL
 
@@ -66,6 +66,7 @@ extern int obsess_over_hosts;
 extern int enable_timing_point;
 
 extern char *config_file_dir;
+extern char *website_url;
 
 #ifdef HAVE_TZNAME
 #ifdef CYGWIN
@@ -346,6 +347,10 @@ NAGIOS_END_DECL
 #define CMD_DEL_DOWNTIME_BY_HOSTGROUP_NAME              171
 #define CMD_DEL_DOWNTIME_BY_START_TIME_COMMENT          172
 
+/* new commands in Nagios 4.x found below... */
+#define CMD_CLEAR_HOST_FLAPPING_STATE                   173
+#define CMD_CLEAR_SVC_FLAPPING_STATE                    174
+
 /* custom command introduced in Nagios 3.x */
 #define CMD_CUSTOM_COMMAND                              999
 
@@ -528,4 +533,4 @@ extern const char *cmd_error_strerror(int error_code);
 #define MODATTR_CHECK_TIMEPERIOD                16384
 #define MODATTR_CUSTOM_VARIABLE                 32768
 #define MODATTR_NOTIFICATION_TIMEPERIOD         65536
-#endif /* INCLUDE_COMMON_H */
+#endif /* NAGIOS_COMMON_H_INCLUDED */

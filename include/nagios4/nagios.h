@@ -17,8 +17,8 @@
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  ************************************************************************/
 
-#ifndef _NAGIOS_H
-#define _NAGIOS_H
+#ifndef NAGIOS_NAGIOS_H_INCLUDED
+#define NAGIOS_NAGIOS_H_INCLUDED
 
 #ifndef NSCORE
 # define NSCORE
@@ -514,6 +514,7 @@ int close_command_file(void);					/* closes and deletes the external command fil
 
 
 /**** Monitoring/Event Handler Functions ****/
+int check_service_parents(service *svc);			/* checks service parents */
 int check_service_dependencies(service *, int);          	/* checks service dependencies */
 int check_host_dependencies(host *, int);                	/* checks host dependencies */
 void check_for_orphaned_services(void);				/* checks for orphaned services */
@@ -530,9 +531,9 @@ int my_system_r(nagios_macros *mac, char *, int, int *, double *, char **, int);
 void check_for_service_flapping(service *, int, int);	      /* determines whether or not a service is "flapping" between states */
 void check_for_host_flapping(host *, int, int, int);		/* determines whether or not a host is "flapping" between states */
 void set_service_flap(service *, double, double, double, int);	/* handles a service that is flapping */
-void clear_service_flap(service *, double, double, double);	/* handles a service that has stopped flapping */
+void clear_service_flap(service *, double, double, double, int);	/* handles a service that has stopped flapping */
 void set_host_flap(host *, double, double, double, int);		/* handles a host that is flapping */
-void clear_host_flap(host *, double, double, double);		/* handles a host that has stopped flapping */
+void clear_host_flap(host *, double, double, double, int);		/* handles a host that has stopped flapping */
 void enable_flap_detection_routines(void);			/* enables flap detection on a program-wide basis */
 void disable_flap_detection_routines(void);			/* disables flap detection on a program-wide basis */
 void enable_host_flap_detection(host *);			/* enables flap detection for a particular host */
@@ -566,7 +567,7 @@ int handle_async_service_check_result(service *, check_result *);
 int handle_host_state(host *);               			/* top level host state handler */
 
 
-/**** Common Check Fucntions *****/
+/**** Common Check Functions *****/
 int reap_check_results(void);
 
 
@@ -760,6 +761,8 @@ void enable_contact_host_notifications(contact *);      /* enables host notifica
 void disable_contact_host_notifications(contact *);     /* disables host notifications for a specific contact */
 void enable_contact_service_notifications(contact *);   /* enables service notifications for a specific contact */
 void disable_contact_service_notifications(contact *);  /* disables service notifications for a specific contact */
+void clear_host_flapping_state(host *);					/* clears the flapping state for a specific host */
+void clear_service_flapping_state(service *);			/* clears the flapping state for a specific service */
 
 int launch_command_file_worker(void);
 int shutdown_command_file_worker(void);
