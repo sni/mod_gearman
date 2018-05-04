@@ -70,7 +70,7 @@ int main (int argc, char **argv) {
             exit( STATE_UNKNOWN );
         }
     }
-    current_client_dup = &client;
+    current_client_dup = &client_dup;
 
     /* send result message */
     signal(SIGALRM, alarm_sighandler);
