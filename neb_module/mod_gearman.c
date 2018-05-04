@@ -177,9 +177,11 @@ int nebmodule_init( int flags, char *args, nebmodule *handle ) {
 
     /* create client */
     if ( create_client( mod_gm_opt->server_list, &client ) != GM_OK ) {
+        current_client = &client;
         gm_log( GM_LOG_ERROR, "cannot start client\n" );
         return NEB_ERROR;
     }
+    current_client = &client;
 
     /* register callback for process event where everything else starts */
     neb_register_callback( NEBCALLBACK_PROCESS_DATA, gearman_module_handle, 0, handle_process_events );

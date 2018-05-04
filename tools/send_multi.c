@@ -61,12 +61,16 @@ int main (int argc, char **argv) {
         printf( "send_multi UNKNOWN: cannot start client\n" );
         exit( STATE_UNKNOWN );
     }
+    current_client = &client;
 
     /* create duplicate client */
-    if ( create_client_dup( mod_gm_opt->dupserver_list, &client_dup ) != GM_OK ) {
-        printf( "send_multi UNKNOWN: cannot start client for duplicate server\n" );
-        exit( STATE_UNKNOWN );
+    if ( mod_gm_opt->dupserver_num > 0 ) {
+        if ( create_client( mod_gm_opt->dupserver_list, &client_dup ) != GM_OK ) {
+            printf( "send_multi UNKNOWN: cannot start client for duplicate server\n" );
+            exit( STATE_UNKNOWN );
+        }
     }
+    current_client_dup = &client_dup;
 
     /* send result message */
     signal(SIGALRM, alarm_sighandler);
