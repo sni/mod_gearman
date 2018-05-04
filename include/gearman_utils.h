@@ -50,7 +50,6 @@ gearman_client_st *current_client_dup;
 gearman_job_st *current_gearman_job;
 
 int create_client( gm_server_t * server_list[GM_LISTSIZE], gearman_client_st * client);
-int create_client_dup( gm_server_t * server_list[GM_LISTSIZE], gearman_client_st * client);
 int create_worker( gm_server_t * server_list[GM_LISTSIZE], gearman_worker_st * worker);
 int add_job_to_queue( gearman_client_st *client, gm_server_t * server_list[GM_LISTSIZE], char * queue, char * uniq, char * data, int priority, int retries, int transport_mode, int send_now );
 int worker_add_function( gearman_worker_st * worker, char * queue, gearman_worker_fn *function);

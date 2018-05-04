@@ -332,9 +332,11 @@ int check_worker(char * queue, char * to_send, char * expect) {
 
     /* create client */
     if ( create_client( server_list, &client ) != GM_OK ) {
+        current_client = &client;
         printf("%s UNKNOWN - cannot create gearman client\n", PLUGIN_NAME);
         return( STATE_UNKNOWN );
     }
+    current_client = &client;
     gearman_client_set_timeout(&client, (opt_timeout-1)*1000/server_list_num);
 
     while (1) {

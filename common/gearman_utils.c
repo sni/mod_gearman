@@ -68,35 +68,6 @@ int worker_add_function( gearman_worker_st * worker, char * queue, gearman_worke
 }
 
 
-/* create the gearman duplicate client */
-int create_client_dup( gm_server_t * server_list[GM_LISTSIZE], gearman_client_st *client ) {
-    gearman_return_t ret;
-    int x = 0;
-
-    gm_log( GM_LOG_TRACE, "create_client_dup()\n" );
-
-    signal(SIGPIPE, SIG_IGN);
-
-    client = gearman_client_create(client);
-    if ( client == NULL ) {
-        gm_log( GM_LOG_ERROR, "Memory allocation failure on client creation\n" );
-        return GM_ERROR;
-    }
-
-    while ( server_list[x] != NULL ) {
-        ret = gearman_client_add_server( client, server_list[x]->host, server_list[x]->port );
-        if ( ret != GEARMAN_SUCCESS ) {
-            gm_log( GM_LOG_ERROR, "client error: %s\n", gearman_client_error( client ) );
-            return GM_ERROR;
-        }
-        x++;
-    }
-
-    current_client_dup = client;
-
-    return GM_OK;
-}
-
 /* create the gearman client */
 int create_client( gm_server_t * server_list[GM_LISTSIZE], gearman_client_st *client ) {
     gearman_return_t ret;
@@ -123,7 +94,6 @@ int create_client( gm_server_t * server_list[GM_LISTSIZE], gearman_client_st *cl
     assert(x != 0);
 
     gearman_client_set_timeout( client, mod_gm_opt->gearman_connection_timeout );
-    current_client = client;
 
     return GM_OK;
 }

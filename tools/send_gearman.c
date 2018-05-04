@@ -61,12 +61,14 @@ int main (int argc, char **argv) {
         printf( "send_gearman UNKNOWN: cannot start client\n" );
         exit( STATE_UNKNOWN );
     }
+    current_client = &client;
 
     /* create duplicate client */
-    if ( create_client_dup( mod_gm_opt->dupserver_list, &client_dup ) != GM_OK ) {
+    if ( create_client( mod_gm_opt->dupserver_list, &client_dup ) != GM_OK ) {
         printf( "send_gearman UNKNOWN: cannot start client for duplicate server\n" );
         exit( STATE_UNKNOWN );
     }
+    current_client_dup = &client;
 
     /* send result message */
     signal(SIGALRM, alarm_sighandler);
