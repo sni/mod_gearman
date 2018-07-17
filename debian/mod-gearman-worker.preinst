@@ -6,6 +6,12 @@ GROUP="nagios"
 USER="nagios"
 DATADIR="/var/lib/mod_gearman"
 
+# Naemon user must exist for standalone worker
+NAEMON_GROUP="naemon"
+NAEMON_USER="naemon"
+NAEMON_DATADIR="/var/lib/naemon"
+
+
 # creating gearman group if he isn't already there
 if ! getent group $GROUP >/dev/null ; then
         # Adding system group
@@ -31,6 +37,34 @@ else
         # Take care of folks who installed when we set homedir to /nonexistent
         if getent passwd $USER | grep nonexistent >/dev/null ; then
                 usermod -d $DATADIR $USER
+        fi
+fi
+
+# creating naemon group if he isn't already there
+if ! getent group $NAEMON_GROUP >/dev/null ; then
+        # Adding system group
+        addgroup --system $NAEMON_GROUP >/dev/null
+fi
+
+# creating naemon user if he isn't already there
+if ! getent passwd $NAEMON_USER >/dev/null ; then
+        # Adding system user
+        adduser \
+          --system \
+          --disabled-login \
+          --ingroup $NAEMON_GROUP \
+          --home $NAEMON_DATADIR \
+          --gecos "naemon" \
+          --shell /bin/false \
+          $NAEMON_USER  >/dev/null
+else
+        if ! test -d $NAEMON_DATADIR ; then
+                mkdir -p $NAEMON_DATADIR
+                chown $NAEMON_USER $NAEMON_DATADIR
+        fi
+        # Take care of folks who installed when we set homedir to /nonexistent
+        if getent passwd $NAEMON_USER | grep nonexistent >/dev/null ; then
+                usermod -d $NAEMON_DATADIR $NAEMON_USER
         fi
 fi
 
