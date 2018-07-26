@@ -430,7 +430,7 @@ version:
 	if [ -z "$$NEWVERSION" ]; then NEWVERSION=$$(dialog --stdout --inputbox "New Version:" 0 0 "$(VERSION)"); fi; \
 	if [ -n "$$NEWVERSION" ] && [ "$$NEWVERSION" != "$(VERSION)" ]; then \
 		sed -ri "s/$(VERSION)/$$NEWVERSION/" include/common.h configure.ac support/mod-gearman.spec; \
-		sed -i Changes -e "s/$(VERSION)/$$NEWVERSION $(shell date)\n          - ...\n\n$(VERSION)/"; \
+		sed -i Changes -e "s/next:/$$NEWVERSION $(shell date)/"; \
 		$(MAKE) docs; \
 		if [ "x$$DEBEMAIL" = "x" ]; then \
 			DEBEMAIL="Sven Nierlein <sven@consol.de>"; \
@@ -438,7 +438,9 @@ version:
 		if [ "x$$DEBFULLNAME" = "x" ]; then \
 			DEBFULLNAME="Sven Nierlein"; \
 		fi; \
-		dch -b --newversion "$$NEWVERSION" --package "mod-gearman" -D "UNRELEASED" "new upstream release"; \
+		sed -e 's/UNRELEASED/unstable/g' -i debian/changelog; \
+		dch --newversion "$$NEWVERSION" --package "mod-gearman" -D "UNRELEASED" --urgency "low" "new upstream release"; \
+		sed -e 's/unstable/UNRELEASED/g' -i debian/changelog; \
 	fi;
 
 dailydist: cleandist

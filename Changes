@@ -1,10 +1,10 @@
 This file documents the revision history for mod_gearman.
 
-next:
+3.0.6 Thu Jul 26 10:05:56 CEST 2018
           - gearman_proxy.pl: set tcp keepalive
           - fix memory leak when using naemon
           - check_gearman: add -x option to alert queue without worker
-          - update nagios4 header files to match latest 4.3.4
+          - update nagios4 header files to version 4.3.4
 
 3.0.5 Mon Jul 10 21:55:17 CEST 2017
           - fix issue with contact macros (#120 Adrian Lopez)
