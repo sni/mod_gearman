@@ -49,3 +49,4 @@ mod_gearman_mini_epn
 perlxsi.c
 mod_gearman_mini_epn
 worker/daemon-systemd
+.vscode/
