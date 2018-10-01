@@ -143,6 +143,11 @@ load_limit15=0
 # Default: yes
 show_error_output=yes
 
+# Defines the return code for timed out checks. Accepted return codes
+# are 0 (Ok), 1 (Warning), 2 (Critical) and 3 (Unknown)
+# Default: 2
+#timeout_return=2
+
 # Use dup_results_are_passive to set if the duplicate result send to the dupserver
 # will be passive or active.
 # Default is yes (passive).
