@@ -1,5 +1,8 @@
 This file documents the revision history for mod_gearman.
 
+next:
+          - change timestamp format to double
+
 3.0.6 Thu Jul 26 10:05:56 CEST 2018
           - gearman_proxy.pl: set tcp keepalive
           - fix memory leak when using naemon

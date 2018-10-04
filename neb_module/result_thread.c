@@ -290,10 +290,10 @@ void *get_results( gearman_job_st *job, void *context, size_t *result_size, gear
     }
 
     /* calculate real latency */
-    now_f            = (double)now.tv_sec + (double)now.tv_usec / 1000000;
-    core_starttime_f = (double)core_start_time.tv_sec + (double)core_start_time.tv_usec / 1000000;
-    starttime_f      = (double)chk_result->start_time.tv_sec + (double)chk_result->start_time.tv_usec / 1000000;
-    finishtime_f     = (double)chk_result->finish_time.tv_sec + (double)chk_result->finish_time.tv_usec / 1000000;
+    now_f            = timeval2double(&now);
+    core_starttime_f = timeval2double(&core_start_time);
+    starttime_f      = timeval2double(&chk_result->start_time);
+    finishtime_f     = timeval2double(&chk_result->finish_time);
     exec_time        = finishtime_f - starttime_f;
     latency          = now_f - exec_time - core_starttime_f;
 

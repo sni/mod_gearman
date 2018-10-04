@@ -1185,37 +1185,14 @@ int read_keyfile(mod_gm_opt_t *opt) {
 
 /* convert to time */
 void string2timeval(char * value, struct timeval *t) {
-    char * v;
-    char * v_c;
-    char * s;
-    char * u;
-
+    double val;
     t->tv_sec  = 0;
     t->tv_usec = 0;
-
-    if(value == NULL)
-        return;
-
-    v = gm_strdup(value);
-    v_c = v;
-
-    s = strsep( &v, "." );
-    if(s == NULL) {
-        free(v_c);
+    if(value == NULL) {
         return;
     }
-
-    t->tv_sec  = strtoul(s,NULL,0);
-
-    u = strsep( &v, "\x0" );
-
-    if(u == NULL) {
-        free(v_c);
-        return;
-    }
-
-    t->tv_usec = strtoul(u,NULL,0);
-    free(v_c);
+    val = atof(value);
+    double2timeval(val, t);
 }
 
 /* convert to time */
@@ -1562,14 +1539,11 @@ void send_result_back(gm_job_t * exec_job) {
 
     gm_log( GM_LOG_TRACE, "queue: %s\n", exec_job->result_queue );
     temp_buffer1[0]='\x0';
-    snprintf( temp_buffer1, result_size-1, "host_name=%s\ncore_start_time=%i.%i\nstart_time=%i.%i\nfinish_time=%i.%i\nreturn_code=%i\nexited_ok=%i\nsource=%s\n",
+    snprintf( temp_buffer1, result_size-1, "host_name=%s\ncore_start_time=%lf\nstart_time=%lf\nfinish_time=%lf\nreturn_code=%i\nexited_ok=%i\nsource=%s\n",
               exec_job->host_name,
-              ( int )exec_job->next_check.tv_sec,
-              ( int )exec_job->next_check.tv_usec,
-              ( int )exec_job->start_time.tv_sec,
-              ( int )exec_job->start_time.tv_usec,
-              ( int )exec_job->finish_time.tv_sec,
-              ( int )exec_job->finish_time.tv_usec,
+              timeval2double(&exec_job->next_check),
+              timeval2double(&exec_job->start_time),
+              timeval2double(&exec_job->finish_time),
               exec_job->return_code,
               exec_job->exited_ok,
               exec_job->source

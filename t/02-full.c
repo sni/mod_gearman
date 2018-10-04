@@ -103,12 +103,11 @@ void test_servicecheck(int transportmode, char*cmd) {
     gettimeofday(&start_time,NULL);
     char temp_buffer[GM_BUFFERSIZE];
     temp_buffer[0]='\x0';
-    snprintf( temp_buffer,sizeof( temp_buffer )-1,"type=service\nresult_queue=%s\nhost_name=%s\nservice_description=%s\nstart_time=%i.%i\ntimeout=%d\ncheck_options=%i\nscheduled_check=%i\nreschedule_check=%i\nlatency=%f\ncommand_line=%s\n\n\n",
+    snprintf( temp_buffer,sizeof( temp_buffer )-1,"type=service\nresult_queue=%s\nhost_name=%s\nservice_description=%s\nstart_time=%lf\ntimeout=%d\ncheck_options=%i\nscheduled_check=%i\nreschedule_check=%i\nlatency=%f\ncommand_line=%s\n\n\n",
               GM_DEFAULT_RESULT_QUEUE,
               "host1",
               "service1",
-              ( int )start_time.tv_sec,
-              ( int )start_time.tv_usec,
+              timeval2double(&start_time),
               60,
               0,
               1,
@@ -129,12 +128,11 @@ void send_big_jobs(int transportmode) {
     gettimeofday(&start_time,NULL);
     char temp_buffer[GM_BUFFERSIZE];
     temp_buffer[0]='\x0';
-    snprintf( temp_buffer,sizeof( temp_buffer )-1,"type=service\nresult_queue=%s\nhost_name=%s\nservice_description=%s\nstart_time=%i.%i\ntimeout=%d\ncheck_options=%i\nscheduled_check=%i\nreschedule_check=%i\nlatency=%f\ncommand_line=%s\n\n\n",
+    snprintf( temp_buffer,sizeof( temp_buffer )-1,"type=service\nresult_queue=%s\nhost_name=%s\nservice_description=%s\nstart_time=%lf\ntimeout=%d\ncheck_options=%i\nscheduled_check=%i\nreschedule_check=%i\nlatency=%f\ncommand_line=%s\n\n\n",
               GM_DEFAULT_RESULT_QUEUE,
               "host1",
               "service1",
-              ( int )start_time.tv_sec,
-              ( int )start_time.tv_usec,
+              timeval2double(&start_time),
               60,
               0,
               1,

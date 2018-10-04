@@ -30,7 +30,7 @@ mod_gm_opt_t * renew_opts() {
 }
 
 int main(void) {
-    plan(69);
+    plan(73);
 
     /* lowercase */
     char test[100];
@@ -150,9 +150,15 @@ int main(void) {
 
     /* string2timeval */
     struct timeval t;
-    string2timeval("100.50", &t);
+    string2timeval("100.000050", &t);
     ok(t.tv_sec  == 100, "string2timeval 1");
     ok(t.tv_usec == 50, "string2timeval 2");
+    ok(timeval2double(&t) == 100.00005, "timeval2double 1");
+
+    string2timeval("100.5", &t);
+    ok(t.tv_sec  == 100, "string2timeval 1b");
+    ok(t.tv_usec == 500000, "string2timeval 2b");
+    ok(timeval2double(&t) == 100.5, "timeval2double 2");
 
     string2timeval("100", &t);
     ok(t.tv_sec  == 100, "string2timeval 3");

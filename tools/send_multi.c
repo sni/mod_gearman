@@ -221,13 +221,11 @@ int send_result() {
 
     gm_log( GM_LOG_TRACE, "queue: %s\n", mod_gm_opt->result_queue );
     temp_buffer1[0]='\x0';
-    snprintf( temp_buffer1, sizeof( temp_buffer1 )-1, "type=%s\nhost_name=%s\nstart_time=%i.%i\nfinish_time=%i.%i\nreturn_code=%i\nsource=send_multi\n",
+    snprintf( temp_buffer1, sizeof( temp_buffer1 )-1, "type=%s\nhost_name=%s\nstart_time=%lf\nfinish_time=%lf\nreturn_code=%i\nsource=send_multi\n",
               mod_gm_opt->active == GM_ENABLED ? "active" : "passive",
               mod_gm_opt->host,
-              (int)mod_gm_opt->starttime.tv_sec,
-              (int)mod_gm_opt->starttime.tv_usec,
-              (int)mod_gm_opt->finishtime.tv_sec,
-              (int)mod_gm_opt->finishtime.tv_usec,
+              timeval2double(&mod_gm_opt->starttime),
+              timeval2double(&mod_gm_opt->finishtime),
               mod_gm_opt->return_code
             );
 
@@ -433,13 +431,12 @@ int read_child_check(char *bufstart, char *bufend, struct timeval * end_time) {
 
     mod_gm_opt->starttime.tv_sec  = start_time.tv_sec;
     mod_gm_opt->starttime.tv_usec = start_time.tv_usec;
-    gm_log( GM_LOG_TRACE, "starttime: %d.%d\n", mod_gm_opt->starttime.tv_sec, mod_gm_opt->starttime.tv_usec);
-
+    gm_log( GM_LOG_TRACE, "starttime: %lf\n", timeval2double(&mod_gm_opt->starttime));
 
     /* end time is the execution time of send_multi itself */
     mod_gm_opt->finishtime.tv_sec  = end_time->tv_sec;
     mod_gm_opt->finishtime.tv_usec = end_time->tv_usec;
-    gm_log( GM_LOG_TRACE, "endtime: %d.%d\n", mod_gm_opt->finishtime.tv_sec, mod_gm_opt->finishtime.tv_usec);
+    gm_log( GM_LOG_TRACE, "endtime: %lf\n", timeval2double(&mod_gm_opt->finishtime));
 
     /* message */
     if ((attribute=read_multi_attribute(bufstart,bufend,"output")) == NULL)
@@ -531,4 +528,3 @@ void write_core_log(char *data) {
     printf("core logger is not available for tools: %s", data);
     return;
 }
-
