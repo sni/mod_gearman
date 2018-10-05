@@ -545,7 +545,7 @@ static int handle_eventhandler( int event_type, void *data ) {
 
     temp_buffer[0]='\x0';
     snprintf( temp_buffer,GM_BUFFERSIZE-1,
-                "type=eventhandler\nstart_time=%lf\ncore_time=%lf\ncommand_line=%s\n\n\n",
+                "type=eventhandler\nstart_time=%Lf\ncore_time=%Lf\ncommand_line=%s\n\n\n",
                 timeval2double(&core_time),
                 timeval2double(&core_time),
                 ds->command_line
@@ -764,7 +764,7 @@ static int handle_notifications( int event_type, void *data ) {
 
     temp_buffer[0]='\x0';
     snprintf( temp_buffer,GM_BUFFERSIZE-1,
-                "type=notification\nstart_time=%lf\ncore_time=%lf\ncontact=%s\ncommand_line=%s\nplugin_output=%s\nlong_plugin_output=%s\n\n\n",
+                "type=notification\nstart_time=%Lf\ncore_time=%Lf\ncontact=%s\ncommand_line=%s\nplugin_output=%s\nlong_plugin_output=%s\n\n\n",
                 timeval2double(&ds->start_time),
                 timeval2double(&core_time),
                 ds->contact_name,
@@ -1046,11 +1046,11 @@ static int handle_host_check( int event_type, void *data ) {
 
     gm_log( GM_LOG_TRACE, "cmd_line: %s\n", processed_command );
 
-    snprintf( temp_buffer,GM_BUFFERSIZE-1,"type=host\nresult_queue=%s\nhost_name=%s\nstart_time=%lf\nnext_check=%lf\ntimeout=%d\ncore_time=%lf\ncommand_line=%s\n\n\n",
+    snprintf( temp_buffer,GM_BUFFERSIZE-1,"type=host\nresult_queue=%s\nhost_name=%s\nstart_time=%ld.0\nnext_check=%ld.0\ntimeout=%d\ncore_time=%Lf\ncommand_line=%s\n\n\n",
               mod_gm_opt->result_queue,
               hst->name,
-              timeval2double(&hst->next_check),
-              timeval2double(&hst->next_check),
+              hst->next_check,
+              hst->next_check,
               host_check_timeout,
               timeval2double(&core_time),
               processed_command
@@ -1247,12 +1247,12 @@ static int handle_svc_check( int event_type, void *data ) {
 
     gm_log( GM_LOG_TRACE, "cmd_line: %s\n", processed_command );
 
-    snprintf( temp_buffer,GM_BUFFERSIZE-1,"type=service\nresult_queue=%s\nhost_name=%s\nservice_description=%s\nstart_time=%lf\nnext_check=%lf\ncore_time=%lf\ntimeout=%d\ncommand_line=%s\n\n\n",
+    snprintf( temp_buffer,GM_BUFFERSIZE-1,"type=service\nresult_queue=%s\nhost_name=%s\nservice_description=%s\nstart_time=%ld.0\nnext_check=%ld.0\ncore_time=%Lf\ntimeout=%d\ncommand_line=%s\n\n\n",
               mod_gm_opt->result_queue,
               svcdata->host_name,
               svcdata->service_description,
-              timeval2double(&svc->next_check),
-              timeval2double(&svc->next_check),
+              svc->next_check,
+              svc->next_check,
               timeval2double(&core_time),
               service_check_timeout,
               processed_command
@@ -1717,7 +1717,7 @@ int handle_export(int callback_type, void *data) {
         case NEBCALLBACK_PROCESS_DATA:                      /*  7 */
             npd    = (nebstruct_process_data *)data;
             type   = nebtype2str(npd->type);
-            snprintf( temp_buffer,GM_BUFFERSIZE-1, "{\"callback_type\":\"%s\",\"type\":\"%s\",\"flags\":%d,\"attr\":%d,\"timestamp\":%lf}",
+            snprintf( temp_buffer,GM_BUFFERSIZE-1, "{\"callback_type\":\"%s\",\"type\":\"%s\",\"flags\":%d,\"attr\":%d,\"timestamp\":%Lf}",
                     "NEBCALLBACK_PROCESS_DATA",
                     type,
                     npd->flags,
@@ -1730,7 +1730,7 @@ int handle_export(int callback_type, void *data) {
             nted       = (nebstruct_timed_event_data *)data;
             event_type = eventtype2str(nted->event_type);
             type       = nebtype2str(nted->type);
-            snprintf( temp_buffer,GM_BUFFERSIZE-1, "{\"callback_type\":\"%s\",\"event_type\":\"%s\",\"type\":\"%s\",\"flags\":%d,\"attr\":%d,\"timestamp\":%lf,\"recurring\":%d,\"run_time\":%d}",
+            snprintf( temp_buffer,GM_BUFFERSIZE-1, "{\"callback_type\":\"%s\",\"event_type\":\"%s\",\"type\":\"%s\",\"flags\":%d,\"attr\":%d,\"timestamp\":%Lf,\"recurring\":%d,\"run_time\":%d}",
                     "NEBCALLBACK_TIMED_EVENT_DATA",
                     event_type,
                     type,
@@ -1747,7 +1747,7 @@ int handle_export(int callback_type, void *data) {
             nld    = (nebstruct_log_data *)data;
             buffer = escapestring(nld->data);
             type   = nebtype2str(nld->type);
-            snprintf( temp_buffer,GM_BUFFERSIZE-1, "{\"callback_type\":\"%s\",\"type\":\"%s\",\"flags\":%d,\"attr\":%d,\"timestamp\":%lf,\"entry_time\":%d,\"data_type\":%d,\"data\":\"%s\"}",
+            snprintf( temp_buffer,GM_BUFFERSIZE-1, "{\"callback_type\":\"%s\",\"type\":\"%s\",\"flags\":%d,\"attr\":%d,\"timestamp\":%Lf,\"entry_time\":%d,\"data_type\":%d,\"data\":\"%s\"}",
                     "NEBCALLBACK_LOG_DATA",
                     type,
                     nld->flags,

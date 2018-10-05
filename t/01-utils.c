@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <math.h>
 
 #include <t/tap.h>
 #include <common.h>
@@ -153,12 +154,12 @@ int main(void) {
     string2timeval("100.000050", &t);
     ok(t.tv_sec  == 100, "string2timeval 1");
     ok(t.tv_usec == 50, "string2timeval 2");
-    ok(timeval2double(&t) == 100.00005, "timeval2double 1");
+    ok(fabs(timeval2double(&t) - 100.00005) < 0.00001, "timeval2double 1");
 
     string2timeval("100.5", &t);
     ok(t.tv_sec  == 100, "string2timeval 1b");
     ok(t.tv_usec == 500000, "string2timeval 2b");
-    ok(timeval2double(&t) == 100.5, "timeval2double 2");
+    ok(fabs(timeval2double(&t) - 100.5) < 0.00001, "timeval2double 2");
 
     string2timeval("100", &t);
     ok(t.tv_sec  == 100, "string2timeval 3");

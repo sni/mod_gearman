@@ -221,7 +221,7 @@ int send_result() {
 
     gm_log( GM_LOG_TRACE, "queue: %s\n", mod_gm_opt->result_queue );
     temp_buffer1[0]='\x0';
-    snprintf( temp_buffer1, sizeof( temp_buffer1 )-1, "type=%s\nhost_name=%s\nstart_time=%lf\nfinish_time=%lf\nreturn_code=%i\nsource=send_multi\n",
+    snprintf( temp_buffer1, sizeof( temp_buffer1 )-1, "type=%s\nhost_name=%s\nstart_time=%Lf\nfinish_time=%Lf\nreturn_code=%i\nsource=send_multi\n",
               mod_gm_opt->active == GM_ENABLED ? "active" : "passive",
               mod_gm_opt->host,
               timeval2double(&mod_gm_opt->starttime),
@@ -366,10 +366,10 @@ int read_multi_stream(FILE *stream) {
 
             /* discard whole buffer but continue */
             buflen=0L;
-            gm_log( GM_LOG_TRACE, "Error: no starting tag <CHILD> within buffer - discarding buffer, buflen now %ld bytes\n", buflen);
+            gm_log( GM_LOG_TRACE, "Error: no starting tag <CHILD> within buffer - discarding buffer, buflen now %Lf bytes\n", buflen);
         }
 
-        gm_log( GM_LOG_TRACE, "\ttrying to fill up buffer with %ld bytes from offset %ld\n", GM_BUFFERSIZE-buflen, buflen);
+        gm_log( GM_LOG_TRACE, "\ttrying to fill up buffer with %Lf bytes from offset %Lf\n", GM_BUFFERSIZE-buflen, buflen);
 
         /* read one block of data, or less bytes, if there is still data left */
         alarm(mod_gm_opt->timeout);
@@ -385,7 +385,7 @@ int read_multi_stream(FILE *stream) {
             /* adjust block len */
             buflen+=bytes_read;
         }
-        gm_log( GM_LOG_TRACE, "\tread %ld bytes, %ld bytes remaining in buffer\n", bytes_read, buflen);
+        gm_log( GM_LOG_TRACE, "\tread %Lf bytes, %Lf bytes remaining in buffer\n", bytes_read, buflen);
     } while (buflen > 0);
     buffer[buflen] = '\0';
     return count;
@@ -431,12 +431,12 @@ int read_child_check(char *bufstart, char *bufend, struct timeval * end_time) {
 
     mod_gm_opt->starttime.tv_sec  = start_time.tv_sec;
     mod_gm_opt->starttime.tv_usec = start_time.tv_usec;
-    gm_log( GM_LOG_TRACE, "starttime: %lf\n", timeval2double(&mod_gm_opt->starttime));
+    gm_log( GM_LOG_TRACE, "starttime: %Lf\n", timeval2double(&mod_gm_opt->starttime));
 
     /* end time is the execution time of send_multi itself */
     mod_gm_opt->finishtime.tv_sec  = end_time->tv_sec;
     mod_gm_opt->finishtime.tv_usec = end_time->tv_usec;
-    gm_log( GM_LOG_TRACE, "endtime: %lf\n", timeval2double(&mod_gm_opt->finishtime));
+    gm_log( GM_LOG_TRACE, "endtime: %Lf\n", timeval2double(&mod_gm_opt->finishtime));
 
     /* message */
     if ((attribute=read_multi_attribute(bufstart,bufend,"output")) == NULL)

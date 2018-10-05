@@ -1185,7 +1185,7 @@ int read_keyfile(mod_gm_opt_t *opt) {
 
 /* convert to time */
 void string2timeval(char * value, struct timeval *t) {
-    double val;
+    long double val;
     t->tv_sec  = 0;
     t->tv_usec = 0;
     if(value == NULL) {
@@ -1196,16 +1196,16 @@ void string2timeval(char * value, struct timeval *t) {
 }
 
 /* convert to time */
-void double2timeval(double value, struct timeval *t) {
+void double2timeval(long double value, struct timeval *t) {
     t->tv_sec  = (int)value;
-    t->tv_usec = (int)((value - (double)t->tv_sec) * 1000000);
+    t->tv_usec = (int)((value - (long double)t->tv_sec) * 1000000);
 }
 
 /* convert a timeval to double */
-double timeval2double(struct timeval * t) {
-    double val = 0.0;
+long double timeval2double(struct timeval * t) {
+    long double val = 0.0;
     if(t != NULL) {
-        val = (double)t->tv_sec + ((double)t->tv_usec / 1000000);
+        val = (long double)t->tv_sec + ((long double)t->tv_usec / 1000000);
     }
     return val;
 }
@@ -1539,7 +1539,7 @@ void send_result_back(gm_job_t * exec_job) {
 
     gm_log( GM_LOG_TRACE, "queue: %s\n", exec_job->result_queue );
     temp_buffer1[0]='\x0';
-    snprintf( temp_buffer1, result_size-1, "host_name=%s\ncore_start_time=%lf\nstart_time=%lf\nfinish_time=%lf\nreturn_code=%i\nexited_ok=%i\nsource=%s\n",
+    snprintf( temp_buffer1, result_size-1, "host_name=%s\ncore_start_time=%Lf\nstart_time=%Lf\nfinish_time=%Lf\nreturn_code=%i\nexited_ok=%i\nsource=%s\n",
               exec_job->host_name,
               timeval2double(&exec_job->next_check),
               timeval2double(&exec_job->start_time),

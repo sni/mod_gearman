@@ -246,7 +246,7 @@ int check_server(char * server, in_port_t port) {
             else if(opt_crit_zero_worker == 1 && stats->function[x]->worker == 0) {
                 rc = STATE_CRITICAL;
                 buf = (char*)gm_malloc(GM_BUFFERSIZE);
-                snprintf(buf, GM_BUFFERSIZE, "Queue %s has no worker. ", stats->function[x]->queue, stats->function[x]->worker );
+                snprintf(buf, GM_BUFFERSIZE, "Queue %s has no worker. ", stats->function[x]->queue);
                 strncat(message, buf, GM_BUFFERSIZE);
             }
             else if(opt_job_warning > 0 && stats->function[x]->waiting >= opt_job_warning) {

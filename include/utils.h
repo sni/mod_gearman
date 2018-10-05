@@ -260,7 +260,7 @@ void string2timeval(char * value, struct timeval * t);
  *
  * @return nothing
  */
-void double2timeval(double value, struct timeval * t);
+void double2timeval(long double value, struct timeval * t);
 
 /**
  * timeval2double
@@ -271,7 +271,7 @@ void double2timeval(double value, struct timeval * t);
  *
  * @return double value for this timeval structure
  */
-double timeval2double(struct timeval * t);
+long double timeval2double(struct timeval * t);
 
 /**
  * mod_gm_time_compare
