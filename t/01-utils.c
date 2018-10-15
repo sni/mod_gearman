@@ -185,7 +185,7 @@ int main(void) {
     mod_gm_opt = renew_opts();
     strcpy(test, "server=:4730");
     parse_args_line(mod_gm_opt, test, 0);
-    like(mod_gm_opt->server_list[0]->host, "localhost", "server=:4730");
+    like(mod_gm_opt->server_list[0]->host, "0.0.0.0", "server=:4730");
     ok(mod_gm_opt->server_list[0]->port == 4730, "server=:4730");
     ok(mod_gm_opt->server_num == 1, "server_number = %d", mod_gm_opt->server_num);
 
@@ -205,9 +205,9 @@ int main(void) {
     parse_args_line(mod_gm_opt, test, 0);
     like(mod_gm_opt->server_list[0]->host, "localhost", "duplicate server");
     ok(mod_gm_opt->server_list[0]->port == 4730, "duplicate server");
-    like(mod_gm_opt->server_list[1]->host, "host", "duplicate server");
-    ok(mod_gm_opt->server_list[1]->port == 4730, "duplicate server");
-    ok(mod_gm_opt->server_num == 2, "server_number = %d", mod_gm_opt->server_num);
+    like(mod_gm_opt->server_list[2]->host, "host", "duplicate server");
+    ok(mod_gm_opt->server_list[2]->port == 4730, "duplicate server");
+    ok(mod_gm_opt->server_num == 3, "server_number = %d", mod_gm_opt->server_num);
 
     /* escape newlines */
     char * escaped = gm_escape_newlines(" test\n", GM_DISABLED);

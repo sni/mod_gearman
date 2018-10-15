@@ -1661,7 +1661,7 @@ void add_server(int * server_num, gm_server_t * server_list[GM_LISTSIZE], char *
     }
     new_server = gm_malloc(sizeof(gm_server_t));
     if(!strcmp(host, "")) {
-        new_server->host = gm_strdup("localhost");
+        new_server->host = gm_strdup("0.0.0.0");
     } else {
         new_server->host = gm_strdup(host);
     }
