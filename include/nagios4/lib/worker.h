@@ -1,5 +1,5 @@
-#ifndef LIBNAGIOS_worker_h__
-#define LIBNAGIOS_worker_h__
+#ifndef LIBNAGIOS_WORKER_H_INCLUDED
+#define LIBNAGIOS_WORKER_H_INCLUDED
 #include <errno.h>
 #include <sys/socket.h>
 #include <stdio.h>
@@ -104,7 +104,7 @@ extern int send_kvvec(int sd, struct kvvec *kvv)
  * @param[in] ioc The io cache
  * @param[out] size Out buffer for buffer length
  * @param[in] flags Currently unused
- * @return A buffer from the iocache on succes; NULL on errors
+ * @return A buffer from the iocache on success; NULL on errors
  */
 extern char *worker_ioc2msg(iocache *ioc, unsigned long *size, int flags);
 

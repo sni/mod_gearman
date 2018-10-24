@@ -1,5 +1,5 @@
-#ifndef LIBNAGIOS_iocache_h__
-#define LIBNAGIOS_iocache_h__
+#ifndef LIBNAGIOS_IOCACHE_H_INCLUDED
+#define LIBNAGIOS_IOCACHE_H_INCLUDED
 #include <stdlib.h>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -60,7 +60,7 @@ extern unsigned long iocache_size(iocache *ioc);
 /**
  * Returns remaining read capacity of the io cache
  * @param ioc The io cache to operate on
- * @return The number of bytes available to read
+ * @return The number of bytes available to read, or -1 if ioc is null, -2 if the buffer is null, or -2 if the buffer size is <= 0
  */
 extern unsigned long iocache_capacity(iocache *ioc);
 

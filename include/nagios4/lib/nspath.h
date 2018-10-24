@@ -1,5 +1,5 @@
-#ifndef LIBNAGIOS_nspath_h__
-#define LIBNAGIOS_nspath_h__
+#ifndef LIBNAGIOS_NSPATH_H_INCLUDED
+#define LIBNAGIOS_NSPATH_H_INCLUDED
 #ifndef _GNU_SOURCE
 # ifndef NODOXY
 #  define _GNU_SOURCE 1
@@ -55,7 +55,7 @@ extern char *nspath_absolute(const char *rel_path, const char *base);
  * errno gets properly set in case of errors.
  * @param rel_path The path to transform
  * @param base The base we should operate relative to
- * @return Newly allocated canonical path on succes, NULL on errors
+ * @return Newly allocated canonical path on success, NULL on errors
  */
 extern char *nspath_real(const char *rel_path, const char *base);
 

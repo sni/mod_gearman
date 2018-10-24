@@ -1,5 +1,5 @@
-#ifndef LIBNAGIOS_fanout_h__
-#define LIBNAGIOS_fanout_h__
+#ifndef LIBNAGIOS_FANOUT_H_INCLUDED
+#define LIBNAGIOS_FANOUT_H_INCLUDED
 #include "lnag-utils.h"
 
 /**
@@ -22,7 +22,7 @@ typedef struct fanout_table fanout_table;
 
 /**
  * Create a fanout table
- * @param[in] size The size of the table. Preferrably a power of 2
+ * @param[in] size The size of the table. Preferably a power of 2
  * @return Pointer to a newly created table
  */
 extern fanout_table *fanout_create(unsigned long size);
