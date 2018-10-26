@@ -982,7 +982,7 @@ static int handle_host_check( int event_type, void *data ) {
 #ifdef USENAGIOS3
     adjust_host_check_attempt_3x(hst,TRUE);
 #endif
-#if defined(USENAEMON) || defined(USENAGIOS4)
+#ifdef USENAEMON
     adjust_host_check_attempt(hst,TRUE);
 #endif
 
