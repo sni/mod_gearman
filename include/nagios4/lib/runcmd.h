@@ -1,5 +1,5 @@
-#ifndef LIBNAGIOS_runcmd_h__
-#define LIBNAGIOS_runcmd_h__
+#ifndef NDO_LIBNAGIOS_RUNCMD_H_INCLUDED
+#define NDO_LIBNAGIOS_RUNCMD_H_INCLUDED
 #include <signal.h>
 
 /**
@@ -75,8 +75,7 @@ extern const char *runcmd_strerror(int code);
  * @param[in] iobregarg The "arg" value to pass to iobroker_register()
  */
 extern int runcmd_open(const char *cmd, int *pfd, int *pfderr, char **env,
-		void (*iobreg)(int, int, void *), void *iobregarg)
-	__attribute__((__nonnull__(1, 2, 3, 5, 6)));
+		void (*iobreg)(int, int, void *), void *iobregarg);
 
 /**
  * Close a command and return its exit status
@@ -103,6 +102,14 @@ extern int runcmd_close(int fd);
  * See the RUNCMD_HAS_* and their ilk to find out about the flag.
  */
 extern int runcmd_cmd2strv(const char *str, int *out_argc, char **out_argv);
+
+/**
+ * If you're using libnagios to execute a remote command, the 
+ * static pid_t pids is not freed after runcmd_open
+ * You can call this function when you're sure pids is no longer
+ * in use, to keep down memory leaks
+ */
+extern void runcmd_free_pids(void);
 
 /** @} */
 /* INCLUDE_runcmd_h__ */

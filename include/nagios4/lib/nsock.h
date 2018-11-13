@@ -1,5 +1,5 @@
-#ifndef LIBNAGIOS_nsock_h__
-#define LIBNAGIOS_nsock_h__
+#ifndef LIBNAGIOS_NSOCK_H_INCLUDED
+#define LIBNAGIOS_NSOCK_H_INCLUDED
 #include <errno.h>
 
 /**
@@ -45,7 +45,7 @@ extern const char *nsock_strerror(int code);
  *
  * @param path The path to connect to or create
  * @param flags Various options controlling the mode of the socket
- * @return An NSOCK_E macro on errors, the created socket on succes
+ * @return An NSOCK_E macro on errors, the created socket on success
  */
 extern int nsock_unix(const char *path, unsigned int flags);
 
@@ -73,4 +73,4 @@ extern int nsock_printf(int sd, const char *fmt, ...)
 	__attribute__((__format__(__printf__, 2, 3)));
 
 /** @} */
-#endif /* LIBNAGIOS_nsock_h__ */
+#endif /* LIBNAGIOS_NSOCK_H_INCLUDED */
