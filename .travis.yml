@@ -1,7 +1,6 @@
 language: c
-dist: trusty
+dist: xenial
 sudo: required
-group: deprecated-2017Q2
 compiler:
   - gcc
 before_install:
