@@ -982,9 +982,6 @@ static int handle_host_check( int event_type, void *data ) {
 #ifdef USENAGIOS3
     adjust_host_check_attempt_3x(hst,TRUE);
 #endif
-#ifdef USENAEMON
-    adjust_host_check_attempt(hst,TRUE);
-#endif
 
     temp_buffer[0]='\x0';
 
