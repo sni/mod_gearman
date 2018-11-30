@@ -1,7 +1,9 @@
 This file documents the revision history for mod_gearman.
 
-next:
+3.0.7 Fri Nov 30 17:03:35 CET 2018
           - change timestamp format to double
+          - add support for latest nagios core
+          - fix incrementing naemon host check attempts by 2 each check
 
 3.0.6 Thu Jul 26 10:05:56 CEST 2018
           - gearman_proxy.pl: set tcp keepalive
