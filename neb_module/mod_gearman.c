@@ -53,9 +53,6 @@ extern check_result   check_result_info;
 extern check_result * check_result_list;
 #endif
 extern int            log_notifications;
-extern int            verify_config;
-extern unsigned long  logging_options;
-extern char *         log_file;
 
 /* global variables */
 #ifdef USENAGIOS3
@@ -815,11 +812,6 @@ static int handle_notifications( int event_type, void *data ) {
     my_free(processed_command);
 
     /* log the notification to program log file */
-    if(svc != NULL) {
-        gm_log( GM_LOG_INFO, "service notification: %s - %s - log_notifications:%d, verify_config:%d, logging_options:%d, log_file:%s\n", svc->host_name, svc->description, log_notifications, verify_config, logging_options, log_file);
-    } else {
-        gm_log( GM_LOG_INFO, "host notification: %s - log_notifications:%d, verify_config:%d, logging_options:%d, log_file:%s\n", hst->name, log_notifications, verify_config, logging_options, log_file );
-    }
     if (log_notifications == TRUE) {
         if(svc != NULL) {
             switch(ds->reason_type) {
@@ -861,8 +853,6 @@ static int handle_notifications( int event_type, void *data ) {
 #if defined(USENAGIOS3)
             write_to_all_logs(processed_buffer, NSLOG_SERVICE_NOTIFICATION);
 #endif
-            gettimeofday(&now,NULL);
-            gm_log( GM_LOG_INFO, "[%lu] %s\n", now.tv_sec, processed_buffer);
         } else {
             switch(ds->reason_type) {
 #if defined(USENAGIOS3)
@@ -903,8 +893,6 @@ static int handle_notifications( int event_type, void *data ) {
 #if defined(USENAGIOS3)
             write_to_all_logs(processed_buffer, NSLOG_HOST_NOTIFICATION);
 #endif
-            gettimeofday(&now,NULL);
-            gm_log( GM_LOG_INFO, "[%lu] %s\n", now.tv_sec, processed_buffer);
         }
         free(log_buffer);
         free(processed_buffer);
