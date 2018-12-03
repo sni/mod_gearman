@@ -53,6 +53,9 @@ extern check_result   check_result_info;
 extern check_result * check_result_list;
 #endif
 extern int            log_notifications;
+extern int            verify_config;
+extern unsigned long  logging_options;
+extern char *         log_file;
 
 /* global variables */
 #ifdef USENAGIOS3
@@ -70,6 +73,23 @@ pthread_t result_thr[GM_LISTSIZE];
 char target_queue[GM_BUFFERSIZE];
 char temp_buffer[GM_BUFFERSIZE];
 char uniq[GM_BUFFERSIZE];
+
+#ifdef USENAEMON
+static const char *gearman_worker_source_name(void *source) {
+    if(!source)
+        return "unknown internal source (voodoo, perhaps?)";
+
+    // we cannot return the source here as it would be never freed
+    //return (char*) source;
+    return "Mod-Gearman Worker";
+}
+
+struct check_engine mod_gearman_check_engine = {
+    "Mod-Gearman",
+    gearman_worker_source_name,
+    NULL
+};
+#endif
 
 static void  register_neb_callbacks(void);
 static int   read_arguments( const char * );
@@ -590,6 +610,7 @@ static int handle_notifications( int event_type, void *data ) {
 #endif
     struct timeval core_time;
     gettimeofday(&core_time,NULL);
+    struct timeval now;
 
     gm_log( GM_LOG_TRACE, "handle_notifications(%i, data)\n", event_type );
 
@@ -794,6 +815,11 @@ static int handle_notifications( int event_type, void *data ) {
     my_free(processed_command);
 
     /* log the notification to program log file */
+    if(svc != NULL) {
+        gm_log( GM_LOG_INFO, "service notification: %s - %s - log_notifications:%d, verify_config:%d, logging_options:%d, log_file:%s\n", svc->host_name, svc->description, log_notifications, verify_config, logging_options, log_file);
+    } else {
+        gm_log( GM_LOG_INFO, "host notification: %s - log_notifications:%d, verify_config:%d, logging_options:%d, log_file:%s\n", hst->name, log_notifications, verify_config, logging_options, log_file );
+    }
     if (log_notifications == TRUE) {
         if(svc != NULL) {
             switch(ds->reason_type) {
@@ -835,6 +861,8 @@ static int handle_notifications( int event_type, void *data ) {
 #if defined(USENAGIOS3)
             write_to_all_logs(processed_buffer, NSLOG_SERVICE_NOTIFICATION);
 #endif
+            gettimeofday(&now,NULL);
+            gm_log( GM_LOG_INFO, "[%lu] %s\n", now.tv_sec, processed_buffer);
         } else {
             switch(ds->reason_type) {
 #if defined(USENAGIOS3)
@@ -875,6 +903,8 @@ static int handle_notifications( int event_type, void *data ) {
 #if defined(USENAGIOS3)
             write_to_all_logs(processed_buffer, NSLOG_HOST_NOTIFICATION);
 #endif
+            gettimeofday(&now,NULL);
+            gm_log( GM_LOG_INFO, "[%lu] %s\n", now.tv_sec, processed_buffer);
         }
         free(log_buffer);
         free(processed_buffer);
@@ -919,7 +949,7 @@ static int handle_host_check( int event_type, void *data ) {
     char *raw_command=NULL;
     char *processed_command=NULL;
     host * hst;
-#ifdef USENAGIOS
+#ifdef CHECK_OPTION_ORPHAN_CHECK
     check_result * chk_result;
     int check_options;
 #endif
@@ -969,7 +999,7 @@ static int handle_host_check( int event_type, void *data ) {
      * we have to do some host check logic here
      * taken from checks.c:
      */
-#ifdef USENAGIOS
+#ifdef CHECK_OPTION_ORPHAN_CHECK
     /* clear check options - we don't want old check options retained */
     check_options = hst->check_options;
     hst->check_options = CHECK_OPTION_NONE;
@@ -1098,7 +1128,12 @@ static int handle_host_check( int event_type, void *data ) {
         init_check_result(chk_result);
         chk_result->host_name           = gm_strdup( hst->name );
         chk_result->scheduled_check     = TRUE;
+#ifdef NAGIOS
         chk_result->reschedule_check    = TRUE;
+#endif
+#ifdef USENAEMON
+    chk_result->engine              = &mod_gearman_check_engine;
+#endif
         chk_result->output_file         = 0;
         chk_result->output_file_fp      = NULL;
         chk_result->output              = gm_strdup(temp_buffer);
@@ -1128,7 +1163,7 @@ static int handle_svc_check( int event_type, void *data ) {
     char *processed_command=NULL;
     nebstruct_service_check_data * svcdata;
     int prio = GM_JOB_PRIO_LOW;
-#ifdef USENAGIOS
+#ifdef CHECK_OPTION_ORPHAN_CHECK
     check_result * chk_result;
 #endif
     struct timeval core_time;
@@ -1314,7 +1349,12 @@ static int handle_svc_check( int event_type, void *data ) {
         chk_result->host_name           = gm_strdup( svc->host_name );
         chk_result->service_description = gm_strdup( svc->description );
         chk_result->scheduled_check     = TRUE;
+#ifdef NAGIOS
         chk_result->reschedule_check    = TRUE;
+#endif
+#ifdef USENAEMON
+    chk_result->engine              = &mod_gearman_check_engine;
+#endif
         chk_result->output_file         = 0;
         chk_result->output_file_fp      = NULL;
         chk_result->output              = gm_strdup(temp_buffer);
@@ -1833,7 +1873,7 @@ int handle_export(int callback_type, void *data) {
 /* core log wrapper */
 void write_core_log(char *data) {
 #ifdef USENAEMON
-    nm_log( NSLOG_INFO_MESSAGE, data );
+    nm_log( NSLOG_INFO_MESSAGE, "%s", data );
 #endif
 #ifdef USENAGIOS
     write_to_all_logs( data, NSLOG_INFO_MESSAGE );
@@ -1844,7 +1884,7 @@ void write_core_log(char *data) {
 /* core log wrapper with type */
 void log_core(int type, char *data) {
 #ifdef USENAEMON
-    nm_log( type, data );
+    nm_log( type, "%s", data );
 #endif
 #ifdef USENAGIOS
     write_to_all_logs( data, type );

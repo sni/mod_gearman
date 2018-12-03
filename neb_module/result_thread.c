@@ -28,23 +28,6 @@
 #include "mod_gearman.h"
 #include "gearman_utils.h"
 
-#ifdef USENAEMON
-static const char *gearman_worker_source_name(void *source) {
-    if(!source)
-        return "unknown internal source (voodoo, perhaps?)";
-
-    // we cannot return the source here as it would be never freed
-    //return (char*) source;
-    return "Mod-Gearman Worker";
-}
-
-struct check_engine mod_gearman_check_engine = {
-    "Mod-Gearman",
-    gearman_worker_source_name,
-    NULL
-};
-#endif
-
 /* cleanup and exit this thread */
 static void cancel_worker_thread (void * data) {
 
