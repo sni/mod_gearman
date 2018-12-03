@@ -115,11 +115,6 @@ void mod_gm_add_result_to_list(check_result * newcheckresult);
  */
 void log_core(int type, char *data);
 
-#ifdef USENAEMON
-static const char *gearman_worker_source_name(void *source);
-struct check_engine mod_gearman_check_engine;
-#endif
-
 /**
  * @}
  */

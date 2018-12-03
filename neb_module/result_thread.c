@@ -28,6 +28,23 @@
 #include "mod_gearman.h"
 #include "gearman_utils.h"
 
+#ifdef USENAEMON
+static const char *gearman_worker_source_name(void *source) {
+    if(!source)
+        return "unknown internal source (voodoo, perhaps?)";
+
+    // we cannot return the source here as it would be never freed
+    //return (char*) source;
+    return "Mod-Gearman Worker";
+}
+
+static struct check_engine mod_gearman_check_engine = {
+    "Mod-Gearman",
+    gearman_worker_source_name,
+    NULL
+};
+#endif
+
 /* cleanup and exit this thread */
 static void cancel_worker_thread (void * data) {
 
@@ -305,7 +322,7 @@ void *get_results( gearman_job_st *job, void *context, size_t *result_size, gear
             return NULL;
         }
 #endif
-        gm_log( GM_LOG_DEBUG, "service job completed: %s %s: %d\n", chk_result->host_name, chk_result->service_description, chk_result->return_code );
+        gm_log( GM_LOG_DEBUG, "service job completed: %s %s: exit %d, latency: %0.3f, exec_time: %0.3f\n", chk_result->host_name, chk_result->service_description, chk_result->return_code, chk_result->latency, exec_time );
     } else {
 #ifdef GM_DEBUG
         /* does this host exist */
@@ -325,7 +342,7 @@ void *get_results( gearman_job_st *job, void *context, size_t *result_size, gear
             }
         }
 #endif
-        gm_log( GM_LOG_DEBUG, "host job completed: %s: %d\n", chk_result->host_name, chk_result->return_code );
+        gm_log( GM_LOG_DEBUG, "host job completed: %s: exit %d, latency: %0.3f, exec_time: %0.3f\n", chk_result->host_name, chk_result->return_code, chk_result->latency, exec_time );
     }
 
     /* add result to result list */
