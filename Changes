@@ -2,6 +2,7 @@ This file documents the revision history for mod_gearman.
 
 next:
           - code cleanup, use INITIATE events for naemon and nagios 4
+            - requires at least naemon 1.0.9, will result in memory leaks otherwise
           - fix orphaned checks in naemon
 
 3.0.7 Fri Nov 30 17:03:35 CET 2018
