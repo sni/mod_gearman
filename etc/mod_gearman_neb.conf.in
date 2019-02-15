@@ -137,7 +137,7 @@ localservicegroups=
 # by a service custom variable. Set the value of your custom
 # variable to 'local' to bypass Mod-Gearman (Same behaviour as in
 # localhostgroups/localservicegroups).
-#queue_custom_variable=WORKER
+queue_custom_variable=WORKER
 
 # Enable or disable result worker thread. The default is one, but
 # you can set it to zero to disabled result workers, for example
