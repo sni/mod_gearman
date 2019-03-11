@@ -1123,6 +1123,7 @@ Nagios box. The amount of worker boxes depends on your check types.
 ++++
 <a title="mod gearman performance" rel="lightbox[mod_gm]" href="http://labs.consol.de/nagios/mod-gearman/mod_gearman_performance_2.png"><img src="http://labs.consol.de/nagios/mod-gearman/mod_gearman_performance_2.png" alt="mod_gearman performance" width="473" height="122" style="float:none" /></a>
 <a title="mod gearman performance" rel="lightbox[mod_gm]" href="http://labs.consol.de/nagios/mod-gearman/mod_gearman_performance_1.png"><img src="http://labs.consol.de/nagios/mod-gearman/mod_gearman_performance_1.png" alt="mod_gearman performance" width="424" height="176" style="float:none" /></a>
+<a href="https://app.fossa.io/projects/git%2Bgithub.com%2Fsni%2Fmod_gearman?ref=badge_shield" alt="FOSSA Status"><img src="https://app.fossa.io/api/projects/git%2Bgithub.com%2Fsni%2Fmod_gearman.svg?type=shield"/></a>
 ++++
 
 See this article about benchmarks with https://labs.consol.de/mod-gearman/nagios/omd/2012/10/23/monitoring-core-benchmarks.html[Nagios3, Nagios4 and Mod-Gearman].
@@ -1435,3 +1436,7 @@ Archive
 * http://mod-gearman.org/archive/mod_gearman-0.6.tar.gz[version 0.6 - October 13 2010]
 * http://mod-gearman.org/archive/mod_gearman-0.5.tar.gz[version 0.5 - October 01 2010]
 * http://mod-gearman.org/archive/mod_gearman-0.4.tar.gz[version 0.4 - September 25 2010]
+
+
+## License
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fsni%2Fmod_gearman.svg?type=large)](https://app.fossa.io/projects/git%2Bgithub.com%2Fsni%2Fmod_gearman?ref=badge_large)
