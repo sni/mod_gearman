@@ -67,7 +67,7 @@ gearman_client_st client;
 
 int send_now, result_threads_running;
 pthread_t result_thr[GM_LISTSIZE];
-char target_queue[GM_BUFFERSIZE];
+char target_queue[GM_SMALLBUFSIZE];
 char temp_buffer[GM_BUFFERSIZE];
 char uniq[GM_BUFFERSIZE];
 
@@ -555,7 +555,7 @@ static int handle_eventhandler( int event_type, void *data ) {
 
     if(mod_gm_opt->route_eventhandler_like_checks != GM_ENABLED || !strcmp( target_queue, "host" ) || !strcmp( target_queue, "service" )) {
         target_queue[0] = '\x0';
-        snprintf( target_queue, GM_BUFFERSIZE-1, "eventhandler" );
+        snprintf( target_queue, GM_SMALLBUFSIZE-1, "eventhandler" );
     }
 
     gm_log( GM_LOG_DEBUG, "eventhandler for queue %s\n", target_queue );
@@ -607,7 +607,6 @@ static int handle_notifications( int event_type, void *data ) {
 #endif
     struct timeval core_time;
     gettimeofday(&core_time,NULL);
-    struct timeval now;
 
     gm_log( GM_LOG_TRACE, "handle_notifications(%i, data)\n", event_type );
 
@@ -652,7 +651,7 @@ static int handle_notifications( int event_type, void *data ) {
         return NEB_OK;
     }
     target_queue[0] = '\x0';
-    snprintf( target_queue, GM_BUFFERSIZE-1, "notification" );
+    snprintf( target_queue, GM_SMALLBUFSIZE-1, "notification" );
 
     /* grab the host macro variables */
     memset(&mac, 0, sizeof(mac));
@@ -1415,7 +1414,7 @@ static void set_target_queue( host *hst, service *svc ) {
                         return;
                     }
                     gm_log( GM_LOG_TRACE, "got target queue from service custom variable: %s\n", temp_customvariablesmember->variable_value );
-                    snprintf( target_queue, GM_BUFFERSIZE-1, "%s", temp_customvariablesmember->variable_value );
+                    snprintf( target_queue, GM_SMALLBUFSIZE-1, "%s", temp_customvariablesmember->variable_value );
                     return;
                 }
             }
@@ -1430,7 +1429,7 @@ static void set_target_queue( host *hst, service *svc ) {
                     return;
                 }
                 gm_log( GM_LOG_TRACE, "got target queue from host custom variable: %s\n", temp_customvariablesmember->variable_value );
-                snprintf( target_queue, GM_BUFFERSIZE-1, "%s", temp_customvariablesmember->variable_value );
+                snprintf( target_queue, GM_SMALLBUFSIZE-1, "%s", temp_customvariablesmember->variable_value );
                 return;
             }
         }
@@ -1466,7 +1465,7 @@ static void set_target_queue( host *hst, service *svc ) {
             servicegroup * temp_servicegroup = find_servicegroup( mod_gm_opt->servicegroups_list[x] );
             if ( temp_servicegroup != NULL && is_service_member_of_servicegroup( temp_servicegroup,svc )==TRUE ) {
                 gm_log( GM_LOG_TRACE, "service is member of servicegroup: %s\n", mod_gm_opt->servicegroups_list[x] );
-                snprintf( target_queue, GM_BUFFERSIZE-1, "servicegroup_%s", mod_gm_opt->servicegroups_list[x] );
+                snprintf( target_queue, GM_SMALLBUFSIZE-1, "servicegroup_%s", mod_gm_opt->servicegroups_list[x] );
                 return;
             }
             x++;
@@ -1479,7 +1478,7 @@ static void set_target_queue( host *hst, service *svc ) {
         hostgroup * temp_hostgroup = find_hostgroup( mod_gm_opt->hostgroups_list[x] );
         if ( temp_hostgroup != NULL && is_host_member_of_hostgroup( temp_hostgroup,hst )==TRUE ) {
             gm_log( GM_LOG_TRACE, "server is member of hostgroup: %s\n", mod_gm_opt->hostgroups_list[x] );
-            snprintf( target_queue, GM_BUFFERSIZE-1, "hostgroup_%s", mod_gm_opt->hostgroups_list[x] );
+            snprintf( target_queue, GM_SMALLBUFSIZE-1, "hostgroup_%s", mod_gm_opt->hostgroups_list[x] );
             return;
         }
         x++;
@@ -1488,14 +1487,14 @@ static void set_target_queue( host *hst, service *svc ) {
     if ( svc ) {
         /* pass into the general service queue */
         if ( mod_gm_opt->services == GM_ENABLED && svc ) {
-            snprintf( target_queue, GM_BUFFERSIZE-1, "service" );
+            snprintf( target_queue, GM_SMALLBUFSIZE-1, "service" );
             return;
         }
     }
     else {
         /* pass into the general host queue */
         if ( mod_gm_opt->hosts == GM_ENABLED ) {
-            snprintf( target_queue, GM_BUFFERSIZE-1, "host" );
+            snprintf( target_queue, GM_SMALLBUFSIZE-1, "host" );
             return;
         }
     }

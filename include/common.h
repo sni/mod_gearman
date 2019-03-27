@@ -59,6 +59,7 @@
 #define GM_ENABLED                      1
 #define GM_DISABLED                     0
 #define GM_BUFFERSIZE               65536
+#define GM_SMALLBUFSIZE              1024
 #define GM_MAX_OUTPUT            10485760   /* limit plugin output size to 10mb */
 #define GM_LISTSIZE                   512
 #define GM_NEBTYPESSIZE                33   /* maximum number of neb types */
@@ -296,7 +297,7 @@ typedef struct gm_job_struct {
 /** options structure */
 mod_gm_opt_t *mod_gm_opt;
 gm_job_t * current_job;
-char hostname[GM_BUFFERSIZE];
+char hostname[GM_SMALLBUFSIZE];
 
 /*
  * @}

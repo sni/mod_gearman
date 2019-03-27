@@ -63,7 +63,7 @@ void worker_client(int worker_mode, int indx, int shid) {
     shmid           = shid;
     current_pid     = getpid();
 
-    gethostname(hostname, GM_BUFFERSIZE-1);
+    gethostname(hostname, GM_SMALLBUFSIZE-1);
 
     /* create worker */
     if(set_worker(&worker) != GM_OK) {
