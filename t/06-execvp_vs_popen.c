@@ -65,7 +65,7 @@ int main (int argc, char **argv, char **env) {
     plan(3);
 
     /* set hostname */
-    gethostname(hostname, GM_BUFFERSIZE-1);
+    gethostname(hostname, GM_SMALLBUFSIZE-1);
 
     /* create options structure and set debug level */
     mod_gm_opt = malloc(sizeof(mod_gm_opt_t));

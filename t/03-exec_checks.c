@@ -29,7 +29,7 @@ int main (int argc, char **argv, char **env) {
     plan(80);
 
     /* set hostname and cwd */
-    gethostname(hostname, GM_BUFFERSIZE-1);
+    gethostname(hostname, GM_SMALLBUFSIZE-1);
     if(!getcwd(cwd, sizeof(cwd)) != NULL)
        perror("getcwd() error");
 

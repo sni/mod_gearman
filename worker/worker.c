@@ -375,7 +375,7 @@ int parse_arguments(int argc, char **argv) {
 
     /* set identifier to hostname unless specified */
     if(mod_gm_new_opt->identifier == NULL) {
-        gethostname(hostname, GM_BUFFERSIZE-1);
+        gethostname(hostname, GM_SMALLBUFSIZE-1);
         mod_gm_new_opt->identifier = gm_strdup(hostname);
     }
 
