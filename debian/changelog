@@ -1,14 +1,20 @@
+mod-gearman (3.0.9) UNRELEASED; urgency=low
+
+  * new upstream release
+
+ -- Sven Nierlein <sven@consol.de>  Tue, 16 Apr 2019 17:18:02 +0200
+
 mod-gearman (3.0.8) UNRELEASED; urgency=low
 
   * new upstream release
 
- -- sven <sven@mo.nierlein.de>  Fri, 15 Feb 2019 15:22:09 +0100
+ -- Sven Nierlein <sven@consol.de>  Fri, 15 Feb 2019 15:22:09 +0100
 
 mod-gearman (3.0.7) UNRELEASED; urgency=low
 
   * new upstream release
 
- -- sven <sven@mo.nierlein.de>  Fri, 30 Nov 2018 17:03:40 +0100
+ -- Sven Nierlein <sven@consol.de>  Fri, 30 Nov 2018 17:03:40 +0100
 
 mod-gearman (3.0.6) UNRELEASED; urgency=low
 
