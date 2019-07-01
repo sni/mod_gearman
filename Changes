@@ -1,5 +1,8 @@
 This file documents the revision history for mod_gearman.
 
+next:
+          - fix macro escaping issue in notifications
+
 3.0.9 Tue Apr 16 17:18:09 CEST 2019
           - fix issue with repeating checks
 

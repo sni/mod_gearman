@@ -765,7 +765,7 @@ static int handle_notifications( int event_type, void *data ) {
     }
 
     /* process any macros contained in the argument */
-    process_macros_r(&mac, raw_command, &processed_command, 0);
+    process_macros_r(&mac, raw_command, &processed_command, macro_options);
     if(processed_command==NULL){
         gm_log( GM_LOG_ERROR, "Processed check command for host '%s' was NULL - aborting.\n",hst->name);
         return NEBERROR_CALLBACKCANCEL;
@@ -845,7 +845,7 @@ static int handle_notifications( int event_type, void *data ) {
                     gm_asprintf(&log_buffer, "SERVICE NOTIFICATION: %s;%s;%s;$SERVICESTATE$;%s;$SERVICEOUTPUT$\n", ds->contact_name, svc->host_name, svc->description, ds->command_name);
                     break;
             }
-            process_macros_r(&mac, log_buffer, &processed_buffer, 0);
+            process_macros_r(&mac, log_buffer, &processed_buffer, macro_options);
 #if defined(USENAEMON) || defined(USENAGIOS4)
             log_core(NSLOG_SERVICE_NOTIFICATION, processed_buffer);
 #endif
@@ -885,7 +885,7 @@ static int handle_notifications( int event_type, void *data ) {
                     gm_asprintf(&log_buffer, "HOST NOTIFICATION: %s;%s;$HOSTSTATE$;%s;$HOSTOUTPUT$\n", ds->contact_name, hst->name, ds->command_name);
                     break;
             }
-            process_macros_r(&mac, log_buffer, &processed_buffer, 0);
+            process_macros_r(&mac, log_buffer, &processed_buffer, macro_options);
 #if defined(USENAEMON) || defined(USENAGIOS4)
             log_core(NSLOG_HOST_NOTIFICATION, processed_buffer);
 #endif
