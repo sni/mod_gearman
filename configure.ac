@@ -4,7 +4,7 @@
 ##############################################
 # autoconf really does not work with 2.59 or older
 AC_PREREQ([2.60])
-AC_INIT([mod_gearman], [3.0.9], [sven.nierlein@consol.de])
+AC_INIT([mod_gearman], [3.1.0], [sven.nierlein@consol.de])
 AM_INIT_AUTOMAKE([-Wall foreign subdir-objects])
 AC_CONFIG_SRCDIR([neb_module_naemon/mod_gearman.c],[neb_module_nagios3/mod_gearman.c],[neb_module_nagios4/mod_gearman.c],[worker/worker.c],[tools/send_gearman.c],[tools/check_gearman.c],[tools/gearman_top.c])
 AC_CONFIG_HEADER([config.h])
