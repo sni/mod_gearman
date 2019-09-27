@@ -1237,11 +1237,12 @@ static int handle_svc_check( int event_type, void *data ) {
     /* execute forced checks with high prio as they are propably user requested */
 #ifdef USENAGIOS3
     if(check_result_info.check_options & CHECK_OPTION_FORCE_EXECUTION)
+        prio = GM_JOB_PRIO_HIGH;
 #endif
 #if defined(USENAEMON) || defined(USENAGIOS4)
     if(check_options & CHECK_OPTION_FORCE_EXECUTION)
-#endif
         prio = GM_JOB_PRIO_HIGH;
+#endif
 
     if(add_job_to_queue( &client,
                          mod_gm_opt->server_list,
