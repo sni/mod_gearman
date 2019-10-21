@@ -255,8 +255,7 @@ int send_result() {
                          temp_buffer1,
                          GM_JOB_PRIO_NORMAL,
                          GM_DEFAULT_JOB_RETRIES,
-                         mod_gm_opt->transportmode,
-                         TRUE
+                         mod_gm_opt->transportmode
                         ) == GM_OK) {
         gm_log( GM_LOG_TRACE, "send_result_back() finished successfully\n" );
 
@@ -268,8 +267,7 @@ int send_result() {
                                  temp_buffer1,
                                  GM_JOB_PRIO_NORMAL,
                                  GM_DEFAULT_JOB_RETRIES,
-                                 mod_gm_opt->transportmode,
-                                 TRUE
+                                 mod_gm_opt->transportmode
                         ) == GM_OK) {
                 gm_log( GM_LOG_TRACE, "send_result_back() finished successfully for duplicate server.\n" );
             }

@@ -100,12 +100,11 @@ int create_client( gm_server_t * server_list[GM_LISTSIZE], gearman_client_st *cl
 
 
 /* create a task and send it */
-int add_job_to_queue( gearman_client_st *client, gm_server_t * server_list[GM_LISTSIZE], char * queue, char * uniq, char * data, int priority, int retries, int transport_mode, int send_now ) {
-    gearman_task_st *task = NULL;
-    gearman_return_t ret1 = GEARMAN_SUCCESS;
-    gearman_return_t ret2 = GEARMAN_SUCCESS;
+int add_job_to_queue( gearman_client_st *client, gm_server_t * server_list[GM_LISTSIZE], char * queue, char * uniq, char * data, int priority, int retries, int transport_mode) {
+    gearman_job_handle_t job_handle;
+    gearman_return_t rc;
     char * crypted_data;
-    int size, free_uniq;
+    int size, free_uniq, ret;
     struct timeval now;
 
     /* check too long queue names */
@@ -123,39 +122,27 @@ int add_job_to_queue( gearman_client_st *client, gm_server_t * server_list[GM_LI
 
     signal(SIGPIPE, SIG_IGN);
 
-    gm_log( GM_LOG_TRACE, "add_job_to_queue(%s, %s, %d, %d, %d, %d)\n", queue, uniq, priority, retries, transport_mode, send_now );
+    gm_log( GM_LOG_TRACE, "add_job_to_queue(%s, %s, %d, %d, %d)\n", queue, uniq, priority, retries, transport_mode);
     gm_log( GM_LOG_TRACE, "%d --->%s<---\n", strlen(data), data );
 
     size = mod_gm_encrypt(&crypted_data, data, transport_mode);
     gm_log( GM_LOG_TRACE, "%d +++>\n%s\n<+++\n", size, crypted_data );
 
     if( priority == GM_JOB_PRIO_LOW ) {
-        task = gearman_client_add_task_low_background( client, NULL, NULL, queue, uniq, ( void * )crypted_data, ( size_t )size, &ret1 );
-        gearman_task_give_workload(task,crypted_data,size);
+        rc = gearman_client_do_low_background(client, queue, uniq, ( void * )crypted_data, ( size_t )size, job_handle);
     }
     else if( priority == GM_JOB_PRIO_NORMAL ) {
-        task = gearman_client_add_task_background( client, NULL, NULL, queue, uniq, ( void * )crypted_data, ( size_t )size, &ret1 );
-        gearman_task_give_workload(task,crypted_data,size);
+        rc = gearman_client_do_background(client, queue, uniq, ( void * )crypted_data, ( size_t )size, job_handle);
     }
     else if( priority == GM_JOB_PRIO_HIGH ) {
-        task = gearman_client_add_task_high_background( client, NULL, NULL, queue, uniq, ( void * )crypted_data, ( size_t )size, &ret1 );
-        gearman_task_give_workload(task,crypted_data,size);
+        rc = gearman_client_do_high_background(client, queue, uniq, ( void * )crypted_data, ( size_t )size, job_handle);
     }
     else {
         gm_log( GM_LOG_ERROR, "add_job_to_queue() wrong priority: %d\n", priority );
     }
+    free(crypted_data);
 
-    if(send_now != TRUE)
-        return GM_OK;
-
-    ret2 = gearman_client_run_tasks( client );
-    gearman_client_task_free_all( client );
-    if(   ret1 != GEARMAN_SUCCESS
-       || ret2 != GEARMAN_SUCCESS
-       || task == NULL
-       || ( gearman_client_error(client) != NULL && atof(gearman_version()) == 0.14 )
-      ) {
-
+    if(!gearman_success(rc)) {
         /* log the error */
         if(retries == 0) {
             gettimeofday(&now,NULL);
@@ -180,14 +167,14 @@ int add_job_to_queue( gearman_client_st *client, gm_server_t * server_list[GM_LI
         if(retries > 0) {
             retries--;
             gm_log( GM_LOG_TRACE, "add_job_to_queue() retrying... %d\n", retries );
-            ret2 = add_job_to_queue( client, server_list, queue, uniq, data, priority, retries, transport_mode, send_now );
+            ret = add_job_to_queue( client, server_list, queue, uniq, data, priority, retries, transport_mode);
             if(free_uniq)
                 free(uniq);
-            return(ret2);
+            return(ret);
         }
         /* no more retries... */
         else {
-            gm_log( GM_LOG_TRACE, "add_job_to_queue() finished with errors: %d %d\n", ret1, ret2 );
+            gm_log(GM_LOG_TRACE, "add_job_to_queue() finished with errors: %d\n", ret);
             if(free_uniq)
                 free(uniq);
             return GM_ERROR;
@@ -200,7 +187,7 @@ int add_job_to_queue( gearman_client_st *client, gm_server_t * server_list[GM_LI
     if(free_uniq)
         free(uniq);
 
-    gm_log( GM_LOG_TRACE, "add_job_to_queue() finished successfully: %d %d\n", ret1, ret2 );
+    gm_log( GM_LOG_TRACE, "add_job_to_queue() finished successfully\n");
     return GM_OK;
 }
 

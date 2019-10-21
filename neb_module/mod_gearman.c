@@ -65,7 +65,7 @@ static pthread_mutex_t mod_gm_result_list_mutex = PTHREAD_MUTEX_INITIALIZER;
 void *gearman_module_handle=NULL;
 gearman_client_st client;
 
-int send_now, result_threads_running;
+int result_threads_running;
 pthread_t result_thr[GM_LISTSIZE];
 char target_queue[GM_SMALLBUFSIZE];
 char temp_buffer[GM_BUFFERSIZE];
@@ -117,7 +117,6 @@ static void move_results_to_core(struct nm_event_execution_properties *evprop);
 int nebmodule_init( int flags, char *args, nebmodule *handle ) {
     int i;
     int broker_option_errors = 0;
-    send_now                 = FALSE;
     result_threads_running   = 0;
 
     /* save our handle */
@@ -208,12 +207,6 @@ int nebmodule_init( int flags, char *args, nebmodule *handle ) {
 #ifdef USENAEMON
     schedule_event(1, move_results_to_core, NULL);
 #endif
-
-    /* register export callbacks */
-    for(i=0;i<GM_NEBTYPESSIZE;i++) {
-        if(mod_gm_opt->exports[i]->elem_number > 0)
-            neb_register_callback( i, gearman_module_handle, 0, handle_export );
-    }
 
     /* log at least one line into the core logfile */
     if ( mod_gm_opt->logmode != GM_LOG_MODE_CORE ) {
@@ -448,53 +441,59 @@ static int handle_process_events( int event_type, void *data ) {
     gm_log( GM_LOG_TRACE, "handle_process_events(%i, data)\n", event_type );
 
     ps = ( struct nebstruct_process_struct * )data;
-    if ( ps->type == NEBTYPE_PROCESS_EVENTLOOPSTART ) {
+    if(ps->type != NEBTYPE_PROCESS_EVENTLOOPSTART ) {
+        return NEB_OK;
+    }
 
-        register_neb_callbacks();
-        start_threads();
-        send_now = TRUE;
+    register_neb_callbacks();
+    start_threads();
 
-        /* verify names of supplied groups
-         * this cannot be done befor naemon has finished reading his config
-         * verify local servicegroups names
-         */
-        while ( mod_gm_opt->local_servicegroups_list[x] != NULL ) {
-            servicegroup * temp_servicegroup = find_servicegroup( mod_gm_opt->local_servicegroups_list[x] );
-            if( temp_servicegroup == NULL ) {
-                gm_log( GM_LOG_INFO, "Warning: servicegroup '%s' does not exist, possible typo?\n", mod_gm_opt->local_servicegroups_list[x] );
-            }
-            x++;
+    /* verify names of supplied groups
+        * this cannot be done befor naemon has finished reading his config
+        * verify local servicegroups names
+        */
+    while ( mod_gm_opt->local_servicegroups_list[x] != NULL ) {
+        servicegroup * temp_servicegroup = find_servicegroup( mod_gm_opt->local_servicegroups_list[x] );
+        if( temp_servicegroup == NULL ) {
+            gm_log( GM_LOG_INFO, "Warning: servicegroup '%s' does not exist, possible typo?\n", mod_gm_opt->local_servicegroups_list[x] );
         }
+        x++;
+    }
 
-        /* verify local hostgroup names */
-        x = 0;
-        while ( mod_gm_opt->local_hostgroups_list[x] != NULL ) {
-            hostgroup * temp_hostgroup = find_hostgroup( mod_gm_opt->local_hostgroups_list[x] );
-            if( temp_hostgroup == NULL ) {
-                gm_log( GM_LOG_INFO, "Warning: hostgroup '%s' does not exist, possible typo?\n", mod_gm_opt->local_hostgroups_list[x] );
-            }
-            x++;
+    /* verify local hostgroup names */
+    x = 0;
+    while ( mod_gm_opt->local_hostgroups_list[x] != NULL ) {
+        hostgroup * temp_hostgroup = find_hostgroup( mod_gm_opt->local_hostgroups_list[x] );
+        if( temp_hostgroup == NULL ) {
+            gm_log( GM_LOG_INFO, "Warning: hostgroup '%s' does not exist, possible typo?\n", mod_gm_opt->local_hostgroups_list[x] );
         }
+        x++;
+    }
 
-        /* verify servicegroups names */
-        x = 0;
-        while ( mod_gm_opt->servicegroups_list[x] != NULL ) {
-            servicegroup * temp_servicegroup = find_servicegroup( mod_gm_opt->servicegroups_list[x] );
-            if( temp_servicegroup == NULL ) {
-                gm_log( GM_LOG_INFO, "Warning: servicegroup '%s' does not exist, possible typo?\n", mod_gm_opt->servicegroups_list[x] );
-            }
-            x++;
+    /* verify servicegroups names */
+    x = 0;
+    while ( mod_gm_opt->servicegroups_list[x] != NULL ) {
+        servicegroup * temp_servicegroup = find_servicegroup( mod_gm_opt->servicegroups_list[x] );
+        if( temp_servicegroup == NULL ) {
+            gm_log( GM_LOG_INFO, "Warning: servicegroup '%s' does not exist, possible typo?\n", mod_gm_opt->servicegroups_list[x] );
         }
+        x++;
+    }
 
-        /* verify hostgroup names */
-        x = 0;
-        while ( mod_gm_opt->hostgroups_list[x] != NULL ) {
-            hostgroup * temp_hostgroup = find_hostgroup( mod_gm_opt->hostgroups_list[x] );
-            if( temp_hostgroup == NULL ) {
-                gm_log( GM_LOG_INFO, "Warning: hostgroup '%s' does not exist, possible typo?\n", mod_gm_opt->hostgroups_list[x] );
-            }
-            x++;
+    /* verify hostgroup names */
+    x = 0;
+    while ( mod_gm_opt->hostgroups_list[x] != NULL ) {
+        hostgroup * temp_hostgroup = find_hostgroup( mod_gm_opt->hostgroups_list[x] );
+        if( temp_hostgroup == NULL ) {
+            gm_log( GM_LOG_INFO, "Warning: hostgroup '%s' does not exist, possible typo?\n", mod_gm_opt->hostgroups_list[x] );
         }
+        x++;
+    }
+
+    /* register export callbacks */
+    for(x=0;x<GM_NEBTYPESSIZE;x++) {
+        if(mod_gm_opt->exports[x]->elem_number > 0)
+            neb_register_callback(x, gearman_module_handle, 0, handle_export);
     }
 
     return NEB_OK;
@@ -575,8 +574,7 @@ static int handle_eventhandler( int event_type, void *data ) {
                          temp_buffer,
                          GM_JOB_PRIO_NORMAL,
                          GM_DEFAULT_JOB_RETRIES,
-                         mod_gm_opt->transportmode,
-                         FALSE
+                         mod_gm_opt->transportmode
                         ) == GM_OK) {
         gm_log( GM_LOG_TRACE, "handle_eventhandler() finished successfully\n" );
     }
@@ -797,8 +795,7 @@ static int handle_notifications( int event_type, void *data ) {
                          temp_buffer,
                          GM_JOB_PRIO_HIGH,
                          GM_DEFAULT_JOB_RETRIES,
-                         mod_gm_opt->transportmode,
-                         FALSE
+                         mod_gm_opt->transportmode
                         ) == GM_OK) {
         gm_log( GM_LOG_TRACE, "handle_notifications() finished successfully\n" );
     }
@@ -1054,8 +1051,7 @@ static int handle_host_check( int event_type, void *data ) {
                          temp_buffer,
                          GM_JOB_PRIO_NORMAL,
                          GM_DEFAULT_JOB_RETRIES,
-                         mod_gm_opt->transportmode,
-                         TRUE
+                         mod_gm_opt->transportmode
                         ) == GM_OK) {
     }
     else {
@@ -1251,8 +1247,7 @@ static int handle_svc_check( int event_type, void *data ) {
                          temp_buffer,
                          prio,
                          GM_DEFAULT_JOB_RETRIES,
-                         mod_gm_opt->transportmode,
-                         TRUE
+                         mod_gm_opt->transportmode
                         ) == GM_OK) {
         gm_log( GM_LOG_TRACE, "handle_svc_check() finished successfully\n" );
     }
@@ -1656,8 +1651,7 @@ int handle_perfdata(int event_type, void *data) {
                                  temp_buffer,
                                  GM_JOB_PRIO_NORMAL,
                                  GM_DEFAULT_JOB_RETRIES,
-                                 mod_gm_opt->transportmode,
-                                 TRUE
+                                 mod_gm_opt->transportmode
                                 ) == GM_OK) {
                 gm_log( GM_LOG_TRACE, "handle_perfdata() successfully added data to %s\n", perfdata_queue );
             }
@@ -1796,8 +1790,7 @@ int handle_export(int callback_type, void *data) {
                               temp_buffer,
                               GM_JOB_PRIO_NORMAL,
                               GM_DEFAULT_JOB_RETRIES,
-                              mod_gm_opt->transportmode,
-                              send_now
+                              mod_gm_opt->transportmode
                             );
         }
     }
