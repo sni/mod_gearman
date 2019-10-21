@@ -1,6 +1,9 @@
 This file documents the revision history for mod_gearman.
 
-3.2.0 Tue 10 Sep 2019 08:56:51 AM CEST
+3.2.1 Mon 21 Oct 18:15:25 CEST 2019
+          - fix memory leak when using latest libgearman
+
+3.2.0 Tue 10 Sep 08:56:51 CEST 2019
           - rebuild to match with new naemon 1.1.0 api version
 
 3.1.0 Mon Jul  1 15:34:56 CEST 2019

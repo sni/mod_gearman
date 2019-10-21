@@ -55,7 +55,7 @@
 #define MOD_GM_COMMON_H
 
 /* constants */
-#define GM_VERSION                 "3.2.0"
+#define GM_VERSION                 "3.2.1"
 #define GM_ENABLED                      1
 #define GM_DISABLED                     0
 #define GM_BUFFERSIZE               65536
