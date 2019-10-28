@@ -934,6 +934,10 @@ int parse_args_line(mod_gm_opt_t *opt, char * arg, int recursion_level) {
         opt->gearman_connection_timeout = atoi( value );
     }
 
+    else if ( !strcmp( key, "prometheus_server" ) ) {
+        gm_log( GM_LOG_INFO, "ignoring unsupported option '%s'\n", key );
+    }
+
     else {
         gm_log( GM_LOG_ERROR, "unknown option '%s'\n", key );
     }
