@@ -115,7 +115,6 @@ fi
 %config(noreplace) %{_sysconfdir}/logrotate.d/mod_gearman
 
 %{_datadir}/mod_gearman/mod_gearman_p1.pl
-%{_datadir}/mod_gearman/gearman_proxy.pl
 
 %{_bindir}/check_gearman
 %{_bindir}/gearman_top
@@ -135,6 +134,9 @@ fi
 %docdir %{_defaultdocdir}
 
 %changelog
+* Wed Jan 29 2020 Sven Nierlein <sven@consol.de>
+- removed gearman_proxy
+
 * Wed Feb 17 2016 Sven Nierlein <sven@consol.de>
 - prepare for mod-gearman 3
 
