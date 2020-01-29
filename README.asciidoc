@@ -291,8 +291,7 @@ where no direct connection is possible use ssh tunnel or the Gearman
 proxy. The Gearman proxy just puts jobs from one gearmand into another
 gearmand and vice versa.
 
-Just copy the gearman_proxy.pl from the contrib or share directory and
-adjust the first few lines to match you needs.
+gearman_proxy.pl can be found at https://github.com/sni/gearman-proxy
 
 Pro:
 

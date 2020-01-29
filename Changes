@@ -1,5 +1,8 @@
 This file documents the revision history for mod_gearman.
 
+next:
+          - gearman_proxy.pl moved to separate repository
+
 3.2.1 Mon 21 Oct 18:15:25 CEST 2019
           - fix memory leak when using latest libgearman
 
