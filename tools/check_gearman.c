@@ -395,6 +395,14 @@ int check_worker(char * queue, char * to_send, char * expect) {
         }
     }
 
+    // if result starts with a number followed by a colon, use this as exit code
+    if(strlen(result) > 1 && result[1] == ':') {
+        int rc = result[0] - '0';
+        result += 2;
+        printf("%s\n", result);
+        return(rc);
+    }
+
     printf("%s OK - %s\n", PLUGIN_NAME, result );
     return( STATE_OK );
 }
