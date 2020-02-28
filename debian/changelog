@@ -1,3 +1,9 @@
+mod-gearman (3.3.0) UNRELEASED; urgency=low
+
+  * new upstream release
+
+ -- Sven Nierlein <sven@tsui.int.consol.de>  Fri, 28 Feb 2020 16:24:14 +0100
+
 mod-gearman (3.2.1) UNRELEASED; urgency=low
 
   * new upstream release

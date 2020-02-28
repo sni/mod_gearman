@@ -1,6 +1,6 @@
 This file documents the revision history for mod_gearman.
 
-next:
+3.3.0 Fr 28. Feb 16:24:03 CET 2020
           - gearman_proxy.pl moved to separate repository
           - check_gearman: support setting exit code from result
 
