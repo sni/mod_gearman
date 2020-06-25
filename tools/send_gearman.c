@@ -28,9 +28,13 @@
 
 #include <worker_dummy_functions.c>
 
+mod_gm_opt_t *mod_gm_opt;
 gearman_client_st client;
 gearman_client_st client_dup;
+gearman_client_st *current_client;
+gearman_client_st *current_client_dup;
 int results_sent = 0;
+char hostname[GM_SMALLBUFSIZE];
 
 /* work starts here */
 int main (int argc, char **argv) {

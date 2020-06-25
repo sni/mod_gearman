@@ -28,6 +28,10 @@
 
 #include <worker_dummy_functions.c>
 
+mod_gm_opt_t *mod_gm_opt;
+gearman_client_st *current_client;
+gearman_client_st *current_client_dup;
+char hostname[GM_SMALLBUFSIZE];
 int opt_verbose          =   0;
 int opt_timeout          =  10;
 int opt_job_warning      =  10;

@@ -35,6 +35,9 @@
 gearman_worker_st worker;
 gearman_client_st client;
 gearman_client_st client_dup;
+gearman_client_st *current_client;
+gearman_client_st *current_client_dup;
+gearman_job_st *current_gearman_job;
 
 pid_t current_pid;
 gm_job_t * exec_job;
@@ -43,7 +46,12 @@ int jobs_done = 0;
 int sleep_time_after_error = 1;
 int worker_run_mode;
 int shm_index = 0;
-volatile sig_atomic_t shmid;
+extern volatile sig_atomic_t shmid;
+
+gm_job_t * current_job;
+
+extern mod_gm_opt_t *mod_gm_opt;
+extern char hostname[GM_SMALLBUFSIZE];
 
 /* callback for task completed */
 #ifdef EMBEDDEDPERL

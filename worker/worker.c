@@ -29,7 +29,9 @@
 
 int current_number_of_workers                = 0;
 volatile sig_atomic_t current_number_of_jobs = 0;  /* must be signal safe */
-
+char hostname[GM_SMALLBUFSIZE];
+mod_gm_opt_t *mod_gm_opt;
+int mod_gm_shm_key;             /**< key for the shared memory segment */
 int     orig_argc;
 char ** orig_argv;
 int     last_time_increased;

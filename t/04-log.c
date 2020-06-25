@@ -12,7 +12,12 @@
 
 #include <worker_dummy_functions.c>
 
+#include <libgearman/gearman.h>
+
 mod_gm_opt_t *mod_gm_opt;
+char hostname[GM_SMALLBUFSIZE];
+gearman_client_st *current_client;
+gearman_client_st *current_client_dup;
 
 /* main tests */
 int main(void) {

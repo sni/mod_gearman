@@ -26,6 +26,10 @@
 #include "mod_gearman.h"
 #include "gearman_utils.h"
 
+mod_gm_opt_t *mod_gm_opt;
+gearman_client_st *current_client;
+gearman_client_st *current_client_dup;
+
 /* specify event broker API version (required) */
 NEB_API_VERSION( CURRENT_NEB_API_VERSION )
 

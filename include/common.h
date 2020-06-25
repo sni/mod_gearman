@@ -293,12 +293,6 @@ typedef struct gm_job_struct {
     int            has_been_sent;       /**< flag if job has been sent back */
 } gm_job_t;
 
-
-/** options structure */
-mod_gm_opt_t *mod_gm_opt;
-gm_job_t * current_job;
-char hostname[GM_SMALLBUFSIZE];
-
 /*
  * @}
  */

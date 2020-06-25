@@ -30,6 +30,11 @@
 
 pid_t current_child_pid = 0;
 
+extern mod_gm_opt_t *mod_gm_opt;
+extern gm_job_t * current_job;
+extern gearman_client_st *current_client;
+extern gearman_job_st *current_gearman_job;
+
 /* convert number to signal name */
 char *nr2signal(int sig) {
     char * signame = NULL;

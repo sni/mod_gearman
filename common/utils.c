@@ -37,6 +37,11 @@ int use_perl_cache               = GM_ENABLED;
 char *p1_file                    = NULL;
 #endif
 
+extern mod_gm_opt_t *mod_gm_opt;
+extern char hostname[GM_SMALLBUFSIZE];
+extern gearman_client_st *current_client;
+extern gearman_client_st *current_client_dup;
+
 /* escapes newlines in a string */
 char *gm_escape_newlines(char *rawbuf, int trimmed) {
     char *tmpbuf=NULL;

@@ -11,6 +11,10 @@
 
 #include <worker_dummy_functions.c>
 
+mod_gm_opt_t *mod_gm_opt;
+char hostname[GM_SMALLBUFSIZE];
+volatile sig_atomic_t shmid;
+
 void printf_hex(char*, int);
 void printf_hex(char* text, int length) {
     int i;

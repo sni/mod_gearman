@@ -28,6 +28,8 @@
 #include "mod_gearman.h"
 #include "gearman_utils.h"
 
+extern mod_gm_opt_t *mod_gm_opt;
+
 #ifdef USENAEMON
 static const char *gearman_worker_source_name(void *source) {
     if(!source)

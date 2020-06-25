@@ -15,6 +15,8 @@
 
 #include <worker_dummy_functions.c>
 
+char hostname[GM_SMALLBUFSIZE];
+volatile sig_atomic_t shmid;
 mod_gm_opt_t *mod_gm_opt;
 
 int main (int argc, char **argv, char **env) {

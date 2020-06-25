@@ -27,6 +27,7 @@
 
 int mod_gm_con_errors = 0;
 struct timeval mod_gm_error_time;
+extern mod_gm_opt_t *mod_gm_opt;
 
 /* create the gearman worker */
 int create_worker( gm_server_t * server_list[GM_LISTSIZE], gearman_worker_st *worker ) {

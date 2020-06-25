@@ -23,11 +23,12 @@
 char * worker_logfile;
 int gearmand_pid;
 int worker_pid;
-gearman_worker_st worker;
-gearman_client_st client;
+extern gearman_worker_st worker;
+extern gearman_client_st client;
 mod_gm_opt_t *mod_gm_opt;
 char * last_result;
-
+char hostname[GM_SMALLBUFSIZE];
+volatile sig_atomic_t shmid;
 
 /* start the gearmand server */
 void *start_gearmand(void*data);

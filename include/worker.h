@@ -44,8 +44,6 @@
  * @{
  */
 
-int mod_gm_shm_key;             /**< key for the shared memory segment */
-
 #define SHM_SHIFT             5 /**< nr of global counter              */
 #define SHM_JOBS_DONE         0 /**< shm id for jobs done counter      */
 #define SHM_WORKER_TOTAL      1 /**< shm id for total worker counter   */

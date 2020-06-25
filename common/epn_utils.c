@@ -28,6 +28,8 @@
 #include "worker_client.h"
 #include "gearman_utils.h"
 
+extern mod_gm_opt_t *mod_gm_opt;
+
 #ifdef EMBEDDEDPERL
 #include <EXTERN.h>
 #include <perl.h>
