@@ -91,11 +91,13 @@ int main (int argc, char **argv) {
     }
     mod_gm_opt->debug_level = opt_verbose;
     mod_gm_opt->logmode     = GM_LOG_MODE_TOOLS;
-    if((env_server = getenv("CONFIG_GEARMAND_PORT")) != NULL) {
-        server_list[server_list_num++] = env_server;
+    if(server_list_num == 0) {
+        if((env_server = getenv("CONFIG_GEARMAND_PORT")) != NULL) {
+            server_list[server_list_num++] = env_server;
+        } else {
+            server_list[server_list_num++] = "localhost";
+        }
     }
-    if(server_list_num == 0)
-        server_list[server_list_num++] = "localhost";
     server_list[server_list_num] = NULL;
 
     signal(SIGINT, clean_exit);
