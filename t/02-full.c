@@ -376,7 +376,7 @@ void check_no_worker_running(char* worker_logfile) {
 int main (int argc, char **argv, char **env) {
     argc = argc; argv = argv; env  = env;
     int status, chld, rc;
-    int tests = 125;
+    int tests = 123;
     int rrc;
     char cmd[150];
     char *result, *error, *message, *output;
@@ -572,32 +572,11 @@ int main (int argc, char **argv, char **env) {
     free_worker(&worker);
 
     /* shutdown gearmand */
-    rc = send2gearmandadmin("shutdown\n", "127.0.0.1", GEARMAND_TEST_PORT, &output, &message);
-    ok(rc == 0, "rc of send2gearmandadmin %d", rc);
-    like(output, "OK", "output contains OK");
-    free(message);
-    free(output);
+    kill(gearmand_pid, SIGTERM);
+    waitpid(gearmand_pid, &status, 0);
+    ok(status == 0, "gearmand (%d) exited with exit code %d", gearmand_pid, real_exit_code(status));
+    status = 0;
 
-    /* wait 5 seconds to shutdown */
-    for(i=0;i<=5;i++) {
-        waitpid(gearmand_pid, &status, WNOHANG);
-        if(pid_alive(gearmand_pid) == FALSE) {
-            todo();
-            ok(status == 0, "gearmand (%d) exited with: %d", gearmand_pid, real_exit_code(status));
-            endtodo;
-            break;
-        }
-        sleep(1);
-    }
-
-    if(pid_alive(gearmand_pid) == TRUE) {
-        /* kill it the hard way */
-        kill(gearmand_pid, SIGTERM);
-        waitpid(gearmand_pid, &status, 0);
-        ok(status == 0, "gearmand (%d) exited with exit code %d", gearmand_pid, real_exit_code(status));
-        status = 0;
-        ok(false, "gearmand had to be killed!");
-    }
     todo();
     check_logfile("/tmp/gearmand.log", status != 0 ? 2 : 0);
     endtodo;
