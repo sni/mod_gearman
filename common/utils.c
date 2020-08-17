@@ -42,6 +42,8 @@ extern char hostname[GM_SMALLBUFSIZE];
 extern gearman_client_st *current_client;
 extern gearman_client_st *current_client_dup;
 
+char uniqbase64[GM_BUFFERSIZE];
+
 /* escapes newlines in a string */
 char *gm_escape_newlines(char *rawbuf, int trimmed) {
     char *tmpbuf=NULL;
@@ -1738,4 +1740,28 @@ int read_pipe(char **target, int input) {
         strncat(*target, buffer, bytes);
     }
     return(size);
+}
+
+void make_uniq(char *uniq, const char *format, ... ) {
+    va_list ap;
+    int size;
+
+    uniq[0] = 0;
+    va_start(ap, format);
+    vsnprintf(uniq, GM_BUFFERSIZE, format, ap);
+    va_end(ap);
+
+    // if identifier is too long, use md5 hash
+    size = strlen(uniq);
+    if(size > GEARMAN_MAX_UNIQUE_SIZE - 1) {
+        char * md5 =  md5sum(uniq);
+        snprintf(uniq, GM_BUFFERSIZE, "%s", md5);
+        size = strlen(uniq);
+        gm_free(md5);
+    }
+
+    uniqbase64[0] = 0;
+    base64_encode((unsigned char *)uniq, strlen(uniq), uniqbase64, size*2);
+
+    snprintf(uniq, GM_BUFFERSIZE, "%s", uniqbase64);
 }

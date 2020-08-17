@@ -114,11 +114,10 @@ int add_job_to_queue( gearman_client_st *client, gm_server_t * server_list[GM_LI
         return GM_ERROR;
     }
 
-    /* cut off to long uniq ids */
-    free_uniq = 0;
+    /* uniq identifier must not exceed certain size */
     if(uniq != NULL && strlen(uniq) > GEARMAN_MAX_UNIQUE_SIZE - 1) {
-        uniq = md5sum(uniq);
-        free_uniq = 1;
+        gm_log( GM_LOG_ERROR, "unique name too long: '%s'\n", uniq );
+        return GM_ERROR;
     }
 
     signal(SIGPIPE, SIG_IGN);
@@ -169,24 +168,17 @@ int add_job_to_queue( gearman_client_st *client, gm_server_t * server_list[GM_LI
             retries--;
             gm_log( GM_LOG_TRACE, "add_job_to_queue() retrying... %d\n", retries );
             ret = add_job_to_queue( client, server_list, queue, uniq, data, priority, retries, transport_mode);
-            if(free_uniq)
-                free(uniq);
             return(ret);
         }
         /* no more retries... */
         else {
             gm_log(GM_LOG_TRACE, "add_job_to_queue() finished with errors: %d\n", ret);
-            if(free_uniq)
-                free(uniq);
             return GM_ERROR;
         }
     }
 
     /* reset error counter */
     mod_gm_con_errors = 0;
-
-    if(free_uniq)
-        free(uniq);
 
     gm_log( GM_LOG_TRACE, "add_job_to_queue() finished successfully\n");
     return GM_OK;

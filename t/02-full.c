@@ -126,6 +126,7 @@ void test_servicecheck(int transportmode, char*cmd) {
 void send_big_jobs(int transportmode);
 void send_big_jobs(int transportmode) {
     struct timeval start_time;
+    char uniq[GM_SMALLBUFSIZE];
     gettimeofday(&start_time,NULL);
     char temp_buffer[GM_BUFFERSIZE];
     temp_buffer[0]='\x0';
@@ -142,7 +143,7 @@ void send_big_jobs(int transportmode) {
               "/bin/hostname"
             );
     temp_buffer[sizeof( temp_buffer )-1]='\x0';
-    char * uniq = "something at least bigger than the (GEARMAN_MAX_UNIQUE_SIZE) 64 chars allowed by libgearman!";
+    make_uniq(uniq, "%s", "something at least bigger than the (GEARMAN_MAX_UNIQUE_SIZE) 64 chars allowed by libgearman!");
     int rt = add_job_to_queue(&client, mod_gm_opt->server_list, "service", uniq, temp_buffer, GM_JOB_PRIO_NORMAL, 1, transportmode);
     ok(rt == GM_OK, "big uniq id sent successfully in mode %s", transportmode == GM_ENCODE_ONLY ? "base64" : "aes256");
 

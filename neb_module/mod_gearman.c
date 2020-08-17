@@ -74,7 +74,7 @@ int result_threads_running;
 pthread_t result_thr[GM_LISTSIZE];
 char target_queue[GM_SMALLBUFSIZE];
 char temp_buffer[GM_BUFFERSIZE];
-char uniq[GM_BUFFERSIZE];
+char uniq[GM_SMALLBUFSIZE];
 
 #ifdef USENAEMON
 static const char *gearman_worker_source_name(void *source) {
@@ -120,7 +120,6 @@ static void move_results_to_core(struct nm_event_execution_properties *evprop);
 #endif
 
 int nebmodule_init( int flags, char *args, nebmodule *handle ) {
-    int i;
     int broker_option_errors = 0;
     result_threads_running   = 0;
 
@@ -1049,10 +1048,13 @@ static int handle_host_check( int event_type, void *data ) {
               processed_command
             );
 
+    if(mod_gm_opt->use_uniq_jobs == GM_ENABLED) {
+        make_uniq(uniq, "%s", hst->name);
+    }
     if(add_job_to_queue( &client,
                          mod_gm_opt->server_list,
                          target_queue,
-                        (mod_gm_opt->use_uniq_jobs == GM_ENABLED ? hst->name : NULL),
+                        (mod_gm_opt->use_uniq_jobs == GM_ENABLED ? uniq : NULL),
                          temp_buffer,
                          GM_JOB_PRIO_NORMAL,
                          GM_DEFAULT_JOB_RETRIES,
@@ -1232,9 +1234,6 @@ static int handle_svc_check( int event_type, void *data ) {
               processed_command
             );
 
-    uniq[0]='\x0';
-    snprintf( uniq,GM_BUFFERSIZE-1,"%s-%s", svcdata->host_name, svcdata->service_description);
-
     /* execute forced checks with high prio as they are propably user requested */
 #ifdef USENAGIOS3
     if(check_result_info.check_options & CHECK_OPTION_FORCE_EXECUTION)
@@ -1245,6 +1244,9 @@ static int handle_svc_check( int event_type, void *data ) {
         prio = GM_JOB_PRIO_HIGH;
 #endif
 
+    if(mod_gm_opt->use_uniq_jobs == GM_ENABLED) {
+        make_uniq(uniq, "%s-%s", svcdata->host_name, svcdata->service_description);
+    }
     if(add_job_to_queue( &client,
                          mod_gm_opt->server_list,
                          target_queue,
@@ -1552,8 +1554,7 @@ int handle_perfdata(int event_type, void *data) {
                     break;
                 }
 
-                uniq[0]='\x0';
-                snprintf( uniq,GM_BUFFERSIZE-1,"%s", hostchkdata->host_name);
+                make_uniq(uniq, "%s", hostchkdata->host_name);
 
 #if defined(USENAEMON) || defined(USENAGIOS4)
                 /* replace newlines with actual newlines */
@@ -1604,8 +1605,7 @@ int handle_perfdata(int event_type, void *data) {
                     break;
                 }
 
-                uniq[0]='\x0';
-                snprintf( uniq,GM_BUFFERSIZE-1,"%s-%s", srvchkdata->host_name, srvchkdata->service_description);
+                make_uniq(uniq, "%s-%s", srvchkdata->host_name, srvchkdata->service_description);
 
 #if defined(USENAEMON) || defined(USENAGIOS4)
                 /* replace newlines with actual newlines */

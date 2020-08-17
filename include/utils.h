@@ -513,5 +513,17 @@ int read_filepointer(char **, FILE*);
 int read_pipe(char **, int);
 
 /**
+ * make_uniq
+ *
+ * create unique identifier from given format
+ *
+ * @param[in] uniq  - reference to target
+ * @param[in] format - printf format string
+ *
+ * @return nothing
+ */
+void make_uniq(char *uniq, const char *format, ... );
+
+/**
  * @}
  */

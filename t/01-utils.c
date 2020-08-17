@@ -35,7 +35,7 @@ mod_gm_opt_t * renew_opts() {
 }
 
 int main(void) {
-    plan(73);
+    plan(75);
 
     /* lowercase */
     char test[100];
@@ -248,6 +248,13 @@ int main(void) {
     test2 = strdup("xyz");
     is(starts_with(test2, test), FALSE,  "starts_with(xyz, test123)");
     free(test2);
+
+    char uniq[GM_SMALLBUFSIZE];
+    make_uniq(uniq, "%s", "test - test");
+    like(uniq, "dGVzdCAtIHRlc3Q=", "make_uniq()");
+
+    make_uniq(uniq, "%s", "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
+    like(uniq, "MDY3NTBhZGRlYzZlMDdkNjFiMmVhZjJkMjRmYWU4N2U=", "make_uniq()");
 
     mod_gm_free_opt(mod_gm_opt);
 
