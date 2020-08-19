@@ -1,5 +1,9 @@
 This file documents the revision history for mod_gearman.
 
+3.3.2 Wed Aug 19 16:19:35 CEST 2020
+          - use base64 encoded uniq idendifiers
+          - gearman_top: read address:port from env variable CONFIG_GEARMAND_PORT (#153)
+
 3.3.1 Thu Jun 25 22:52:20 CEST 2020
           - fix builds with gcc 10
 
