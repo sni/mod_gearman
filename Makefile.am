@@ -429,7 +429,7 @@ version:
 	if [ -z "$$NEWVERSION" ]; then NEWVERSION=$$(dialog --stdout --inputbox "New Version:" 0 0 "$(VERSION)"); fi; \
 	if [ -n "$$NEWVERSION" ] && [ "$$NEWVERSION" != "$(VERSION)" ]; then \
 		sed -ri "s/$(VERSION)/$$NEWVERSION/" include/common.h configure.ac support/mod-gearman.spec; \
-		sed -i Changes -e "s/next:/$$NEWVERSION $(shell date)/"; \
+		sed -i Changes -e "s/next:/$$NEWVERSION $(shell LC_TIME=C date)/"; \
 		$(MAKE) docs; \
 		if [ "x$$DEBEMAIL" = "x" ]; then \
 			DEBEMAIL="Sven Nierlein <sven@consol.de>"; \
