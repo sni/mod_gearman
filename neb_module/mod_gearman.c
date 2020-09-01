@@ -583,7 +583,7 @@ static int handle_eventhandler( int event_type, void *data ) {
         gm_log( GM_LOG_TRACE, "handle_eventhandler() finished successfully\n" );
     }
     else {
-        gm_log( GM_LOG_TRACE, "handle_eventhandler() finished unsuccessfully\n" );
+        gm_log( GM_LOG_ERROR, "failed to send eventhandler to gearmand\n" );
     }
 
     /* tell naemon to not execute */
@@ -804,7 +804,7 @@ static int handle_notifications( int event_type, void *data ) {
         gm_log( GM_LOG_TRACE, "handle_notifications() finished successfully\n" );
     }
     else {
-        gm_log( GM_LOG_TRACE, "handle_notifications() finished unsuccessfully\n" );
+        gm_log( GM_LOG_ERROR, "failed to send notification to gearmand\n" );
     }
 
     /* clean up */
@@ -1070,7 +1070,7 @@ static int handle_host_check( int event_type, void *data ) {
         /* unset the execution flag */
         hst->is_executing=FALSE;
 
-        gm_log( GM_LOG_TRACE, "handle_host_check() finished unsuccessfully -> %d\n", NEBERROR_CALLBACKCANCEL );
+        gm_log( GM_LOG_ERROR, "failed to send host check to gearmand\n" );
         return NEBERROR_CALLBACKCANCEL;
     }
 
@@ -1267,7 +1267,7 @@ static int handle_svc_check( int event_type, void *data ) {
         /* unset the execution flag */
         svc->is_executing=FALSE;
 
-        gm_log( GM_LOG_TRACE, "handle_svc_check() finished unsuccessfully\n" );
+        gm_log( GM_LOG_ERROR, "failed to send service check to gearmand\n" );
         return NEBERROR_CALLBACKCANCEL;
     }
 
@@ -1661,7 +1661,7 @@ int handle_perfdata(int event_type, void *data) {
                 gm_log( GM_LOG_TRACE, "handle_perfdata() successfully added data to %s\n", perfdata_queue );
             }
             else {
-                gm_log( GM_LOG_TRACE, "handle_perfdata() failed to add data to %s\n", perfdata_queue );
+                gm_log( GM_LOG_ERROR, "failed to send perfdata to gearmand\n" );
             }
         }
     }

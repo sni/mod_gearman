@@ -8,6 +8,7 @@
 #include <common.h>
 #include <utils.h>
 #include <check_utils.h>
+#include "gearman_utils.h"
 
 #include <worker_dummy_functions.c>
 
@@ -35,7 +36,7 @@ mod_gm_opt_t * renew_opts() {
 }
 
 int main(void) {
-    plan(75);
+    plan(82);
 
     /* lowercase */
     char test[100];
@@ -251,10 +252,19 @@ int main(void) {
 
     char uniq[GM_SMALLBUFSIZE];
     make_uniq(uniq, "%s", "test - test");
-    like(uniq, "dGVzdCAtIHRlc3Q=", "make_uniq()");
+    like(uniq, "3a9e4a6a2e66af990948d81e004b3ac0", "make_uniq()");
+    is(strlen(uniq), 32, "length of uniq string is 32");
+    ok(strlen(uniq) < GEARMAN_MAX_UNIQUE_SIZE - 1, "uniq string is smaller than GEARMAN_MAX_UNIQUE_SIZE");
 
     make_uniq(uniq, "%s", "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
-    like(uniq, "MDY3NTBhZGRlYzZlMDdkNjFiMmVhZjJkMjRmYWU4N2U=", "make_uniq()");
+    like(uniq, "06750addec6e07d61b2eaf2d24fae87e", "make_uniq()");
+    is(strlen(uniq), 32, "length of uniq string is 32");
+    ok(strlen(uniq) < GEARMAN_MAX_UNIQUE_SIZE - 1, "uniq string is smaller than GEARMAN_MAX_UNIQUE_SIZE");
+
+    make_uniq(uniq, "%s-%s", "xxx-xxxxx-xxxxxx.xxxxxxxxxx.xxxxxx.xx", "xxxx_xxxx_xxxxx_xxx_xx");
+    like(uniq, "91de277e8197840a3261751c712698e0", "make_uniq()");
+    is(strlen(uniq), 32, "length of uniq string is 32");
+    ok(strlen(uniq) < GEARMAN_MAX_UNIQUE_SIZE - 1, "uniq string is smaller than GEARMAN_MAX_UNIQUE_SIZE");
 
     mod_gm_free_opt(mod_gm_opt);
 

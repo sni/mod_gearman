@@ -1748,20 +1748,11 @@ void make_uniq(char *uniq, const char *format, ... ) {
 
     uniq[0] = 0;
     va_start(ap, format);
-    vsnprintf(uniq, GM_BUFFERSIZE, format, ap);
+    vsnprintf(uniq, GM_SMALLBUFSIZE, format, ap);
     va_end(ap);
 
-    // if identifier is too long, use md5 hash
-    size = strlen(uniq);
-    if(size > GEARMAN_MAX_UNIQUE_SIZE - 1) {
-        char * md5 =  md5sum(uniq);
-        snprintf(uniq, GM_BUFFERSIZE, "%s", md5);
-        size = strlen(uniq);
-        gm_free(md5);
-    }
-
-    uniqbase64[0] = 0;
-    base64_encode((unsigned char *)uniq, strlen(uniq), uniqbase64, size*2);
-
-    snprintf(uniq, GM_BUFFERSIZE, "%s", uniqbase64);
+    // create md5 hash to avoid nasty characters and make string smaller than GEARMAN_MAX_UNIQUE_SIZE
+    char * md5 =  md5sum(uniq);
+    snprintf(uniq, GM_SMALLBUFSIZE, "%s", md5);
+    gm_free(md5);
 }

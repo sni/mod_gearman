@@ -1,5 +1,8 @@
 This file documents the revision history for mod_gearman.
 
+next:
+          - fix calculating uniq string
+
 3.3.2 Wed Aug 19 16:19:35 CEST 2020
           - use base64 encoded uniq idendifiers
           - gearman_top: read address:port from env variable CONFIG_GEARMAND_PORT (#153)

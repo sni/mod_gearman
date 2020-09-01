@@ -116,7 +116,7 @@ int add_job_to_queue( gearman_client_st *client, gm_server_t * server_list[GM_LI
 
     /* uniq identifier must not exceed certain size */
     if(uniq != NULL && strlen(uniq) > GEARMAN_MAX_UNIQUE_SIZE - 1) {
-        gm_log( GM_LOG_ERROR, "unique name too long: '%s'\n", uniq );
+        gm_log( GM_LOG_ERROR, "unique name too long (%d > %d): '%s'\n", strlen(uniq), GEARMAN_MAX_UNIQUE_SIZE - 1, uniq );
         return GM_ERROR;
     }
 
