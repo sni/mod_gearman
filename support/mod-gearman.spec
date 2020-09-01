@@ -1,5 +1,5 @@
 Name:          mod_gearman
-Version:       3.3.2
+Version:       3.3.3
 Release:       1%{?dist}
 License:       GNU Public License version 2
 Packager:      Sven Nierlein <sven.nierlein@consol.de>

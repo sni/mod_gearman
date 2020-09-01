@@ -1,6 +1,6 @@
 This file documents the revision history for mod_gearman.
 
-next:
+3.3.3 Tue Sep  1 11:30:47 CEST 2020
           - fix calculating uniq string
 
 3.3.2 Wed Aug 19 16:19:35 CEST 2020
