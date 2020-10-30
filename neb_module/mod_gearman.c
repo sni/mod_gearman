@@ -73,7 +73,7 @@ gearman_client_st client;
 int result_threads_running;
 pthread_t result_thr[GM_LISTSIZE];
 char target_queue[GM_SMALLBUFSIZE];
-char temp_buffer[GM_BUFFERSIZE];
+char temp_buffer[GM_MAX_OUTPUT];
 char uniq[GM_SMALLBUFSIZE];
 
 #ifdef USENAEMON
@@ -564,7 +564,7 @@ static int handle_eventhandler( int event_type, void *data ) {
     gm_log( GM_LOG_DEBUG, "eventhandler for queue %s\n", target_queue );
 
     temp_buffer[0]='\x0';
-    snprintf( temp_buffer,GM_BUFFERSIZE-1,
+    snprintf( temp_buffer,GM_MAX_OUTPUT-1,
                 "type=eventhandler\nstart_time=%Lf\ncore_time=%Lf\ncommand_line=%s\n\n\n",
                 timeval2double(&core_time),
                 timeval2double(&core_time),
@@ -782,7 +782,7 @@ static int handle_notifications( int event_type, void *data ) {
 #endif
 
     temp_buffer[0]='\x0';
-    snprintf( temp_buffer,GM_BUFFERSIZE-1,
+    snprintf( temp_buffer,GM_MAX_OUTPUT-1,
                 "type=notification\nstart_time=%Lf\ncore_time=%Lf\ncontact=%s\ncommand_line=%s\nplugin_output=%s\nlong_plugin_output=%s\n\n\n",
                 timeval2double(&ds->start_time),
                 timeval2double(&core_time),
@@ -1038,7 +1038,7 @@ static int handle_host_check( int event_type, void *data ) {
     gm_log( GM_LOG_TRACE, "cmd_line: %s\n", processed_command );
 
     temp_buffer[0]='\x0';
-    snprintf( temp_buffer,GM_BUFFERSIZE-1,"type=host\nresult_queue=%s\nhost_name=%s\nstart_time=%ld.0\nnext_check=%ld.0\ntimeout=%d\ncore_time=%Lf\ncommand_line=%s\n\n\n",
+    snprintf( temp_buffer,GM_MAX_OUTPUT-1,"type=host\nresult_queue=%s\nhost_name=%s\nstart_time=%ld.0\nnext_check=%ld.0\ntimeout=%d\ncore_time=%Lf\ncommand_line=%s\n\n\n",
               mod_gm_opt->result_queue,
               hst->name,
               hst->next_check,
@@ -1086,7 +1086,7 @@ static int handle_host_check( int event_type, void *data ) {
         gm_log( GM_LOG_DEBUG, "host check for %s orphaned\n", hst->name );
         if ( ( chk_result = ( check_result * )gm_malloc( sizeof *chk_result ) ) == 0 )
             return NEBERROR_CALLBACKCANCEL;
-        snprintf( temp_buffer,GM_BUFFERSIZE-1,"(host check orphaned, is the mod-gearman worker on queue '%s' running?)\n", target_queue);
+        snprintf( temp_buffer,GM_MAX_OUTPUT-1,"(host check orphaned, is the mod-gearman worker on queue '%s' running?)\n", target_queue);
         init_check_result(chk_result);
         chk_result->host_name           = gm_strdup( hst->name );
         chk_result->scheduled_check     = TRUE;
@@ -1223,7 +1223,7 @@ static int handle_svc_check( int event_type, void *data ) {
     gm_log( GM_LOG_TRACE, "cmd_line: %s\n", processed_command );
 
     temp_buffer[0]='\x0';
-    snprintf( temp_buffer,GM_BUFFERSIZE-1,"type=service\nresult_queue=%s\nhost_name=%s\nservice_description=%s\nstart_time=%ld.0\nnext_check=%ld.0\ncore_time=%Lf\ntimeout=%d\ncommand_line=%s\n\n\n",
+    snprintf( temp_buffer,GM_MAX_OUTPUT-1,"type=service\nresult_queue=%s\nhost_name=%s\nservice_description=%s\nstart_time=%ld.0\nnext_check=%ld.0\ncore_time=%Lf\ntimeout=%d\ncommand_line=%s\n\n\n",
               mod_gm_opt->result_queue,
               svcdata->host_name,
               svcdata->service_description,
@@ -1283,7 +1283,7 @@ static int handle_svc_check( int event_type, void *data ) {
         gm_log( GM_LOG_DEBUG, "service check for %s - %s orphaned\n", svc->host_name, svc->description );
         if ( ( chk_result = ( check_result * )gm_malloc( sizeof *chk_result ) ) == 0 )
             return NEBERROR_CALLBACKCANCEL;
-        snprintf( temp_buffer,GM_BUFFERSIZE-1,"(service check orphaned, is the mod-gearman worker on queue '%s' running?)\n", target_queue);
+        snprintf( temp_buffer,GM_MAX_OUTPUT-1,"(service check orphaned, is the mod-gearman worker on queue '%s' running?)\n", target_queue);
         init_check_result(chk_result);
         chk_result->host_name           = gm_strdup( svc->host_name );
         chk_result->service_description = gm_strdup( svc->description );
@@ -1563,7 +1563,7 @@ int handle_perfdata(int event_type, void *data) {
 
 
                 temp_buffer[0]='\x0';
-                snprintf( temp_buffer,GM_BUFFERSIZE-1,
+                snprintf( temp_buffer,GM_MAX_OUTPUT-1,
                             "DATATYPE::HOSTPERFDATA\t"
                             "TIMET::%d\t"
                             "HOSTNAME::%s\t"
@@ -1613,7 +1613,7 @@ int handle_perfdata(int event_type, void *data) {
 #endif
 
                 temp_buffer[0]='\x0';
-                snprintf( temp_buffer,GM_BUFFERSIZE-1,
+                snprintf( temp_buffer,GM_MAX_OUTPUT-1,
                             "DATATYPE::SERVICEPERFDATA\t"
                             "TIMET::%d\t"
                             "HOSTNAME::%s\t"
@@ -1633,7 +1633,7 @@ int handle_perfdata(int event_type, void *data) {
 #endif
                             srvchkdata->state, srvchkdata->state_type,
                             svc->check_interval);
-                temp_buffer[GM_BUFFERSIZE-1]='\x0';
+                temp_buffer[GM_MAX_OUTPUT-1]='\x0';
                 has_perfdata = TRUE;
 #if defined(USENAEMON) || defined(USENAGIOS4)
                 free(perf_data);
@@ -1690,7 +1690,7 @@ int handle_export(int callback_type, void *data) {
         case NEBCALLBACK_PROCESS_DATA:                      /*  7 */
             npd    = (nebstruct_process_data *)data;
             type   = nebtype2str(npd->type);
-            snprintf( temp_buffer,GM_BUFFERSIZE-1, "{\"callback_type\":\"%s\",\"type\":\"%s\",\"flags\":%d,\"attr\":%d,\"timestamp\":%Lf}",
+            snprintf( temp_buffer,GM_MAX_OUTPUT-1, "{\"callback_type\":\"%s\",\"type\":\"%s\",\"flags\":%d,\"attr\":%d,\"timestamp\":%Lf}",
                     "NEBCALLBACK_PROCESS_DATA",
                     type,
                     npd->flags,
@@ -1703,7 +1703,7 @@ int handle_export(int callback_type, void *data) {
             nted       = (nebstruct_timed_event_data *)data;
             event_type = eventtype2str(nted->event_type);
             type       = nebtype2str(nted->type);
-            snprintf( temp_buffer,GM_BUFFERSIZE-1, "{\"callback_type\":\"%s\",\"event_type\":\"%s\",\"type\":\"%s\",\"flags\":%d,\"attr\":%d,\"timestamp\":%Lf,\"recurring\":%d,\"run_time\":%d}",
+            snprintf( temp_buffer,GM_MAX_OUTPUT-1, "{\"callback_type\":\"%s\",\"event_type\":\"%s\",\"type\":\"%s\",\"flags\":%d,\"attr\":%d,\"timestamp\":%Lf,\"recurring\":%d,\"run_time\":%d}",
                     "NEBCALLBACK_TIMED_EVENT_DATA",
                     event_type,
                     type,
@@ -1720,7 +1720,7 @@ int handle_export(int callback_type, void *data) {
             nld    = (nebstruct_log_data *)data;
             buffer = escapestring(nld->data);
             type   = nebtype2str(nld->type);
-            snprintf( temp_buffer,GM_BUFFERSIZE-1, "{\"callback_type\":\"%s\",\"type\":\"%s\",\"flags\":%d,\"attr\":%d,\"timestamp\":%Lf,\"entry_time\":%d,\"data_type\":%d,\"data\":\"%s\"}",
+            snprintf( temp_buffer,GM_MAX_OUTPUT-1, "{\"callback_type\":\"%s\",\"type\":\"%s\",\"flags\":%d,\"attr\":%d,\"timestamp\":%Lf,\"entry_time\":%d,\"data_type\":%d,\"data\":\"%s\"}",
                     "NEBCALLBACK_LOG_DATA",
                     type,
                     nld->flags,
