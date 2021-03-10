@@ -20,7 +20,7 @@ Description: Documentation and examples for Mod Gearman
 
 Package: mod-gearman-module
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}
+Depends: ${shlibs:Depends}, ${misc:Depends}, naemon-core
 Pre-Depends: ${misc:Pre-Depends}
 Description: Event broker module to distribute service checks.
  Event broker module for Naemon. This module adds
