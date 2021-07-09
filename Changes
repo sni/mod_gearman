@@ -2,6 +2,7 @@ This file documents the revision history for mod_gearman.
 
 next:
           - fix crash if gearmand is unreachable
+          - fix host acknowledgement notification author macros
 
 3.3.3 Tue Sep  1 11:30:47 CEST 2020
           - fix calculating uniq string
