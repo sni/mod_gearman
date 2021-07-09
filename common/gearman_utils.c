@@ -105,7 +105,8 @@ int add_job_to_queue( gearman_client_st *client, gm_server_t * server_list[GM_LI
     gearman_job_handle_t job_handle;
     gearman_return_t rc;
     char * crypted_data;
-    int size, free_uniq, ret;
+    int size;
+    int ret = GM_OK;
     struct timeval now;
 
     /* check too long queue names */
@@ -139,6 +140,7 @@ int add_job_to_queue( gearman_client_st *client, gm_server_t * server_list[GM_LI
     }
     else {
         gm_log( GM_LOG_ERROR, "add_job_to_queue() wrong priority: %d\n", priority );
+        return GM_ERROR;
     }
     free(crypted_data);
 
