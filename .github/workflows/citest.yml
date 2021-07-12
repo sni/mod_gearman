@@ -10,8 +10,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Setup tmate session, see https://github.com/marketplace/actions/debugging-with-tmate
-        uses: mxschmitt/action-tmate@v3
+      #- name: Setup tmate session, see https://github.com/marketplace/actions/debugging-with-tmate
+      #  uses: mxschmitt/action-tmate@v3
       - name: prepare machine
         run: |
           sudo apt-get update
@@ -33,7 +33,7 @@ jobs:
 
       - name: run tests
         run: |
-          HARNESS_VERBOSE=1 make test                            || sleep 3600
+          VERBOSE=1 HARNESS_VERBOSE=1 make test                            || sleep 3600
           make clean                           || exit 1
           ./configure --enable-debug           || exit 1
           make                                 || exit 1
