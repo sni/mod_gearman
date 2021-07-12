@@ -37,11 +37,7 @@
 #include <unistd.h>
 #include <assert.h>
 #include <netinet/in.h>
-#ifdef LIBGEARMAN_1_0
 #include "libgearman-1.0/gearman.h"
-#else
-#include "libgearman/gearman.h"
-#endif
 
 typedef void*( mod_gm_worker_fn)(gearman_job_st *job, void *context, size_t *result_size, gearman_return_t *ret_ptr);
 

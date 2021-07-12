@@ -380,7 +380,7 @@ int main (int argc, char **argv, char **env) {
     int tests = 123;
     int rrc;
     char cmd[150];
-    char *result, *error, *message, *output;
+    char *result, *error;
     plan(tests);
 
     mod_gm_opt = malloc(sizeof(mod_gm_opt_t));

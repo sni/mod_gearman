@@ -50,27 +50,8 @@
  * @{
  */
 
-/* include some Nagios stuff as well */
-#ifdef USENAGIOS3
-#include "nagios3/nagios.h"
-#include "nagios3/neberrors.h"
-#include "nagios3/nebstructs.h"
-#include "nagios3/nebcallbacks.h"
-#include "nagios3/broker.h"
-#include "nagios3/macros.h"
-#endif
-#ifdef USENAGIOS4
-#include "nagios4/nagios.h"
-#include "nagios4/neberrors.h"
-#include "nagios4/nebstructs.h"
-#include "nagios4/nebcallbacks.h"
-#include "nagios4/broker.h"
-#include "nagios4/macros.h"
-#endif
-#ifdef USENAEMON
 /* include naemon */
 #include "naemon/naemon.h"
-#endif
 
 /* include the gearman libs */
 #include <libgearman/gearman.h>

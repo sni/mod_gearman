@@ -8,6 +8,9 @@ DH_VERBOSE=1
 %:
 	dh $@
 
+override_dh_installinit:
+	true
+
 override_dh_clean:
 	rm -f compile depcomp install-sh missing
 	rm -f extras/gearmand-init
@@ -25,6 +28,7 @@ override_dh_auto_install:
 	cp worker/mod_gearman_p1.pl debian/tmp/usr/share/mod_gearman/mod_gearman_p1.pl
 	rm -f debian/mod-gearman/usr/share/mod_gearman/shared.conf
 	rm -f debian/mod-gearman/usr/share/mod_gearman/standalone_worker.conf
+	rm -f debian/mod-gearman/etc/init.d/mod-gearman-worker
 
 	help2man --no-info --section=8 --version-string="mod_gearman_worker $(DEB_VERSION)" \
 		--help-option=-h --include=$(CURDIR)/debian/help2man.include \
@@ -34,7 +38,7 @@ override_dh_auto_install:
 
 	help2man --no-info --section=8 --version-string="check_gearman $(DEB_VERSION)" \
 		--help-option=-h --include=$(CURDIR)/debian/help2man.include \
-                -n "Nagios service check to monitor the gearman job server" \
+                -n "Naemon service check to monitor the gearman job server" \
                 $(CURDIR)/debian/tmp/usr/bin/check_gearman \
                 > $(CURDIR)/debian/check_gearman.8
 

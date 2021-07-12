@@ -2,12 +2,12 @@ Source: mod-gearman
 Section: net
 Priority: extra
 Maintainer: Sven Nierlein <sven.nierlein@consol.de>
-Build-Depends: debhelper (>= 10), automake, libtool, libgearman-dev (>= 0.14), libncurses5-dev, libltdl-dev, gearman-job-server, help2man, dctrl-tools
+Build-Depends: debhelper (>= 10), automake, libtool, libgearman-dev (>= 1.1), libncurses5-dev,
+               libltdl-dev, gearman-job-server, help2man, dctrl-tools, libperl-dev, gearman-tools,
+               monitoring-plugins-basic
 Pre-Depends: ${misc:Pre-Depends}
 Standards-Version: 3.9.1
 Homepage: http://labs.consol.de/nagios/mod-gearman/
-Vcs-Git: git://git.debian.org/pkg-nagios/pkg-mod-gearman
-Vcs-Browser: http://git.debian.org/?p=pkg-nagios/pkg-mod-gearman
 
 Package: mod-gearman-doc
 Architecture: all
@@ -20,7 +20,7 @@ Description: Documentation and examples for Mod Gearman
 
 Package: mod-gearman-module
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, naemon-core
+Depends: ${shlibs:Depends}, ${misc:Depends}, naemon-core, libc6
 Pre-Depends: ${misc:Pre-Depends}
 Description: Event broker module to distribute service checks.
  Event broker module for Naemon. This module adds

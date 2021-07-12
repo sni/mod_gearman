@@ -27,7 +27,6 @@ my $suppressions = '/tmp/suppressions.log';
 my @tests = $ARGV[0] || split/\s+/, `grep ^check_PROGRAMS Makefile.am | awk -F = '{print \$2}'`;
 for my $test (@tests) {
     next if $test =~ m/^\s*$/;
-    next if $test =~ m/nagios4/;
     `make $test 2>/dev/null`;
     is($?, 0, "$test build rc is $?");
 

@@ -5,20 +5,11 @@
 #include <unistd.h>
 #include <dlfcn.h>
 
-#ifdef USENAEMON
 #include "naemon/naemon.h"
 #include "naemon/nebmodules.h"
 #include "naemon/nebstructs.h"
 #include "naemon/nebcallbacks.h"
 #include "naemon/broker.h"
-#endif
-#ifdef USENAEMON
-#include "naemon/naemon.h"
-#include "naemon/nebmodules.h"
-#include "naemon/nebstructs.h"
-#include "naemon/nebcallbacks.h"
-#include "naemon/broker.h"
-#endif
 
 static void init_externals(void);
 static void* load_neb(char* objfile, char * nebargs);
@@ -44,16 +35,8 @@ int service_check_timeout;
 int host_check_timeout;
 int currently_running_service_checks;
 int currently_running_host_checks;
-#ifdef USENAEMON
 int event_broker_options;
-#endif
-#ifdef USENAEMON
 unsigned long event_broker_options;
-#endif
-#ifdef USENAGIOS3
-check_result *check_result_list;
-check_result check_result_info;
-#endif
 int process_performance_data;
 
 nebcallback nebcb_process_data[MAX_NEB_CB];
@@ -81,10 +64,6 @@ static void init_externals(void) {
     currently_running_service_checks = 0;
     currently_running_host_checks = 0;
     event_broker_options = 1048575; /* BROKER_EVERYTHING */
-#ifdef USENAGIOS3
-    check_result_list = NULL;
-    check_result_info.check_options = 1; /* CHECK_OPTION_FORCE_EXECUTION */
-#endif
     process_performance_data = 1;
 }
 

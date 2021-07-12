@@ -16,7 +16,7 @@ my $sendinterval=60; #seconds #purges the mem if a report hasnt been generated
 my $sendgm="/usr/bin/send_gearman";
 my $VERSION=1.05;
 
-$SIG{HUP}  = \&mk_report; #write nagios reults to $scratchfile
+$SIG{HUP}  = \&mk_report; #write naemon results to $scratchfile
 $SIG{TERM} = \&death; #exit this script
 
 #name of this script
@@ -87,7 +87,7 @@ while (<FH>) {
 #Send of the script
 &death;
 
-#build report based off the data collected. json to syslog and nagios format to $scratchfile
+#build report based off the data collected. json to syslog and naemon format to $scratchfile
 sub mk_report {
     my $last=shift;
     
@@ -110,7 +110,7 @@ sub mk_report {
         
     logit(" { \"service\":$svc, \"host\":$host, \"error\": $error, \"stale\":$stale, \"new\":$new, \"total_actions\":$total, \"total_workers\":$psinfo->{total}, \"idle_workers\":$psinfo->{idle}, \"active_workers\":$psinfo->{active} }");
     
-    #Passivly send the results back to the nagios
+    #Passivly send the results back to the naemon
     my $now=time;
     my $p=sprintf("%.0f", $now-$start);
     my $cmd="$sendgm --config=\"$workerconf\" --host=\"$hostname\" --service=\"Worker Stats\" --message=\'OK: $process age $p seconds|service=$svc.00; host=$host.00; errors=$error.00; stale=$stale.00; new=$new.00; total_actions=$total.00; total_workers=$psinfo->{total}.00; idle_workers=$psinfo->{idle}.00; active_workers=$psinfo->{active}.00\n\'";

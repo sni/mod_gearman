@@ -2,12 +2,10 @@
 
 use warnings;
 use strict;
-use Test::More tests => 6;
+use Test::More tests => 2;
 
 my $mods = {
     "mod_gearman_naemon.o"  => { 'check_result_info' => 0, 'notification_reason_name' => 1 },
-    "mod_gearman_nagios3.o" => { 'check_result_info' => 1, 'notification_reason_name' => 0 },
-    "mod_gearman_nagios4.o" => { 'check_result_info' => 0, 'notification_reason_name' => 1 },
 };
 for my $mod (sort keys %{$mods}) {
 SKIP: {

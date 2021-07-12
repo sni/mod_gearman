@@ -41,7 +41,7 @@ int check_logfile(char *logfile, char *match) {
     fp = fopen(logfile, "r");
     if(fp == NULL) {
         perror(logfile);
-        return;
+        return(0);
     }
     line = malloc(GM_BUFFERSIZE);
     while(fgets(line, GM_BUFFERSIZE, fp) != NULL) {

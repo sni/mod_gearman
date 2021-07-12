@@ -11,10 +11,6 @@ Files: debian/*
 Copyright: 2010, Stig Sandbeck Mathisen <ssm@debian.org>
 License: GPL-3+
 
-Files: include/nagios/*
-Copyright: 1999-2008 Ethan Galstad <egalstad@nagios.org>
-License: GPL-2
-
 Files: include/libgearman/*
 Copyright: 2006-2010 Brian Aker,
            2008-2010 Eric Day

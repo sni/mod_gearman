@@ -2,8 +2,8 @@
 
 set -e
 
-GROUP="nagios"
-USER="nagios"
+GROUP="naemon"
+USER="naemon"
 DATADIR="/var/lib/mod_gearman"
 
 # Naemon user must exist for standalone worker
@@ -18,7 +18,7 @@ if ! getent group $GROUP >/dev/null ; then
         addgroup --system $GROUP >/dev/null
 fi
 
-# creating nagios user if he isn't already there
+# creating naemon user if he isn't already there
 if ! getent passwd $USER >/dev/null ; then
         # Adding system user
         adduser \
@@ -26,7 +26,7 @@ if ! getent passwd $USER >/dev/null ; then
           --disabled-login \
           --ingroup $GROUP \
           --home $DATADIR \
-          --gecos "nagios" \
+          --gecos "naemon" \
           --shell /bin/false \
           $USER  >/dev/null
 else

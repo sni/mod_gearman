@@ -235,7 +235,7 @@ sub exec_handler {
 
     # check too old
     if($age > $opt_maxage) {
-        # send a "unknown" result so nagios can reschedule this check
+        # send a "unknown" result so naemon can reschedule this check
         _out("max age reached for this job: ".$age." sec");
         $result->{return_code}  = 3;
         $result->{output}       = "(Could Not Start Check In Time)";

@@ -23,7 +23,7 @@ chomp(my $gearman = `which gearman 2>/dev/null`);
 ok($gearman, 'gearman present: '.$gearman) or BAIL_OUT("no gearman");
 
 # start gearmand
-system("$gearmand --port $TESTPORT --pid-file=./gearman.pid -d --log-file=$LOGFILE");
+system("$gearmand --port=$TESTPORT --pid-file=./gearman.pid -d --log-file=$LOGFILE");
 chomp(my $gearmand_pid = `cat ./gearman.pid`);
 isnt($gearmand_pid, '', 'gearmand running: '.$gearmand_pid) or BAIL_OUT("no gearmand");
 

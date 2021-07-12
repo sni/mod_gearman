@@ -10,7 +10,7 @@ increasing Naemon scalability. Mod-Gearman can even help to reduce the
 load on a single Naemon host, because its much smaller and more
 efficient in executing checks.
 
- * Mod-Gearman 3.x works with Nagios 3 and Naemon (and might work with Nagios 4)
+ * Mod-Gearman 4.x works with Naemon Core
 
 It consists of three parts:
 
@@ -409,8 +409,6 @@ broker line to your naemon.cfg:
 --------------------------------------
 broker_module=.../mod_gearman_naemon.o server=localhost:4730 eventhandler=yes services=yes hosts=yes config=.../module.conf
 --------------------------------------
-
-NOTE: use mod_gearman_nagios3.o if you use nagios 3.
 
 see <<_configuration,Configuration>> for details on all parameters
 
@@ -1176,8 +1174,8 @@ verify if a plugin works with EPN or not.
 
 General EPN documentation is valid for Mod-Gearman as well:
 
- * http://nagios.sourceforge.net/docs/3_0/embeddedperl.html[Embedded Perl]
- * http://nagios.sourceforge.net/docs/3_0/epnplugins.html[Plugin Guidelines]
+ * https://www.naemon.org/documentation/usersguide/embeddedperl.html[Embedded Perl]
+ * https://www.naemon.org/documentation/usersguide/epnplugins.html[Plugin Guidelines]
 
 NOTE: Mod-Gearman does not fix all of the memory leaks introduced with
 Naemon and Embedded Perl, but it moves the leaks away from the core.
@@ -1333,23 +1331,14 @@ Mod-Gearman works perfectly with all versions of the Naemon core.
 
 Nagios
 ~~~~~~
-Mod-Gearman works well with Nagios 3. Preferable version 3.2.3
-or 3.5.1.
-
- * http://nagios.org[Nagios]
-
+Mod-Gearman dropped support for Nagios 3 starting with Mod-Gearman
+4.x. Use a 3.x release from the archive if you still need that.
 
 
 Icinga
 ~~~~~~
-The Icinga core is not really supported by Mod-Gearman. However, people have
-reported it works with Icinga 1.2.0, 1.8 and 1.10.1 but it seems like some
-statistics are not updated.
-
- * http://icinga.org[Icinga]
-
-
-
+Mod-Gearman dropped support for Icinga 1 starting with Mod-Gearman
+4.x. Use a 3.x release from the archive if you still need that.
 
 
 Hints
@@ -1367,7 +1356,7 @@ Hints
  - If you have some checks which should not run parallel, just setup a
    single worker with --max-worker=1 and they will be executed one
    after another. For example for cpu intesive checks with selenium.
- - Make sure all your worker have the Nagios-Plugins available under
+ - Make sure all your worker have the Monitoring-Plugins available under
    the same path. Otherwise they could'nt be found by the worker.
 
 

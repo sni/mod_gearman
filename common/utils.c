@@ -1744,7 +1744,6 @@ int read_pipe(char **target, int input) {
 
 void make_uniq(char *uniq, const char *format, ... ) {
     va_list ap;
-    int size;
 
     uniq[0] = 0;
     va_start(ap, format);

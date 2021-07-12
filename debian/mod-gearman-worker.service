@@ -1,0 +1,9 @@
+[Unit]
+Description=Mod-Gearman worker
+After=syslog.target network.target
+[Service]
+User=naemon
+Type=exec
+ExecStart=/usr/sbin/mod_gearman_worker --config=/etc/mod-gearman/worker.conf
+[Install]
+WantedBy=multi-user.target

@@ -5,11 +5,10 @@ use strict;
 use Test::More tests => 37;
 use Data::Dumper;
 
-for my $file (sort split("\n", `find common/ include/ neb_module/ tools/ worker/ -type f`)) {
+for my $file (sort split("\n", `find common/ include/ neb_module_naemon/ tools/ worker/ -type f`)) {
     next if $file !~ m/\.(c|h)$/mx;
     next if $file =~ m/gm_alloc\.(c|h)/mx;
     next if $file =~ m/base64\.c/mx;
-    next if $file =~ m/include\/nagios/mx;
     next if $file =~ m/worker_dummy_functions/mx;
     my $content = read_file($file);
     $content =~ s|(/\*.*?\*/)|&_replace_comments($1)|gsmxe;

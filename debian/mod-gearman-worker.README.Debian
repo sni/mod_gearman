@@ -14,7 +14,7 @@ module and the workers.
 Start the worker
 ----------------
 
-# /etc/init.d/mod-gearman-worker start
+# systemctl start mod-gearman-worker
 
 
 Check worker

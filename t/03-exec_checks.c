@@ -385,7 +385,7 @@ int main (int argc, char **argv, char **env) {
     /*****************************************
      * restricted paths
      */
-    char res[150];
+    char res[2048];
     snprintf(res, 150, "--restrict_path=/tmp/");
     rc = parse_args_line(mod_gm_opt, res, 0);
     cmp_ok(rc, "==", GM_OK, "parsed %s option", res);

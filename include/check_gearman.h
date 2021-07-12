@@ -23,10 +23,10 @@
 
 /**
  * @file
- * @brief check_gearman nagios plugin
+ * @brief check_gearman naemon plugin
  * @addtogroup mod_gearman_check_gearman check_gearman
  *
- * check_gearman can be used as a nagios plugin to verify gearman server and worker.
+ * check_gearman can be used as a naemon plugin to verify gearman server and worker.
  * It is part of the Mod-Gearman package but not limited to Mod-Gearman.
  *
  * @{
@@ -47,7 +47,7 @@
  * @param[in] argc - number of arguments
  * @param[in] argv - list of arguments
  *
- * @return exits with a nagios compatible exit code
+ * @return exits with a naemon compatible exit code
  */
 int main (int argc, char **argv);
 
@@ -55,7 +55,7 @@ int main (int argc, char **argv);
  *
  * print the usage and exit
  *
- * @return exits with a nagios compatible exit code
+ * @return exits with a naemon compatible exit code
  */
 void print_usage(void);
 
@@ -63,7 +63,7 @@ void print_usage(void);
  *
  * print the version and exit
  *
- * @return exits with a nagios compatible exit code
+ * @return exits with a naemon compatible exit code
  */
 void print_version(void);
 
@@ -73,7 +73,7 @@ void print_version(void);
  *
  * @param[in] sig - signal number
  *
- * @return exits with a nagios compatible exit code
+ * @return exits with a naemon compatible exit code
  */
 void alarm_sighandler(int sig);
 
@@ -83,7 +83,7 @@ void alarm_sighandler(int sig);
  *
  * @param[in] server - server to check
  *
- * @return returns a nagios compatible exit code
+ * @return returns a naemon compatible exit code
  */
 int check_server(char * server, in_port_t port);
 
@@ -95,7 +95,7 @@ int check_server(char * server, in_port_t port);
  * @param[in] send - put this text as job into the queue
  * @param[in] expect - returning text to expect
  *
- * @return returns a nagios compatible exit code
+ * @return returns a naemon compatible exit code
  */
 int check_worker(char * queue, char * send, char * expect);
 

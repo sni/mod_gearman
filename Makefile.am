@@ -54,29 +54,11 @@ common_check_SOURCES       = common/check_utils.c \
 
 pkglib_LIBRARIES           =
 NEB_MODULES                =
-if ENABLE_NAEMON
 pkglib_LIBRARIES          += mod_gearman_naemon.so
 mod_gearman_naemon_so_SOURCES = $(common_SOURCES) \
                              neb_module_naemon/result_thread.c \
                              neb_module_naemon/mod_gearman.c
 NEB_MODULES               += mod_gearman_naemon.o
-endif
-
-if ENABLE_NAGIOS3
-pkglib_LIBRARIES          += mod_gearman_nagios3.so
-mod_gearman_nagios3_so_SOURCES = $(common_SOURCES) \
-                             neb_module_nagios3/result_thread.c \
-                             neb_module_nagios3/mod_gearman.c
-NEB_MODULES               += mod_gearman_nagios3.o
-endif
-
-if ENABLE_NAGIOS4
-pkglib_LIBRARIES          += mod_gearman_nagios4.so
-mod_gearman_nagios4_so_SOURCES = $(common_SOURCES) \
-                             neb_module_nagios4/result_thread.c \
-                             neb_module_nagios4/mod_gearman.c
-NEB_MODULES               += mod_gearman_nagios4.o
-endif
 
 bin_PROGRAMS               = mod_gearman_worker \
                              send_gearman \
@@ -102,44 +84,20 @@ gearman_top_SOURCES        = $(common_SOURCES) \
 gearman_top_LDADD          = -lncurses
 
 # tests
-check_PROGRAMS   = 01_utils 02_full 03_exec 04_log
-if ENABLE_NAEMON
-check_PROGRAMS   += 05_neb_naemon
-endif
-if ENABLE_NAGIOS3
-check_PROGRAMS   += 05_neb_nagios3
-endif
-if ENABLE_NAGIOS4
-check_PROGRAMS   += 05_neb_nagios4
-endif
-check_PROGRAMS   += 06_exec 07_epn
+check_PROGRAMS   = 01_utils 02_full 03_exec 04_log 05_neb 06_exec 07_epn
 #check_PROGRAMS  += 08_roundtrip
 01_utils_SOURCES = $(common_SOURCES) t/tap.h t/tap.c t/01-utils.c $(common_check_SOURCES)
 02_full_SOURCES  = $(common_SOURCES) t/tap.h t/tap.c t/02-full.c $(common_check_SOURCES)
 03_exec_SOURCES  = $(common_SOURCES) t/tap.h t/tap.c t/03-exec_checks.c $(common_check_SOURCES)
 04_log_SOURCES   = $(common_SOURCES) t/tap.h t/tap.c t/04-log.c
-05_neb_naemon_SOURCES  = $(common_SOURCES) t/tap.h t/tap.c t/05-neb_naemon.c
-05_neb_nagios3_SOURCES = $(common_SOURCES) t/tap.h t/tap.c t/05-neb_nagios3.c
-05_neb_nagios4_SOURCES = $(common_SOURCES) t/tap.h t/tap.c t/05-neb_nagios4.c
-05_neb_naemon_LDFLAGS   = -Wl,--export-dynamic -rdynamic
-05_neb_nagios3_LDFLAGS  = $(05_neb_naemon_LDFLAGS)
-05_neb_nagios4_LDFLAGS  = $(05_neb_naemon_LDFLAGS)
+05_neb_SOURCES   = $(common_SOURCES) t/tap.h t/tap.c t/05-neb.c
+05_neb_LDFLAGS   = -Wl,--export-dynamic -rdynamic
+05_neb_LDADD     =-ldl
 07_epn_SOURCES   = $(common_SOURCES) t/tap.h t/tap.c t/07-epn.c $(common_check_SOURCES)
 # only used for performance tests
 06_exec_SOURCES  = $(common_SOURCES) t/tap.h t/tap.c t/06-execvp_vs_popen.c $(common_check_SOURCES)
 #08_roundtrip_SOURCES  = $(common_SOURCES) t/08-roundtrip.c
 #08_roundtrip_LDFLAGS = -Wl,--export-dynamic -rdynamic
-if USEBSD
-05_neb_naemon_LDADD=
-05_neb_nagios3_LDADD=
-05_neb_nagios4_LDADD=
-#08_roundtrip_LDADD=
-else
-05_neb_naemon_LDADD=-ldl
-05_neb_nagios3_LDADD=$(05_neb_naemon_LDADD)
-05_neb_nagios4_LDADD=$(05_neb_naemon_LDADD)
-#08_roundtrip_LDADD=-ldl
-endif
 TESTS            = $(check_PROGRAMS) t/09-benchmark.t t/10-large-result.t t/11-alloc.t t/12-cppcheck.t t/13-tools.t t/14-symbols.t
 
 
@@ -154,10 +112,10 @@ replace_vars = sed -e 's:%CONFIG_WORKER%:$(sysconfdir)/mod_gearman/worker.conf:g
                -e 's:%WORKERBIN%:$(bindir)/mod_gearman_worker:g' \
                -e 's:%USER%:$(user):g'
 
-EXTRA_DIST = COPYING etc/*.in extras include neb_module \
+EXTRA_DIST = COPYING etc/*.in extras include \
              THANKS README docs/README.html Changes worker/initscript.in worker/daemon-systemd.in \
              support/mod-gearman.spec \
-             t/data/* t/rc t/both t/killer t/sleep t/*.pl t/*.t t/05-neb.c \
+             t/data/* t/rc t/both t/killer t/sleep t/*.pl t/*.t \
              worker/mod_gearman_p1.pl t/test_all.pl t/valgrind_suppress.cfg contrib \
              etc/mod_gearman_logrotate ./autogen.sh \
              debian
@@ -174,26 +132,6 @@ mod_gearman_naemon.o: $(mod_gearman_naemon_so_OBJECTS) $(mod_gearman_naemon_so_D
 	fi
 	chmod 644 mod_gearman_naemon.o
 	@$(RM) mod_gearman_naemon.so
-
-mod_gearman_nagios3.o: $(mod_gearman_nagios3_so_OBJECTS) $(mod_gearman_nagios3_so_DEPENDENCIES)
-	@echo '    $$(CC) $<'
-	@if [ "$(OS)" = "Darwin" ]; then \
-		$(CXX) $(LDFLAGS) -dynamiclib -single_module -undefined dynamic_lookup $(mod_gearman_nagios3_so_OBJECTS) -o $@ -lpthread -lgearman; \
-	else \
-		$(CXX) $(LDFLAGS) -fPIC -shared $(mod_gearman_nagios3_so_OBJECTS) -o $@ -lpthread -lgearman; \
-	fi
-	chmod 644 mod_gearman_nagios3.o
-	@$(RM) mod_gearman_nagios3.so
-
-mod_gearman_nagios4.o: $(mod_gearman_nagios4_so_OBJECTS) $(mod_gearman_nagios4_so_DEPENDENCIES)
-	@echo '    $$(CC) $<'
-	@if [ "$(OS)" = "Darwin" ]; then \
-		$(CXX) $(LDFLAGS) -dynamiclib -single_module -undefined dynamic_lookup $(mod_gearman_nagios4_so_OBJECTS) -o $@ -lpthread -lgearman; \
-	else \
-		$(CXX) $(LDFLAGS) -fPIC -shared $(mod_gearman_nagios4_so_OBJECTS) -o $@ -lpthread -lgearman; \
-	fi
-	chmod 644 mod_gearman_nagios4.o
-	@$(RM) mod_gearman_nagios4.so
 
 common/perlxsi.o:
 	@echo '    $$(CC) $<'
@@ -223,15 +161,7 @@ all-local: $(NEB_MODULES) initscript-local mod_gearman_neb.conf-local mod_gearma
 	@echo ""
 	@echo "  the following files have been created:"
 	@echo ""
-if ENABLE_NAEMON
 	@echo "  mod_gearman_naemon.o"
-endif
-if ENABLE_NAGIOS3
-	@echo "  mod_gearman_nagios3.o"
-endif
-if ENABLE_NAGIOS4
-	@echo "  mod_gearman_nagios4.o"
-endif
 	@echo "  mod_gearman_worker"
 	@echo "  worker/initscript"
 	@echo "  worker/daemon-systemd"
@@ -275,15 +205,7 @@ worker.static: worker
 	@echo ""
 
 install-exec-local: install-local-state-dir
-if ENABLE_NAEMON
 	$(install_sh_PROGRAM) -m 644 mod_gearman_naemon.o $(DESTDIR)$(pkglibdir)/mod_gearman_naemon.o
-endif
-if ENABLE_NAGIOS3
-	$(install_sh_PROGRAM) -m 644 mod_gearman_nagios3.o $(DESTDIR)$(pkglibdir)/mod_gearman_nagios3.o
-endif
-if ENABLE_NAGIOS4
-	$(install_sh_PROGRAM) -m 644 mod_gearman_nagios4.o $(DESTDIR)$(pkglibdir)/mod_gearman_nagios4.o
-endif
 	$(install_sh_PROGRAM) -m 755 worker/initscript $(DESTDIR)$(initrddir)/mod-gearman-worker
 
 install-local-state-dir:
@@ -303,15 +225,7 @@ install-data-local: install-local-state-dir $(install_epnfiles)
 	@echo "################################################################"
 	@echo ""
 	@echo " Installation completed:"
-if ENABLE_NAEMON
 	@echo " neb module:     $(DESTDIR)$(pkglibdir)/mod_gearman_naemon.o"
-endif
-if ENABLE_NAGIOS3
-	@echo " neb module:     $(DESTDIR)$(pkglibdir)/mod_gearman_nagios3.o"
-endif
-if ENABLE_NAGIOS4
-	@echo " neb module:     $(DESTDIR)$(pkglibdir)/mod_gearman_nagios4.o"
-endif
 	@echo ""
 	@echo " worker:         $(DESTDIR)$(bindir)/mod_gearman_worker"
 	@echo " init script:    $(DESTDIR)$(initrddir)/mod-gearman-worker"
@@ -321,18 +235,8 @@ endif
 	@echo " send bin:       $(DESTDIR)$(bindir)/send_gearman"
 	@echo " send multi bin: $(DESTDIR)$(bindir)/send_multi"
 	@echo ""
-if ENABLE_NAEMON
-		echo "just add the broker line to your naemon.cfg:"
-		echo "broker_module=$(DESTDIR)$(pkglibdir)/mod_gearman_naemon.o config=$(DESTDIR)$(sysconfdir)/mod_gearman/module.conf"
-endif
-if ENABLE_NAGIOS3
-		echo "just add the broker line to your nagios.cfg:"
-		echo "broker_module=$(DESTDIR)$(pkglibdir)/mod_gearman_nagios3.o config=$(DESTDIR)$(sysconfdir)/mod_gearman/module.conf"
-endif
-if ENABLE_NAGIOS4
-		echo "just add the broker line to your nagios.cfg:"
-		echo "broker_module=$(DESTDIR)$(pkglibdir)/mod_gearman_nagios4.o config=$(DESTDIR)$(sysconfdir)/mod_gearman/module.conf"
-endif
+	@echo "just add the broker line to your naemon.cfg:"
+	@echo "broker_module=$(DESTDIR)$(pkglibdir)/mod_gearman_naemon.o config=$(DESTDIR)$(sysconfdir)/mod_gearman/module.conf"
 	@echo ""
 	@if [ -e $(DESTDIR)$(sysconfdir)/mod_gearman/module.conf -o -e $(DESTDIR)$(sysconfdir)/mod_gearman/worker.conf ]; then \
 	    echo " install default config with"; \
@@ -343,8 +247,6 @@ endif
             make install-config; \
 	fi
 	$(RM) $(DESTDIR)$(pkglibdir)/mod_gearman_naemon.so
-	$(RM) $(DESTDIR)$(pkglibdir)/mod_gearman_nagios3.so
-	$(RM) $(DESTDIR)$(pkglibdir)/mod_gearman_nagios4.so
 
 
 install-config:

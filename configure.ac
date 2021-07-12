@@ -4,9 +4,9 @@
 ##############################################
 # autoconf really does not work with 2.59 or older
 AC_PREREQ([2.60])
-AC_INIT([mod_gearman], [3.3.3], [sven.nierlein@consol.de])
+AC_INIT([mod_gearman], [3.3.4.20210712], [sven.nierlein@consol.de])
 AM_INIT_AUTOMAKE([-Wall foreign subdir-objects])
-AC_CONFIG_SRCDIR([neb_module_naemon/mod_gearman.c],[neb_module_nagios3/mod_gearman.c],[neb_module_nagios4/mod_gearman.c],[worker/worker.c],[tools/send_gearman.c],[tools/check_gearman.c],[tools/gearman_top.c])
+AC_CONFIG_SRCDIR([neb_module_naemon/mod_gearman.c],[worker/worker.c],[tools/send_gearman.c],[tools/check_gearman.c],[tools/gearman_top.c])
 AC_CONFIG_HEADER([config.h])
 
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
@@ -28,6 +28,7 @@ AC_PROG_CXX
 AC_PROG_CC
 AM_PROG_CC_C_O
 AC_PROG_RANLIB
+AM_PROG_AR
 
 ##############################################
 # gearman wants this
@@ -50,7 +51,6 @@ AC_ARG_WITH(gearman,
  [  --with-gearman=DIR Specify the path to your gearman library],
  [
     found=0
-    libgm_1_0=0
     for d in libgearman/.libs lib lib64 .; do
       test -e "$withval/$d/libgearman.so" && LDFLAGS="${LDFLAGS} -L$withval/$d" && CFLAGS="${CFLAGS} -L$withval/$d" && found=1 && break;
     done
@@ -58,13 +58,15 @@ AC_ARG_WITH(gearman,
     echo "found libgearman.so in $withval/$d/"
     found=0
     for d in libgearman-1.0 include .; do
-      test -e "$withval/$d/libgearman-1.0/gearman.h" && CFLAGS="${CFLAGS} -I$withval/$d" && found=1 && libgm_1_0=1 && break;
-      test -e "$withval/$d/libgearman/gearman.h"     && CFLAGS="${CFLAGS} -I$withval/$d" && found=1 && break;
+      test -e "$withval/$d/libgearman-1.0/gearman.h" && CFLAGS="${CFLAGS} -I$withval/$d" && found=1 && break;
     done
-    test $found -eq 1 || { echo 'did not find gearman.h under your specified path!' && exit 1; }
-    test $libgm_1_0 -eq 1 && { AC_DEFINE_UNQUOTED(LIBGEARMAN_1_0,,[libgearman 1.0 uses different header name. introduced with libgearman 0.25 ]) }
+    test $found -eq 1 || { echo 'did not find libgearman-1.0/gearman.h under your specified path!' && exit 1; }
     echo "found gearman.h in $withval/$d/"
- ])
+ ],
+ [
+    PKG_CHECK_MODULES([gearmand], [gearmand >= 1.1.12])
+ ]
+)
 
 ##############################################
 # Checks for additional libraries.
@@ -87,7 +89,13 @@ AC_ARG_WITH(naemon,
     echo "found naemon.h in $withval/$d/"
     test $found -eq 1 || { echo 'did not find naemon/naemon.h under your specified path!' && exit 1; }
     CPPFLAGS=`PKG_CONFIG_PATH="$withval/$d/" pkg-config --cflags naemon`
- ])
+ ],
+ [
+    PKG_CHECK_MODULES([naemon], [naemon >= 1.2])
+    CPPFLAGS=`pkg-config --cflags naemon`
+    AC_CHECK_HEADERS([naemon/naemon.h],,AC_MSG_ERROR([Compiling Mod-Gearman requires naemon.h (hint: install naemon-dev pkg)]))
+ ]
+)
 
 ##############################################
 # Determine the system init.d directory
@@ -127,43 +135,6 @@ if test "$USEPERL" = "yes"; then
     echo "Embedded Perl interpreter will be compiled in..."
     PERLLIBS="`perl -MExtUtils::Embed -e ccopts -e ldopts | tr -d '\n'`"
     AC_SUBST(PERLLIBS)
-fi
-
-##############################################
-AC_ARG_ENABLE(naemon-neb-module,--disable-naemon-neb-module will disable building the neb module for naemon,[
-    ENABLE_NAEMON=$enableval
-    ]
-    ,ENABLE_NAEMON=yes)
-AC_MSG_NOTICE([Building naemon neb module... $ENABLE_NAEMON])
-AM_CONDITIONAL(ENABLE_NAEMON, test "$ENABLE_NAEMON" = "yes")
-
-AC_ARG_ENABLE(nagios3-neb-module,--disable-nagios3-neb-module will disable building the neb module for nagios3,[
-    ENABLE_NAGIOS3=$enableval
-    ]
-    ,ENABLE_NAGIOS3=yes)
-AC_MSG_NOTICE([Building nagios3 neb module... $ENABLE_NAGIOS3])
-AM_CONDITIONAL(ENABLE_NAGIOS3, test "$ENABLE_NAGIOS3" = "yes")
-
-AC_ARG_ENABLE(nagios4-neb-module,--disable-nagios4-neb-module will disable building the neb module for nagios4,[
-    ENABLE_NAGIOS4=$enableval
-    ]
-    ,ENABLE_NAGIOS4=yes)
-AC_MSG_NOTICE([Building nagios4 neb module... $ENABLE_NAGIOS4])
-AM_CONDITIONAL(ENABLE_NAGIOS4, test "$ENABLE_NAGIOS4" = "yes")
-
-if test "$ENABLE_NAEMON" = "yes"; then
-    if test "x$with_naemon" = "x"; then
-        PKG_CHECK_MODULES(NAEMON, [naemon >= 0.8])
-        CPPFLAGS=`pkg-config --cflags naemon`
-    fi
-    AC_CHECK_HEADERS([naemon/naemon.h],,AC_MSG_ERROR([Compiling Mod-Gearman requires naemon.h (hint: install naemon-dev pkg)]))
-    AC_DEFINE_UNQUOTED(ENABLE_NAEMON,,[Build naemon neb module])
-fi
-if test "$ENABLE_NAGIOS3" = "yes"; then
-    AC_DEFINE_UNQUOTED(ENABLE_NAGIOS3,,[Build nagios3 neb module])
-fi
-if test "$ENABLE_NAGIOS4" = "yes"; then
-    AC_DEFINE_UNQUOTED(ENABLE_NAGIOS4,,[Build nagios4 neb module])
 fi
 
 ##############################################

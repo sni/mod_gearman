@@ -1,5 +1,5 @@
 Name:          mod_gearman
-Version:       3.3.3
+Version:       3.3.4.20210712
 Release:       1%{?dist}
 License:       GNU Public License version 2
 Packager:      Sven Nierlein <sven.nierlein@consol.de>
@@ -7,21 +7,17 @@ Vendor:        Labs Consol
 URL:           http://labs.consol.de/nagios/mod-gearman/
 Source0:       mod_gearman-%{version}.tar.gz
 Group:         Applications/Monitoring
-BuildRoot:     %{_tmppath}/%{name}-%{version}-root-%(%{__id_u} -n)
+Summary:       Mod-Gearman module for Naemon
+Provides:      mod_gearman
+Requires:      libgearman, perl, logrotate
 BuildRequires: autoconf, automake, ncurses-devel
 BuildRequires: libtool, libtool-ltdl-devel, libevent-devel
-BuildRequires: gearmand-devel
-Summary:       Gearman module for Naemon
-Requires(pre,post): /sbin/ldconfig
-Requires:      gearmand, perl, logrotate
-%if 0%{?el7}%{?fc20}%{?fc21}%{?fc22}
+BuildRequires: libgearman-devel
+BuildRequires: perl-devel, perl-ExtUtils-Embed, perl-Test-Simple, perl-Time-HiRes
+BuildRequires: nagios-plugins-all
+BuildRequires: gearmand
 BuildRequires: systemd
-%endif
-%if 0%{?suse_version} < 1315
-Requires(pre): shadow-utils
-%endif
-
-Provides:      mod_gearman
+%{?systemd_requires}
 
 %description
 Mod Gearman is a new way of distributing active Naemon (and compatible cores)
@@ -33,7 +29,6 @@ be bound to host and servicegroups.
 
 %prep
 %setup -q
-[ -f ./configure ] || ./autogen.sh
 
 %build
 %configure \
@@ -53,14 +48,12 @@ be bound to host and servicegroups.
      DESTDIR="%{buildroot}" \
      AM_INSTALL_PROGRAM_FLAGS=""
 
-%if 0%{?el7}%{?fc20}%{?fc21}%{?fc22}
 # Install systemd entry
 %{__install} -D -m 0644 -p worker/daemon-systemd %{buildroot}%{_unitdir}/mod-gearman-worker.service
 mkdir -p %{buildroot}%{_sysconfdir}/sysconfig
 touch %{buildroot}%{_sysconfdir}/sysconfig/mod-gearman-worker
 # remove SystemV init-script
 %{__rm} -f %{buildroot}%{_initrddir}/mod-gearman-worker
-%endif
 
 
 
@@ -72,44 +65,20 @@ getent passwd naemon >/dev/null || \
 exit 0
 
 %post
-/sbin/ldconfig
-%if 0%{?el7}%{?fc20}%{?fc21}%{?fc22}
-# on first installation only
-if [ $1 -eq 1 ] ; then
-    systemctl enable mod-gearman-worker
-    systemctl start mod-gearman-worker
-else
-    systemctl try-restart mod-gearman-worker
-fi
-%else
-if test $1 = 1; then
-  /sbin/chkconfig --add mod-gearman-worker
-fi
-%endif
+%systemd_post mod-gearman-worker.service
 
 %preun
-%if 0%{?el7}%{?fc20}%{?fc21}%{?fc22}
-systemctl disable mod-gearman-worker
-%else
-if test $1 = 0; then
-  /sbin/chkconfig --del mod-gearman-worker
-fi
-%endif
+%systemd_preun mod-gearman-worker.service
 
 %postun
-/sbin/ldconfig
+%systemd_postun mod-gearman-worker.service
 
 %clean
 %{__rm} -rf %{buildroot}
 
 %files
-%if 0%{?el7}%{?fc20}%{?fc21}%{?fc22}
-  %attr(0644,root,root) %{_unitdir}/mod-gearman-worker.service
-  %attr(0644,root,root) %{_sysconfdir}/sysconfig/mod-gearman-worker
-%else
-  %attr(755,root,root) %{_initrddir}/mod-gearman-worker
-%endif
-
+%attr(0644,root,root) %{_unitdir}/mod-gearman-worker.service
+%attr(0644,root,root) %{_sysconfdir}/sysconfig/mod-gearman-worker
 %config(noreplace) %{_sysconfdir}/mod_gearman/module.conf
 %config(noreplace) %{_sysconfdir}/mod_gearman/worker.conf
 %config(noreplace) %{_sysconfdir}/logrotate.d/mod_gearman
@@ -124,8 +93,6 @@ fi
 %{_bindir}/mod_gearman_mini_epn
 
 %{_libdir}/mod_gearman/mod_gearman_naemon.o
-%{_libdir}/mod_gearman/mod_gearman_nagios3.o
-%{_libdir}/mod_gearman/mod_gearman_nagios4.o
 
 %attr(755,naemon,root) %{_localstatedir}/mod_gearman
 %attr(755,naemon,root) %{_localstatedir}/log/mod_gearman
@@ -134,6 +101,10 @@ fi
 %docdir %{_defaultdocdir}
 
 %changelog
+* Mon Jun 12 2021 Sven Nierlein <sven@consol.de>
+- remove init.d
+- build with upstream gearmand
+
 * Wed Jan 29 2020 Sven Nierlein <sven@consol.de>
 - removed gearman_proxy
 

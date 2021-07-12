@@ -8,30 +8,12 @@
 
 #include <config.h>
 
-#ifdef USENAGIOS3
-#include "nagios3/nagios.h"
-#include "nagios3/nebmodules.h"
-#include "nagios3/nebstructs.h"
-#include "nagios3/nebcallbacks.h"
-#include "nagios3/broker.h"
-#define BROKER_MODULE "mod_gearman_nagios3.o"
-#endif
-#ifdef USENAGIOS4
-#include "nagios4/nagios.h"
-#include "nagios4/nebmodules.h"
-#include "nagios4/nebstructs.h"
-#include "nagios4/nebcallbacks.h"
-#include "nagios4/broker.h"
-#define BROKER_MODULE "mod_gearman_nagios4.o"
-#endif
-#ifdef USENAEMON
 #include "naemon/naemon.h"
 #include "naemon/nebmodules.h"
 #include "naemon/nebstructs.h"
 #include "naemon/nebcallbacks.h"
 #include "naemon/broker.h"
 #define BROKER_MODULE "mod_gearman_naemon.o"
-#endif
 
 #include "common.h"
 #include <worker_dummy_functions.c>
@@ -47,19 +29,8 @@ int service_check_timeout;
 int host_check_timeout;
 int currently_running_service_checks;
 int currently_running_host_checks;
-#ifdef USENAGIOS3
-int event_broker_options;
-#endif
-#if defined(USENAEMON) || defined(USENAGIOS4)
 unsigned long event_broker_options;
-#ifdef USENAEMON
 timed_event *schedule_event(time_t delay, event_callback callback, void *user_data) { delay = delay; callback = callback; user_data = user_data; return(NULL); }
-#endif
-#endif
-#ifdef USENAGIOS3
-check_result *check_result_list;
-check_result check_result_info;
-#endif
 int process_performance_data;
 int log_notifications;
 
@@ -79,10 +50,6 @@ void check_neb(char * nebargs) {
     currently_running_service_checks = 0;
     currently_running_host_checks    = 0;
     event_broker_options             = 1048575; /* BROKER_EVERYTHING */
-#ifdef USENAGIOS3
-    check_result_list                = NULL;
-    check_result_info.check_options  = 1;       /* CHECK_OPTION_FORCE_EXECUTION */
-#endif
     process_performance_data         = 1;
 
     /* load neb module */
@@ -130,15 +97,8 @@ void write_core_log(char *data) {
 
 /* fake some core functions */
 int neb_set_module_info(void *handle, int type, char *data) { handle=handle; type=type; data=data; return 0; }
-#if defined(USENAGIOS3) || defined(USENAGIOS4)
-int neb_register_callback(int callback_type, void *mod_handle, int priority, int (*callback_func)(int,void *)) { callback_type=callback_type; mod_handle=mod_handle; priority=priority; callback_func=callback_func; return 0; }
-int neb_deregister_callback(int callback_type, int (*callback_func)(int,void *)) { callback_type=callback_type; callback_func=callback_func; return 0; }
-#endif
-#ifdef USENAEMON
 int neb_register_callback(enum NEBCallbackType callback_type, void *mod_handle, int priority, int (*callback_func)(int, void *)) { return 0; }
 int neb_deregister_callback(enum NEBCallbackType callback_type, void *callback_func) { return 0; }
-#endif
-
 
 int main(void) {
     int i;

@@ -30,12 +30,6 @@
 #include "mod_gearman.h"
 
 #include <libgearman/gearman.h>
-#ifdef USENAGIOS3
-#include "nagios3/nagios.h"
-#endif
-#ifdef USENAGIOS4
-#include "nagios4/nagios.h"
-#endif
 
 void *result_worker(void *);
 int set_worker( gearman_worker_st *worker );

@@ -12,7 +12,7 @@
 #include <perl.h>
 
 #include <fcntl.h>
-#undef DEBUG /* epn-compiled Nagios spews just - this has a side effect of potentially disabling debug output on epn systems */
+#undef DEBUG /* epn-compiled Naemon spews just - this has a side effect of potentially disabling debug output on epn systems */
 #undef ctime    /* don't need perl's threaded version */
 #undef printf   /* can't use perl's printf until initialized */
 

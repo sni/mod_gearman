@@ -71,7 +71,7 @@ void print_usage(void);
  *
  * print the version and exit
  *
- * @return exits with a nagios compatible exit code
+ * @return exits with a naemon compatible exit code
  */
 void print_version(void);
 
