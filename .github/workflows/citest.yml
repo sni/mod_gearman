@@ -33,7 +33,7 @@ jobs:
 
       - name: run tests
         run: |
-          make test                            || exit 1
+          HARNESS_VERBOSE=1 make test                            || sleep 3600
           make clean                           || exit 1
           ./configure --enable-debug           || exit 1
           make                                 || exit 1
