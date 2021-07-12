@@ -13,6 +13,7 @@ Requires:      libgearman, perl, logrotate
 BuildRequires: autoconf, automake, ncurses-devel
 BuildRequires: libtool, libtool-ltdl-devel, libevent-devel
 BuildRequires: libgearman-devel
+BuildRequires: naemon-devel
 BuildRequires: perl-devel, perl-ExtUtils-Embed, perl-Test-Simple, perl-Time-HiRes
 BuildRequires: nagios-plugins-all
 BuildRequires: gearmand
