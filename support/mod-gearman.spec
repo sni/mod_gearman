@@ -10,7 +10,7 @@ Group:         Applications/Monitoring
 Summary:       Mod-Gearman module for Naemon
 Provides:      mod_gearman
 Requires:      libgearman, perl, logrotate
-BuildRequires: autoconf, automake, ncurses-devel
+BuildRequires: autoconf, automake, pkgconfig, ncurses-devel
 BuildRequires: libtool, libtool-ltdl-devel, libevent-devel
 BuildRequires: libgearman-devel
 BuildRequires: naemon-devel
