@@ -1,0 +1,41 @@
+name: citest
+
+on:
+  push:
+  pull_request:
+  release:
+
+jobs:
+  citest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      #- name: Setup tmate session, see https://github.com/marketplace/actions/debugging-with-tmate
+      #  uses: mxschmitt/action-tmate@v3
+      - name: prepare machine
+        run: |
+          sudo apt-get update
+          sudo apt-get install apt-transport-https
+          sudo sh -c "echo 'deb http://download.opensuse.org/repositories/home:/naemon:/daily/xUbuntu_$(lsb_release -rs)/ ./' >> /etc/apt/sources.list"
+          wget -q "https://build.opensuse.org/projects/home:naemon:daily/public_key" -O - | sudo apt-key add -
+          sudo apt-get update
+          sudo apt-get autoremove -y
+          sudo apt-get install -y devscripts build-essential equivs dh-systemd dpkg-dev
+          sudo mk-build-deps
+          sudo apt-get install -y ./*-build-deps*.deb
+          sudo rm -f *-build-deps*{deb,buildinfo,changes}
+
+      - name: run build
+        run: |
+          ./autogen.sh                                      || exit 1
+          ./configure --enable-embedded-perl --enable-debug || exit 1
+          make                                              || exit 1
+
+      - name: run tests
+        run: |
+          make test                            || exit 1
+          make clean                           || exit 1
+          ./configure --enable-debug           || exit 1
+          make                                 || exit 1
+          make fulltest                        || exit 1
+          make deb                             || exit 1
