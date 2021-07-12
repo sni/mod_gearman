@@ -10,8 +10,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      #- name: Setup tmate session, see https://github.com/marketplace/actions/debugging-with-tmate
-      #  uses: mxschmitt/action-tmate@v3
+      - name: Setup tmate session, see https://github.com/marketplace/actions/debugging-with-tmate
+        uses: mxschmitt/action-tmate@v3
       - name: prepare machine
         run: |
           sudo apt-get update
