@@ -20,7 +20,7 @@ jobs:
           wget -q "https://build.opensuse.org/projects/home:naemon:daily/public_key" -O - | sudo apt-key add -
           sudo apt-get update
           sudo apt-get autoremove -y
-          sudo apt-get install -y devscripts build-essential equivs dh-systemd dpkg-dev
+          sudo apt-get install -y devscripts build-essential equivs dh-systemd dpkg-dev valgrind
           sudo mk-build-deps
           sudo apt-get install -y ./*-build-deps*.deb
           sudo rm -f *-build-deps*{deb,buildinfo,changes}
