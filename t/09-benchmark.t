@@ -3,10 +3,12 @@
 use warnings;
 use strict;
 use Test::More tests => 8;
-use Data::Dumper;
+use Carp qw/confess/;
 use Time::HiRes qw( gettimeofday tv_interval sleep );
 
-alarm(180); # hole test should not take longer than 3 minutes
+$SIG{'ALRM'} = sub { confess("alarm clock"); };
+$SIG{'PIPE'} = sub { confess("got sig pipe"); };
+alarm(60); # hole test should not take longer than 1 minute
 
 my $TESTPORT    = 54730;
 my $NR_TST_JOBS = 2000;

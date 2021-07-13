@@ -21,9 +21,7 @@ mod_gearman_worker
 02_full
 03_exec
 04_log
-05_neb_naemon
-05_neb_nagios3
-05_neb_nagios4
+05_neb
 06_exec
 07_epn
 08_roundtrip
