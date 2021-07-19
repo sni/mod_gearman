@@ -8,7 +8,7 @@ Homepage: http://www.mod-gearman.org
 Bugs: https://github.com/sni/mod_gearman/issues
 Vcs-Browser: https://github.com/sni/mod_gearman
 Vcs-Git: git://github.com/sni/mod_gearman.git
-Build-Depends: debhelper (>= 10), automake, libtool, libgearman-dev (>= 1.1), libncurses5-dev,
+Build-Depends: debhelper (>= 7), automake, libtool, libgearman-dev (>= 1.1), libncurses5-dev,
                libltdl-dev, gearman-job-server, help2man, dctrl-tools, libperl-dev, gearman-tools,
                monitoring-plugins-basic, naemon-dev, pkg-config
 Files:
