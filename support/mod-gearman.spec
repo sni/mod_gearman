@@ -14,7 +14,11 @@ BuildRequires: autoconf, automake, pkgconfig, ncurses-devel
 BuildRequires: libtool, libtool-ltdl-devel, libevent-devel
 BuildRequires: libgearman-devel
 BuildRequires: naemon-devel
+BuildRequires: perl
+%if %{defined suse_version}
+%else
 BuildRequires: perl-devel, perl-ExtUtils-Embed, perl-Test-Simple, perl-Time-HiRes
+%endif
 BuildRequires: nagios-plugins-all
 BuildRequires: gearmand
 BuildRequires: systemd
