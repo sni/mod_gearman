@@ -36,6 +36,7 @@ be bound to host and servicegroups.
 %setup -q
 
 %build
+test -f configure || ./autogen.sh
 %configure \
      --datadir="%{_datadir}" \
      --datarootdir="%{_datadir}" \
