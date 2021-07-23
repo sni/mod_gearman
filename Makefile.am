@@ -114,7 +114,7 @@ replace_vars = sed -e 's:%CONFIG_WORKER%:$(sysconfdir)/mod_gearman/worker.conf:g
 
 EXTRA_DIST = COPYING etc/*.in extras include \
              THANKS README docs/README.html Changes worker/initscript.in worker/daemon-systemd.in \
-             support/mod-gearman.spec \
+             support/mod_gearman.spec \
              t/data/* t/rc t/both t/killer t/sleep t/*.pl t/*.t \
              worker/mod_gearman_p1.pl t/test_all.pl t/valgrind_suppress.cfg contrib \
              etc/mod_gearman_logrotate ./autogen.sh \
@@ -330,7 +330,7 @@ resetdaily:
 version:
 	if [ -z "$$NEWVERSION" ]; then NEWVERSION=$$(dialog --stdout --inputbox "New Version:" 0 0 "$(VERSION)"); fi; \
 	if [ -n "$$NEWVERSION" ] && [ "$$NEWVERSION" != "$(VERSION)" ]; then \
-		sed -ri "s/$(VERSION)/$$NEWVERSION/" include/common.h configure.ac support/mod-gearman.spec; \
+		sed -ri "s/$(VERSION)/$$NEWVERSION/" include/common.h configure.ac support/mod_gearman.spec; \
 		sed -i Changes -e "s/next:/$$NEWVERSION $(shell LC_TIME=C date)/"; \
 		$(MAKE) docs; \
 		if [ "x$$DEBEMAIL" = "x" ]; then \
