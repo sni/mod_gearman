@@ -39,3 +39,4 @@ jobs:
           make                                  || exit 1
           make fulltest                         || exit 1
           make deb                              || exit 1
+          make dist                             || exit 1
