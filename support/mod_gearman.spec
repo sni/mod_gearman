@@ -85,10 +85,12 @@ exit 0
 %files
 %attr(0644,root,root) %{_unitdir}/mod-gearman-worker.service
 %attr(0644,root,root) %{_sysconfdir}/sysconfig/mod-gearman-worker
+%dir %{_sysconfdir}/mod_gearman
 %config(noreplace) %{_sysconfdir}/mod_gearman/module.conf
 %config(noreplace) %{_sysconfdir}/mod_gearman/worker.conf
 %config(noreplace) %{_sysconfdir}/logrotate.d/mod_gearman
 
+%dir %{_datadir}/mod_gearman
 %{_datadir}/mod_gearman/mod_gearman_p1.pl
 
 %{_bindir}/check_gearman
@@ -98,6 +100,7 @@ exit 0
 %{_bindir}/send_multi
 %{_bindir}/mod_gearman_mini_epn
 
+%dir %{_libdir}/mod_gearman
 %{_libdir}/mod_gearman/mod_gearman_naemon.o
 
 %attr(755,naemon,root) %{_localstatedir}/mod_gearman
