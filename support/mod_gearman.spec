@@ -18,7 +18,6 @@ BuildRequires: perl
 %else
 BuildRequires: perl-devel, perl-ExtUtils-Embed, perl-Test-Simple, perl-Time-HiRes
 %endif
-BuildRequires: nagios-plugins-all
 BuildRequires: gearmand
 BuildRequires: systemd
 %{?systemd_requires}
