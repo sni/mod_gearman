@@ -1,3 +1,7 @@
+%if ! %{defined _fillupdir}
+%define _fillupdir %{_localstatedir}/adm/fillup-templates
+%endif
+
 Name:          mod_gearman
 Version:       3.3.3
 Release:       1%{?dist}
@@ -54,8 +58,15 @@ test -f configure || ./autogen.sh
 
 # Install systemd entry
 %{__install} -D -m 0644 -p worker/daemon-systemd %{buildroot}%{_unitdir}/mod-gearman-worker.service
+
+%if %{defined suse_version}
+mkdir -p %{buildroot}%{_fillupdir}
+touch %{buildroot}%{_fillupdir}/sysconfig.mod-gearman-worker
+%else
 mkdir -p %{buildroot}%{_sysconfdir}/sysconfig
 touch %{buildroot}%{_sysconfdir}/sysconfig/mod-gearman-worker
+%endif
+
 # remove SystemV init-script
 %{__rm} -f %{buildroot}%{_initrddir}/mod-gearman-worker
 
@@ -66,23 +77,46 @@ getent group naemon >/dev/null || groupadd -r naemon
 getent passwd naemon >/dev/null || \
     useradd -r -g naemon -d %{_localstatedir}/mod_gearman -s /sbin/nologin \
     -c "naemon user" naemon
-exit 0
+%if %{defined suse_version}
+%service_add_pre mod-gearman-worker.service
+%endif
 
 %post
+%if %{defined suse_version}
+%service_add_post mod-gearman-worker.service
+%if 0%{?suse_version} < 1230
+%{fillup_and_insserv -y mod-gearman-worker}
+%else
+%fillup_only -n mod-gearman-worker
+%endif
+%else
 %systemd_post mod-gearman-worker.service
+%endif
 
 %preun
+%if %{defined suse_version}
+%service_del_preun mod-gearman-worker.service
+%else
 %systemd_preun mod-gearman-worker.service
+%endif
 
 %postun
+%if %{defined suse_version}
+%service_del_postun mod-gearman-worker.service
+%else
 %systemd_postun mod-gearman-worker.service
+%endif
 
 %clean
 %{__rm} -rf %{buildroot}
 
 %files
 %attr(0644,root,root) %{_unitdir}/mod-gearman-worker.service
-%attr(0644,root,root) %{_sysconfdir}/sysconfig/mod-gearman-worker
+%if %{defined suse_version}
+%config(noreplace) %{_fillupdir}/sysconfig.mod-gearman-worker
+%else
+%config(noreplace) %{_sysconfdir}/sysconfig/mod-gearman-worker
+%endif
 %dir %{_sysconfdir}/mod_gearman
 %config(noreplace) %{_sysconfdir}/mod_gearman/module.conf
 %config(noreplace) %{_sysconfdir}/mod_gearman/worker.conf
