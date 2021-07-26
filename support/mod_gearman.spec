@@ -5,12 +5,12 @@
 Name:          mod_gearman
 Version:       3.3.3
 Release:       1%{?dist}
-License:       GNU Public License version 2
+License:       GPL-2.0-or-later
 Packager:      Sven Nierlein <sven.nierlein@consol.de>
 Vendor:        Labs Consol
 URL:           http://labs.consol.de/nagios/mod-gearman/
 Source0:       mod_gearman-%{version}.tar.gz
-Group:         Applications/Monitoring
+Group:         System/Monitoring
 Summary:       Mod-Gearman module for Naemon
 Requires:      libgearman, perl, logrotate
 BuildRequires: autoconf, automake, gcc-c++, pkgconfig, ncurses-devel
@@ -113,7 +113,7 @@ getent passwd naemon >/dev/null || \
 %files
 %attr(0644,root,root) %{_unitdir}/mod-gearman-worker.service
 %if %{defined suse_version}
-%config(noreplace) %{_fillupdir}/sysconfig.mod-gearman-worker
+%{_fillupdir}/sysconfig.mod-gearman-worker
 %else
 %config(noreplace) %{_sysconfdir}/sysconfig/mod-gearman-worker
 %endif
