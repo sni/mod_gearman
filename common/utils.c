@@ -598,7 +598,6 @@ int parse_args_line(mod_gm_opt_t *opt, char * arg, int recursion_level) {
     /* result worker */
     else if ( !strcmp( key, "result_workers" ) ) {
         opt->result_workers = atoi( value );
-        if(opt->result_workers > 1) { opt->result_workers = 1; }
         if(opt->result_workers < 0) { opt->result_workers = 0; }
     }
 

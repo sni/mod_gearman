@@ -45,7 +45,7 @@ extern int            process_performance_data;
 extern int            log_notifications;
 
 /* global variables */
-static objectlist * mod_gm_result_list = 0;
+static objectlist * mod_gm_result_list = NULL;
 static pthread_mutex_t mod_gm_result_list_mutex = PTHREAD_MUTEX_INITIALIZER;
 void *gearman_module_handle=NULL;
 gearman_client_st client;
@@ -274,30 +274,47 @@ int nebmodule_deinit( int flags, int reason ) {
 
 /* insert results list into naemon core */
 static void move_results_to_core(struct nm_event_execution_properties *evprop) {
+    struct timeval tval_before, tval_after, tval_result;
     objectlist *tmp_list = NULL;
-    if(evprop->execution_type == EVENT_EXEC_NORMAL) {
-    /* safely save off currently local list */
-    pthread_mutex_lock(&mod_gm_result_list_mutex);
-
-    for( ; mod_gm_result_list; mod_gm_result_list = mod_gm_result_list->next) {
-        free(tmp_list);
-        process_check_result(mod_gm_result_list->object_ptr);
-        free_check_result(mod_gm_result_list->object_ptr);
-        free(mod_gm_result_list->object_ptr);
-        tmp_list = mod_gm_result_list;
+    objectlist *cur = NULL;
+    int count = 0;
+    if(evprop->execution_type != EVENT_EXEC_NORMAL) {
+        return;
     }
-    mod_gm_result_list = 0;
+
+    gettimeofday(&tval_before, NULL);
+    gm_log( GM_LOG_DEBUG, "move_results_to_core()\n" );
+
+    /* safely move result list aside */
+    pthread_mutex_lock(&mod_gm_result_list_mutex);
+    tmp_list = mod_gm_result_list;
+    mod_gm_result_list = NULL;
+    pthread_mutex_unlock(&mod_gm_result_list_mutex);
+
+    /* process result list */
+    while(tmp_list) {
+        cur = tmp_list;
+        tmp_list = tmp_list->next;
+
+        process_check_result(cur->object_ptr);
+        free_check_result(cur->object_ptr);
+        free(cur->object_ptr);
+        free(cur);
+        count++;
+    }
     free(tmp_list);
 
-    pthread_mutex_unlock(&mod_gm_result_list_mutex);
-        schedule_event(1, move_results_to_core, NULL);
-    }
+    gettimeofday(&tval_after, NULL);
+    timersub(&tval_after, &tval_before, &tval_result);
+
+    gm_log( GM_LOG_DEBUG, "move_results_to_core processed %d results in %ld.%06lds\n", count, (long int)tval_result.tv_sec, (long int)tval_result.tv_usec );
+    schedule_event(1, move_results_to_core, NULL);
 }
 
 /* add list to gearman result list */
 void mod_gm_add_result_to_list(check_result * newcr) {
     pthread_mutex_lock(&mod_gm_result_list_mutex);
-    add_object_to_objectlist(&mod_gm_result_list, newcr);
+    prepend_object_to_objectlist(&mod_gm_result_list, newcr);
     pthread_mutex_unlock(&mod_gm_result_list_mutex);
 }
 

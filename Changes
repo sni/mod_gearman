@@ -2,6 +2,8 @@ This file documents the revision history for mod_gearman.
 
 next:
           - drop nagios 3, nagios 4 and icinga 1 support
+          - improve check results handling performance
+          - add support for multiple result_workers
           - fix crash if gearmand is unreachable
           - fix host acknowledgement notification author macros
 
