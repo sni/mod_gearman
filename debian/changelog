@@ -1,3 +1,9 @@
+mod-gearman (4.0.0) UNRELEASED; urgency=low
+
+  * new upstream release
+
+ --  <build@mon-build-master.int.consol.de>  Fri, 11 Mar 2022 16:14:55 +0100
+
 mod-gearman (3.3.3) UNRELEASED; urgency=low
 
   * new upstream release
