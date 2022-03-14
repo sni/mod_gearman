@@ -1,4 +1,4 @@
-/var/log/mod_gearman/mod_gearman_neb.log {
+/var/log/mod-gearman/module.log {
     missingok
     notifempty
     copytruncate

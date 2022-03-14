@@ -23,8 +23,7 @@ override_dh_auto_configure:
 
 override_dh_auto_install:
 	dh_auto_install
-	cp etc/mod_gearman_worker.conf debian/worker.conf
-	cp etc/mod_gearman_neb.conf debian/module.conf
+	sed -e 's%/var/lib/log/%/var/log/mod-gearman/%' -i etc/*.conf
 	cp worker/mod_gearman_p1.pl debian/tmp/usr/share/mod_gearman/mod_gearman_p1.pl
 	rm -f debian/mod-gearman/usr/share/mod_gearman/shared.conf
 	rm -f debian/mod-gearman/usr/share/mod_gearman/standalone_worker.conf

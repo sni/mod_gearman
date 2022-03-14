@@ -4,10 +4,8 @@ set -e
 
 case "$1" in
     configure)
-        mkdir -p /etc/mod-gearman /var/lib/log/mod_gearman
-        chown naemon:naemon /var/lib/log/mod_gearman
-        [ -e /etc/mod-gearman/worker.conf ] || cp -p /usr/share/doc/mod-gearman-worker/examples/worker.conf.gz /etc/mod-gearman/worker.conf.gz
-        [ -e /etc/mod-gearman/worker.conf.gz ] && gunzip /etc/mod-gearman/worker.conf.gz
+        mkdir -p /etc/mod-gearman /var/log/mod-gearman/
+        chown naemon:naemon /var/log/mod-gearman/
     ;;
 
     abort-upgrade|abort-remove|abort-deconfigure)

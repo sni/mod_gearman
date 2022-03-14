@@ -1,1 +1,2 @@
+debian/tmp/etc/mod_gearman/module.conf etc/mod-gearman
 debian/tmp/usr/lib/*/mod_gearman/mod_gearman_naemon.o
