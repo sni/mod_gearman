@@ -3,7 +3,7 @@
 %endif
 
 Name:          mod_gearman
-Version:       4.0.0
+Version:       4.0.1
 Release:       1%{?dist}
 License:       GPL-2.0-or-later
 Packager:      Sven Nierlein <sven.nierlein@consol.de>

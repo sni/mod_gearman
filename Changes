@@ -1,5 +1,8 @@
 This file documents the revision history for mod_gearman.
 
+4.0.1 Tue Mar 15 09:52:14 CET 2022
+          - fix debian packaging
+
 4.0.0 Fri Mar 11 16:14:37 CET 2022
           - drop nagios 3, nagios 4 and icinga 1 support
           - improve check results handling performance
