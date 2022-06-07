@@ -202,9 +202,8 @@ void *dummy( gearman_job_st *job, void *context, size_t *result_size, gearman_re
 /* free client structure */
 void gm_free_client(gearman_client_st *client) {
     gearman_client_remove_servers(client);
-    if(client->options.is_allocated) {
-        gearman_client_free(client);
-    }
+    gearman_client_create(client);
+    gearman_client_free(client);
 }
 
 /* free worker structure */
