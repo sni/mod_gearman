@@ -132,11 +132,10 @@ void worker_loop() {
 
         if ( ret != GEARMAN_SUCCESS ) {
             gm_log( GM_LOG_ERROR, "worker error: %s\n", gearman_worker_error( &worker ) );
-            gearman_job_free_all( &worker );
-            gearman_worker_free( &worker );
-            gearman_client_free( &client );
+            gm_free_worker(&worker);
+            gm_free_client( &client );
             if( mod_gm_opt->dupserver_num )
-                gearman_client_free( &client_dup );
+                gm_free_client( &client_dup );
 
             /* sleep on error to avoid cpu intensive infinite loops */
             sleep(sleep_time_after_error);
@@ -585,10 +584,9 @@ void clean_worker_exit(int sig) {
     }
 
     gm_log( GM_LOG_TRACE, "cleaning worker\n");
-    gearman_worker_unregister_all(&worker);
-    gearman_job_free_all( &worker );
+    gm_free_worker(&worker);
     gm_log( GM_LOG_TRACE, "cleaning client\n");
-    gearman_client_free( &client );
+    gm_free_client(&client);
     mod_gm_free_opt(mod_gm_opt);
 
 #ifdef EMBEDDEDPERL

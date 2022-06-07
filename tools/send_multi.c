@@ -92,9 +92,9 @@ int main (int argc, char **argv) {
         rc*=-1;
     }
 
-    gearman_client_free( &client );
+    gm_free_client( &client );
     if( mod_gm_opt->dupserver_num )
-        gearman_client_free( &client_dup );
+        gm_free_client( &client_dup );
     mod_gm_free_opt(mod_gm_opt);
     exit( rc );
 }

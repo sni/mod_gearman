@@ -162,7 +162,7 @@ int add_job_to_queue( gearman_client_st *client, gm_server_t * server_list[GM_LI
         }
 
         /* recreate client, otherwise gearman sigsegvs */
-        gearman_client_free( client );
+        gm_free_client( client );
         create_client( server_list, client );
 
         /* retry as long as we have retries */
@@ -199,18 +199,21 @@ void *dummy( gearman_job_st *job, void *context, size_t *result_size, gearman_re
     return NULL;
 }
 
-
 /* free client structure */
-void free_client(gearman_client_st *client) {
-    gearman_client_free( client );
-    return;
+void gm_free_client(gearman_client_st *client) {
+    gearman_client_remove_servers(client);
+    if(client->options.is_allocated) {
+        gearman_client_free(client);
+    }
 }
 
-
 /* free worker structure */
-void free_worker(gearman_worker_st *worker) {
-    gearman_worker_free( worker );
-    return;
+void gm_free_worker(gearman_worker_st *worker) {
+    gearman_worker_unregister_all(worker);
+    gearman_worker_remove_servers(worker);
+    if(worker->options.is_allocated) {
+        gearman_worker_free(worker);
+    }
 }
 
 /* get worker/jobs data from gearman server */

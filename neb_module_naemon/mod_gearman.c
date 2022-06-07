@@ -260,7 +260,7 @@ int nebmodule_deinit( int flags, int reason ) {
     }
 
     /* cleanup */
-    free_client(&client);
+    gm_free_client(&client);
 
     /* close old logfile */
     if(mod_gm_opt->logfile_fp != NULL) {

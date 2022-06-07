@@ -56,11 +56,7 @@ static void cancel_worker_thread (void * data) {
     if(worker == NULL)
         return;
 
-    gearman_worker_unregister_all(worker);
-    gearman_worker_remove_servers(worker);
-    if(worker->options.is_allocated) {
-        gearman_worker_free(worker);
-    }
+    gm_free_worker(worker);
 
     gm_log( GM_LOG_DEBUG, "worker thread finished\n" );
 
@@ -87,14 +83,8 @@ void *result_worker( void * data ) {
             if ( ret != GEARMAN_TIMEOUT)
                 gm_log( GM_LOG_ERROR, "worker error: %s\n", gearman_worker_error( &worker ) );
 
-            gearman_job_free_all( &worker );
-            if ( ret == GEARMAN_TIMEOUT) {
-                gearman_worker_unregister_all(&worker);
-                gearman_worker_remove_servers(&worker);
-            } else {
-                gearman_worker_free( &worker );
-                sleep(1);
-            }
+            gm_free_worker(&worker);
+            sleep(1);
 
             set_worker(&worker);
         }

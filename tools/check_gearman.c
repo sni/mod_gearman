@@ -373,16 +373,16 @@ int check_worker(char * queue, char * to_send, char * expect) {
             continue;
         }
         else if (ret == GEARMAN_SUCCESS) {
-            gearman_client_free(&client);
+            gm_free_client(&client);
         }
         else if (ret == GEARMAN_WORK_FAIL) {
             printf("%s CRITICAL - Job failed\n", PLUGIN_NAME);
-            gearman_client_free(&client);
+            gm_free_client(&client);
             return( STATE_CRITICAL );
         }
         else {
             printf("%s CRITICAL - Job failed: %s\n", PLUGIN_NAME, gearman_client_error(&client));
-            gearman_client_free(&client);
+            gm_free_client(&client);
             return( STATE_CRITICAL );
         }
         break;

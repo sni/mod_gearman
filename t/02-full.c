@@ -569,8 +569,8 @@ int main (int argc, char **argv, char **env) {
     /* cleanup */
     free(result);
     free(error);
-    free_client(&client);
-    free_worker(&worker);
+    gm_free_client(&client);
+    gm_free_worker(&worker);
 
     /* shutdown gearmand */
     kill(gearmand_pid, SIGTERM);

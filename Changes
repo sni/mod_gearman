@@ -1,5 +1,9 @@
 This file documents the revision history for mod_gearman.
 
+next:
+          - improve/unify worker/client cleanup
+          - fix potential crash during shutdown
+
 4.0.1 Tue Mar 15 09:52:14 CET 2022
           - fix debian packaging
 

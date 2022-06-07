@@ -46,8 +46,8 @@ int create_worker( gm_server_t * server_list[GM_LISTSIZE], gearman_worker_st * w
 int add_job_to_queue( gearman_client_st *client, gm_server_t * server_list[GM_LISTSIZE], char * queue, char * uniq, char * data, int priority, int retries, int transport_mode);
 int worker_add_function( gearman_worker_st * worker, char * queue, gearman_worker_fn *function);
 void *dummy( gearman_job_st *, void *, size_t *, gearman_return_t * );
-void free_client(gearman_client_st *client);
-void free_worker(gearman_worker_st *worker);
+void gm_free_client(gearman_client_st *client);
+void gm_free_worker(gearman_worker_st *worker);
 
 /** function status structure */
 typedef struct mod_gm_status_function {
