@@ -1,6 +1,6 @@
 This file documents the revision history for mod_gearman.
 
-next:
+4.0.2 Tue Jun  7 16:42:57 CEST 2022
           - improve/unify worker/client cleanup
           - fix potential crash during shutdown
 
