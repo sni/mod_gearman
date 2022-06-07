@@ -376,7 +376,7 @@ void check_no_worker_running(char* worker_logfile) {
 /* main tests */
 int main (int argc, char **argv, char **env) {
     argc = argc; argv = argv; env  = env;
-    int status, chld, rc;
+    int status, chld;
     int tests = 123;
     int rrc;
     char cmd[150];
