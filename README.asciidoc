@@ -1176,8 +1176,8 @@ verify if a plugin works with EPN or not.
 
 General EPN documentation is valid for Mod-Gearman as well:
 
- * https://www.naemon.org/documentation/usersguide/embeddedperl.html[Embedded Perl]
- * https://www.naemon.org/documentation/usersguide/epnplugins.html[Plugin Guidelines]
+ * https://www.naemon.io/documentation/usersguide/embeddedperl.html[Embedded Perl]
+ * https://www.naemon.io/documentation/usersguide/epnplugins.html[Plugin Guidelines]
 
 NOTE: Mod-Gearman does not fix all of the memory leaks introduced with
 Naemon and Embedded Perl, but it moves the leaks away from the core.
@@ -1329,7 +1329,7 @@ Naemon
 ~~~~~~
 Mod-Gearman works perfectly with all versions of the Naemon core.
 
- * http://naemon.org[Naemon]
+ * http://naemon.io[Naemon]
 
 
 Nagios

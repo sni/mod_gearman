@@ -26,7 +26,7 @@
  * \section intro_sec Introduction
  *
  * Mod-Gearman (http://labs.consol.de/nagios/mod-gearman) is a new
- * way of distributing active Naemon checks (http://www.naemon.org) across your network. It
+ * way of distributing active Naemon checks (http://www.naemon.io) across your network. It
  * consists of two parts: There is a NEB module which resides in the
  * Naemon core and adds servicechecks, hostchecks and eventhandler to a
  * Gearman (http://gearman.org) queue. There can be multiple equal
