@@ -225,7 +225,6 @@ void *get_results( gearman_job_st *job, void *context, size_t *result_size, gear
             chk_result->scheduled_check = atoi( value );
         } else if ( !strcmp( key, "type" ) && !strcmp( value, "passive" ) ) {
             active_check=FALSE;
-        } else if ( !strcmp( key, "reschedule_check" ) ) {
         } else if ( !strcmp( key, "exited_ok" ) ) {
             chk_result->exited_ok = atoi( value );
         } else if ( !strcmp( key, "early_timeout" ) ) {

@@ -282,7 +282,6 @@ typedef struct gm_job_struct {
     int            early_timeout;       /**< did the check run into a timeout */
     int            check_options;       /**< check_options given from the core */
     int            scheduled_check;     /**< normal scheduled check? */
-    int            reschedule_check;    /**< rescheduled check? */
     int            exited_ok;           /**< did the plugin exit normally? */
     int            timeout;             /**< timeout for this job */
     double         latency;             /**< latency for from this job */

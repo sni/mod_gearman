@@ -230,7 +230,6 @@ sub exec_handler {
         exited_ok           => 1,
         check_options       => $data->{'check_options'},
         scheduled_check     => $data->{'scheduled_check'},
-        reschedule_check    => $data->{'reschedule_check'},
     };
 
     # check too old
@@ -297,7 +296,7 @@ sub _build_result {
     my $data   = shift;
     my $result = "";
 
-    for my $key (qw/host_name service_description early_timeout return_code latency exited_ok check_options scheduled_check reschedule_check/) {
+    for my $key (qw/host_name service_description early_timeout return_code latency exited_ok check_options scheduled_check/) {
         $result .= $key.'='.$data->{$key}."\n" if defined $data->{$key};
     }
     if(defined $data->{'start_time_tv_sec'} and defined $data->{'start_time_tv_usec'}) {

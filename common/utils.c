@@ -1243,7 +1243,6 @@ int set_default_job(gm_job_t *job, mod_gm_opt_t *opt) {
     job->error               = NULL;
     job->exited_ok           = TRUE;
     job->scheduled_check     = TRUE;
-    job->reschedule_check    = TRUE;
     job->return_code         = STATE_OK;
     job->latency             = 0.0;
     job->timeout             = opt->job_timeout;

@@ -253,9 +253,6 @@ void *get_job( gearman_job_st *job, void *context, size_t *result_size, gearman_
         } else if ( !strcmp( key, "scheduled_check" ) ) {
             exec_job->scheduled_check = atoi(value);
             valid_lines++;
-        } else if ( !strcmp( key, "reschedule_check" ) ) {
-            exec_job->reschedule_check = atoi(value);
-            valid_lines++;
         } else if ( !strcmp( key, "latency" ) ) {
             exec_job->latency = atof(value);
             valid_lines++;

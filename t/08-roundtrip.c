@@ -303,7 +303,6 @@ int init_check_result(check_result *info) {
     info->check_type = HOST_CHECK_ACTIVE;
     info->check_options = CHECK_OPTION_NONE;
     info->scheduled_check = FALSE;
-    info->reschedule_check = FALSE;
     info->output_file_fp = NULL;
     info->latency = 0.0;
     info->start_time.tv_sec = 0;
