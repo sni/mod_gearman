@@ -199,6 +199,7 @@ typedef struct mod_gm_opt_struct {
     int            logmode;                                 /**< logmode: auto, syslog, file or core */
     char         * logfile;                                 /**< path for the logfile */
     FILE         * logfile_fp;                              /**< filedescriptor for the logfile */
+    int            log_stats_interval;                      /**< interval in seconds to log gearman submission statistics  */
     int            use_uniq_jobs;                           /**< flag whether normal jobs will be sent with/without uniq set */
 /* neb module */
     char         * result_queue;                            /**< name of the result queue used by the neb module */

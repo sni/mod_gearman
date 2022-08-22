@@ -242,6 +242,7 @@ int set_default_options(mod_gm_opt_t *opt) {
     opt->perfdata_mode      = GM_PERFDATA_OVERWRITE;
     opt->perfdata_send_all  = GM_DISABLED;
     opt->use_uniq_jobs      = GM_ENABLED;
+    opt->log_stats_interval = 60;
     opt->do_hostchecks      = GM_ENABLED;
     opt->route_eventhandler_like_checks = GM_DISABLED;
     opt->hosts              = GM_DISABLED;
@@ -593,6 +594,12 @@ int parse_args_line(mod_gm_opt_t *opt, char * arg, int recursion_level) {
         else {
             gm_log( GM_LOG_ERROR, "unknown log mode '%s', use one of 'automatic', 'file', 'stdout', 'syslog' and 'core'\n", value );
         }
+    }
+
+    /* log_stats_interval  */
+    else if ( !strcmp( key, "log_stats_interval" ) ) {
+        opt->log_stats_interval = atoi( value );
+        if(opt->log_stats_interval < 0) { opt->log_stats_interval = 0; }
     }
 
     /* result worker */
@@ -1600,7 +1607,8 @@ void send_result_back(gm_job_t * exec_job) {
                          temp_buffer1,
                          GM_JOB_PRIO_NORMAL,
                          GM_DEFAULT_JOB_RETRIES,
-                         mod_gm_opt->transportmode
+                         mod_gm_opt->transportmode,
+                         0
                         ) == GM_OK) {
         gm_log( GM_LOG_TRACE, "send_result_back() finished successfully\n" );
     }
@@ -1622,7 +1630,8 @@ void send_result_back(gm_job_t * exec_job) {
                               temp_buffer2,
                               GM_JOB_PRIO_NORMAL,
                               GM_DEFAULT_JOB_RETRIES,
-                              mod_gm_opt->transportmode
+                              mod_gm_opt->transportmode,
+                              0
                             ) == GM_OK) {
             gm_log( GM_LOG_TRACE, "send_result_back() finished successfully for duplicate server.\n" );
         }
@@ -1752,4 +1761,11 @@ void make_uniq(char *uniq, const char *format, ... ) {
     char * md5 =  md5sum(uniq);
     snprintf(uniq, GM_SMALLBUFSIZE, "%s", md5);
     gm_free(md5);
+}
+
+double elapsed_time(struct timeval t1, struct timeval t2) {
+    long seconds = t2.tv_sec - t1.tv_sec;
+    long microseconds = t2.tv_usec - t1.tv_usec;
+    double elapsed = seconds + microseconds*1e-6;
+    return(elapsed);
 }

@@ -471,7 +471,8 @@ static int handle_eventhandler( int event_type, void *data ) {
                          temp_buffer,
                          GM_JOB_PRIO_NORMAL,
                          GM_DEFAULT_JOB_RETRIES,
-                         mod_gm_opt->transportmode
+                         mod_gm_opt->transportmode,
+                         mod_gm_opt->log_stats_interval
                         ) == GM_OK) {
         gm_log( GM_LOG_TRACE, "handle_eventhandler() finished successfully\n" );
     }
@@ -672,7 +673,8 @@ static int handle_notifications( int event_type, void *data ) {
                          temp_buffer,
                          GM_JOB_PRIO_HIGH,
                          GM_DEFAULT_JOB_RETRIES,
-                         mod_gm_opt->transportmode
+                         mod_gm_opt->transportmode,
+                         mod_gm_opt->log_stats_interval
                         ) == GM_OK) {
         gm_log( GM_LOG_TRACE, "handle_notifications() finished successfully\n" );
     }
@@ -880,7 +882,8 @@ static int handle_host_check( int event_type, void *data ) {
                          temp_buffer,
                          GM_JOB_PRIO_NORMAL,
                          GM_DEFAULT_JOB_RETRIES,
-                         mod_gm_opt->transportmode
+                         mod_gm_opt->transportmode,
+                         mod_gm_opt->log_stats_interval
                         ) == GM_OK) {
     }
     else {
@@ -1035,7 +1038,8 @@ static int handle_svc_check( int event_type, void *data ) {
                          temp_buffer,
                          prio,
                          GM_DEFAULT_JOB_RETRIES,
-                         mod_gm_opt->transportmode
+                         mod_gm_opt->transportmode,
+                         mod_gm_opt->log_stats_interval
                         ) == GM_OK) {
         gm_log( GM_LOG_TRACE, "handle_svc_check() finished successfully\n" );
     }
@@ -1391,7 +1395,8 @@ int handle_perfdata(int event_type, void *data) {
                                  temp_buffer,
                                  GM_JOB_PRIO_NORMAL,
                                  GM_DEFAULT_JOB_RETRIES,
-                                 mod_gm_opt->transportmode
+                                 mod_gm_opt->transportmode,
+                                 mod_gm_opt->log_stats_interval
                                 ) == GM_OK) {
                 gm_log( GM_LOG_TRACE, "handle_perfdata() successfully added data to %s\n", perfdata_queue );
             }
@@ -1530,7 +1535,8 @@ int handle_export(int callback_type, void *data) {
                               temp_buffer,
                               GM_JOB_PRIO_NORMAL,
                               GM_DEFAULT_JOB_RETRIES,
-                              mod_gm_opt->transportmode
+                              mod_gm_opt->transportmode,
+                              mod_gm_opt->log_stats_interval
                             );
         }
     }

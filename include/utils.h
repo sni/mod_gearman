@@ -525,5 +525,17 @@ int read_pipe(char **, int);
 void make_uniq(char *uniq, const char *format, ... );
 
 /**
+ * elapsed_time
+ *
+ * return elapsed time between two points in time
+ *
+ * @param[in] t1 - start time
+ * @param[in] t2 - end time
+ *
+ * @return elapsed time
+ */
+double elapsed_time(struct timeval t1, struct timeval t2);
+
+/**
  * @}
  */

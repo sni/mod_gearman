@@ -27,6 +27,10 @@
 
 int mod_gm_con_errors = 0;
 struct timeval mod_gm_error_time;
+double total_submit_sum = 0;
+double total_submit_max = 0;
+int total_submit_jobs = 0;
+struct timeval total_submit_time;
 extern mod_gm_opt_t *mod_gm_opt;
 
 /* create the gearman worker */
@@ -101,13 +105,14 @@ int create_client( gm_server_t * server_list[GM_LISTSIZE], gearman_client_st *cl
 
 
 /* create a task and send it */
-int add_job_to_queue( gearman_client_st *client, gm_server_t * server_list[GM_LISTSIZE], char * queue, char * uniq, char * data, int priority, int retries, int transport_mode) {
+int add_job_to_queue( gearman_client_st *client, gm_server_t * server_list[GM_LISTSIZE], char * queue, char * uniq, char * data, int priority, int retries, int transport_mode, int log_stats_interval) {
     gearman_job_handle_t job_handle;
     gearman_return_t rc;
     char * crypted_data;
     int size;
     int ret = GM_OK;
-    struct timeval now;
+    struct timeval t1, t2;
+    double elapsed;
 
     /* check too long queue names */
     if(strlen(queue) > GEARMAN_FUNCTION_MAX_SIZE - 1) {
@@ -126,6 +131,7 @@ int add_job_to_queue( gearman_client_st *client, gm_server_t * server_list[GM_LI
     gm_log( GM_LOG_TRACE, "add_job_to_queue(%s, %s, %d, %d, %d)\n", queue, uniq, priority, retries, transport_mode);
     gm_log( GM_LOG_TRACE, "%d --->%s<---\n", strlen(data), data );
 
+    gettimeofday(&t1,NULL);
     size = mod_gm_encrypt(&crypted_data, data, transport_mode);
     gm_log( GM_LOG_TRACE, "%d +++>\n%s\n<+++\n", size, crypted_data );
 
@@ -143,18 +149,41 @@ int add_job_to_queue( gearman_client_st *client, gm_server_t * server_list[GM_LI
         return GM_ERROR;
     }
     free(crypted_data);
+    gettimeofday(&t2,NULL);
+
+    // log some statistics
+    if(log_stats_interval > 0) {
+        elapsed = elapsed_time(t1, t2);
+        total_submit_sum += elapsed;
+        total_submit_jobs++;
+        if(elapsed > total_submit_max)
+            total_submit_max = elapsed;
+        if(t2.tv_sec >= total_submit_time.tv_sec + log_stats_interval) {
+            if(total_submit_time.tv_sec > 0) {
+                gm_log(GM_LOG_INFO, "gearmand submission statistics: jobs:%7d   submit_rate: %6.1f/s   avg_submit_duration: %.6fs   max_submit_duration: %.6fs\n",
+                    total_submit_jobs,
+                    total_submit_jobs / elapsed_time(total_submit_time, t2),
+                    total_submit_sum/total_submit_jobs,
+                    total_submit_max
+                );
+                total_submit_sum  = 0;
+                total_submit_jobs = 0;
+                total_submit_max  = 0;
+            }
+            gettimeofday(&total_submit_time,NULL);
+        }
+    }
 
     if(!gearman_success(rc)) {
         /* log the error */
         if(retries == 0) {
-            gettimeofday(&now,NULL);
             /* only log the first error, otherwise we would fill the log very quickly */
             if( mod_gm_con_errors == 0 ) {
                 gettimeofday(&mod_gm_error_time,NULL);
                 gm_log( GM_LOG_ERROR, "sending job to gearmand failed: %s\n", gearman_client_error(client) );
             }
             /* or every minute to give an update */
-            else if( now.tv_sec >= mod_gm_error_time.tv_sec + 60) {
+            else if( t2.tv_sec >= mod_gm_error_time.tv_sec + 60) {
                 gettimeofday(&mod_gm_error_time,NULL);
                 gm_log( GM_LOG_ERROR, "sending job to gearmand failed: %s (%i lost jobs so far)\n", gearman_client_error(client), mod_gm_con_errors );
             }
@@ -168,8 +197,13 @@ int add_job_to_queue( gearman_client_st *client, gm_server_t * server_list[GM_LI
         /* retry as long as we have retries */
         if(retries > 0) {
             retries--;
-            gm_log( GM_LOG_TRACE, "add_job_to_queue() retrying... %d\n", retries );
-            ret = add_job_to_queue( client, server_list, queue, uniq, data, priority, retries, transport_mode);
+            if(t2.tv_sec >= mod_gm_error_time.tv_sec + 60) {
+                gettimeofday(&mod_gm_error_time,NULL);
+                gm_log( GM_LOG_INFO, "add_job_to_queue() retrying... %d\n", retries );
+            } else {
+                gm_log( GM_LOG_TRACE, "add_job_to_queue() retrying... %d\n", retries );
+            }
+            ret = add_job_to_queue( client, server_list, queue, uniq, data, priority, retries, transport_mode, log_stats_interval);
             return(ret);
         }
         /* no more retries... */

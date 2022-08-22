@@ -108,6 +108,11 @@ key=should_be_changed
 use_uniq_jobs=on
 
 
+# Log gearman job submission details
+# Default is 60
+# log_stats_interval=60
+
+
 
 ###############################################################################
 #
