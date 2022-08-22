@@ -290,11 +290,6 @@ void *get_results( gearman_job_st *job, void *context, size_t *result_size, gear
 
     chk_result->latency += latency;
 
-#ifdef GM_DEBUG
-    if(chk_result->latency > 1000)
-        write_debug_file(&decrypted_orig);
-#endif
-
     /* this check is not a freshnes check */
     chk_result->check_options    = chk_result->check_options & ! CHECK_OPTION_FRESHNESS_CHECK;
 
@@ -310,16 +305,6 @@ void *get_results( gearman_job_st *job, void *context, size_t *result_size, gear
 #endif
         gm_log( GM_LOG_DEBUG, "service job completed: %s %s: exit %d, latency: %0.3f, exec_time: %0.3f\n", chk_result->host_name, chk_result->service_description, chk_result->return_code, chk_result->latency, exec_time );
     } else {
-#ifdef GM_DEBUG
-        /* does this host exist */
-/* TODO: this is done by core already! no need to do this twice */
-        host * hst = find_host( chk_result->host_name );
-        if(hst == NULL) {
-            write_debug_file(&decrypted_orig);
-            gm_log( GM_LOG_ERROR, "host '%s' could not be found\n", chk_result->host_name );
-            return NULL;
-        }
-#endif
         if(active_check) {
             host * hst = find_host( chk_result->host_name );
             if(hst != NULL) {
