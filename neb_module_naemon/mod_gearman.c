@@ -792,8 +792,6 @@ static int handle_host_check( int event_type, void *data ) {
 #endif
     int check_options;
     struct timeval core_time;
-    struct tm next_check;
-    char buffer1[GM_BUFFERSIZE];
 
     gettimeofday(&core_time,NULL);
 
@@ -828,7 +826,7 @@ static int handle_host_check( int event_type, void *data ) {
         return NEB_OK;
     }
 
-    gm_log( GM_LOG_DEBUG, "received job for queue %s: %s, check_options: %d\n", target_queue, hostdata->host_name, check_options );
+    gm_log(GM_LOG_DEBUG, "received job for queue %s: %s, check_options: %d    latency so far: %.3fs\n", target_queue, hostdata->host_name, check_options, hostdata->latency);
 
     /* as we have to intercept host checks so early
      * (we cannot cancel checks otherwise)
@@ -849,26 +847,17 @@ static int handle_host_check( int event_type, void *data ) {
         return NEBERROR_CALLBACKCANCEL;
     }
 
-    /* log latency */
-    if(mod_gm_opt->debug_level >= GM_LOG_DEBUG) {
-        localtime_r(&hst->next_check, &next_check);
-        strftime(buffer1, sizeof(buffer1), "%Y-%m-%d %H:%M:%S", &next_check );
-        gm_log( GM_LOG_DEBUG, "host: '%s', next_check is at %s, latency so far: %i\n", hst->name, buffer1, ((int)core_time.tv_sec - (int)hst->next_check));
-    }
-
     /* set the execution flag */
     hst->is_executing=TRUE;
 
     gm_log( GM_LOG_TRACE, "cmd_line: %s\n", processed_command );
 
     temp_buffer[0]='\x0';
-    snprintf( temp_buffer,GM_MAX_OUTPUT-1,"type=host\nresult_queue=%s\nhost_name=%s\nstart_time=%ld.0\nnext_check=%ld.0\ntimeout=%d\ncore_time=%Lf\ncommand_line=%s\n\n\n",
+    snprintf( temp_buffer,GM_MAX_OUTPUT-1,"type=host\nresult_queue=%s\nhost_name=%s\ncore_time=%Lf\ntimeout=%d\ncommand_line=%s\n\n\n",
               mod_gm_opt->result_queue,
               hst->name,
-              hst->next_check,
-              hst->next_check,
+              timeval2double(&core_time) - hostdata->latency, // can only assume planned start date since next_check already advanced to next check and last_check still points to previous check
               host_check_timeout,
-              timeval2double(&core_time),
               processed_command
             );
 
@@ -944,8 +933,6 @@ static int handle_svc_check( int event_type, void *data ) {
 #endif
     int check_options;
     struct timeval core_time;
-    struct tm next_check;
-    char buffer1[GM_BUFFERSIZE];
 
     gettimeofday(&core_time,NULL);
 
@@ -980,7 +967,7 @@ static int handle_svc_check( int event_type, void *data ) {
         return NEB_OK;
     }
 
-    gm_log( GM_LOG_DEBUG, "received job for queue %s: %s - %s, check_options: %d\n", target_queue, svcdata->host_name, svcdata->service_description, check_options );
+    gm_log(GM_LOG_DEBUG, "received job for queue %s: %s - %s, check_options: %d   latency so far: %.3fs\n", target_queue, svcdata->host_name, svcdata->service_description, check_options, svcdata->latency);
 
     /* as we have to intercept service checks so early
      * (we cannot cancel checks otherwise)
@@ -1000,26 +987,17 @@ static int handle_svc_check( int event_type, void *data ) {
         return NEBERROR_CALLBACKCANCEL;
     }
 
-    /* log latency */
-    if(mod_gm_opt->debug_level >= GM_LOG_DEBUG) {
-        localtime_r(&svc->next_check, &next_check);
-        strftime(buffer1, sizeof(buffer1), "%Y-%m-%d %H:%M:%S", &next_check );
-        gm_log( GM_LOG_DEBUG, "service: '%s' - '%s', next_check is at %s, latency so far: %i\n", svcdata->host_name, svcdata->service_description, buffer1, ((int)core_time.tv_sec - (int)svc->next_check));
-    }
-
     /* set the execution flag */
     svc->is_executing=TRUE;
 
     gm_log( GM_LOG_TRACE, "cmd_line: %s\n", processed_command );
 
     temp_buffer[0]='\x0';
-    snprintf( temp_buffer,GM_MAX_OUTPUT-1,"type=service\nresult_queue=%s\nhost_name=%s\nservice_description=%s\nstart_time=%ld.0\nnext_check=%ld.0\ncore_time=%Lf\ntimeout=%d\ncommand_line=%s\n\n\n",
+    snprintf( temp_buffer,GM_MAX_OUTPUT-1,"type=service\nresult_queue=%s\nhost_name=%s\nservice_description=%s\ncore_time=%Lf\ntimeout=%d\ncommand_line=%s\n\n\n",
               mod_gm_opt->result_queue,
               svcdata->host_name,
               svcdata->service_description,
-              svc->next_check,
-              svc->next_check,
-              timeval2double(&core_time),
+              timeval2double(&core_time) - svcdata->latency, // can only assume planned start date since next_check already advanced to next check and last_check still points to previous check
               service_check_timeout,
               processed_command
             );

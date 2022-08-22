@@ -181,6 +181,7 @@ void *get_results( gearman_job_st *job, void *context, size_t *result_size, gear
     chk_result->engine              = &mod_gearman_check_engine;
     core_start_time.tv_sec          = 0;
     core_start_time.tv_usec         = 0;
+    chk_result->latency             = 0;
 
     while ( (ptr = strsep(&decrypted_data, "\n" )) != NULL ) {
         char *key   = strsep( &ptr, "=" );
@@ -237,7 +238,7 @@ void *get_results( gearman_job_st *job, void *context, size_t *result_size, gear
             string2timeval(value, &chk_result->start_time);
         } else if ( !strcmp( key, "finish_time" ) ) {
             string2timeval(value, &chk_result->finish_time);
-        } else if ( !strcmp( key, "latency" ) ) {
+        } else if ( !strcmp( key, "latency" ) ) { // used by send_gearman
             chk_result->latency = atof( value );
         }
     }
@@ -276,9 +277,9 @@ void *get_results( gearman_job_st *job, void *context, size_t *result_size, gear
 
     /* calculate real latency */
     now_f            = timeval2double(&now);
-    core_starttime_f = timeval2double(&core_start_time);
-    starttime_f      = timeval2double(&chk_result->start_time);
-    finishtime_f     = timeval2double(&chk_result->finish_time);
+    core_starttime_f = timeval2double(&core_start_time);            // time before job was sent to gearmand
+    starttime_f      = timeval2double(&chk_result->start_time);     // ts when check started on worker
+    finishtime_f     = timeval2double(&chk_result->finish_time);    // ts when check finished on worker
     exec_time        = finishtime_f - starttime_f;
     latency          = now_f - exec_time - core_starttime_f;
 
