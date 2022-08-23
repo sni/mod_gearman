@@ -126,8 +126,6 @@ int main (int argc, char **argv) {
     signal(SIGINT, clean_exit);
     signal(SIGTERM,clean_exit);
     signal(SIGHUP, reload_config);
-    signal(SIGPIPE, SIG_IGN);
-
 
     /* check and write pid file */
     if(write_pid_file() != GM_OK) {

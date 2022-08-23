@@ -826,6 +826,9 @@ static int handle_host_check( int event_type, void *data ) {
         return NEB_OK;
     }
 
+    if(hostdata->latency < 0)
+        hostdata->latency = 0;
+
     gm_log(GM_LOG_DEBUG, "received job for queue %s: %s, check_options: %d    latency so far: %.3fs\n", target_queue, hostdata->host_name, check_options, hostdata->latency);
 
     /* as we have to intercept host checks so early
@@ -966,6 +969,9 @@ static int handle_svc_check( int event_type, void *data ) {
         gm_log( GM_LOG_DEBUG, "passing by local servicecheck: %s - %s\n", svcdata->host_name, svcdata->service_description);
         return NEB_OK;
     }
+
+    if(svcdata->latency < 0)
+        svcdata->latency = 0;
 
     gm_log(GM_LOG_DEBUG, "received job for queue %s: %s - %s, check_options: %d   latency so far: %.3fs\n", target_queue, svcdata->host_name, svcdata->service_description, check_options, svcdata->latency);
 

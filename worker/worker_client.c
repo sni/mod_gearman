@@ -121,7 +121,6 @@ void worker_loop() {
             alarm(mod_gm_opt->idle_timeout);
         }
 
-        signal(SIGPIPE, SIG_IGN);
         ret = gearman_worker_work( &worker );
 
         if (mod_gm_opt->max_jobs > 0 && jobs_done >= mod_gm_opt->max_jobs) {

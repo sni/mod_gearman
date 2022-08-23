@@ -153,7 +153,6 @@ int run_epn_check(char *processed_command, char **ret, char **err) {
         signal(SIGINT,  SIG_DFL);
         signal(SIGTERM, SIG_DFL);
         signal(SIGHUP,  SIG_DFL);
-        signal(SIGPIPE, SIG_DFL);
 
         /* run the perl script */
         ENTER;

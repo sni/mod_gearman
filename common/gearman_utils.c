@@ -29,7 +29,8 @@ int mod_gm_con_errors = 0;
 struct timeval mod_gm_error_time;
 double total_submit_sum = 0;
 double total_submit_max = 0;
-int total_submit_jobs = 0;
+long int total_submit_jobs = 0;
+long int total_submit_errors = 0;
 struct timeval total_submit_time;
 extern mod_gm_opt_t *mod_gm_opt;
 
@@ -38,7 +39,6 @@ int create_worker( gm_server_t * server_list[GM_LISTSIZE], gearman_worker_st *wo
     int x = 0;
 
     gearman_return_t ret;
-    signal(SIGPIPE, SIG_IGN);
 
     gearman_worker_create( worker );
     if ( worker == NULL ) {
@@ -80,8 +80,6 @@ int create_client( gm_server_t * server_list[GM_LISTSIZE], gearman_client_st *cl
 
     gm_log( GM_LOG_TRACE, "create_client()\n" );
 
-    signal(SIGPIPE, SIG_IGN);
-
     client = gearman_client_create(client);
     if ( client == NULL ) {
         gm_log( GM_LOG_ERROR, "Memory allocation failure on client creation\n" );
@@ -99,6 +97,7 @@ int create_client( gm_server_t * server_list[GM_LISTSIZE], gearman_client_st *cl
     assert(x != 0);
 
     gearman_client_set_timeout( client, mod_gm_opt->gearman_connection_timeout );
+    gearman_client_add_options( client, GEARMAN_CLIENT_NON_BLOCKING|GEARMAN_CLIENT_FREE_TASKS|GEARMAN_CLIENT_UNBUFFERED_RESULT);
 
     return GM_OK;
 }
@@ -125,8 +124,6 @@ int add_job_to_queue( gearman_client_st *client, gm_server_t * server_list[GM_LI
         gm_log( GM_LOG_ERROR, "unique name too long (%d > %d): '%s'\n", strlen(uniq), GEARMAN_MAX_UNIQUE_SIZE - 1, uniq );
         return GM_ERROR;
     }
-
-    signal(SIGPIPE, SIG_IGN);
 
     gm_log( GM_LOG_TRACE, "add_job_to_queue(%s, %s, %d, %d, %d)\n", queue, uniq, priority, retries, transport_mode);
     gm_log( GM_LOG_TRACE, "%d --->%s<---\n", strlen(data), data );
@@ -158,23 +155,27 @@ int add_job_to_queue( gearman_client_st *client, gm_server_t * server_list[GM_LI
         total_submit_jobs++;
         if(elapsed > total_submit_max)
             total_submit_max = elapsed;
+        if(rc != GEARMAN_SUCCESS && rc != GEARMAN_IO_WAIT)
+            total_submit_errors++;
         if(t2.tv_sec >= total_submit_time.tv_sec + log_stats_interval) {
             if(total_submit_time.tv_sec > 0) {
-                gm_log(GM_LOG_INFO, "gearmand submission statistics: jobs:%7d   submit_rate: %6.1f/s   avg_submit_duration: %.6fs   max_submit_duration: %.6fs\n",
+                gm_log(GM_LOG_INFO, "gearmand submission statistics: jobs:%7d   errors: %7d   submit_rate: %6.1f/s   avg_submit_duration: %.6fs   max_submit_duration: %.6fs\n",
                     total_submit_jobs,
-                    total_submit_jobs / elapsed_time(total_submit_time, t2),
+                    total_submit_errors,
+                    (total_submit_jobs-total_submit_errors) / elapsed_time(total_submit_time, t2),
                     total_submit_sum/total_submit_jobs,
                     total_submit_max
                 );
-                total_submit_sum  = 0;
-                total_submit_jobs = 0;
-                total_submit_max  = 0;
+                total_submit_sum    = 0;
+                total_submit_jobs   = 0;
+                total_submit_errors = 0;
+                total_submit_max    = 0;
             }
             gettimeofday(&total_submit_time,NULL);
         }
     }
 
-    if(!gearman_success(rc)) {
+    if(rc != GEARMAN_SUCCESS && rc != GEARMAN_IO_WAIT) {
         /* log the error */
         if(retries == 0) {
             /* only log the first error, otherwise we would fill the log very quickly */
@@ -243,9 +244,7 @@ void gm_free_client(gearman_client_st *client) {
 void gm_free_worker(gearman_worker_st *worker) {
     gearman_worker_unregister_all(worker);
     gearman_worker_remove_servers(worker);
-    if(worker->options.is_allocated) {
-        gearman_worker_free(worker);
-    }
+    gearman_worker_free(worker);
 }
 
 /* get worker/jobs data from gearman server */

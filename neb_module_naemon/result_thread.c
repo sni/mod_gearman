@@ -332,7 +332,9 @@ void *get_results( gearman_job_st *job, void *context, size_t *result_size, gear
 /* get the worker */
 int set_worker( gearman_worker_st *worker ) {
 
-    create_worker( mod_gm_opt->server_list, worker );
+    if(create_worker( mod_gm_opt->server_list, worker ) != GM_OK) {
+        return GM_ERROR;
+    }
 
     if ( mod_gm_opt->result_queue == NULL ) {
         gm_log( GM_LOG_ERROR, "got no result queue!\n" );
