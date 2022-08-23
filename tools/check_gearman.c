@@ -365,6 +365,10 @@ int check_worker(char * queue, char * to_send, char * expect) {
                                                     &ret);
         }
 
+        if (ret == GEARMAN_IO_WAIT) {
+            ret = gearman_client_wait(&client);
+        }
+
         if (ret == GEARMAN_WORK_DATA) {
             free(result);
             continue;
