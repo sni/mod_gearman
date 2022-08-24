@@ -1,9 +1,11 @@
 This file documents the revision history for mod_gearman.
 
-next:
+4.0.3 Wed Aug 24 10:48:50 CEST 2022
           - add 'log_stats_interval' option
           - add support for check_gearman checking result queue worker / core statistics
           - set default connection timeout to 5 seconds
+          - improve neb module performance
+            - use non-blocking io
 
 4.0.2 Tue Jun  7 16:42:57 CEST 2022
           - improve/unify worker/client cleanup
