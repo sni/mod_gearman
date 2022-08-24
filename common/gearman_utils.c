@@ -109,7 +109,9 @@ int create_client_blocking( gm_server_t * server_list[GM_LISTSIZE], gearman_clie
     }
     assert(x != 0);
 
-    gearman_client_set_timeout( client, mod_gm_opt->gearman_connection_timeout );
+    if(mod_gm_opt->gearman_connection_timeout > 0) {
+        gearman_client_set_timeout( client, mod_gm_opt->gearman_connection_timeout );
+    }
 
     return GM_OK;
 }

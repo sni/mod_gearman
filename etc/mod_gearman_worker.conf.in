@@ -175,8 +175,8 @@ p1_file=%P1FILE%
 
 # Gearman connection timeout(in milliseconds) while submitting jobs to
 # gearmand server
-# Default is -1(no timeout)
-# gearman_connection_timeout=-1
+# Default is 5000
+# gearman_connection_timeout=5000
 
 # Security
 # restrict_path allows you to restrict this worker to only execute plugins

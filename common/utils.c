@@ -318,7 +318,7 @@ int set_default_options(mod_gm_opt_t *opt) {
     }
     opt->exports_count = 0;
     opt->restrict_path_num      = 0;
-    opt->gearman_connection_timeout = -1;
+    opt->gearman_connection_timeout = 5000;
     for(i=0;i<GM_LISTSIZE;i++)
         opt->restrict_path[i] = NULL;
 

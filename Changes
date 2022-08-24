@@ -3,6 +3,7 @@ This file documents the revision history for mod_gearman.
 next:
           - add 'log_stats_interval' option
           - add support for check_gearman checking result queue worker / core statistics
+          - set default connection timeout to 5 seconds
 
 4.0.2 Tue Jun  7 16:42:57 CEST 2022
           - improve/unify worker/client cleanup

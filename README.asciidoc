@@ -611,13 +611,13 @@ Default is On.
 ====
 
 gearman_connection_timeout::
-Timeout in milliseconds when connecting to gearmand daemon. Default value is
-defined as 'no timeout'.
-Default is -1.
+Timeout in milliseconds when connecting to gearmand daemon. Set to 0 to disable
+the timeout.
+Default is 5000.
 
 +
 ====
-    gearman_connection_timeout=-1
+    gearman_connection_timeout=5000
 ====
 
 Server Options
@@ -1361,4 +1361,3 @@ Hints
    after another. For example for cpu intesive checks with selenium.
  - Make sure all your worker have the Monitoring-Plugins available under
    the same path. Otherwise they could'nt be found by the worker.
-
