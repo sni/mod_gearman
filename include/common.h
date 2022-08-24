@@ -90,6 +90,7 @@
 #define GM_LOG_MODE_CORE                3
 #define GM_LOG_MODE_SYSLOG              4
 #define GM_LOG_MODE_TOOLS               5
+#define GM_LOG_MODE_CHECKS              6
 
 /* job priorities */
 #define GM_JOB_PRIO_LOW                 1

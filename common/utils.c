@@ -1025,6 +1025,8 @@ void dumpconfig(mod_gm_opt_t *opt, int mode) {
         gm_log( GM_LOG_DEBUG, "log mode:                        syslog (%d)\n", opt->logmode);
     if(opt->logmode == GM_LOG_MODE_TOOLS)
         gm_log( GM_LOG_DEBUG, "log mode:                        tools (%d)\n", opt->logmode);
+    if(opt->logmode == GM_LOG_MODE_CHECKS)
+        gm_log( GM_LOG_DEBUG, "log mode:            monitoring plugin (%d)\n", opt->logmode);
 
     if(mode == GM_WORKER_MODE) {
         gm_log( GM_LOG_DEBUG, "identifier:                      %s\n", opt->identifier);
@@ -1484,6 +1486,11 @@ void gm_log( int lvl, const char *text, ... ) {
     va_start( ap, text );
     vsnprintf( buffer3, GM_BUFFERSIZE, text, ap );
     va_end( ap );
+
+    if ( debug_level >= GM_LOG_STDOUT || logmode == GM_LOG_MODE_CHECKS ) {
+        fprintf(stderr, "%s", buffer3 );
+        return;
+    }
 
     if ( debug_level >= GM_LOG_STDOUT || logmode == GM_LOG_MODE_TOOLS ) {
         printf( "%s", buffer3 );

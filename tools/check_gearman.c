@@ -100,7 +100,7 @@ int main (int argc, char **argv) {
         }
     }
     mod_gm_opt->debug_level = opt_verbose;
-    mod_gm_opt->logmode     = GM_LOG_MODE_TOOLS;
+    mod_gm_opt->logmode     = GM_LOG_MODE_CHECKS;
 
     if(server_list_num == 0) {
         printf("Error - no hostname given\n\n");
@@ -365,6 +365,11 @@ int check_worker(char * queue, char * to_send, char * expect) {
                                                     &ret);
         }
 
+        if(opt_verbose) {
+            fprintf(stderr, "code:   %s\n", gearman_client_error(&client));
+            fprintf(stderr, "result: %s\n", result);
+        }
+
         if (ret == GEARMAN_IO_WAIT) {
             ret = gearman_client_wait(&client);
         }
@@ -379,13 +384,8 @@ int check_worker(char * queue, char * to_send, char * expect) {
         else if (ret == GEARMAN_SUCCESS) {
             gm_free_client(&client);
         }
-        else if (ret == GEARMAN_WORK_FAIL) {
-            printf("%s CRITICAL - Job failed\n", PLUGIN_NAME);
-            gm_free_client(&client);
-            return( STATE_CRITICAL );
-        }
         else {
-            printf("%s CRITICAL - Job failed: %s\n", PLUGIN_NAME, gearman_client_error(&client));
+            printf("%s CRITICAL - job failed: %s\n", PLUGIN_NAME, gearman_client_error(&client));
             gm_free_client(&client);
             return( STATE_CRITICAL );
         }
