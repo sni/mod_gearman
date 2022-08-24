@@ -90,7 +90,7 @@ void *start_worker(void*data) {
 void test_eventhandler(int transportmode);
 void test_eventhandler(int transportmode) {
     char * testdata = strdup("type=eventhandler\ncommand_line=/bin/hostname\n\n\n");
-    int rt = add_job_to_queue(&client, mod_gm_opt->server_list, "eventhandler", NULL, testdata, GM_JOB_PRIO_NORMAL, 1, transportmode, 0);
+    int rt = add_job_to_queue(&client, mod_gm_opt->server_list, "eventhandler", NULL, testdata, GM_JOB_PRIO_NORMAL, 1, transportmode, 0, 0);
     ok(rt == GM_OK, "eventhandler sent successfully in mode %s", transportmode == GM_ENCODE_ONLY ? "base64" : "aes256");
     free(testdata);
     return;
@@ -116,7 +116,7 @@ void test_servicecheck(int transportmode, char*cmd) {
               cmd==NULL ? "/bin/hostname" : cmd
             );
     temp_buffer[sizeof( temp_buffer )-1]='\x0';
-    int rt = add_job_to_queue(&client, mod_gm_opt->server_list, "service", NULL, temp_buffer, GM_JOB_PRIO_NORMAL, 1, transportmode, 0);
+    int rt = add_job_to_queue(&client, mod_gm_opt->server_list, "service", NULL, temp_buffer, GM_JOB_PRIO_NORMAL, 1, transportmode, 0, 0);
     ok(rt == GM_OK, "servicecheck sent successfully in mode %s", transportmode == GM_ENCODE_ONLY ? "base64" : "aes256");
     return;
 }
@@ -142,11 +142,11 @@ void send_big_jobs(int transportmode) {
             );
     temp_buffer[sizeof( temp_buffer )-1]='\x0';
     make_uniq(uniq, "%s", "something at least bigger than the (GEARMAN_MAX_UNIQUE_SIZE) 64 chars allowed by libgearman!");
-    int rt = add_job_to_queue(&client, mod_gm_opt->server_list, "service", uniq, temp_buffer, GM_JOB_PRIO_NORMAL, 1, transportmode, 0);
+    int rt = add_job_to_queue(&client, mod_gm_opt->server_list, "service", uniq, temp_buffer, GM_JOB_PRIO_NORMAL, 1, transportmode, 0, 0);
     ok(rt == GM_OK, "big uniq id sent successfully in mode %s", transportmode == GM_ENCODE_ONLY ? "base64" : "aes256");
 
     char * queue = "something at least bigger than the (GEARMAN_FUNCTION_MAX_SIZE) 512 chars allowed by libgearman! aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
-    rt = add_job_to_queue(&client, mod_gm_opt->server_list, queue, uniq, temp_buffer, GM_JOB_PRIO_NORMAL, 1, transportmode, 0);
+    rt = add_job_to_queue(&client, mod_gm_opt->server_list, queue, uniq, temp_buffer, GM_JOB_PRIO_NORMAL, 1, transportmode, 0, 0);
     ok(rt == GM_ERROR, "big queue sent unsuccessfully in mode %s", transportmode == GM_ENCODE_ONLY ? "base64" : "aes256");
 
     return;
@@ -195,7 +195,7 @@ void *get_results( gearman_job_st *job, void *context, size_t *result_size, gear
 /* create server / clients / worker */
 void create_modules(void);
 void create_modules() {
-    ok(create_client( mod_gm_opt->server_list, &client ) == GM_OK, "created test client");
+    ok(create_client_blocking( mod_gm_opt->server_list, &client ) == GM_OK, "created test client");
 
     ok(create_worker( mod_gm_opt->server_list, &worker ) == GM_OK, "created test worker");
     ok(worker_add_function( &worker, GM_DEFAULT_RESULT_QUEUE, get_results ) == GM_OK, "added result worker");

@@ -74,7 +74,7 @@ int worker_add_function( gearman_worker_st * worker, char * queue, gearman_worke
 
 /* create the gearman client with non-blocking io */
 int create_client( gm_server_t * server_list[GM_LISTSIZE], gearman_client_st *client ) {
-    if(create_client(server_list,client ) != GM_OK) {
+    if(create_client_blocking(server_list,client ) != GM_OK) {
         return GM_ERROR;
     }
     gearman_client_add_options( client, GEARMAN_CLIENT_NON_BLOCKING|GEARMAN_CLIENT_FREE_TASKS|GEARMAN_CLIENT_UNBUFFERED_RESULT);
@@ -111,7 +111,7 @@ int create_client_blocking( gm_server_t * server_list[GM_LISTSIZE], gearman_clie
 
 
 /* create a task and send it */
-int add_job_to_queue( gearman_client_st *client, gm_server_t * server_list[GM_LISTSIZE], char * queue, char * uniq, char * data, int priority, int retries, int transport_mode, int log_stats_interval) {
+int add_job_to_queue( gearman_client_st *client, gm_server_t * server_list[GM_LISTSIZE], char * queue, char * uniq, char * data, int priority, int retries, int transport_mode, int async, int log_stats_interval) {
     gearman_job_handle_t job_handle;
     gearman_return_t rc;
     char * crypted_data;
@@ -132,7 +132,7 @@ int add_job_to_queue( gearman_client_st *client, gm_server_t * server_list[GM_LI
         return GM_ERROR;
     }
 
-    gm_log( GM_LOG_TRACE, "add_job_to_queue(%s, %s, %d, %d, %d)\n", queue, uniq, priority, retries, transport_mode);
+    gm_log( GM_LOG_TRACE, "add_job_to_queue(%s, %s, %d, %d, %d, %d, %d)\n", queue, uniq, priority, retries, transport_mode, async, log_stats_interval);
     gm_log( GM_LOG_TRACE, "%d --->%s<---\n", strlen(data), data );
 
     gettimeofday(&t1,NULL);
@@ -200,7 +200,11 @@ int add_job_to_queue( gearman_client_st *client, gm_server_t * server_list[GM_LI
 
         /* recreate client, otherwise gearman sigsegvs */
         gm_free_client( client );
-        create_client( server_list, client );
+        if(async) {
+            create_client( server_list, client );
+        } else {
+            create_client_blocking( server_list, client );
+        }
 
         /* retry as long as we have retries */
         if(retries > 0) {
@@ -211,7 +215,7 @@ int add_job_to_queue( gearman_client_st *client, gm_server_t * server_list[GM_LI
             } else {
                 gm_log( GM_LOG_TRACE, "add_job_to_queue() retrying... %d\n", retries );
             }
-            ret = add_job_to_queue( client, server_list, queue, uniq, data, priority, retries, transport_mode, log_stats_interval);
+            ret = add_job_to_queue( client, server_list, queue, uniq, data, priority, retries, transport_mode, async, log_stats_interval);
             return(ret);
         }
         /* no more retries... */

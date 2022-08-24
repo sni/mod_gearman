@@ -81,7 +81,7 @@ void worker_client(int worker_mode, int indx, int shid) {
     }
 
     /* create client */
-    if ( create_client( mod_gm_opt->server_list, &client ) != GM_OK ) {
+    if ( create_client_blocking( mod_gm_opt->server_list, &client ) != GM_OK ) {
         gm_log( GM_LOG_ERROR, "cannot start client\n" );
         clean_worker_exit(0);
         _exit( EXIT_FAILURE );
@@ -90,7 +90,7 @@ void worker_client(int worker_mode, int indx, int shid) {
 
     /* create duplicate client */
     if( mod_gm_opt->dupserver_num ) {
-        if ( create_client( mod_gm_opt->dupserver_list, &client_dup ) != GM_OK ) {
+        if ( create_client_blocking( mod_gm_opt->dupserver_list, &client_dup ) != GM_OK ) {
             gm_log( GM_LOG_ERROR, "cannot start client for duplicate server\n" );
             _exit( EXIT_FAILURE );
         }
@@ -144,10 +144,10 @@ void worker_loop() {
 
             /* create new connections */
             set_worker( &worker );
-            create_client( mod_gm_opt->server_list, &client );
+            create_client_blocking( mod_gm_opt->server_list, &client );
             current_client = &client;
             if( mod_gm_opt->dupserver_num ) {
-                create_client( mod_gm_opt->dupserver_list, &client_dup );
+                create_client_blocking( mod_gm_opt->dupserver_list, &client_dup );
                 current_client_dup = &client_dup;
             }
         }
