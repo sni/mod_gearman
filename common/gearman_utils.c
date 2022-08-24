@@ -29,8 +29,13 @@ int mod_gm_con_errors = 0;
 struct timeval mod_gm_error_time;
 double total_submit_sum = 0;
 double total_submit_max = 0;
-long int total_submit_jobs = 0;
-long int total_submit_errors = 0;
+double current_submit_max = 0;
+unsigned long total_submit_jobs = 0;
+unsigned long total_submit_jobs_delta = 0;
+unsigned long total_submit_errors = 0;
+unsigned long total_submit_errors_delta = 0;
+float current_submit_rate = 0;
+float current_avg_submit_duration = 0;
 struct timeval total_submit_time;
 extern mod_gm_opt_t *mod_gm_opt;
 
@@ -159,24 +164,30 @@ int add_job_to_queue( gearman_client_st *client, gm_server_t * server_list[GM_LI
     if(log_stats_interval > 0) {
         elapsed = elapsed_time(t1, t2);
         total_submit_sum += elapsed;
+        total_submit_jobs_delta++;
         total_submit_jobs++;
         if(elapsed > total_submit_max)
             total_submit_max = elapsed;
-        if(rc != GEARMAN_SUCCESS && rc != GEARMAN_IO_WAIT)
+        if(rc != GEARMAN_SUCCESS && rc != GEARMAN_IO_WAIT) {
             total_submit_errors++;
+            total_submit_errors_delta++;
+        }
         if(t2.tv_sec >= total_submit_time.tv_sec + log_stats_interval) {
             if(total_submit_time.tv_sec > 0) {
+                current_submit_rate = (total_submit_jobs_delta-total_submit_errors_delta) / elapsed_time(total_submit_time, t2);
+                current_avg_submit_duration = total_submit_sum/total_submit_jobs_delta;
+                current_submit_max = total_submit_max;
                 gm_log(GM_LOG_INFO, "gearmand submission statistics: jobs:%7d   errors: %7d   submit_rate: %6.1f/s   avg_submit_duration: %.6fs   max_submit_duration: %.6fs\n",
-                    total_submit_jobs,
-                    total_submit_errors,
-                    (total_submit_jobs-total_submit_errors) / elapsed_time(total_submit_time, t2),
-                    total_submit_sum/total_submit_jobs,
+                    total_submit_jobs_delta,
+                    total_submit_errors_delta,
+                    current_submit_rate,
+                    current_avg_submit_duration,
                     total_submit_max
                 );
-                total_submit_sum    = 0;
-                total_submit_jobs   = 0;
-                total_submit_errors = 0;
-                total_submit_max    = 0;
+                total_submit_sum          = 0;
+                total_submit_jobs_delta   = 0;
+                total_submit_errors_delta = 0;
+                total_submit_max          = 0;
             }
             gettimeofday(&total_submit_time,NULL);
         }

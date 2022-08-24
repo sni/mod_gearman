@@ -29,6 +29,13 @@
 #include "gearman_utils.h"
 
 extern mod_gm_opt_t *mod_gm_opt;
+extern char hostname[GM_SMALLBUFSIZE];
+extern unsigned long total_submit_jobs;
+extern unsigned long total_submit_errors;
+extern float current_submit_rate;
+extern float current_avg_submit_duration;
+extern double current_submit_max;
+extern int result_threads_running;
 
 static const char *gearman_worker_source_name(void *source) {
     if(!source)
@@ -70,6 +77,7 @@ void *result_worker( void * data ) {
     gearman_return_t ret;
 
     gm_log( GM_LOG_TRACE, "worker %d started\n", *worker_num );
+    gethostname(hostname, GM_SMALLBUFSIZE-1);
 
     pthread_setcancelstate (PTHREAD_CANCEL_ENABLE, NULL);
     pthread_setcanceltype (PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
@@ -139,6 +147,24 @@ void *get_results( gearman_job_st *job, void *context, size_t *result_size, gear
         transportmode = mod_gm_opt->transportmode;
     }
     mod_gm_decrypt(&decrypted_data, workload, transportmode);
+
+    if(!strcmp(workload, "check")) {
+        char * result = gm_malloc(GM_BUFFERSIZE);
+        *result_size = GM_BUFFERSIZE;
+        snprintf(result, GM_BUFFERSIZE, "0:OK - result worker running on %s. Sending %.1f jobs/s (avg duration:%.3fms). Version: %s|worker=%i;;;0;%i avg_submit_duration=%.6fs;;;0;%.6f jobs=%luc errors=%luc",
+                                            hostname,
+                                            current_submit_rate,
+                                            (current_avg_submit_duration*1000),
+                                            GM_VERSION,
+                                            result_threads_running,
+                                            mod_gm_opt->result_workers,
+                                            current_avg_submit_duration,
+                                            current_submit_max,
+                                            total_submit_jobs,
+                                            total_submit_errors
+        );
+        return((void*)result);
+    }
 
     if(decrypted_data == NULL) {
         *ret_ptr = GEARMAN_WORK_FAIL;

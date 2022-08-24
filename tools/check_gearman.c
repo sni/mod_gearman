@@ -191,6 +191,10 @@ void print_usage() {
     printf("%%> ./check_gearman -H <job server hostname> -q perfdata -t 10 -x\n");
     printf("check_gearman CRITICAL - Queue perfdata has 155 jobs without any worker. |'perfdata_waiting'=155;10;100;0 'perfdata_running'=0 'perfdata_worker'=0;25;50;0\n");
     printf("\n");
+    printf("Check result worker:\n");
+    printf("%%> ./check_gearman -H <job server hostname> -q check_results -t 10 -s check\n");
+    printf("OK - result worker running on host. Sending 14.9 jobs/s (avg duration:0.040ms). Version: 4.0.3|worker=3;;;0;3 avg_submit_duration=0.000040s;;;0;0.000429 jobs=2388c errors=0c\n");
+    printf("\n");
 
     exit( STATE_UNKNOWN );
 }
