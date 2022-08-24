@@ -61,7 +61,7 @@ int main (int argc, char **argv) {
     }
 
     /* create client */
-    if ( create_client( mod_gm_opt->server_list, &client ) != GM_OK ) {
+    if ( create_client_blocking( mod_gm_opt->server_list, &client ) != GM_OK ) {
         printf( "send_gearman UNKNOWN: cannot start client\n" );
         exit( STATE_UNKNOWN );
     }
@@ -69,7 +69,7 @@ int main (int argc, char **argv) {
 
     /* create duplicate client */
     if ( mod_gm_opt->dupserver_num > 0 ) {
-        if ( create_client( mod_gm_opt->dupserver_list, &client_dup ) != GM_OK ) {
+        if ( create_client_blocking( mod_gm_opt->dupserver_list, &client_dup ) != GM_OK ) {
             printf( "send_gearman UNKNOWN: cannot start client for duplicate server\n" );
             exit( STATE_UNKNOWN );
         }

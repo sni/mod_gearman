@@ -72,9 +72,17 @@ int worker_add_function( gearman_worker_st * worker, char * queue, gearman_worke
     return GM_OK;
 }
 
-
-/* create the gearman client */
+/* create the gearman client with non-blocking io */
 int create_client( gm_server_t * server_list[GM_LISTSIZE], gearman_client_st *client ) {
+    if(create_client(server_list,client ) != GM_OK) {
+        return GM_ERROR;
+    }
+    gearman_client_add_options( client, GEARMAN_CLIENT_NON_BLOCKING|GEARMAN_CLIENT_FREE_TASKS|GEARMAN_CLIENT_UNBUFFERED_RESULT);
+    return GM_OK;
+}
+
+/* create the gearman client with blocking io */
+int create_client_blocking( gm_server_t * server_list[GM_LISTSIZE], gearman_client_st *client ) {
     gearman_return_t ret;
     int x = 0;
 
@@ -97,7 +105,6 @@ int create_client( gm_server_t * server_list[GM_LISTSIZE], gearman_client_st *cl
     assert(x != 0);
 
     gearman_client_set_timeout( client, mod_gm_opt->gearman_connection_timeout );
-    gearman_client_add_options( client, GEARMAN_CLIENT_NON_BLOCKING|GEARMAN_CLIENT_FREE_TASKS|GEARMAN_CLIENT_UNBUFFERED_RESULT);
 
     return GM_OK;
 }

@@ -335,7 +335,7 @@ int check_worker(char * queue, char * to_send, char * expect) {
     }
 
     /* create client */
-    if ( create_client( server_list, &client ) != GM_OK ) {
+    if ( create_client_blocking( server_list, &client ) != GM_OK ) {
         current_client = &client;
         printf("%s UNKNOWN - cannot create gearman client\n", PLUGIN_NAME);
         return( STATE_UNKNOWN );
@@ -404,7 +404,7 @@ int check_worker(char * queue, char * to_send, char * expect) {
     }
 
     // if result starts with a number followed by a colon, use this as exit code
-    if(strlen(result) > 1 && result[1] == ':') {
+    if(result != NULL && strlen(result) > 1 && result[1] == ':') {
         int rc = result[0] - '0';
         result += 2;
         printf("%s\n", result);
