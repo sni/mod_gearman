@@ -159,12 +159,12 @@ int main(void) {
     string2timeval("100.000050", &t);
     ok(t.tv_sec  == 100, "string2timeval 1");
     ok(t.tv_usec == 50, "string2timeval 2");
-    ok(fabs(timeval2double(&t) - 100.00005) < 0.00001, "timeval2double 1");
+    ok(fabs((double)timeval2double(&t) - 100.00005) < 0.00001, "timeval2double 1");
 
     string2timeval("100.5", &t);
     ok(t.tv_sec  == 100, "string2timeval 1b");
     ok(t.tv_usec == 500000, "string2timeval 2b");
-    ok(fabs(timeval2double(&t) - 100.5) < 0.00001, "timeval2double 2");
+    ok(fabs((double)timeval2double(&t) - 100.5) < 0.00001, "timeval2double 2");
 
     string2timeval("100", &t);
     ok(t.tv_sec  == 100, "string2timeval 3");
@@ -238,32 +238,32 @@ int main(void) {
     /* starts_with */
     strcpy(test, "test123");
     test2 = strdup("test");
-    is(starts_with(test2, test), TRUE, "starts_with(test, test123)");
+    ok(starts_with(test2, test) == TRUE, "starts_with(test, test123)");
     free(test2);
     test2 = strdup("test123");
-    is(starts_with(test2, test), TRUE,  "starts_with(test123, test123)");
+    ok(starts_with(test2, test) == TRUE,  "starts_with(test123, test123)");
     free(test2);
     test2 = strdup("test1234");
-    is(starts_with(test2, test), FALSE,  "starts_with(test1234, test123)");
+    ok(starts_with(test2, test) == FALSE,  "starts_with(test1234, test123)");
     free(test2);
     test2 = strdup("xyz");
-    is(starts_with(test2, test), FALSE,  "starts_with(xyz, test123)");
+    ok(starts_with(test2, test) == FALSE,  "starts_with(xyz, test123)");
     free(test2);
 
     char uniq[GM_SMALLBUFSIZE];
     make_uniq(uniq, "%s", "test - test");
     like(uniq, "3a9e4a6a2e66af990948d81e004b3ac0", "make_uniq()");
-    is(strlen(uniq), 32, "length of uniq string is 32");
+    ok(strlen(uniq) == 32, "length of uniq string is 32");
     ok(strlen(uniq) < GEARMAN_MAX_UNIQUE_SIZE - 1, "uniq string is smaller than GEARMAN_MAX_UNIQUE_SIZE");
 
     make_uniq(uniq, "%s", "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
     like(uniq, "06750addec6e07d61b2eaf2d24fae87e", "make_uniq()");
-    is(strlen(uniq), 32, "length of uniq string is 32");
+    ok(strlen(uniq) == 32, "length of uniq string is 32");
     ok(strlen(uniq) < GEARMAN_MAX_UNIQUE_SIZE - 1, "uniq string is smaller than GEARMAN_MAX_UNIQUE_SIZE");
 
     make_uniq(uniq, "%s-%s", "xxx-xxxxx-xxxxxx.xxxxxxxxxx.xxxxxx.xx", "xxxx_xxxx_xxxxx_xxx_xx");
     like(uniq, "91de277e8197840a3261751c712698e0", "make_uniq()");
-    is(strlen(uniq), 32, "length of uniq string is 32");
+    ok(strlen(uniq) == 32, "length of uniq string is 32");
     ok(strlen(uniq) < GEARMAN_MAX_UNIQUE_SIZE - 1, "uniq string is smaller than GEARMAN_MAX_UNIQUE_SIZE");
 
     mod_gm_free_opt(mod_gm_opt);

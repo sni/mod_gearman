@@ -158,7 +158,7 @@ void worker_loop() {
 
 
 /* get a job */
-void *get_job( gearman_job_st *job, void *context, size_t *result_size, gearman_return_t *ret_ptr ) {
+void *get_job( gearman_job_st *job, __attribute__((__unused__)) void *context, size_t *result_size, gearman_return_t *ret_ptr ) {
     sigset_t block_mask;
     int wsize, valid_lines;
     char * workload;
@@ -179,9 +179,6 @@ void *get_job( gearman_job_st *job, void *context, size_t *result_size, gearman_
     set_state(GM_JOB_START);
 
     gm_log( GM_LOG_TRACE, "get_job()\n" );
-
-    /* contect is unused */
-    context = context;
 
     /* set size of result */
     *result_size = 0;
@@ -612,16 +609,13 @@ void clean_worker_exit(int sig) {
 
 
 /* answer status querys */
-void *return_status( gearman_job_st *job, void *context, size_t *result_size, gearman_return_t *ret_ptr ) {
+void *return_status( gearman_job_st *job, __attribute__((__unused__)) void *context, size_t *result_size, gearman_return_t *ret_ptr ) {
     int wsize;
     char workload[GM_BUFFERSIZE];
     int *shm;
     char * result;
 
     gm_log( GM_LOG_TRACE, "return_status()\n" );
-
-    /* contect is unused */
-    context = context;
 
     /* get the data */
     wsize = gearman_job_workload_size(job);
@@ -670,11 +664,13 @@ void *return_status( gearman_job_st *job, void *context, size_t *result_size, ge
 void write_debug_file(char ** text) {
     FILE * fd;
     fd = fopen( "/tmp/mod_gearman_worker.txt", "a+" );
-    if(fd == NULL)
+    if(fd == NULL) {
         perror("fopen");
-    fputs( "------------->\n", fd );
-    fputs( *text, fd );
-    fputs( "\n<-------------\n", fd );
-    fclose( fd );
+    } else {
+        fputs( "------------->\n", fd );
+        fputs( *text, fd );
+        fputs( "\n<-------------\n", fd );
+        fclose( fd );
+    }
 }
 #endif

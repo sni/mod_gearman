@@ -578,7 +578,7 @@ int main (int argc, char **argv, char **env) {
 
     todo();
     check_logfile("/tmp/gearmand.log", status != 0 ? 2 : 0);
-    endtodo;
+    end_todo;
     status = 0;
 
     kill(worker_pid, SIGTERM);
@@ -593,7 +593,7 @@ int main (int argc, char **argv, char **env) {
 
     free(last_result);
     free(worker_logfile);
-    endskip;
+    end_skip;
     mod_gm_free_opt(mod_gm_opt);
     return exit_status();
 }

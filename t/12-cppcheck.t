@@ -17,7 +17,7 @@ for my $check (qw|/usr/bin/cppcheck
 plan skip_all => 'requires cppcheck' unless $cppcheck;
 plan tests    => 2;
 
-my $cmd = $cppcheck." --force --inline-suppr --template '{file}:{line},{severity},{id},{message}' -q common/. include/. neb_module_*/. tools/. worker/. 2>&1 | grep -v 'Invalid number of character'";
+my $cmd = $cppcheck." --force --inline-suppr --template '{file}:{line},{severity},{id},{message}' -D NEB_API_VERSION -q common/. include/. neb_module_*/. tools/. worker/. 2>&1 | grep -v 'Invalid number of character' | grep -v 'common/md5'";
 ok($cmd, $cmd);
 my $out = `$cmd`;
 chomp($out);

@@ -274,18 +274,6 @@ void double2timeval(long double value, struct timeval * t);
 long double timeval2double(struct timeval * t);
 
 /**
- * mod_gm_time_compare
- *
- * get difference between two timeval
- *
- * @param[in] tv1 - first timeval
- * @param[in] tv2 - second timeval
- *
- * @return difference in seconds
- */
-long mod_gm_time_compare(struct timeval * tv1, struct timeval * tv2);
-
-/**
  *
  * set_default_job
  *

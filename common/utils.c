@@ -1220,7 +1220,7 @@ void double2timeval(long double value, struct timeval *t) {
     t->tv_usec = (int)((value - (long double)t->tv_sec) * 1000000);
 }
 
-/* convert a timeval to double */
+/* convert a timeval to long double */
 long double timeval2double(struct timeval * t) {
     long double val = 0.0;
     if(t != NULL) {
@@ -1228,15 +1228,6 @@ long double timeval2double(struct timeval * t) {
     }
     return val;
 }
-
-
-/* compare 2 timestructs */
-long mod_gm_time_compare(struct timeval * tv1, struct timeval * tv2) {
-   long secdiff = (long)(tv1->tv_sec - tv2->tv_sec);
-   long usecdiff = (long)(tv1->tv_usec - tv2->tv_usec);
-   return secdiff? secdiff: usecdiff;
-}
-
 
 /* set empty default job */
 int set_default_job(gm_job_t *job, mod_gm_opt_t *opt) {

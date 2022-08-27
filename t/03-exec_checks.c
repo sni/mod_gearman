@@ -23,16 +23,15 @@ int main (int argc, char **argv, char **env) {
     argc = argc; argv = argv; env  = env;
     int rc, rrc;
     char *result, *error;
-    char cmd[120];
+    char cmd[4096];
     char hostname[GM_BUFFERSIZE];
     char cwd[1024];
-    struct stat st;
 
     plan(76);
 
     /* set hostname and cwd */
     gethostname(hostname, GM_SMALLBUFSIZE-1);
-    if(!getcwd(cwd, sizeof(cwd)) != NULL)
+    if(getcwd(cwd, sizeof(cwd)) == NULL)
        perror("getcwd() error");
 
     /* create options structure and set debug level */
@@ -365,7 +364,7 @@ int main (int argc, char **argv, char **env) {
     /*****************************************
      * restricted paths
      */
-    char res[2048];
+    char res[4096];
     snprintf(res, 150, "--restrict_path=/tmp/");
     rc = parse_args_line(mod_gm_opt, res, 0);
     cmp_ok(rc, "==", GM_OK, "parsed %s option", res);
@@ -390,7 +389,7 @@ int main (int argc, char **argv, char **env) {
     /*****************************************
      * restricted paths (3)
      */
-    snprintf(res, 150, "--restrict_path=%s", cwd);
+    snprintf(res, 1100, "--restrict_path=%s", cwd);
     rc = parse_args_line(mod_gm_opt, res, 0);
     cmp_ok(rc, "==", GM_OK, "parsed %s option", res);
     cmp_ok(mod_gm_opt->restrict_path_num, "==", 2, "restricted path is set in opts: %d", mod_gm_opt->restrict_path_num);

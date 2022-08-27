@@ -97,8 +97,8 @@ void write_core_log(char *data) {
 
 /* fake some core functions */
 int neb_set_module_info(void *handle, int type, char *data) { handle=handle; type=type; data=data; return 0; }
-int neb_register_callback(enum NEBCallbackType callback_type, void *mod_handle, int priority, int (*callback_func)(int, void *)) { return 0; }
-int neb_deregister_callback(enum NEBCallbackType callback_type, void *callback_func) { return 0; }
+int neb_register_callback(__attribute__((__unused__)) enum NEBCallbackType callback_type, __attribute__((__unused__)) void *mod_handle, __attribute__((__unused__)) int priority, __attribute__((__unused__)) int (*callback_func)(int, void *)) { return 0; }
+int neb_deregister_callback(__attribute__((__unused__)) enum NEBCallbackType callback_type, __attribute__((__unused__)) void *callback_func) { return 0; }
 
 int main(void) {
     int i;

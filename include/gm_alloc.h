@@ -8,7 +8,6 @@
 
 void *gm_malloc(size_t size);
 void *gm_realloc(void *ptr, size_t size);
-void *gm_calloc(size_t count, size_t size);
 void *gm_strdup(const char *s);
 void *gm_strndup(const char *s, size_t size);
 void gm_asprintf(char **strp, const char *fmt, ...);

@@ -78,8 +78,8 @@ static int   handle_host_check( int,void * );
 static int   handle_svc_check( int,void * );
 static int   handle_eventhandler( int,void * );
 static int   handle_notifications( int,void * );
-static int   handle_perfdata(int e, void *);
-static int   handle_export(int e, void *);
+static int   handle_perfdata(int, void *);
+static int   handle_export(int, void *);
 static void  set_target_queue( host *, service * );
 static int   handle_process_events( int, void * );
 static void move_results_to_core(struct nm_event_execution_properties *evprop);
@@ -312,9 +312,9 @@ static void move_results_to_core(struct nm_event_execution_properties *evprop) {
 }
 
 /* add list to gearman result list */
-void mod_gm_add_result_to_list(check_result * newcr) {
+void mod_gm_add_result_to_list(check_result * newcheckresult) {
     pthread_mutex_lock(&mod_gm_result_list_mutex);
-    prepend_object_to_objectlist(&mod_gm_result_list, newcr);
+    prepend_object_to_objectlist(&mod_gm_result_list, newcheckresult);
     pthread_mutex_unlock(&mod_gm_result_list_mutex);
 }
 
@@ -1251,7 +1251,7 @@ static void set_target_queue( host *hst, service *svc ) {
 
     if ( svc ) {
         /* pass into the general service queue */
-        if ( mod_gm_opt->services == GM_ENABLED && svc ) {
+        if ( mod_gm_opt->services == GM_ENABLED ) {
             snprintf( target_queue, GM_SMALLBUFSIZE-1, "service" );
             return;
         }
@@ -1275,7 +1275,6 @@ int handle_perfdata(int event_type, void *data) {
     host *hst        = NULL;
     service *svc     = NULL;
     int has_perfdata = FALSE;
-    int i;
     char *perf_data;
 
     gm_log( GM_LOG_TRACE, "handle_perfdata(%d)\n", event_type );
@@ -1373,7 +1372,7 @@ int handle_perfdata(int event_type, void *data) {
     }
 
     if(has_perfdata == TRUE) {
-        for (i = 0; i < mod_gm_opt->perfdata_queues_num; i++) {
+        for (int i = 0; i < mod_gm_opt->perfdata_queues_num; i++) {
             char *perfdata_queue = mod_gm_opt->perfdata_queues_list[i];
             /* add our job onto the queue */
             if(add_job_to_queue( &client,
@@ -1401,7 +1400,7 @@ int handle_perfdata(int event_type, void *data) {
 
 /* handle generic exports */
 int handle_export(int callback_type, void *data) {
-    int i, debug_level_orig, return_code;
+    int debug_level_orig, return_code;
     char * buffer;
     char * type;
     char * event_type;
@@ -1515,7 +1514,7 @@ int handle_export(int callback_type, void *data) {
 
     if(temp_buffer[0] != '\x0') {
 
-        for(i=0;i<mod_gm_opt->exports[callback_type]->elem_number;i++) {
+        for(int i = 0; i<mod_gm_opt->exports[callback_type]->elem_number; i++) {
             return_code = mod_gm_opt->exports[callback_type]->return_code[i];
             add_job_to_queue( &client,
                               mod_gm_opt->server_list,

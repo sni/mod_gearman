@@ -103,7 +103,7 @@ void *result_worker( void * data ) {
 }
 
 /* put back the result into the core */
-void *get_results( gearman_job_st *job, void *context, size_t *result_size, gearman_return_t *ret_ptr ) {
+void *get_results( gearman_job_st *job, __attribute__((__unused__)) void *context, size_t *result_size, gearman_return_t *ret_ptr ) {
     int wsize, transportmode;
     char *workload;
     char *decrypted_data;
@@ -119,9 +119,6 @@ void *get_results( gearman_job_st *job, void *context, size_t *result_size, gear
 
     /* for calculating real latency */
     gettimeofday(&now,NULL);
-
-    /* contect is unused */
-    context = context;
 
     /* set size of result */
     *result_size = 0;
@@ -184,10 +181,12 @@ void *get_results( gearman_job_st *job, void *context, size_t *result_size, gear
     if(mod_gm_opt->debug_result == GM_ENABLED) {
         FILE * fd;
         fd = fopen( "/tmp/last_result_received.txt", "w+" );
-        if(fd == NULL)
+        if(fd == NULL) {
             perror("fopen");
-        fputs( decrypted_data, fd );
-        fclose( fd );
+        } else {
+            fputs( decrypted_data, fd );
+            fclose( fd );
+        }
     }
 #endif
 
@@ -387,11 +386,13 @@ int set_worker( gearman_worker_st *worker ) {
 void write_debug_file(char ** text) {
     FILE * fd;
     fd = fopen( "/tmp/mod_gearman_result.txt", "a+" );
-    if(fd == NULL)
+    if(fd == NULL) {
         perror("fopen");
-    fputs( "------------->\n", fd );
-    fputs( *text, fd );
-    fputs( "\n<-------------\n", fd );
-    fclose( fd );
+    } else {
+        fputs( "------------->\n", fd );
+        fputs( *text, fd );
+        fputs( "\n<-------------\n", fd );
+        fclose( fd );
+    }
 }
 #endif

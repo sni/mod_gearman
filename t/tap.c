@@ -1,3 +1,11 @@
+/*
+libtap - Write tests in C
+Copyright 2012 Jake Gelbman <gelbman@gmail.com>
+This file is licensed under the LGPL
+*/
+
+#define _DEFAULT_SOURCE 1
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
@@ -19,13 +27,17 @@ vstrdupf (const char *fmt, va_list args) {
         fmt = "";
     size = vsnprintf(NULL, 0, fmt, args2) + 2;
     str = malloc(size);
+    if (!str) {
+        perror("malloc error");
+        exit(1);
+    }
     vsprintf(str, fmt, args);
     va_end(args2);
     return str;
 }
 
 void
-cplan (int tests, const char *fmt, ...) {
+tap_plan (int tests, const char *fmt, ...) {
     expected_tests = tests;
     if (tests == SKIP_ALL) {
         char *why;
@@ -34,7 +46,7 @@ cplan (int tests, const char *fmt, ...) {
         why = vstrdupf(fmt, args);
         va_end(args);
         printf("1..0 ");
-        note("SKIP %s\n", why);
+        diag("SKIP %s\n", why);
         exit(0);
     }
     if (tests != NO_PLAN) {
@@ -47,7 +59,10 @@ vok_at_loc (const char *file, int line, int test, const char *fmt,
             va_list args)
 {
     char *name = vstrdupf(fmt, args);
-    printf("%sok %d", test ? "" : "not ", ++current_test);
+    if (!test) {
+        printf("not ");
+    }
+    printf("ok %d", ++current_test);
     if (*name)
         printf(" - %s", name);
     if (todo_mesg) {
@@ -57,12 +72,13 @@ vok_at_loc (const char *file, int line, int test, const char *fmt,
     }
     printf("\n");
     if (!test) {
+        printf("#   Failed ");
+        if (todo_mesg)
+            printf("(TODO) ");
+        printf("test ");
         if (*name)
-            diag("  Failed%s test '%s'\n  at %s line %d.",
-                todo_mesg ? " (TODO)" : "", name, file, line);
-        else
-            diag("  Failed%s test at %s line %d.",
-                todo_mesg ? " (TODO)" : "", file, line);
+            printf("'%s'\n#   ", name);
+        printf("at %s line %d.\n", file, line);
         if (!todo_mesg)
             failed_tests++;
     }
@@ -154,42 +170,68 @@ cmp_ok_at_loc (const char *file, int line, int a, const char *op, int b,
     return test;
 }
 
-static void
-vdiag_to_fh (FILE *fh, const char *fmt, va_list args) {
+static int
+find_mem_diff (const char *a, const char *b, size_t n, size_t *offset) {
+    size_t i;
+    if (a == b)
+        return 0;
+    if (!a || !b)
+        return 2;
+    for (i = 0; i < n; i++) {
+        if (a[i] != b[i]) {
+            *offset = i;
+            return 1;
+        }
+    }
+    return 0;
+}
+
+int
+cmp_mem_at_loc (const char *file, int line, const void *got,
+                const void *expected, size_t n, const char *fmt, ...)
+{
+    size_t offset;
+    int diff = find_mem_diff(got, expected, n, &offset);
+    va_list args;
+    va_start(args, fmt);
+    vok_at_loc(file, line, !diff, fmt, args);
+    va_end(args);
+    if (diff == 1) {
+        diag("    Difference starts at offset %d", offset);
+        diag("         got: 0x%02x", ((unsigned char *)got)[offset]);
+        diag("    expected: 0x%02x", ((unsigned char *)expected)[offset]);
+    }
+    else if (diff == 2) {
+        diag("         got: %s", got ? "not NULL" : "NULL");
+        diag("    expected: %s", expected ? "not NULL" : "NULL");
+    }
+    return !diff;
+}
+
+int
+diag (const char *fmt, ...) {
+    va_list args;
     char *mesg, *line;
     int i;
-    if (!fmt)
-        return;
+    va_start(args, fmt);
+    if (!fmt) {
+        va_end(args);
+        return 0;
+    }
     mesg = vstrdupf(fmt, args);
     line = mesg;
     for (i = 0; *line; i++) {
         char c = mesg[i];
         if (!c || c == '\n') {
             mesg[i] = '\0';
-            fprintf(fh, "# %s\n", line);
-            if (!c) break;
+            printf("# %s\n", line);
+            if (!c)
+                break;
             mesg[i] = c;
-            line = &mesg[i+1];
+            line = mesg + i + 1;
         }
     }
     free(mesg);
-    return;
-}
-
-int
-diag (const char *fmt, ...) {
-    va_list args;
-    va_start(args, fmt);
-    vdiag_to_fh(stderr, fmt, args);
-    va_end(args);
-    return 0;
-}
-
-int
-note (const char *fmt, ...) {
-    va_list args;
-    va_start(args, fmt);
-    vdiag_to_fh(stdout, fmt, args);
     va_end(args);
     return 0;
 }
@@ -203,15 +245,12 @@ exit_status () {
     else if (current_test != expected_tests) {
         diag("Looks like you planned %d test%s but ran %d.",
             expected_tests, expected_tests > 1 ? "s" : "", current_test);
-        retval = 255;
+        retval = 2;
     }
     if (failed_tests) {
         diag("Looks like you failed %d test%s of %d run.",
             failed_tests, failed_tests > 1 ? "s" : "", current_test);
-        if (expected_tests == NO_PLAN)
-            retval = failed_tests;
-        else
-            retval = expected_tests - current_test + failed_tests;
+        retval = 1;
     }
     return retval;
 }
@@ -219,6 +258,7 @@ exit_status () {
 int
 bail_out (int ignore, const char *fmt, ...) {
     va_list args;
+    (void) ignore;
     va_start(args, fmt);
     printf("Bail out!  ");
     vprintf(fmt, args);
@@ -229,7 +269,7 @@ bail_out (int ignore, const char *fmt, ...) {
 }
 
 void
-skippy (int n, const char *fmt, ...) {
+tap_skip (int n, const char *fmt, ...) {
     char *why;
     va_list args;
     va_start(args, fmt);
@@ -237,41 +277,41 @@ skippy (int n, const char *fmt, ...) {
     va_end(args);
     while (n --> 0) {
         printf("ok %d ", ++current_test);
-        note("skip %s\n", why);
+        diag("skip %s\n", why);
     }
     free(why);
 }
 
 void
-ctodo (int ignore, const char *fmt, ...) {
+tap_todo (int ignore, const char *fmt, ...) {
     va_list args;
+    (void) ignore;
     va_start(args, fmt);
     todo_mesg = vstrdupf(fmt, args);
     va_end(args);
 }
 
 void
-cendtodo () {
+tap_end_todo () {
     free(todo_mesg);
     todo_mesg = NULL;
 }
 
 #ifndef _WIN32
 #include <sys/mman.h>
+#include <sys/param.h>
 #include <regex.h>
 
-#ifdef __APPLE__
+#ifndef MAP_ANONYMOUS
+#ifdef MAP_ANON
 #define MAP_ANONYMOUS MAP_ANON
+#else
+#error "System does not support mapping anonymous pages"
 #endif
-
-#include <sys/param.h>
-#ifdef BSD
-#include <sys/mman.h>
-#define MAP_ANONYMOUS MAP_ANON
 #endif
 
 /* Create a shared memory int to keep track of whether a piece of code executed
-dies. to be used in the dies_ok and lives_ok macros  */
+dies. to be used in the dies_ok and lives_ok macros.  */
 int
 tap_test_died (int status) {
     static int *test_died = NULL;
@@ -292,6 +332,7 @@ like_at_loc (int for_match, const char *file, int line, const char *got,
 {
     int test;
     regex_t re;
+    va_list args;
     int err = regcomp(&re, expected, REG_EXTENDED);
     if (err) {
         char errbuf[256];
@@ -303,7 +344,6 @@ like_at_loc (int for_match, const char *file, int line, const char *got,
     err = regexec(&re, got, 0, NULL, 0);
     regfree(&re);
     test = for_match ? !err : err;
-    va_list args;
     va_start(args, fmt);
     vok_at_loc(file, line, test, fmt, args);
     va_end(args);
@@ -320,4 +360,3 @@ like_at_loc (int for_match, const char *file, int line, const char *got,
     return test;
 }
 #endif
-

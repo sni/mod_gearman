@@ -29,11 +29,6 @@ void *gm_realloc(void *ptr, size_t size)  {
     CHECK_AND_RETURN(new_ptr);
 }
 
-void *gm_calloc(size_t count, size_t size) {
-    void *ptr = calloc(count, size);
-    CHECK_AND_RETURN(ptr);
-}
-
 void *gm_strdup(const char *s) {
     char *str = strdup(s);
     CHECK_AND_RETURN(str);
