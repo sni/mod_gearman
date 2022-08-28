@@ -1372,7 +1372,8 @@ int handle_perfdata(int event_type, void *data) {
     }
 
     if(has_perfdata == TRUE) {
-        for (int i = 0; i < mod_gm_opt->perfdata_queues_num; i++) {
+        int i = 0;
+        for (i = 0; i < mod_gm_opt->perfdata_queues_num; i++) {
             char *perfdata_queue = mod_gm_opt->perfdata_queues_list[i];
             /* add our job onto the queue */
             if(add_job_to_queue( &client,
@@ -1513,8 +1514,8 @@ int handle_export(int callback_type, void *data) {
     }
 
     if(temp_buffer[0] != '\x0') {
-
-        for(int i = 0; i<mod_gm_opt->exports[callback_type]->elem_number; i++) {
+        int i = 0;
+        for(i = 0; i<mod_gm_opt->exports[callback_type]->elem_number; i++) {
             return_code = mod_gm_opt->exports[callback_type]->return_code[i];
             add_job_to_queue( &client,
                               mod_gm_opt->server_list,
