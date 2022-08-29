@@ -61,7 +61,7 @@ int main (int argc, char **argv) {
     }
 
     /* create client */
-    if ( create_client_blocking( mod_gm_opt->server_list, &client ) != GM_OK ) {
+    if ( create_client( mod_gm_opt->server_list, &client ) != GM_OK ) {
         printf( "send_gearman UNKNOWN: cannot start client\n" );
         exit( STATE_UNKNOWN );
     }
@@ -69,7 +69,7 @@ int main (int argc, char **argv) {
 
     /* create duplicate client */
     if ( mod_gm_opt->dupserver_num > 0 ) {
-        if ( create_client_blocking( mod_gm_opt->dupserver_list, &client_dup ) != GM_OK ) {
+        if ( create_client( mod_gm_opt->dupserver_list, &client_dup ) != GM_OK ) {
             printf( "send_gearman UNKNOWN: cannot start client for duplicate server\n" );
             exit( STATE_UNKNOWN );
         }
@@ -362,7 +362,7 @@ int submit_result() {
                          GM_DEFAULT_JOB_RETRIES,
                          mod_gm_opt->transportmode,
                          0,
-                         0
+                         1
                         ) == GM_OK) {
         gm_log( GM_LOG_TRACE, "send_result_back() finished successfully\n" );
 
@@ -376,7 +376,7 @@ int submit_result() {
                                  GM_DEFAULT_JOB_RETRIES,
                                  mod_gm_opt->transportmode,
                                  0,
-                                 0
+                                 1
                             ) == GM_OK) {
                 gm_log( GM_LOG_TRACE, "send_result_back() finished successfully for duplicate server.\n" );
             }
