@@ -1531,9 +1531,9 @@ gearman_connection_timeout
 </dt>
 <dd>
 <p>
-Timeout in milliseconds when connecting to gearmand daemon. Default value is
-defined as <em>no timeout</em>.
-Default is -1.
+Timeout in milliseconds when connecting to gearmand daemon. Set to 0 to disable
+the timeout.
+Default is 5000.
 </p>
 </dd>
 </dl></div>
@@ -1542,7 +1542,7 @@ Default is -1.
 <div class="content">
 <div class="literalblock">
 <div class="content">
-<pre><code>gearman_connection_timeout=-1</code></pre>
+<pre><code>gearman_connection_timeout=5000</code></pre>
 </div></div>
 </div></div>
 </div>
@@ -2711,7 +2711,7 @@ Make sure all your worker have the Monitoring-Plugins available under
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2022-07-29 01:50:04 CEST
+ 2022-08-24 16:29:59 CEST
 </div>
 </div>
 </body>
