@@ -280,6 +280,7 @@ int send_result() {
     else if(mod_gm_opt->message == NULL) {
         /* get all lines from stdin */
         mod_gm_opt->message = gm_malloc(GM_BUFFERSIZE);
+        mod_gm_opt->message[0]='\x0';
         alarm(mod_gm_opt->timeout);
         read_filepointer(&mod_gm_opt->message, stdin);
         alarm(0);
