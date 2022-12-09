@@ -40,8 +40,8 @@
 #include <sys/wait.h>
 #include <sys/stat.h>
 #include <stddef.h>
+#include <openssl/evp.h>
 
-#include "polarssl/md5.h"
 #include "common.h"
 
 #define GM_PERFDATA_QUEUE    "perfdata"  /**< default performance data queue */
@@ -74,33 +74,46 @@ int real_exit_code(int code);
  *
  * @param[in] key - password for encryption
  *
+ * @return openssl ctx
+ */
+EVP_CIPHER_CTX * mod_gm_crypt_init(const char * key);
+
+/**
+ * mod_gm_crypt_deinit
+ *
+ * wrapper to deinitialze mod_gearman crypt module
+ *
+ * @param[in] ctx - openssl context
+ *
  * @return nothing
  */
-void mod_gm_crypt_init(char * key);
+void mod_gm_crypt_deinit(EVP_CIPHER_CTX *);
 
 /**
  * mod_gm_encrypt
  *
  * wrapper to encrypt text
  *
- * @param[out] encrypted - pointer to encrypted text
- * @param[in] text - text to encrypt
+ * @param[in] ctx - openssl context
+ * @param[out] ciphertext - pointer to target encrypted text
+ * @param[in] plaintext - source text to encrypt
  * @param[in] mode - encryption mode (base64 or aes64 with base64)
  *
  * @return base64 encoded text or aes encrypted text based on mode
  */
-int mod_gm_encrypt(char ** encrypted, char * text, int mode);
+int mod_gm_encrypt(EVP_CIPHER_CTX * ctx, char ** ciphertext, const char * plaintext, int mode);
 
 /**
  * mod_gm_decrypt
  *
- * @param[out] decrypted - pointer to decrypted text
- * @param[in] text - text to decrypt
+ * @param[in] ctx - openssl context
+ * @param[out] plaintext - pointer to target plaintext text
+ * @param[in] ciphertext - source text to decrypt
  * @param[in] mode - do only base64 decoding or decryption too
  *
- * @return decrypted text
+ * @return 1 on success
  */
-void mod_gm_decrypt(char ** decrypted, char * text, int mode);
+int mod_gm_decrypt(EVP_CIPHER_CTX * ctx, char ** plaintext, const char * cipertext, int mode);
 
 /**
  * file_exists
@@ -436,18 +449,7 @@ int check_param_server(gm_server_t * new_server, gm_server_t * server_list[GM_LI
  *
  * @return nothing
  */
-void send_result_back(gm_job_t * exec_job);
-
-/**
- * md5sum
- *
- * create md5 sum
- *
- * @param[in] text - char array to get md5 from
- *
- * @return md5sum (hex)
- */
-char *md5sum(char *text);
+void send_result_back(gm_job_t * exec_job, EVP_CIPHER_CTX * ctx);
 
 /**
  * add_server
@@ -523,6 +525,8 @@ void make_uniq(char *uniq, const char *format, ... );
  * @return elapsed time
  */
 double elapsed_time(struct timeval t1, struct timeval t2);
+
+void printf_hex(const char* src, int len, char*prefix);
 
 /**
  * @}

@@ -38,13 +38,14 @@
 #include <assert.h>
 #include <netinet/in.h>
 #include "libgearman-1.0/gearman.h"
+#include "openssl/evp.h"
 
 typedef void*( mod_gm_worker_fn)(gearman_job_st *job, void *context, size_t *result_size, gearman_return_t *ret_ptr);
 
 int create_client( gm_server_t * server_list[GM_LISTSIZE], gearman_client_st * client);
 int create_client_blocking( gm_server_t * server_list[GM_LISTSIZE], gearman_client_st * client);
 int create_worker( gm_server_t * server_list[GM_LISTSIZE], gearman_worker_st * worker);
-int add_job_to_queue( gearman_client_st *client, gm_server_t * server_list[GM_LISTSIZE], char * queue, char * uniq, char * data, int priority, int retries, int transport_mode, int async, int stats_log_interval);
+int add_job_to_queue( gearman_client_st *client, gm_server_t * server_list[GM_LISTSIZE], char * queue, char * uniq, char * data, int priority, int retries, int transport_mode, EVP_CIPHER_CTX * ctx, int async, int stats_log_interval);
 int worker_add_function( gearman_worker_st * worker, char * queue, gearman_worker_fn *function);
 void *dummy( gearman_job_st *, void *, size_t *, gearman_return_t * );
 void gm_free_client(gearman_client_st *client);

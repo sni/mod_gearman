@@ -93,9 +93,11 @@ int verify_options(mod_gm_opt_t *opt);
  *
  * create and send back the gearman jobs
  *
+ * @param[in] ctx - openssl context
+ *
  * @return TRUE on success or FALSE if something went wrong
  */
-int send_result(void);
+int send_result(EVP_CIPHER_CTX * ctx);
 
 /**
  * alarm_sighandler
@@ -114,10 +116,11 @@ void alarm_sighandler(int sig);
  * read xml data from stream
  *
  * @param[in] stream - file pointer to read xml data from
+ * @param[in] ctx - openssl context
  *
  * @return TRUE on success or FALSE if something went wrong
  */
-int read_multi_stream(FILE *stream);
+int read_multi_stream(FILE *stream, EVP_CIPHER_CTX * ctx);
 
 /**
  * read_child_check

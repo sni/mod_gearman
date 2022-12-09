@@ -29,6 +29,7 @@ mod_gm_opt_t *mod_gm_opt;
 char * last_result;
 char hostname[GM_SMALLBUFSIZE];
 volatile sig_atomic_t shmid;
+EVP_CIPHER_CTX * test_ctx = NULL;
 
 /* start the gearmand server */
 void *start_gearmand(void*data);
@@ -90,7 +91,7 @@ void *start_worker(void*data) {
 void test_eventhandler(int transportmode);
 void test_eventhandler(int transportmode) {
     char * testdata = strdup("type=eventhandler\ncommand_line=/bin/hostname\n\n\n");
-    int rt = add_job_to_queue(&client, mod_gm_opt->server_list, "eventhandler", NULL, testdata, GM_JOB_PRIO_NORMAL, 1, transportmode, 0, 1);
+    int rt = add_job_to_queue(&client, mod_gm_opt->server_list, "eventhandler", NULL, testdata, GM_JOB_PRIO_NORMAL, 1, transportmode, test_ctx, 0, 1);
     ok(rt == GM_OK, "eventhandler sent successfully in mode %s", transportmode == GM_ENCODE_ONLY ? "base64" : "aes256");
     free(testdata);
     return;
@@ -116,7 +117,7 @@ void test_servicecheck(int transportmode, char*cmd) {
               cmd==NULL ? "/bin/hostname" : cmd
             );
     temp_buffer[sizeof( temp_buffer )-1]='\x0';
-    int rt = add_job_to_queue(&client, mod_gm_opt->server_list, "service", NULL, temp_buffer, GM_JOB_PRIO_NORMAL, 1, transportmode, 0, 1);
+    int rt = add_job_to_queue(&client, mod_gm_opt->server_list, "service", NULL, temp_buffer, GM_JOB_PRIO_NORMAL, 1, transportmode, test_ctx, 0, 1);
     ok(rt == GM_OK, "servicecheck sent successfully in mode %s", transportmode == GM_ENCODE_ONLY ? "base64" : "aes256");
     return;
 }
@@ -142,11 +143,11 @@ void send_big_jobs(int transportmode) {
             );
     temp_buffer[sizeof( temp_buffer )-1]='\x0';
     make_uniq(uniq, "%s", "something at least bigger than the (GEARMAN_MAX_UNIQUE_SIZE) 64 chars allowed by libgearman!");
-    int rt = add_job_to_queue(&client, mod_gm_opt->server_list, "service", uniq, temp_buffer, GM_JOB_PRIO_NORMAL, 1, transportmode, 0, 1);
+    int rt = add_job_to_queue(&client, mod_gm_opt->server_list, "service", uniq, temp_buffer, GM_JOB_PRIO_NORMAL, 1, transportmode, test_ctx, 0, 1);
     ok(rt == GM_OK, "big uniq id sent successfully in mode %s", transportmode == GM_ENCODE_ONLY ? "base64" : "aes256");
 
     char * queue = "something at least bigger than the (GEARMAN_FUNCTION_MAX_SIZE) 512 chars allowed by libgearman! aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
-    rt = add_job_to_queue(&client, mod_gm_opt->server_list, queue, uniq, temp_buffer, GM_JOB_PRIO_NORMAL, 1, transportmode, 0, 1);
+    rt = add_job_to_queue(&client, mod_gm_opt->server_list, queue, uniq, temp_buffer, GM_JOB_PRIO_NORMAL, 1, transportmode, test_ctx, 0, 1);
     ok(rt == GM_ERROR, "big queue sent unsuccessfully in mode %s", transportmode == GM_ENCODE_ONLY ? "base64" : "aes256");
 
     return;
@@ -175,7 +176,7 @@ void *get_results( gearman_job_st *job, void *context, size_t *result_size, gear
 
     /* decrypt data */
     decrypted_data   = malloc(GM_BUFFERSIZE);
-    mod_gm_decrypt(&decrypted_data, workload, mod_gm_opt->transportmode);
+    mod_gm_decrypt(test_ctx, &decrypted_data, workload, mod_gm_opt->transportmode);
 
     if(decrypted_data == NULL) {
         *ret_ptr = GEARMAN_WORK_FAIL;
@@ -304,7 +305,7 @@ void wait_for_empty_queue(char *queue, int timeout) {
 
     int tries = 0;
     int found = 0;
-    while(tries <= timeout && found == 0) {
+    while(tries <= timeout*10 && found == 0) {
         tries++;
         stats = malloc(sizeof(mod_gm_server_status_t));
         stats->function_num = 0;
@@ -323,10 +324,10 @@ void wait_for_empty_queue(char *queue, int timeout) {
         free(message);
         free(version);
         free_mod_gm_status_server(stats);
-        sleep(1);
+        usleep(100000);
     }
 
-    ok(tries < timeout, "queue %s empty after %d seconds", queue, tries);
+    ok(tries < timeout, "queue %s empty after %.1f seconds", queue, (double)tries/10);
 
     if(tries >= timeout) {
         diag_queues();
@@ -349,7 +350,7 @@ char* my_tmpfile() {
 }
 
 void check_no_worker_running(char*);
-void check_no_worker_running(char* worker_logfile) {
+void check_no_worker_running(char* logfile) {
     char cmd[150];
     char *result, *error;
     int rrc;
@@ -362,7 +363,7 @@ void check_no_worker_running(char* worker_logfile) {
     like(result, "^\\s*$", "ps output should be empty");
     like(error, "^\\s*$", "ps error output should be empty");
     if(rrc != 1) {
-        check_logfile(worker_logfile, 3);
+        check_logfile(logfile, 3);
     }
     free(result);
     free(error);
@@ -516,7 +517,7 @@ int main (int argc, char **argv, char **env) {
         mod_gm_opt->transportmode = GM_ENCODE_AND_ENCRYPT;
         start_worker((void *)test_keys[i]);
 
-        mod_gm_crypt_init( test_keys[i] );
+        test_ctx = mod_gm_crypt_init( test_keys[i] );
         ok(1, "initialized with key: %s", test_keys[i]);
 
         test_eventhandler(GM_ENCODE_AND_ENCRYPT);
@@ -533,6 +534,7 @@ int main (int argc, char **argv, char **env) {
         status = 0;
         check_no_worker_running(worker_logfile);
         check_logfile(worker_logfile, 0);
+        mod_gm_crypt_deinit(test_ctx);
     }
 
     /*****************************************

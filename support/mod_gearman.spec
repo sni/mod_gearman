@@ -12,9 +12,9 @@ URL:           http://labs.consol.de/nagios/mod-gearman/
 Source0:       mod_gearman-%{version}.tar.gz
 Group:         System/Monitoring
 Summary:       Mod-Gearman module for Naemon
-Requires:      libgearman, perl, logrotate
+Requires:      libgearman, perl, logrotate, openssl-libs
 BuildRequires: autoconf, automake, gcc-c++, pkgconfig, ncurses-devel
-BuildRequires: libtool, libtool-ltdl-devel, libevent-devel
+BuildRequires: libtool, libtool-ltdl-devel, libevent-devel, openssl-devel, openssl-libs
 BuildRequires: libgearman-devel
 BuildRequires: naemon-devel
 BuildRequires: perl

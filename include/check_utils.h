@@ -30,6 +30,7 @@
 #include "popenRWE.h"
 #include "common.h"
 #include <fcntl.h>
+#include <openssl/evp.h>
 
 /**
  * nr2signal
@@ -64,7 +65,7 @@ char *extract_check_result(FILE *fp, int trimmed);
  *
  * @return true on success
  */
-int parse_command_line(char *cmd, char *argv[GM_LISTSIZE]);
+int parse_command_line(char *cmd, char *argv[MAX_CMD_ARGS]);
 
 /**
  * run_check
@@ -124,7 +125,7 @@ void check_alarm_handler(int sig);
  *
  * @return nothing
  */
-void send_timeout_result(gm_job_t * exec_job);
+void send_timeout_result(gm_job_t * exec_job, EVP_CIPHER_CTX * ctx);
 
 /**
  * send_failed_result
@@ -136,7 +137,7 @@ void send_timeout_result(gm_job_t * exec_job);
  *
  * @return nothing
  */
-void send_failed_result(gm_job_t * exec_job, int sig);
+void send_failed_result(gm_job_t * exec_job, int sig, EVP_CIPHER_CTX * ctx);
 
 /**
  * @}

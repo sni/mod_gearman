@@ -2,8 +2,7 @@
 
 use warnings;
 use strict;
-use Test::More tests => 37;
-use Data::Dumper;
+use Test::More;
 
 for my $file (sort split("\n", `find common/ include/ neb_module_naemon/ tools/ worker/ -type f`)) {
     next if $file !~ m/\.(c|h)$/mx;
@@ -24,7 +23,7 @@ for my $file (sort split("\n", `find common/ include/ neb_module_naemon/ tools/ 
     }
     ok($errors == 0, $file." is ok");
 }
-exit(0);
+done_testing();
 
 # replace comments with space, so they don't match our pattern matches later
 sub _replace_comments {

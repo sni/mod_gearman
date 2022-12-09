@@ -8,50 +8,44 @@
 #include <common.h>
 #include <utils.h>
 #include <check_utils.h>
+#include <gm_crypt.h>
 #include "gearman_utils.h"
 
 #include <worker_dummy_functions.c>
 
-mod_gm_opt_t *mod_gm_opt;
+mod_gm_opt_t *mod_gm_opt = NULL;
 char hostname[GM_SMALLBUFSIZE];
 volatile sig_atomic_t shmid;
 
-void printf_hex(char*, int);
-void printf_hex(char* text, int length) {
-    int i;
-    for(i=0; i<length; i++)
-        printf("%02x",text[i]);
-    printf("\n");
-    return;
-}
-
 mod_gm_opt_t * renew_opts(void);
 mod_gm_opt_t * renew_opts() {
-    mod_gm_opt_t *mod_gm_opt;
+    if(mod_gm_opt != NULL)
+        mod_gm_free_opt(mod_gm_opt);
 
-    mod_gm_opt = malloc(sizeof(mod_gm_opt_t));
-    set_default_options(mod_gm_opt);
+    mod_gm_opt = gm_malloc(sizeof(mod_gm_opt_t));
+    int rc = set_default_options(mod_gm_opt);
+    ok(rc == 0, "setting default options");
 
     return mod_gm_opt;
 }
 
 int main(void) {
-    plan(82);
+    plan(103);
 
     /* lowercase */
     char test[100];
     ok(lc(NULL) == NULL, "lc(NULL)");
-    strcpy(test, "Yes"); like(lc(test), "yes", "lc(yes)");
-    strcpy(test, "YES"); like(lc(test), "yes", "lc(YES)");
-    strcpy(test, "yeS"); like(lc(test), "yes", "lc(yeS)");
+    strcpy(test, "Yes"); is(lc(test), "yes", "lc(yes)");
+    strcpy(test, "YES"); is(lc(test), "yes", "lc(YES)");
+    strcpy(test, "yeS"); is(lc(test), "yes", "lc(yeS)");
 
 
     /* trim */
-    strcpy(test, "    text  "); like(ltrim(test), "text  ",   "ltrim()");
-    strcpy(test, "    text  "); like(rtrim(test), "    text", "rtrim()");
-    strcpy(test, "    text  "); like(trim(test),  "text",     "trim()");
+    strcpy(test, "    text  "); is(ltrim(test), "text  ",   "ltrim()");
+    strcpy(test, "    text  "); is(rtrim(test), "    text", "rtrim()");
+    strcpy(test, "    text  "); is(trim(test),  "text",     "trim()");
     char *test2;
-    test2 = strdup("   text   ");  like(trim(test2),  "text", "trim()");
+    test2 = strdup("   text   ");  is(trim(test2),  "text", "trim()");
     free(test2);
 
     /* parse_yes_or_no */
@@ -72,15 +66,12 @@ int main(void) {
 
     /* trim */
     ok(trim(NULL) == NULL, "trim(NULL)");
-    strcpy(test, " test "); like(trim(test), "^test$", "trim(' test ')");
-    strcpy(test, "\ntest\n"); like(trim(test), "^test$", "trim('\\ntest\\n')");
+    strcpy(test, " test "); is(trim(test), "test", "trim(' test ')");
+    strcpy(test, "\ntest\n"); is(trim(test), "test", "trim('\\ntest\\n')");
 
     /* reading keys */
-    mod_gm_opt_t *mod_gm_opt;
-    mod_gm_opt = malloc(sizeof(mod_gm_opt_t));
-    int rc = set_default_options(mod_gm_opt);
+    renew_opts();
 
-    ok(rc == 0, "setting default options");
     mod_gm_opt->keyfile = strdup("t/data/test1.key");
     read_keyfile(mod_gm_opt);
     //printf_hex(mod_gm_opt->crypt_key, 32);
@@ -92,50 +83,65 @@ int main(void) {
         snprintf(hex, 4, "%02x", mod_gm_opt->crypt_key[i]);
         strncat(test, hex, 4);
     }
-    like(test, "3131313131313131313131313131313131313131313131313131313131310000", "read keyfile t/data/test1.key");
+    is(test, "3131313131313131313131313131313131313131313131313131313131310000", "read keyfile t/data/test1.key");
 
     free(mod_gm_opt->keyfile);
     mod_gm_opt->keyfile = strdup("t/data/test2.key");
     read_keyfile(mod_gm_opt);
 
-    like(mod_gm_opt->crypt_key, "abcdef", "reading keyfile t/data/test2.key");
+    is(mod_gm_opt->crypt_key, "abcdef", "reading keyfile t/data/test2.key");
 
     free(mod_gm_opt->keyfile);
     mod_gm_opt->keyfile = strdup("t/data/test3.key");
     read_keyfile(mod_gm_opt);
     //printf_hex(mod_gm_opt->crypt_key, 32);
-    like(mod_gm_opt->crypt_key, "11111111111111111111111111111111", "reading keyfile t/data/test3.key");
+    is(mod_gm_opt->crypt_key, "11111111111111111111111111111111", "reading keyfile t/data/test3.key");
     ok(strlen(mod_gm_opt->crypt_key) == 32, "key size for t/data/test3.key");
 
 
     /* encrypt */
-    char * key       = "test1234";
-    char * encrypted;
-    char * text      = "test message";
-    char * base      = "a7HqhQEE8TQBde9uknpPYQ==";
-    mod_gm_crypt_init(key);
-    int len;
-    len = mod_gm_encrypt(&encrypted, text, GM_ENCODE_AND_ENCRYPT);
-    ok(len == 24, "length of encrypted only");
-    like(encrypted, base, "encrypted string");
+    const char *key = "test1234";
+    struct {
+            const char *plaintext;
+            const char *base64;
+            int base64_len;
+    } encryption_tests[] = {
+            { "test message", "a7HqhQEE8TQBde9uknpPYQ==", 24 },
+            { "test1 message\ntest2 message\ntest3 message1234567\n", "lixUQN83MnLhMB6ppyNA5bUPq39eZE+8GnSWLu4JdKJN2uIjOtjjtVn8mZrXj0dLl7iWqId8FZE2j6Ej+jroEQ==", 88 },
+            { "123456789abcdef", "uLgRxE2qLExwLvEyB7yAEw==", 24 },
+            { "123456789abcdef1", "CueC0iJAZL2J+zhEPgVFVQ==", 24 },
+            { "123456789abcdef12", "CueC0iJAZL2J+zhEPgVFVeiqJ0EDJEmrqx95Bewle4s=", 44 },
+            { NULL },
+    };
+    EVP_CIPHER_CTX * ctx = mod_gm_crypt_init(key);
+    for (i = 0; encryption_tests[i].plaintext != NULL; i++) {
+        char * encrypted;
+        int len = mod_gm_encrypt(ctx, &encrypted, encryption_tests[i].plaintext, GM_ENCODE_AND_ENCRYPT);
+        ok(len == encryption_tests[i].base64_len, "length of encrypted only: %d vs. %d", len, encryption_tests[i].base64_len);
+        is(encrypted, encryption_tests[i].base64, "encrypted string");
 
-    /* decrypt */
-    char * decrypted = malloc(GM_BUFFERSIZE);
-    mod_gm_decrypt(&decrypted, encrypted, GM_ENCODE_AND_ENCRYPT);
-    like(decrypted, text, "decrypted text");
-    free(decrypted);
-    free(encrypted);
+        /* decrypt */
+        char * decrypted = gm_malloc(GM_BUFFERSIZE);
+        mod_gm_decrypt(ctx, &decrypted, encrypted, GM_ENCODE_AND_ENCRYPT);
+        is(decrypted, encryption_tests[i].plaintext, "decrypted text");
+        ok(strlen(encryption_tests[i].plaintext) == strlen(decrypted), "decryption str len");
+        free(decrypted);
+        free(encrypted);
+    }
+    mod_gm_crypt_deinit(ctx);
 
     /* base 64 */
+    const char *text = "test message";
+    ctx = mod_gm_crypt_init(key);
     char * base64;
-    len = mod_gm_encrypt(&base64, text, GM_ENCODE_ONLY);
+    int len = mod_gm_encrypt(ctx, &base64, text, GM_ENCODE_ONLY);
     ok(len == 16, "length of encode only");
-    like(base64, "dGVzdCBtZXNzYWdl", "base64 only string");
+    is(base64, "dGVzdCBtZXNzYWdl", "base64 only string");
 
     /* debase 64 */
-    char * debase64 = malloc(GM_BUFFERSIZE);
-    mod_gm_decrypt(&debase64, base64, GM_ENCODE_ONLY);
-    like(debase64, text, "debase64 text");
+    char * debase64 = gm_malloc(GM_BUFFERSIZE);
+    mod_gm_decrypt(ctx, &debase64, base64, GM_ENCODE_ONLY);
+    is(debase64, text, "debase64 text");
     free(debase64);
     free(base64);
 
@@ -146,11 +152,11 @@ int main(void) {
 
     /* nr2signal */
     char * signame1 = nr2signal(9);
-    like(signame1, "SIGKILL", "get SIGKILL for 9");
+    is(signame1, "SIGKILL", "get SIGKILL for 9");
     free(signame1);
 
     char * signame2 = nr2signal(15);
-    like(signame2, "SIGTERM", "get SIGTERM for 15");
+    is(signame2, "SIGTERM", "get SIGTERM for 15");
     free(signame2);
 
 
@@ -179,39 +185,35 @@ int main(void) {
     ok(t.tv_usec == 0, "string2timeval 8");
 
     /* command line parsing */
-    mod_gm_free_opt(mod_gm_opt);
-    mod_gm_opt = renew_opts();
+    renew_opts();
     strcpy(test, "server=host:4730");
     parse_args_line(mod_gm_opt, test, 0);
-    like(mod_gm_opt->server_list[0]->host, "host", "server=host:4730");
+    is(mod_gm_opt->server_list[0]->host, "host", "server=host:4730");
     ok(mod_gm_opt->server_list[0]->port == 4730, "server=host:4730");
     ok(mod_gm_opt->server_num == 1, "server_number = %d", mod_gm_opt->server_num);
 
-    mod_gm_free_opt(mod_gm_opt);
-    mod_gm_opt = renew_opts();
+    renew_opts();
     strcpy(test, "server=:4730");
     parse_args_line(mod_gm_opt, test, 0);
-    like(mod_gm_opt->server_list[0]->host, "0.0.0.0", "server=:4730");
+    is(mod_gm_opt->server_list[0]->host, "0.0.0.0", "server=:4730");
     ok(mod_gm_opt->server_list[0]->port == 4730, "server=:4730");
     ok(mod_gm_opt->server_num == 1, "server_number = %d", mod_gm_opt->server_num);
 
-    mod_gm_free_opt(mod_gm_opt);
-    mod_gm_opt = renew_opts();
+    renew_opts();
     strcpy(test, "server=localhost:4730");
     parse_args_line(mod_gm_opt, test, 0);
     strcpy(test, "server=localhost:4730");
     parse_args_line(mod_gm_opt, test, 0);
-    like(mod_gm_opt->server_list[0]->host, "localhost", "duplicate server");
+    is(mod_gm_opt->server_list[0]->host, "localhost", "duplicate server");
     ok(mod_gm_opt->server_list[0]->port == 4730, "duplicate server");
     ok(mod_gm_opt->server_num == 1, "server_number = %d", mod_gm_opt->server_num);
 
-    mod_gm_free_opt(mod_gm_opt);
-    mod_gm_opt = renew_opts();
+    renew_opts();
     strcpy(test, "server=localhost:4730,localhost:4730,:4730,host:4730,");
     parse_args_line(mod_gm_opt, test, 0);
-    like(mod_gm_opt->server_list[0]->host, "localhost", "duplicate server");
+    is(mod_gm_opt->server_list[0]->host, "localhost", "duplicate server");
     ok(mod_gm_opt->server_list[0]->port == 4730, "duplicate server");
-    like(mod_gm_opt->server_list[2]->host, "host", "duplicate server");
+    is(mod_gm_opt->server_list[2]->host, "host", "duplicate server");
     ok(mod_gm_opt->server_list[2]->port == 4730, "duplicate server");
     ok(mod_gm_opt->server_num == 3, "server_number = %d", mod_gm_opt->server_num);
 
@@ -223,16 +225,16 @@ int main(void) {
     is(escaped, "test", "trimmed escape string");
     free(escaped);
 
-    /* md5 sum */
-    char * sum = NULL;
+    /* sha256 hash sum */
+    char * sum;
     strcpy(test, "");
-    sum = md5sum(test);
-    like(sum, "d41d8cd98f00b204e9800998ecf8427e", "md5sum()");
+    sum = (char*)mod_gm_hexsum(test);
+    is(sum, "3490E034A1F8B9F65333848E51F32C519FD49E727910A0E998968AD8C2C87EC3", "sha256sum()");
     free(sum);
 
     strcpy(test, "The quick brown fox jumps over the lazy dog.");
-    sum = md5sum(test);
-    like(sum, "e4d909c290d0fb1ca068ffaddf22cbd0", "md5sum()");
+    sum = (char*)mod_gm_hexsum(test);
+    is(sum, "5C8C8F7E5314C1A46211ABCBC5024700CFFFC8EC719F11A5369683B11CACD72F", "sha256sum()");
     free(sum);
 
     /* starts_with */
@@ -252,21 +254,22 @@ int main(void) {
 
     char uniq[GM_SMALLBUFSIZE];
     make_uniq(uniq, "%s", "test - test");
-    like(uniq, "3a9e4a6a2e66af990948d81e004b3ac0", "make_uniq()");
-    ok(strlen(uniq) == 32, "length of uniq string is 32");
-    ok(strlen(uniq) < GEARMAN_MAX_UNIQUE_SIZE - 1, "uniq string is smaller than GEARMAN_MAX_UNIQUE_SIZE");
+    is(uniq, "31121DCCD068B90014ADCC5D500F0E0F5C49C8CAE5E893C58FE3C77283B83086", "make_uniq()");
+    ok(strlen(uniq) == 64, "length of uniq string is 64");
+    ok(strlen(uniq) <= GEARMAN_MAX_UNIQUE_SIZE, "uniq string is smaller than GEARMAN_MAX_UNIQUE_SIZE");
 
     make_uniq(uniq, "%s", "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
-    like(uniq, "06750addec6e07d61b2eaf2d24fae87e", "make_uniq()");
-    ok(strlen(uniq) == 32, "length of uniq string is 32");
-    ok(strlen(uniq) < GEARMAN_MAX_UNIQUE_SIZE - 1, "uniq string is smaller than GEARMAN_MAX_UNIQUE_SIZE");
+    is(uniq, "6915CE3CDB89789E8B6DD53FC103E7E7ADD6873AD41A0F40274E5CB63D6B0D04", "make_uniq()");
+    ok(strlen(uniq) == 64, "length of uniq string is 64");
+    ok(strlen(uniq) <= GEARMAN_MAX_UNIQUE_SIZE, "uniq string is smaller than GEARMAN_MAX_UNIQUE_SIZE");
 
     make_uniq(uniq, "%s-%s", "xxx-xxxxx-xxxxxx.xxxxxxxxxx.xxxxxx.xx", "xxxx_xxxx_xxxxx_xxx_xx");
-    like(uniq, "91de277e8197840a3261751c712698e0", "make_uniq()");
-    ok(strlen(uniq) == 32, "length of uniq string is 32");
-    ok(strlen(uniq) < GEARMAN_MAX_UNIQUE_SIZE - 1, "uniq string is smaller than GEARMAN_MAX_UNIQUE_SIZE");
+    is(uniq, "9E94C0A8F100FCB3EC917C14D0B766FBFF06F40868DD6E6345AA19EB692E9224", "make_uniq()");
+    ok(strlen(uniq) == 64, "length of uniq string is 64");
+    ok(strlen(uniq) <= GEARMAN_MAX_UNIQUE_SIZE, "uniq string is smaller than GEARMAN_MAX_UNIQUE_SIZE");
 
     mod_gm_free_opt(mod_gm_opt);
+    mod_gm_crypt_deinit(ctx);
 
     return exit_status();
 }

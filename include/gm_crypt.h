@@ -31,9 +31,12 @@
 
 #include <stdio.h>
 #include <string.h>
-#include "rijndael.h"
+#include <openssl/evp.h>
+#include <openssl/hmac.h>
+#include <openssl/err.h>
 
 #define KEYBITS     256     /**< key size */
+#define KEYBYTES     32     /* char size */
 #define BLOCKSIZE    16     /**< block size for encryption */
 
 /**
@@ -41,30 +44,68 @@
  *
  * @param[in] password - encryption key
  *
+ * @return openssl ctx
+ */
+EVP_CIPHER_CTX * mod_gm_aes_init(const char * password);
+
+/**
+ * deinitialize crypto module
+ *
  * @return nothing
  */
-void mod_gm_aes_init(char * password);
+void mod_gm_aes_deinit(EVP_CIPHER_CTX *);
 
 /**
  * encrypt text
  *
- * @param[out] encrypted - pointer to encrypted text
- * @param[in] text       - text which should be encrypted
+ * @param[in] ctx         - openssl context (from mod_gm_aes_init())
+ * @param[out] ciphertext - pointer to encrypted text
+ * @param[in] plaintext   - text which should be encrypted
  *
  * @return size of encrypted text
  */
-int mod_gm_aes_encrypt(unsigned char ** encrypted, char * text);
+int mod_gm_aes_encrypt(EVP_CIPHER_CTX * ctx, unsigned char * ciphertext, const unsigned char * plaintext);
 
 /**
  * decrypt text
  *
+ * @param[in] ctx        - openssl context (from mod_gm_aes_init())
  * @param[out] decrypted - pointer to decrypted text
  * @param[in] encrypted  - text which should be decrypted
  * @param[in] size       - size of encrypted text
  *
+ * @return 1 on success
+ */
+int mod_gm_aes_decrypt(EVP_CIPHER_CTX * ctx, unsigned char * plaintext, unsigned char * ciphertext, int ciphertext_len);
+
+/**
+ * create hex sum of text
+ *
+ * @param[out] hexsum - pointer to hex sum
+ * @param[in] text  - source text for check sum
+ *
  * @return nothing
  */
-void mod_gm_aes_decrypt(char ** decrypted, unsigned char * encrypted, int size);
+char *mod_gm_hexsum(const char *text);
+
+/**
+ * decode base64 encoded data
+ *
+ * @param source the encoded data (zero terminated)
+ * @param sourcelen the size of the input text
+ * @param target the target char array
+ * @return number of bytes decoded or -1 on error
+ */
+int base64_decode(const char *source, int sourcelen, unsigned char * target);
+
+/**
+ * encode an array of bytes using Base64
+ *
+ * @param source the source buffer
+ * @param sourcelen the length of the source buffer
+ * @return encodede bytes or NULL on error
+ */
+unsigned char * base64_encode(const unsigned char *source, size_t sourcelen);
 
 /*
  * @}

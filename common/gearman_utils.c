@@ -118,7 +118,7 @@ int create_client_blocking( gm_server_t * server_list[GM_LISTSIZE], gearman_clie
 
 
 /* create a task and send it */
-int add_job_to_queue( gearman_client_st *client, gm_server_t * server_list[GM_LISTSIZE], char * queue, char * uniq, char * data, int priority, int retries, int transport_mode, int async, int log_stats_interval) {
+int add_job_to_queue( gearman_client_st *client, gm_server_t * server_list[GM_LISTSIZE], char * queue, char * uniq, char * data, int priority, int retries, int transport_mode, EVP_CIPHER_CTX * ctx, int async, int log_stats_interval) {
     gearman_job_handle_t job_handle;
     gearman_return_t rc;
     char * crypted_data;
@@ -134,16 +134,16 @@ int add_job_to_queue( gearman_client_st *client, gm_server_t * server_list[GM_LI
     }
 
     /* uniq identifier must not exceed certain size */
-    if(uniq != NULL && strlen(uniq) > GEARMAN_MAX_UNIQUE_SIZE - 1) {
-        gm_log( GM_LOG_ERROR, "unique name too long (%d > %d): '%s'\n", strlen(uniq), GEARMAN_MAX_UNIQUE_SIZE - 1, uniq );
+    if(uniq != NULL && strlen(uniq) > GEARMAN_MAX_UNIQUE_SIZE) {
+        gm_log( GM_LOG_ERROR, "unique name too long (%zu > %d): '%s'\n", strlen(uniq), GEARMAN_MAX_UNIQUE_SIZE, uniq );
         return GM_ERROR;
     }
 
     gm_log( GM_LOG_TRACE, "add_job_to_queue(%s, %s, %d, %d, %d, %d, %d)\n", queue, uniq, priority, retries, transport_mode, async, log_stats_interval);
-    gm_log( GM_LOG_TRACE, "%d --->%s<---\n", strlen(data), data );
+    gm_log( GM_LOG_TRACE, "%zu --->%s<---\n", strlen(data), data );
 
     gettimeofday(&t1,NULL);
-    size = mod_gm_encrypt(&crypted_data, data, transport_mode);
+    size = mod_gm_encrypt(ctx, &crypted_data, data, transport_mode);
     gm_log( GM_LOG_TRACE, "%d +++>\n%s\n<+++\n", size, crypted_data );
 
     if( priority == GM_JOB_PRIO_LOW ) {
@@ -179,7 +179,7 @@ int add_job_to_queue( gearman_client_st *client, gm_server_t * server_list[GM_LI
                 current_submit_rate = (total_submit_jobs_delta-total_submit_errors_delta) / elapsed_time(total_submit_time, t2);
                 current_avg_submit_duration = total_submit_sum/total_submit_jobs_delta;
                 current_submit_max = total_submit_max;
-                gm_log(GM_LOG_INFO, "gearmand submission statistics: jobs:%7d   errors: %7d   submit_rate: %6.1f/s   avg_submit_duration: %.6fs   max_submit_duration: %.6fs\n",
+                gm_log(GM_LOG_INFO, "gearmand submission statistics: jobs:%7lu   errors: %7lu   submit_rate: %6.1f/s   avg_submit_duration: %.6fs   max_submit_duration: %.6fs\n",
                     total_submit_jobs_delta,
                     total_submit_errors_delta,
                     current_submit_rate,
@@ -228,7 +228,7 @@ int add_job_to_queue( gearman_client_st *client, gm_server_t * server_list[GM_LI
             } else {
                 gm_log( GM_LOG_TRACE, "add_job_to_queue() retrying... %d\n", retries );
             }
-            ret = add_job_to_queue( client, server_list, queue, uniq, data, priority, retries, transport_mode, async, log_stats_interval);
+            ret = add_job_to_queue( client, server_list, queue, uniq, data, priority, retries, transport_mode, ctx, async, log_stats_interval);
             return(ret);
         }
         /* no more retries... */

@@ -25,100 +25,159 @@
 #include <string.h>
 #include <stdlib.h>
 #include <assert.h>
+
 #include <gm_crypt.h>
 #include "common.h"
 
 int encryption_initialized = 0;
-unsigned char key[KEYLENGTH(KEYBITS)];
-
+unsigned char key[KEYBYTES];
 
 /* initialize encryption */
-void mod_gm_aes_init(char * password) {
+EVP_CIPHER_CTX * mod_gm_aes_init(const char * password) {
+    EVP_CIPHER_CTX * ctx;
 
     /* pad key till keysize */
     int i;
-    for (i = 0; i < 32; i++)
+    for (i = 0; i < KEYBYTES; i++)
         key[i] = *password != 0 ? *password++ : 0;
 
+    /* Create and initialise the context */
+    if(!(ctx = EVP_CIPHER_CTX_new())) {
+        fprintf(stderr, "EVP_CIPHER_CTX_new failed:\n");
+        ERR_print_errors_fp(stderr);
+        exit(1);
+    }
+    // disable padding, this has to be done manually. For historical reasons, mod-gearman uses zero padding which
+    // is not supported by openssl
+    EVP_CIPHER_CTX_set_padding(ctx, 0);
+
     encryption_initialized = 1;
+    return(ctx);
+}
+
+/* deinitialize encryption */
+void mod_gm_aes_deinit(EVP_CIPHER_CTX *ctx) {
+    if(ctx != NULL)
+        EVP_CIPHER_CTX_free(ctx);
+    ctx = NULL;
+
+    encryption_initialized = 0;
     return;
 }
 
 
 /* encrypt text with given key */
-int mod_gm_aes_encrypt(unsigned char ** encrypted, char * text) {
-    unsigned long rk[RKLENGTH(KEYBITS)];
-    int nrounds;
-    int i = 0;
-    int k = 0;
-    unsigned char *enc;
-    int size;
-    int totalsize;
+int mod_gm_aes_encrypt(EVP_CIPHER_CTX * ctx, unsigned char * ciphertext, const unsigned char * plaintext) {
+    int len;
+    int plaintext_len = strlen((const char*)plaintext);
+    int ciphertext_len;
+    unsigned char *iv = (unsigned char *)""; // not used in ecb mode anyway
 
     assert(encryption_initialized == 1);
+    assert(ctx != NULL);
 
-    nrounds   = rijndaelSetupEncrypt(rk, key, KEYBITS);
-    size      = strlen(text);
-    totalsize = size + BLOCKSIZE-size%BLOCKSIZE;
-    if(size%BLOCKSIZE == 0) {
-        size += BLOCKSIZE;
+    if(1 != EVP_EncryptInit_ex(ctx, EVP_aes_256_ecb(), NULL, key, iv)) {
+        fprintf(stderr, "EVP_EncryptInit_ex failed:\n");
+        ERR_print_errors_fp(stderr);
+        return -1;
     }
-    enc       = (unsigned char *) gm_malloc(sizeof(unsigned char)*totalsize);
-    while(size > 0) {
-        unsigned char plaintext[BLOCKSIZE];
-        unsigned char ciphertext[BLOCKSIZE];
-        int j;
-        for (j = 0; j < BLOCKSIZE; j++) {
-            int c = text[i];
-            if(c == 0)
-                break;
-            plaintext[j] = c;
-            i++;
+
+    if(1 != EVP_EncryptUpdate(ctx, ciphertext, &len, plaintext, plaintext_len)) {
+        fprintf(stderr, "EVP_EncryptUpdate failed\n");
+        ERR_print_errors_fp(stderr);
+        return -1;
+    }
+
+    ciphertext_len = len;
+
+    // do zero padding
+    if(BLOCKSIZE%plaintext_len != 0) {
+        const char * zeros = "\x0\x0\x0\x0\x0\x0\x0\x0\x0\x0\x0\x0\x0\x0\x0";
+        if(1 != EVP_EncryptUpdate(ctx, ciphertext+len, &len, (const unsigned char *)zeros, BLOCKSIZE - (plaintext_len % BLOCKSIZE))) {
+            fprintf(stderr, "EVP_EncryptUpdate failed\n");
+            ERR_print_errors_fp(stderr);
+            return -1;
         }
-
-        for (; j < BLOCKSIZE; j++)
-            plaintext[j] = '\x0';
-        rijndaelEncrypt(rk, nrounds, plaintext, ciphertext);
-        for (j = 0; j < BLOCKSIZE; j++)
-            enc[k++] = ciphertext[j];
-        size -=BLOCKSIZE;
+        ciphertext_len += len;
     }
 
-    *encrypted = enc;
-    return totalsize;
+    if(1 != EVP_EncryptFinal_ex(ctx, ciphertext + ciphertext_len, &len)) {
+        fprintf(stderr, "EVP_EncryptFinal_ex failed\n");
+        ERR_print_errors_fp(stderr);
+        return -1;
+    }
+    ciphertext_len += len;
+
+    return ciphertext_len;
 }
 
 
 /* decrypt text with given key */
-void mod_gm_aes_decrypt(char ** text, unsigned char * encrypted, int size) {
-    char *decr;
-    unsigned long rk[RKLENGTH(KEYBITS)];
-    int nrounds;
-    int i = 0;
-
-    decr = gm_malloc(sizeof(char*)*size+GM_BUFFERSIZE);
+int mod_gm_aes_decrypt(EVP_CIPHER_CTX * ctx, unsigned char * plaintext, unsigned char * ciphertext, int ciphertext_len) {
+    unsigned char *iv = (unsigned char *)""; // not used in ecb mode anyway
+    int len;
 
     assert(encryption_initialized == 1);
-    nrounds = rijndaelSetupDecrypt(rk, key, KEYBITS);
-    decr[0] = '\0';
+    assert(ctx != NULL);
 
-    while(1) {
-        unsigned char plaintext[BLOCKSIZE];
-        unsigned char ciphertext[BLOCKSIZE];
-        int j;
-        for (j = 0; j < BLOCKSIZE; j++) {
-            int c = encrypted[i];
-            ciphertext[j] = c;
-            i++;
-        }
-        rijndaelDecrypt(rk, nrounds, ciphertext, plaintext);
-        strncat(decr, (char*)plaintext, BLOCKSIZE);
-        size -= BLOCKSIZE;
-        if(size < BLOCKSIZE)
-            break;
+    if(1 != EVP_DecryptInit_ex(ctx, EVP_aes_256_ecb(), NULL, key, iv)) {
+        fprintf(stderr, "EVP_DecryptInit_ex failed\n");
+        ERR_print_errors_fp(stderr);
+        return -1;
     }
 
-    strcpy(*text, decr);
-    free(decr);
-    return;
+    if(1 != EVP_DecryptUpdate(ctx, plaintext, &len, ciphertext, ciphertext_len)) {
+        fprintf(stderr, "EVP_DecryptUpdate failed\n");
+        ERR_print_errors_fp(stderr);
+        return -1;
+    }
+
+    // do zero padding
+    if(len % BLOCKSIZE != 0) {
+        for(int i = 0; i < BLOCKSIZE - (len % BLOCKSIZE); i++) {
+            plaintext[len++] = '\x0';
+        }
+    }
+
+    plaintext[len] = '\x0';
+
+    if(1 != EVP_DecryptFinal_ex(ctx, plaintext + len, &len)) {
+        fprintf(stderr, "EVP_DecodeFinal_ex failed\n");
+        ERR_print_errors_fp(stderr);
+        return -1;
+    }
+
+    return 1;
+}
+
+/* create hex sum for char[] */
+char *mod_gm_hexsum(const char *text) {
+    unsigned char *result = NULL;
+    unsigned int resultlen = -1;
+    char *hex = gm_malloc(sizeof(char)*((KEYBYTES*2)+1));
+    result = HMAC(EVP_sha256(), key, KEYBYTES, (const unsigned char*)text, strlen(text), result, &resultlen);
+    for(unsigned int i = 0; i < resultlen; i++){
+        snprintf(hex+(i*2), 3, "%02hhX", result[i]);
+    }
+    return(hex);
+}
+
+int base64_decode(const char *source, int sourcelen, unsigned char * target) {
+    int n = EVP_DecodeBlock(target, (const unsigned char*)source, sourcelen);
+    if(n != -1) {
+        return(n);
+    }
+    fprintf(stderr, "EVP_DecodeBlock failed\n");
+    ERR_print_errors_fp(stderr);
+    return(-1);
+}
+
+unsigned char * base64_encode(const unsigned char *source, size_t sourcelen) {
+    unsigned char * target = gm_malloc(sizeof(char) * ((sourcelen/3)*4)+5);
+    if(EVP_EncodeBlock(target, source, sourcelen)) {
+        return(target);
+    }
+    fprintf(stderr, "EVP_EncodeBlock failed\n");
+    ERR_print_errors_fp(stderr);
+    return(NULL);
 }

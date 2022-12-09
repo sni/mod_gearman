@@ -4,7 +4,7 @@ Priority: extra
 Maintainer: Sven Nierlein <sven.nierlein@consol.de>
 Build-Depends: debhelper (>= 10), automake, libtool, libgearman-dev (>= 1.1), libncurses5-dev,
                libltdl-dev, gearman-job-server, help2man, dctrl-tools, libperl-dev, gearman-tools,
-               naemon-dev, pkg-config
+               naemon-dev, pkg-config, libssl-dev, openssl
 Standards-Version: 3.9.1
 Homepage: http://labs.consol.de/nagios/mod-gearman/
 
@@ -18,7 +18,7 @@ Description: Documentation for Mod Gearman
 
 Package: mod-gearman-module
 Architecture: any
-Depends: ${misc:Depends}, naemon-core, libc6
+Depends: ${misc:Depends}, naemon-core, libc6, openssl
 Description: Event broker module to distribute service checks.
  Event broker module for Naemon. This module adds
  servicechecks, hostchecks and eventhandlers to a queue on a Gearman
@@ -28,7 +28,7 @@ Description: Event broker module to distribute service checks.
 
 Package: mod-gearman-worker
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}
+Depends: ${shlibs:Depends}, ${misc:Depends}, openssl
 Description: Worker agent for mod-gearman
  The worker agent for mod-geraman connects to a gearman job server,
  runs active Naemon service checks, and return the results.
@@ -42,7 +42,7 @@ Description: Worker agent for mod-gearman
 
 Package: mod-gearman-tools
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}
+Depends: ${shlibs:Depends}, ${misc:Depends}, openssl
 Description: Tools for mod-gearman
  The Mod Gearman package contains tools to complement a mod gearman
  installation.

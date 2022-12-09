@@ -50,6 +50,8 @@ extern volatile sig_atomic_t shmid;
 
 gm_job_t * current_job;
 
+EVP_CIPHER_CTX * worker_ctx = NULL;
+
 extern mod_gm_opt_t *mod_gm_opt;
 extern char hostname[GM_SMALLBUFSIZE];
 
@@ -102,6 +104,8 @@ void worker_client(int worker_mode, int indx, int shid) {
         _exit( EXIT_FAILURE );
     }
 #endif
+
+    worker_ctx = mod_gm_crypt_init(mod_gm_opt->crypt_key);
 
     worker_loop();
 
@@ -198,12 +202,12 @@ void *get_job( gearman_job_st *job, __attribute__((__unused__)) void *context, s
     strncpy(workload, (const char*)gearman_job_workload(job), wsize);
     workload[wsize] = '\0';
     gm_log( GM_LOG_TRACE, "got new job %s\n", gearman_job_handle( job ) );
-    gm_log( GM_LOG_TRACE, "%d +++>\n%s\n<+++\n", strlen(workload), workload );
+    gm_log( GM_LOG_TRACE, "%zu +++>\n%s\n<+++\n", strlen(workload), workload );
 
     /* decrypt data */
     decrypted_data = gm_malloc(wsize*2);
     decrypted_data_c = decrypted_data;
-    mod_gm_decrypt(&decrypted_data, workload, mod_gm_opt->transportmode);
+    mod_gm_decrypt(worker_ctx, &decrypted_data, workload, mod_gm_opt->transportmode);
     decrypted_orig = gm_strdup(decrypted_data);
     free(workload);
 
@@ -212,7 +216,7 @@ void *get_job( gearman_job_st *job, __attribute__((__unused__)) void *context, s
         free(decrypted_orig);
         return NULL;
     }
-    gm_log( GM_LOG_TRACE, "%d --->\n%s\n<---\n", strlen(decrypted_data), decrypted_data );
+    gm_log( GM_LOG_TRACE, "%zu --->\n%s\n<---\n", strlen(decrypted_data), decrypted_data );
 
     /* set result pointer to success */
     *ret_ptr= GEARMAN_SUCCESS;
@@ -283,10 +287,10 @@ void *get_job( gearman_job_st *job, __attribute__((__unused__)) void *context, s
         write_debug_file(&decrypted_orig);
 #endif
 
-    if(!strcmp( exec_job->type, "notification")) {
+    if(exec_job->type != NULL && !strcmp( exec_job->type, "notification")) {
         is_notification_job = TRUE;
     }
-    else if ( !strcmp( exec_job->type, "eventhandler" ) ) {
+    else if (exec_job->type != NULL &&  !strcmp( exec_job->type, "eventhandler" ) ) {
         is_eventhandler_job = TRUE;
     }
 
@@ -329,8 +333,8 @@ void *get_job( gearman_job_st *job, __attribute__((__unused__)) void *context, s
                exec_job->type,
                exec_job->return_code
         );
-        gm_log( GM_LOG_ERROR, "cmd: %s\n", exec_job->output );
-        gm_log( GM_LOG_ERROR, "output: %s\n" );
+        gm_log( GM_LOG_ERROR, "cmd: %s\n", exec_job->command_line );
+        gm_log( GM_LOG_ERROR, "output: %s\n", exec_job->output );
     }
 
     free(decrypted_orig);
@@ -414,7 +418,7 @@ void do_exec_job( ) {
 
         if ( !strcmp( exec_job->type, "service" ) || !strcmp( exec_job->type, "host" ) ) {
             exec_job->output = gm_strdup("(Could Not Start Check In Time)");
-            send_result_back(exec_job);
+            send_result_back(exec_job, worker_ctx);
         }
 
         return;
@@ -429,7 +433,7 @@ void do_exec_job( ) {
     current_job = NULL;
 
     if ( !strcmp( exec_job->type, "service" ) || !strcmp( exec_job->type, "host" ) ) {
-        send_result_back(exec_job);
+        send_result_back(exec_job, worker_ctx);
     }
 
     return;
@@ -569,7 +573,7 @@ void clean_worker_exit(int sig) {
         if(sig == SIGINT) {
             /* if worker stopped with sigint, let the job retry */
         } else {
-            send_failed_result(current_job, sig);
+            send_failed_result(current_job, sig, worker_ctx);
             gearman_job_send_complete(current_gearman_job, NULL, 0);
         }
         /* make sure no processes are left over */
@@ -604,6 +608,8 @@ void clean_worker_exit(int sig) {
     if(shmdt(shm) < 0)
         perror("shmdt");
 
+    mod_gm_crypt_deinit(worker_ctx);
+
     _exit( EXIT_SUCCESS );
 }
 
@@ -622,7 +628,7 @@ void *return_status( gearman_job_st *job, __attribute__((__unused__)) void *cont
     strncpy(workload, (const char*)gearman_job_workload(job), wsize);
     workload[wsize] = '\0';
     gm_log( GM_LOG_TRACE, "got status job %s\n", gearman_job_handle( job ) );
-    gm_log( GM_LOG_TRACE, "%d +++>\n%s\n<+++\n", strlen(workload), workload );
+    gm_log( GM_LOG_TRACE, "%zu +++>\n%s\n<+++\n", strlen(workload), workload );
 
     /* set result pointer to success */
     *ret_ptr= GEARMAN_SUCCESS;

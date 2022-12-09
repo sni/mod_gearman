@@ -25,6 +25,7 @@
 #include "send_gearman.h"
 #include "utils.h"
 #include "gearman_utils.h"
+#include "openssl/evp.h"
 
 #include <worker_dummy_functions.c>
 
@@ -39,6 +40,7 @@ char hostname[GM_SMALLBUFSIZE];
 /* work starts here */
 int main (int argc, char **argv) {
     int rc;
+    EVP_CIPHER_CTX * ctx = NULL;
 
     /*
      * allocate options structure
@@ -55,7 +57,7 @@ int main (int argc, char **argv) {
 
     /* init crypto functions */
     if(mod_gm_opt->encryption == GM_ENABLED) {
-        mod_gm_crypt_init(mod_gm_opt->crypt_key);
+        ctx = mod_gm_crypt_init(mod_gm_opt->crypt_key);
     } else {
         mod_gm_opt->transportmode = GM_ENCODE_ONLY;
     }
@@ -78,12 +80,13 @@ int main (int argc, char **argv) {
 
     /* send result message */
     signal(SIGALRM, alarm_sighandler);
-    rc = send_result();
+    rc = send_result(ctx);
 
     gm_free_client( &client );
     if( mod_gm_opt->dupserver_num )
         gm_free_client( &client_dup );
     mod_gm_free_opt(mod_gm_opt);
+    mod_gm_crypt_deinit(ctx);
 
     exit( rc );
 }
@@ -209,7 +212,7 @@ void print_usage() {
 
 
 /* send message to job server */
-int send_result() {
+int send_result(EVP_CIPHER_CTX * ctx) {
     char *ptr1, *ptr2, *ptr3, *ptr4;
     char buffer[GM_BUFFERSIZE];
 
@@ -266,7 +269,7 @@ int send_result() {
                 mod_gm_opt->return_code = atoi(ptr3);
                 mod_gm_opt->message     = gm_strdup(ptr4);
             }
-            if(submit_result() == STATE_OK) {
+            if(submit_result(ctx) == STATE_OK) {
                 results_sent++;
             } else {
                 printf("failed to send result!\n");
@@ -285,11 +288,11 @@ int send_result() {
         read_filepointer(&mod_gm_opt->message, stdin);
         alarm(0);
     }
-    return(submit_result());
+    return(submit_result(ctx));
 }
 
 /* submit result */
-int submit_result() {
+int submit_result(EVP_CIPHER_CTX * ctx) {
     char * buf;
     char * temp_buffer;
     char * result;
@@ -362,6 +365,7 @@ int submit_result() {
                          GM_JOB_PRIO_NORMAL,
                          GM_DEFAULT_JOB_RETRIES,
                          mod_gm_opt->transportmode,
+                         ctx,
                          0,
                          1
                         ) == GM_OK) {
@@ -376,6 +380,7 @@ int submit_result() {
                                  GM_JOB_PRIO_NORMAL,
                                  GM_DEFAULT_JOB_RETRIES,
                                  mod_gm_opt->transportmode,
+                                 ctx,
                                  0,
                                  1
                             ) == GM_OK) {

@@ -24,7 +24,6 @@ int main (int argc, char **argv, char **env) {
     int rc, rrc;
     char *result, *error;
     char cmd[4096];
-    char hostname[GM_BUFFERSIZE];
     char cwd[1024];
 
     plan(76);

@@ -442,7 +442,9 @@ void check_alarm_handler(int sig) {
         else if ( !strcmp( current_job->type, "eventhandler" ) ) {
             gm_log( GM_LOG_INFO, "timeout (%is) hit for eventhandler: %s\n", current_job->timeout, current_job->command_line);
         }
-        send_timeout_result(current_job);
+        EVP_CIPHER_CTX * ctx = mod_gm_crypt_init(mod_gm_opt->crypt_key);
+        send_timeout_result(current_job, ctx);
+        mod_gm_crypt_deinit(ctx);
         gearman_job_send_complete(current_gearman_job, NULL, 0);
     }
 
@@ -498,7 +500,7 @@ void kill_child_checks(void) {
 }
 
 
-void send_timeout_result(gm_job_t * exec_job) {
+void send_timeout_result(gm_job_t * exec_job, EVP_CIPHER_CTX * ctx) {
     struct timeval end_time;
     char buffer[GM_BUFFERSIZE];
     buffer[0] = '\x0';
@@ -517,14 +519,14 @@ void send_timeout_result(gm_job_t * exec_job) {
     free(exec_job->output);
     exec_job->output = gm_strdup( buffer );
 
-    send_result_back(exec_job);
+    send_result_back(exec_job, ctx);
 
     return;
 }
 
 
 /* send failed result */
-void send_failed_result(gm_job_t * exec_job, int sig) {
+void send_failed_result(gm_job_t * exec_job, int sig, EVP_CIPHER_CTX * ctx) {
     struct timeval end_time;
     char buffer[GM_BUFFERSIZE];
     char * signame;
@@ -542,7 +544,7 @@ void send_failed_result(gm_job_t * exec_job, int sig) {
     exec_job->output = gm_strdup( buffer );
     free(signame);
 
-    send_result_back(exec_job);
+    send_result_back(exec_job, ctx);
 
     return;
 }

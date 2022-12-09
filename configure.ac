@@ -11,14 +11,12 @@ AC_CONFIG_HEADER([config.h])
 
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 
-CFLAGS="-Wall -W -Wstrict-prototypes -Wmissing-prototypes -Wnested-externs -O -fPIC -D_GNU_SOURCE -D_REENTRANT -D_FILE_OFFSET_BITS=64"
+CFLAGS="${CFLAGS} -Wall -W -Wstrict-prototypes -Wmissing-prototypes -Wnested-externs -O -fPIC -D_GNU_SOURCE -D_REENTRANT -D_FILE_OFFSET_BITS=64"
 
 ##############################################
 AC_ARG_ENABLE(debug,--enable-debug will enable debugging symbols,[
     CFLAGS="${CFLAGS} -pedantic -Wfatal-errors -Wshadow -Wpointer-arith -Wcast-qual -Wcast-align -g3"
     ],
-    # do not strip binarys, this is done on packaging automatically and prevents debug packages to build properly
-    #CFLAGS="${CFLAGS} -s"
     CFLAGS="${CFLAGS} -g3"
 )
 
@@ -47,12 +45,14 @@ AC_CHECK_HEADERS([stdlib.h string.h unistd.h pthread.h arpa/inet.h fcntl.h limit
 AC_CHECK_HEADERS([ltdl.h],,AC_MSG_ERROR([Compiling Mod-Gearman requires ltdl.h]))
 AC_CHECK_HEADERS([curses.h],,AC_MSG_ERROR([Compiling Mod-Gearman requires curses.h]))
 
+##############################################
+# check for gearmand
 AC_ARG_WITH(gearman,
  [  --with-gearman=DIR Specify the path to your gearman library],
  [
     found=0
     for d in libgearman/.libs lib lib64 .; do
-      test -e "$withval/$d/libgearman.so" && LDFLAGS="${LDFLAGS} -L$withval/$d" && CFLAGS="${CFLAGS} -L$withval/$d" && found=1 && break;
+      test -e "$withval/$d/libgearman.so" && LDFLAGS="${LDFLAGS} -L$withval/$d" && found=1 && break;
     done
     test $found -eq 1 || { echo 'did not find libgearman.so under your specified path!' && exit 1; }
     echo "found libgearman.so in $withval/$d/"
@@ -62,40 +62,53 @@ AC_ARG_WITH(gearman,
     done
     test $found -eq 1 || { echo 'did not find libgearman-1.0/gearman.h under your specified path!' && exit 1; }
     echo "found gearman.h in $withval/$d/"
+    GEARMAN_LIBS="-lgearman"
  ],
  [
     PKG_CHECK_MODULES([gearmand], [gearmand >= 1.1.12])
+    CFLAGS="${CFLAGS} `pkg-config --cflags gearmand`"
+    GEARMAN_LIBS="`pkg-config --libs gearmand`"
  ]
 )
+AC_CHECK_LIB([gearman], [gearman_client_create],,AC_MSG_ERROR([Compiling Mod-Gearman requires libgearman. (hint: install libgearman-dev pkg or specify --with-gearman=...)]))
+AC_SUBST(GEARMAN_LIBS)
 
 ##############################################
-# Checks for additional libraries.
-AC_CHECK_LIB([gearman], [gearman_client_create],,AC_MSG_ERROR([Compiling Mod-Gearman requires libgearman. You may specify the path by --with-gearman=path...]))
-
-##############################################
+# check for naemon
 AC_ARG_WITH(naemon,
  [  --with-naemon=DIR Specify the path to libnaemon],
  [
     found=0
     for d in .; do
-      test -e "$withval/$d/libnaemon.la" && LDFLAGS="${LDFLAGS} -L$withval/$d" && CFLAGS="${CFLAGS} -L$withval/$d" && found=1 && break;
+      test -e "$withval/$d/libnaemon.la" && LDFLAGS="${LDFLAGS} -L$withval/$d" && found=1 && break;
     done
     test $found -eq 1 || { echo 'did not find libnaemon.la under your specified path!' && exit 1; }
     echo "found libnaemon.la in $withval/$d/"
     found=0
     for d in .; do
-      test -e "$withval/$d/src/naemon/naemon.h"  && CFLAGS="${CFLAGS} -I$withval/$d -I$withval/$d/src" && found=1 && break;
+      test -e "$withval/$d/src/naemon/naemon.h" && CFLAGS="${CFLAGS} -I$withval/$d -I$withval/$d/src" && found=1 && break;
     done
     echo "found naemon.h in $withval/$d/"
     test $found -eq 1 || { echo 'did not find naemon/naemon.h under your specified path!' && exit 1; }
-    CPPFLAGS=`PKG_CONFIG_PATH="$withval/$d/" pkg-config --cflags naemon`
+    CFLAGS="${CFLAGS} `PKG_CONFIG_PATH="$withval/$d/" pkg-config --cflags naemon`"
+    NAEMON_LIBS="-lnaemon -ldl -lm -lglib-2.0"
  ],
  [
     PKG_CHECK_MODULES([naemon], [naemon >= 1.2])
-    CPPFLAGS=`pkg-config --cflags naemon`
-    AC_CHECK_HEADERS([naemon/naemon.h],,AC_MSG_ERROR([Compiling Mod-Gearman requires naemon.h (hint: install naemon-dev pkg)]))
+    CFLAGS="${CFLAGS} `pkg-config --cflags naemon`"
+    NAEMON_LIBS="`pkg-config --libs naemon`"
  ]
 )
+CPPFLAGS="${CPPFLAGS} ${CFLAGS}"
+AC_CHECK_HEADERS([naemon/naemon.h],,AC_MSG_ERROR([Compiling Mod-Gearman requires naemon.h (hint: install naemon-dev pkg or specify --with-naemon=...)]))
+AC_SUBST(NAEMON_LIBS)
+
+##############################################
+# check for openssl
+PKG_CHECK_MODULES([openssl], [openssl >= 1])
+CFLAGS="${CFLAGS} `pkg-config --cflags openssl`"
+LDFLAGS="${LDFLAGS} `pkg-config --libs openssl`"
+AC_CHECK_HEADERS([openssl/evp.h],,AC_MSG_ERROR([Compiling Mod-Gearman requires openssl.h (hint: install libssl-dev pkg)]))
 
 ##############################################
 # Determine the system init.d directory

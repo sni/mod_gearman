@@ -1,5 +1,8 @@
 This file documents the revision history for mod_gearman.
 
+next:
+          - switch to openssl for all aes/base64 and digest functions
+
 4.0.3 Wed Aug 24 10:48:50 CEST 2022
           - add 'log_stats_interval' option
           - add support for check_gearman checking result queue worker / core statistics

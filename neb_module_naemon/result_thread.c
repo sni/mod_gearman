@@ -37,6 +37,8 @@ extern float current_avg_submit_duration;
 extern double current_submit_max;
 extern int result_threads_running;
 
+EVP_CIPHER_CTX * result_ctx = NULL;
+
 static const char *gearman_worker_source_name(void *source) {
     if(!source)
         return "unknown internal source (voodoo, perhaps?)";
@@ -65,6 +67,8 @@ static void cancel_worker_thread (void * data) {
 
     gm_free_worker(worker);
 
+    mod_gm_crypt_deinit(result_ctx);
+
     gm_log( GM_LOG_DEBUG, "worker thread finished\n" );
 
     return;
@@ -84,6 +88,8 @@ void *result_worker( void * data ) {
 
     set_worker(&worker);
     pthread_cleanup_push(cancel_worker_thread, (void*) &worker);
+
+    result_ctx = mod_gm_crypt_init(mod_gm_opt->crypt_key);
 
     while ( 1 ) {
         ret = gearman_worker_work( &worker );
@@ -132,7 +138,7 @@ void *get_results( gearman_job_st *job, __attribute__((__unused__)) void *contex
     strncpy(workload, (const char*)gearman_job_workload(job), wsize);
     workload[wsize] = '\x0';
     gm_log( GM_LOG_TRACE, "got result %s\n", gearman_job_handle( job ));
-    gm_log( GM_LOG_TRACE, "%d +++>\n%s\n<+++\n", strlen(workload), workload );
+    gm_log( GM_LOG_TRACE, "%zu +++>\n%s\n<+++\n", strlen(workload), workload );
 
     /* decrypt data */
     decrypted_data   = gm_malloc(wsize*2);
@@ -143,7 +149,7 @@ void *get_results( gearman_job_st *job, __attribute__((__unused__)) void *contex
     } else {
         transportmode = mod_gm_opt->transportmode;
     }
-    mod_gm_decrypt(&decrypted_data, workload, transportmode);
+    mod_gm_decrypt(result_ctx, &decrypted_data, workload, transportmode);
 
     if(!strcmp(workload, "check")) {
         char * result = gm_malloc(GM_BUFFERSIZE);
@@ -167,7 +173,7 @@ void *get_results( gearman_job_st *job, __attribute__((__unused__)) void *contex
         *ret_ptr = GEARMAN_WORK_FAIL;
         return NULL;
     }
-    gm_log( GM_LOG_TRACE, "%d --->\n%s\n<---\n", strlen(decrypted_data), decrypted_data );
+    gm_log( GM_LOG_TRACE, "%zu --->\n%s\n<---\n", strlen(decrypted_data), decrypted_data );
 #ifdef GM_DEBUG
     decrypted_orig   = gm_strdup(decrypted_data);
 #endif

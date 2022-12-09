@@ -12,8 +12,9 @@ DOS2UNIX=$(shell which dos2unix || which fromdos)
 
 .PHONY: docs
 
-AM_CPPFLAGS=-Iinclude
-CFLAGS +=-DDATADIR='"$(datadir)"'
+AM_CPPFLAGS=-Iinclude $(CFLAGS)
+AM_CFLAGS =-DDATADIR='"$(datadir)"'
+LIBS = $(GEARMAN_LIBS) $(openssl_LIBS)
 OS=$(shell uname)
 # disable parallel builds which sometime run into ranlib file not found errors
 MAKEFLAGS=-j1
@@ -40,13 +41,10 @@ EPN_BIN          =
 endif
 
 # source definitions
-common_SOURCES             = common/base64.c \
-                             common/gm_crypt.c  \
-                             common/rijndael.c \
+common_SOURCES             = common/gm_crypt.c  \
                              common/gearman_utils.c \
                              common/utils.c \
-                             common/gm_alloc.c \
-                             common/md5.c
+                             common/gm_alloc.c
 
 common_check_SOURCES       = common/check_utils.c \
                              common/popenRWE.c \
@@ -81,7 +79,7 @@ check_gearman_SOURCES      = $(common_SOURCES) \
 
 gearman_top_SOURCES        = $(common_SOURCES) \
                              tools/gearman_top.c
-gearman_top_LDADD          = -lncurses
+gearman_top_LDADD          = $(LDFLAGS) -lncurses
 
 # tests
 check_PROGRAMS   = 01_utils 02_full 03_exec 04_log 05_neb 06_exec 07_epn
@@ -92,7 +90,7 @@ check_PROGRAMS   = 01_utils 02_full 03_exec 04_log 05_neb 06_exec 07_epn
 04_log_SOURCES   = $(common_SOURCES) t/tap.h t/tap.c t/04-log.c
 05_neb_SOURCES   = $(common_SOURCES) t/tap.h t/tap.c t/05-neb.c
 05_neb_LDFLAGS   = -Wl,--export-dynamic -rdynamic
-05_neb_LDADD     =-ldl
+05_neb_LDADD     = $(NAEMON_LDFLAGS) -ldl
 07_epn_SOURCES   = $(common_SOURCES) t/tap.h t/tap.c t/07-epn.c $(common_check_SOURCES)
 # only used for performance tests
 06_exec_SOURCES  = $(common_SOURCES) t/tap.h t/tap.c t/06-execvp_vs_popen.c $(common_check_SOURCES)
@@ -126,7 +124,7 @@ include contrib/Makefile.am
 mod_gearman_naemon.o: $(mod_gearman_naemon_so_OBJECTS) $(mod_gearman_naemon_so_DEPENDENCIES)
 	@echo '    $$(CC) $<'
 	@if [ "$(OS)" = "Darwin" ]; then \
-		$(CXX) $(LDFLAGS) -dynamiclib -single_module -undefined dynamic_lookup $(mod_gearman_naemon_so_OBJECTS) -o $@ -lpthread -lgearman $(NAEMON_LIBS); \
+		$(CXX) $(LDFLAGS) -dynamiclib -single_module -undefined dynamic_lookup $(mod_gearman_naemon_so_OBJECTS) -o $@ -lpthread -lgearman; \
 	else \
 		$(CXX) $(LDFLAGS) -fPIC -shared $(mod_gearman_naemon_so_OBJECTS) -o $@ -lpthread -lgearman; \
 	fi
@@ -199,7 +197,7 @@ worker.static: worker
 	@echo " compile libgearman with -static"
 	@echo ""
 	@echo "################################################################"
-	cd worker && $(CC) $(LDFLAGS) $(CFLAGS) -static -o worker.static $(worker_OBJECTS) -lgearman -lpthread -luuid
+	cd worker && $(CC) $(LDFLAGS) $(CFLAGS) -static -o worker.static $(worker_OBJECTS) -lpthread -luuid
 	@echo ""
 	@echo " worker.static created."
 	@echo ""

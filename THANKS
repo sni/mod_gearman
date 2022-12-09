@@ -5,24 +5,12 @@ http://dnx.sourceforge.net/
 for inspiration and parts of the core logic.
 
 Thanks to
-http://freecode-freecode.blogspot.com/2008/02/base64c.html
-for the base64 code.
-
-Thanks to
-http://www.efgh.com/software/rijndael.htm
-for the aes-256 code.
-
-Thanks to
 https://github.com/zorgnax/libtap
 for the libtap code.
 
 Thanks to
 www.jukie.net/bart/blog/popenRWE
 for the popenRWE code.
-
-Thanks to
-http://polarssl.org
-for the MD5 implementation
 
 Thanks to
 Tone Darrud

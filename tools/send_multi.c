@@ -39,6 +39,7 @@ char hostname[GM_SMALLBUFSIZE];
 /* work starts here */
 int main (int argc, char **argv) {
     int rc;
+    EVP_CIPHER_CTX * ctx = NULL;
 
     /*
      * allocate options structure
@@ -55,7 +56,7 @@ int main (int argc, char **argv) {
 
     /* init crypto functions */
     if(mod_gm_opt->encryption == GM_ENABLED) {
-        mod_gm_crypt_init(mod_gm_opt->crypt_key);
+        ctx = mod_gm_crypt_init(mod_gm_opt->crypt_key);
     } else {
         mod_gm_opt->transportmode = GM_ENCODE_ONLY;
     }
@@ -78,7 +79,7 @@ int main (int argc, char **argv) {
 
     /* send result message */
     signal(SIGALRM, alarm_sighandler);
-    rc = read_multi_stream(stdin);
+    rc = read_multi_stream(stdin, ctx);
     /* if rc > 0, it contains the number of checks being submitted,
        otherwise its an error code (-1 - WARNING, -2 - CRITICAL, -3 - UNKNOWN) */
     if (rc == 0) {
@@ -96,6 +97,7 @@ int main (int argc, char **argv) {
     if( mod_gm_opt->dupserver_num )
         gm_free_client( &client_dup );
     mod_gm_free_opt(mod_gm_opt);
+    mod_gm_crypt_deinit(ctx);
     exit( rc );
 }
 
@@ -204,7 +206,7 @@ void print_usage() {
 
 
 /* send message to job server */
-int send_result() {
+int send_result(EVP_CIPHER_CTX * ctx) {
     char * buf;
     char temp_buffer1[GM_BUFFERSIZE];
     char temp_buffer2[GM_BUFFERSIZE];
@@ -260,6 +262,7 @@ int send_result() {
                          GM_JOB_PRIO_NORMAL,
                          GM_DEFAULT_JOB_RETRIES,
                          mod_gm_opt->transportmode,
+                         ctx,
                          0,
                          0
                         ) == GM_OK) {
@@ -274,6 +277,7 @@ int send_result() {
                                  GM_JOB_PRIO_NORMAL,
                                  GM_DEFAULT_JOB_RETRIES,
                                  mod_gm_opt->transportmode,
+                                 ctx,
                                  0,
                                  0
                         ) == GM_OK) {
@@ -308,7 +312,7 @@ void print_version() {
     exit( STATE_UNKNOWN );
 }
 
-int read_multi_stream(FILE *stream) {
+int read_multi_stream(FILE *stream, EVP_CIPHER_CTX * ctx) {
     char buffer[GM_BUFFERSIZE+1];
     unsigned long buflen=0L;
     unsigned long bytes_read=0L;
@@ -326,7 +330,6 @@ int read_multi_stream(FILE *stream) {
             /* closing tag </CHILD> found? read after <CHILD> with rest of buffer len */
             if ((bufend=(char *)memmem(bufstart,buflen-(bufstart-buffer),"</CHILD>",strlen("</CHILD>"))) != NULL) {
 
-                gm_log( GM_LOG_TRACE, "\tXML chunk %d found: buffer position %3d-%3d length %d bytes\n", count, bufstart-buffer, bufend-buffer, bufend-bufstart);
                 /* count valid chunks */
                 count++;
 
@@ -335,7 +338,7 @@ int read_multi_stream(FILE *stream) {
 
                 /* if valid check_multi chunk found, send the result*/
                 if (read_child_check(bufstart,bufend,&end_time)) {
-                    if (send_result() == GM_ERROR) {
+                    if (send_result(ctx) == GM_ERROR) {
                         count--;
                     }
                 } else {
@@ -372,10 +375,10 @@ int read_multi_stream(FILE *stream) {
 
             /* discard whole buffer but continue */
             buflen=0L;
-            gm_log( GM_LOG_TRACE, "Error: no starting tag <CHILD> within buffer - discarding buffer, buflen now %Lf bytes\n", buflen);
+            gm_log( GM_LOG_TRACE, "Error: no starting tag <CHILD> within buffer - discarding buffer, buflen now %lu bytes\n", buflen);
         }
 
-        gm_log( GM_LOG_TRACE, "\ttrying to fill up buffer with %Lf bytes from offset %Lf\n", GM_BUFFERSIZE-buflen, buflen);
+        gm_log( GM_LOG_TRACE, "\ttrying to fill up buffer with %lu bytes from offset %lu\n", (unsigned long)GM_BUFFERSIZE-buflen, buflen);
 
         /* read one block of data, or less bytes, if there is still data left */
         alarm(mod_gm_opt->timeout);
@@ -391,7 +394,7 @@ int read_multi_stream(FILE *stream) {
             /* adjust block len */
             buflen+=bytes_read;
         }
-        gm_log( GM_LOG_TRACE, "\tread %Lf bytes, %Lf bytes remaining in buffer\n", bytes_read, buflen);
+        gm_log( GM_LOG_TRACE, "\tread %lu bytes, %lu bytes remaining in buffer\n", bytes_read, buflen);
     } while (buflen > 0);
     buffer[buflen] = '\0';
     return count;

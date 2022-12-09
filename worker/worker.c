@@ -134,7 +134,6 @@ int main (int argc, char **argv) {
 
     /* init crypto functions */
     if(mod_gm_opt->encryption == GM_ENABLED) {
-        mod_gm_crypt_init(mod_gm_opt->crypt_key);
     } else {
         mod_gm_opt->transportmode = GM_ENCODE_ONLY;
     }

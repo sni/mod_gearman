@@ -24,10 +24,8 @@
 #include "config.h"
 #include "utils.h"
 #include "gm_crypt.h"
-#include "base64.h"
 #include "gearman_utils.h"
 #include "popenRWE.h"
-#include "polarssl/md5.h"
 
 #ifdef EMBEDDEDPERL
 #include "epn_utils.h"
@@ -109,60 +107,96 @@ int real_exit_code(int code) {
 
 
 /* initialize encryption */
-void mod_gm_crypt_init(char * key) {
+EVP_CIPHER_CTX * mod_gm_crypt_init(const char * key) {
+    EVP_CIPHER_CTX * ctx;
+
+    if(key == NULL)
+        return NULL;
+
+    if(key == NULL) {
+        gm_log( GM_LOG_ERROR, "encryption key not set\n" );
+        exit(1);
+    }
     if(strlen(key) < 8) {
         gm_log( GM_LOG_INFO, "encryption key should be at least 8 bytes!\n" );
     }
-    mod_gm_aes_init(key);
+    ctx = mod_gm_aes_init(key);
+    return(ctx);
+}
+
+
+/* deinitialize encryption */
+void mod_gm_crypt_deinit(EVP_CIPHER_CTX * ctx) {
+    mod_gm_aes_deinit(ctx);
     return;
 }
 
 
 /* encrypt text with given key */
-int mod_gm_encrypt(char ** encrypted, char * text, int mode) {
+int mod_gm_encrypt(EVP_CIPHER_CTX * ctx, char ** ciphertext, const char * plaintext, int mode) {
     int size;
     unsigned char * crypted;
-    char * base64;
+    unsigned char * base64;
 
     if(mode == GM_ENCODE_AND_ENCRYPT) {
-        size = mod_gm_aes_encrypt(&crypted, text);
+        size = strlen(plaintext) + 1;
+        if(size%BLOCKSIZE != 0)
+            size += BLOCKSIZE - (size%BLOCKSIZE);
+        crypted = gm_malloc(sizeof(char) * size);
+        size = mod_gm_aes_encrypt(ctx, crypted, (const unsigned char*)plaintext);
+        if(size <= 0) {
+            free(crypted);
+            return -1;
+        }
     }
     else {
-        crypted = (unsigned char*)gm_strdup(text);
-        size    = strlen(text);
+        crypted = (unsigned char*)gm_strdup(plaintext);
+        size    = strlen(plaintext);
     }
 
     /* now encode in base64 */
-    base64 = gm_malloc(size*2);
-    base64[0] = 0;
-    base64_encode(crypted, size, base64, size*2);
+    base64 = base64_encode(crypted, size);
     free(crypted);
-    *encrypted = base64;
-    return strlen(base64);
+    *ciphertext = (char*)base64;
+    return strlen(*ciphertext);
 }
 
 
 /* decrypt text with given key */
-void mod_gm_decrypt(char ** decrypted, char * text, int mode) {
+int mod_gm_decrypt(EVP_CIPHER_CTX * ctx, char ** plaintext, const char * cipertext, int mode) {
     char *test;
-    int input_size = strlen(text);
-    unsigned char * buffer = gm_malloc(sizeof(unsigned char) * input_size * 2);
+    int bsize;
+    int input_size = strlen(cipertext);
+    unsigned char * buffer = gm_malloc(sizeof(char) * ((input_size/4)*3)+5);
 
     /* first decode from base64 */
-    size_t bsize = base64_decode(text, buffer, input_size);
+    bsize = base64_decode(cipertext, input_size, buffer);
+    if(bsize == -1) {
+        free(buffer);
+        gm_log( GM_LOG_ERROR, "failed to decode base64 string.\n" );
+        return -1;
+    }
     test = gm_strndup((char *)buffer, 5);
     if(mode == GM_ENCODE_AND_ENCRYPT || (mode == GM_ENCODE_ACCEPT_ALL && strcmp(test, "type="))) {
-        /* then decrypt */
-        mod_gm_aes_decrypt(decrypted, buffer, bsize);
+        /* decrypt if it is no plaintext already. */
+        /* And if this is base64 encoded encrypted data, it is a multiple of blocksize, strip off
+           trailing artefacts.
+         */
+        bsize = bsize - bsize%BLOCKSIZE;
+        if(1 != mod_gm_aes_decrypt(ctx, (unsigned char*)*plaintext, buffer, bsize)) {
+            free(test);
+            free(buffer);
+            return -1;
+        }
     }
     else  {
-        *decrypted[0] = '\x0';
+        *plaintext[0] = '\x0';
         buffer[bsize] = '\x0';
-        strncat(*decrypted, (char*)buffer, bsize);
+        strncat(*plaintext, (char*)buffer, bsize);
     }
     free(test);
     free(buffer);
-    return;
+    return 1;
 }
 
 
@@ -947,8 +981,13 @@ int parse_args_line(mod_gm_opt_t *opt, char * arg, int recursion_level) {
         opt->gearman_connection_timeout = atoi( value );
     }
 
-    else if ( !strcmp( key, "prometheus_server" ) ) {
-        gm_log( GM_LOG_INFO, "ignoring unsupported option '%s'\n", key );
+    else if ( !strcmp( key, "prometheus_server" )
+           || !strcmp( key, "sink-rate" )
+           || !strcmp( key, "backgrounding-threshold" )
+           || !strcmp( key, "load_cpu_multi" )
+           || !strcmp( key, "mem_limit" )
+    ) {
+        gm_log( GM_LOG_DEBUG, "ignoring unsupported option '%s'\n", key );
     }
 
     else {
@@ -1517,7 +1556,7 @@ int check_param_server(gm_server_t * new_server, gm_server_t * server_list[GM_LI
 
 
 /* send results back */
-void send_result_back(gm_job_t * exec_job) {
+void send_result_back(gm_job_t * exec_job, EVP_CIPHER_CTX * ctx) {
     char * temp_buffer1;
     char * temp_buffer2;
     int result_size;
@@ -1606,6 +1645,7 @@ void send_result_back(gm_job_t * exec_job) {
                          GM_JOB_PRIO_NORMAL,
                          GM_DEFAULT_JOB_RETRIES,
                          mod_gm_opt->transportmode,
+                         ctx,
                          0,
                          0
                         ) == GM_OK) {
@@ -1630,6 +1670,7 @@ void send_result_back(gm_job_t * exec_job) {
                               GM_JOB_PRIO_NORMAL,
                               GM_DEFAULT_JOB_RETRIES,
                               mod_gm_opt->transportmode,
+                              ctx,
                               0,
                               0
                             ) == GM_OK) {
@@ -1645,23 +1686,6 @@ void send_result_back(gm_job_t * exec_job) {
     free(temp_buffer1);
     free(temp_buffer2);
     return;
-}
-
-
-/* create md5 sum for char[] */
-char *md5sum(char *text) {
-    unsigned char sum[16];
-    char *result=NULL;
-
-    /* allocate enough memory to escape all chars if necessary */
-    if((result=gm_malloc(33))==NULL)
-        return NULL;
-
-    md5((unsigned char *)text, strlen(text), sum);
-    snprintf(result, 33, "%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x",
-           sum[0],sum[1],sum[2],sum[3],sum[4],sum[5],sum[6],sum[7],sum[8],sum[9],sum[10],sum[11],sum[12],sum[13],sum[14],sum[15]);
-
-    return result;
 }
 
 /* add parsed server to list */
@@ -1757,10 +1781,10 @@ void make_uniq(char *uniq, const char *format, ... ) {
     vsnprintf(uniq, GM_SMALLBUFSIZE, format, ap);
     va_end(ap);
 
-    // create md5 hash to avoid nasty characters and make string smaller than GEARMAN_MAX_UNIQUE_SIZE
-    char * md5 =  md5sum(uniq);
-    snprintf(uniq, GM_SMALLBUFSIZE, "%s", md5);
-    gm_free(md5);
+    // create hash sum to avoid nasty characters and make string smaller than GEARMAN_MAX_UNIQUE_SIZE
+    char * hex =  mod_gm_hexsum(uniq);
+    snprintf(uniq, GM_SMALLBUFSIZE, "%s", hex);
+    gm_free(hex);
 }
 
 double elapsed_time(struct timeval t1, struct timeval t2) {
@@ -1768,4 +1792,13 @@ double elapsed_time(struct timeval t1, struct timeval t2) {
     long microseconds = t2.tv_usec - t1.tv_usec;
     double elapsed = seconds + microseconds*1e-6;
     return(elapsed);
+}
+
+void printf_hex(const char* text, int length, char*prefix) {
+    int i;
+    printf("%s%d: ", prefix, length);
+    for(i=0; i<length; i++)
+        printf("%02x ",text[i]);
+    printf("\n");
+    return;
 }

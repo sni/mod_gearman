@@ -30,6 +30,7 @@ mod_gm_opt_t *mod_gm_opt;
 char hostname[GM_SMALLBUFSIZE];
 gearman_client_st *current_client;
 gearman_client_st *current_client_dup;
+EVP_CIPHER_CTX * mod_ctx = NULL;
 
 /* specify event broker API version (required) */
 NEB_API_VERSION( CURRENT_NEB_API_VERSION )
@@ -105,7 +106,7 @@ int nebmodule_init( int flags, char *args, nebmodule *handle ) {
     /* parse arguments */
     gm_log( GM_LOG_DEBUG, "Version %s\n", GM_VERSION );
     gm_log( GM_LOG_DEBUG, "args: %s\n", args );
-    gm_log( GM_LOG_TRACE, "nebmodule_init(%i, %i)\n", flags );
+    gm_log( GM_LOG_TRACE, "nebmodule_init(%i)\n", flags);
     gm_log( GM_LOG_DEBUG, "running on libgearman %s\n", gearman_version() );
 
     if( read_arguments( args ) == GM_ERROR )
@@ -155,9 +156,10 @@ int nebmodule_init( int flags, char *args, nebmodule *handle ) {
             gm_log( GM_LOG_ERROR, "no encryption key provided, please use --key=... or keyfile=...\n");
             return NEB_ERROR;
         }
-        mod_gm_crypt_init(mod_gm_opt->crypt_key);
+        mod_ctx = mod_gm_crypt_init(mod_gm_opt->crypt_key);
     } else {
         mod_gm_opt->transportmode = GM_ENCODE_ONLY;
+        mod_ctx = NULL;
     }
 
     /* create client */
@@ -269,6 +271,7 @@ int nebmodule_deinit( int flags, int reason ) {
 
     mod_gm_free_opt(mod_gm_opt);
 
+    mod_gm_crypt_deinit(mod_ctx);
     return NEB_OK;
 }
 
@@ -472,6 +475,7 @@ static int handle_eventhandler( int event_type, void *data ) {
                          GM_JOB_PRIO_NORMAL,
                          GM_DEFAULT_JOB_RETRIES,
                          mod_gm_opt->transportmode,
+                         mod_ctx,
                          1,
                          mod_gm_opt->log_stats_interval
                         ) == GM_OK) {
@@ -675,6 +679,7 @@ static int handle_notifications( int event_type, void *data ) {
                          GM_JOB_PRIO_HIGH,
                          GM_DEFAULT_JOB_RETRIES,
                          mod_gm_opt->transportmode,
+                         mod_ctx,
                          1,
                          mod_gm_opt->log_stats_interval
                         ) == GM_OK) {
@@ -877,6 +882,7 @@ static int handle_host_check( int event_type, void *data ) {
                          GM_JOB_PRIO_NORMAL,
                          GM_DEFAULT_JOB_RETRIES,
                          mod_gm_opt->transportmode,
+                         mod_ctx,
                          1,
                          mod_gm_opt->log_stats_interval
                         ) == GM_OK) {
@@ -1026,6 +1032,7 @@ static int handle_svc_check( int event_type, void *data ) {
                          prio,
                          GM_DEFAULT_JOB_RETRIES,
                          mod_gm_opt->transportmode,
+                         mod_ctx,
                          1,
                          mod_gm_opt->log_stats_interval
                         ) == GM_OK) {
@@ -1384,6 +1391,7 @@ int handle_perfdata(int event_type, void *data) {
                                  GM_JOB_PRIO_NORMAL,
                                  GM_DEFAULT_JOB_RETRIES,
                                  mod_gm_opt->transportmode,
+                                 mod_ctx,
                                  1,
                                  mod_gm_opt->log_stats_interval
                                 ) == GM_OK) {
@@ -1525,6 +1533,7 @@ int handle_export(int callback_type, void *data) {
                               GM_JOB_PRIO_NORMAL,
                               GM_DEFAULT_JOB_RETRIES,
                               mod_gm_opt->transportmode,
+                              mod_ctx,
                               1,
                               mod_gm_opt->log_stats_interval
                             );

@@ -41,6 +41,7 @@
 #include <sys/wait.h>
 #include <libgearman/gearman.h>
 #include "common.h"
+#include "openssl/evp.h"
 
 /** send_gearman
  *
@@ -93,18 +94,22 @@ int verify_options(mod_gm_opt_t *opt);
  *
  * extract result
  *
+ * @param[in] ctx - openssl context
+ *
  * @return TRUE on success or FALSE if something went wrong
  */
-int send_result(void);
+int send_result(EVP_CIPHER_CTX * ctx);
 
 /**
  * submit_result
  *
  * send back result as gearman job
  *
+ * @param[in] ctx - openssl context
+ *
  * @return TRUE on success or FALSE if something went wrong
  */
-int submit_result(void);
+int submit_result(EVP_CIPHER_CTX * ctx);
 
 /**
  * alarm_sighandler
