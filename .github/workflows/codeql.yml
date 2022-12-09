@@ -1,0 +1,63 @@
+name: "CodeQL"
+
+on:
+  push:
+  pull_request:
+  schedule:
+    - cron: '40 10 * * 1'
+
+jobs:
+  analyze:
+    name: Analyze
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [ 'cpp' ]
+        # CodeQL supports [ 'cpp', 'csharp', 'go', 'java', 'javascript', 'python', 'ruby' ]
+        # Learn more about CodeQL language support at https://aka.ms/codeql-docs/language-support
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    # Initializes the CodeQL tools for scanning.
+    - name: Initialize CodeQL
+      uses: github/codeql-action/init@v2
+      with:
+        languages: ${{ matrix.language }}
+        # If you wish to specify custom queries, you can do so here or in a config file.
+        # By default, queries listed here will override any specified in a config file.
+        # Prefix the list here with "+" to use these queries and those in the config file.
+
+        # Details on CodeQL's query packs refer to : https://docs.github.com/en/code-security/code-scanning/automatically-scanning-your-code-for-vulnerabilities-and-errors/configuring-code-scanning#using-queries-in-ql-packs
+        # queries: security-extended,security-and-quality
+
+    - name: prepare machine
+      run: |
+        sudo apt-get update
+        sudo apt-get install apt-transport-https
+        sudo sh -c "echo 'deb http://download.opensuse.org/repositories/home:/naemon:/daily/xUbuntu_$(lsb_release -rs)/ ./' >> /etc/apt/sources.list"
+        wget -q "https://build.opensuse.org/projects/home:naemon:daily/public_key" -O - | sudo apt-key add -
+        sudo apt-get update
+        sudo apt-get autoremove -y
+        sudo apt-get install -y devscripts build-essential equivs dpkg-dev valgrind cppcheck
+        sudo mk-build-deps
+        sudo apt-get install -y ./*-build-deps*.deb
+        sudo rm -f *-build-deps*{deb,buildinfo,changes}
+
+    - name: run build
+      run: |
+        ./autogen.sh                                      || exit 1
+        ./configure --enable-embedded-perl --enable-debug || exit 1
+        make                                              || exit 1
+
+    - name: Perform CodeQL Analysis
+      uses: github/codeql-action/analyze@v2
+      with:
+        category: "/language:${{matrix.language}}"
