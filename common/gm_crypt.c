@@ -155,9 +155,10 @@ int mod_gm_aes_decrypt(EVP_CIPHER_CTX * ctx, unsigned char * plaintext, unsigned
 char *mod_gm_hexsum(const char *text) {
     unsigned char *result = NULL;
     unsigned int resultlen = -1;
+    unsigned int i = 0;
     char *hex = gm_malloc(sizeof(char)*((KEYBYTES*2)+1));
     result = HMAC(EVP_sha256(), key, KEYBYTES, (const unsigned char*)text, strlen(text), result, &resultlen);
-    for(unsigned int i = 0; i < resultlen; i++){
+    for(i = 0; i < resultlen; i++){
         snprintf(hex+(i*2), 3, "%02hhX", result[i]);
     }
     return(hex);
