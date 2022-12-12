@@ -142,7 +142,7 @@ getent passwd naemon >/dev/null || \
 %docdir %{_defaultdocdir}
 
 %changelog
-* Mon Jun 12 2021 Sven Nierlein <sven@consol.de>
+* Sat Jun 12 2021 Sven Nierlein <sven@consol.de>
 - remove init.d
 - build with upstream gearmand
 
