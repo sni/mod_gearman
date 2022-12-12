@@ -116,6 +116,7 @@ int mod_gm_aes_encrypt(EVP_CIPHER_CTX * ctx, unsigned char * ciphertext, const u
 int mod_gm_aes_decrypt(EVP_CIPHER_CTX * ctx, unsigned char * plaintext, unsigned char * ciphertext, int ciphertext_len) {
     unsigned char *iv = (unsigned char *)""; // not used in ecb mode anyway
     int len;
+    int i = 0;
 
     assert(encryption_initialized == 1);
     assert(ctx != NULL);
@@ -134,7 +135,7 @@ int mod_gm_aes_decrypt(EVP_CIPHER_CTX * ctx, unsigned char * plaintext, unsigned
 
     // do zero padding
     if(len % BLOCKSIZE != 0) {
-        for(int i = 0; i < BLOCKSIZE - (len % BLOCKSIZE); i++) {
+        for(i = 0; i < BLOCKSIZE - (len % BLOCKSIZE); i++) {
             plaintext[len++] = '\x0';
         }
     }
