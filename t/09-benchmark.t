@@ -2,7 +2,7 @@
 
 use warnings;
 use strict;
-use Test::More tests => 8;
+use Test::More tests => 9;
 use Carp qw/confess/;
 use Time::HiRes qw( gettimeofday tv_interval sleep );
 
@@ -22,6 +22,19 @@ system("$gearmand --port $TESTPORT --pid-file=./gearman.pid -d --log-file=/tmp/g
 chomp(my $gearmand_pid = `cat ./gearman.pid`);
 
 isnt($gearmand_pid, '', 'gearmand running: '.$gearmand_pid) or BAIL_OUT("no gearmand");
+
+# double check gearmand
+my($gearman_running, $gearman_top_out);
+for(1..10) {
+    $gearman_top_out = `gearman_top -b -H localhost:$TESTPORT 2>&1`;
+    if($gearman_top_out =~ m/\s+\-\s+localhost:$TESTPORT\s+\-\s+v.*Waiting/sgmx) {
+        $gearman_running = 1;
+        last;
+    }
+    sleep(1);
+}
+ok($gearman_running, "gearmand is running");
+diag($gearman_top_out) unless $gearman_running;
 
 # fill the queue
 open(my $ph, "|./send_gearman --server=localhost:$TESTPORT --result_queue=eventhandler") or die("failed to open send_gearman: $!");
