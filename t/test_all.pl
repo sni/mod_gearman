@@ -34,7 +34,7 @@ for my $test (@tests) {
     `$cmd`;
     is($?, 0, "$test build rc is $?");
 
-    $cmd = "yes | valgrind --tool=memcheck --leak-check=yes --leak-check=full --show-reachable=yes --track-origins=yes $skip_perl_mem_leaks --gen-suppressions=yes --log-file=$vallog ./$test >$testlog 2>&1";
+    $cmd = "yes | valgrind --tool=memcheck --leak-check=yes --leak-check=full --show-reachable=yes --track-origins=yes $skip_perl_mem_leaks --gen-suppressions=yes --error-limit=no --log-file=$vallog ./$test >$testlog 2>&1";
     ok(1, $cmd);
     `$cmd`;
     is($?, 0, "$test valgrind exit code is $?") or diag(`cat $testlog`);
