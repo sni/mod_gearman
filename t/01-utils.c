@@ -30,7 +30,7 @@ mod_gm_opt_t * renew_opts() {
 }
 
 int main(void) {
-    plan(103);
+    plan(120);
 
     /* lowercase */
     char test[100];
@@ -98,9 +98,34 @@ int main(void) {
     is(mod_gm_opt->crypt_key, "11111111111111111111111111111111", "reading keyfile t/data/test3.key");
     ok(strlen(mod_gm_opt->crypt_key) == 32, "key size for t/data/test3.key");
 
+    /* base 64 en/decoding */
+    struct {
+            const char *plaintext;
+            const char *base64;
+            int base64_len;
+    } base64_tests[] = {
+            { "test", "dGVzdA==", 8 },
+            { "test\n", "dGVzdAo=", 8 },
+            { "test message", "dGVzdCBtZXNzYWdl", 16 },
+            { "test1 message\ntest2 message\ntest3 message1234567\n", "dGVzdDEgbWVzc2FnZQp0ZXN0MiBtZXNzYWdlCnRlc3QzIG1lc3NhZ2UxMjM0NTY3Cg==", 68 },
+            { NULL },
+    };
+    for (i = 0; base64_tests[i].plaintext != NULL; i++) {
+        char * base64 = NULL;
+        /* encode base64 */
+        int len = mod_gm_encrypt(NULL, &base64, base64_tests[i].plaintext, GM_ENCODE_ONLY);
+        cmp_ok(len, "==", base64_tests[i].base64_len, "length of base64 string");
+        is(base64, base64_tests[i].base64, "base64 encoded string");
 
-    /* encrypt */
-    const char *key = "test1234";
+        /* decode base64 */
+        char * debase64 = gm_malloc(GM_BUFFERSIZE);
+        mod_gm_decrypt(NULL, &debase64, base64, GM_ENCODE_ONLY);
+        is(debase64, base64_tests[i].plaintext, "decoded base64 text is equal to source text");
+        free(debase64);
+        free(base64);
+    }
+
+    /* aes en/decryption */
     struct {
             const char *plaintext;
             const char *base64;
@@ -108,43 +133,31 @@ int main(void) {
     } encryption_tests[] = {
             { "test message", "a7HqhQEE8TQBde9uknpPYQ==", 24 },
             { "test1 message\ntest2 message\ntest3 message1234567\n", "lixUQN83MnLhMB6ppyNA5bUPq39eZE+8GnSWLu4JdKJN2uIjOtjjtVn8mZrXj0dLl7iWqId8FZE2j6Ej+jroEQ==", 88 },
+            { "123456789abcde", "U+0gPoTCEibvwB+HaO3seA==", 24 },
             { "123456789abcdef", "uLgRxE2qLExwLvEyB7yAEw==", 24 },
-            { "123456789abcdef1", "CueC0iJAZL2J+zhEPgVFVQ==", 24 },
+            { "123456789abcdef1", "CueC0iJAZL2J+zhEPgVFVYDKd5Fmk6oJnfJnxuj7f0U=", 44 },
             { "123456789abcdef12", "CueC0iJAZL2J+zhEPgVFVeiqJ0EDJEmrqx95Bewle4s=", 44 },
+            { "123456789abcdef123", "CueC0iJAZL2J+zhEPgVFVUPX+fNRaJ7/VNIrGRAapGQ=", 44 },
             { NULL },
     };
+    const char *key = "test1234";
     EVP_CIPHER_CTX * ctx = mod_gm_crypt_init(key);
     for (i = 0; encryption_tests[i].plaintext != NULL; i++) {
+        /* encrypt */
         char * encrypted;
         int len = mod_gm_encrypt(ctx, &encrypted, encryption_tests[i].plaintext, GM_ENCODE_AND_ENCRYPT);
-        ok(len == encryption_tests[i].base64_len, "length of encrypted only: %d vs. %d", len, encryption_tests[i].base64_len);
+        cmp_ok(len, "==", encryption_tests[i].base64_len, "length of encrypted text: %d vs. %d", len, encryption_tests[i].base64_len);
         is(encrypted, encryption_tests[i].base64, "encrypted string");
 
         /* decrypt */
         char * decrypted = gm_malloc(GM_BUFFERSIZE);
-        mod_gm_decrypt(ctx, &decrypted, encrypted, GM_ENCODE_AND_ENCRYPT);
+        mod_gm_decrypt(ctx, &decrypted, encrypted, GM_ENCODE_AND_ENCRYPT); // TODO: move malloc to aes
         is(decrypted, encryption_tests[i].plaintext, "decrypted text");
-        ok(strlen(encryption_tests[i].plaintext) == strlen(decrypted), "decryption str len");
+        cmp_ok(strlen(encryption_tests[i].plaintext), "==", strlen(decrypted), "decryption string len");
         free(decrypted);
         free(encrypted);
     }
     mod_gm_crypt_deinit(ctx);
-
-    /* base 64 */
-    const char *text = "test message";
-    ctx = mod_gm_crypt_init(key);
-    char * base64;
-    int len = mod_gm_encrypt(ctx, &base64, text, GM_ENCODE_ONLY);
-    ok(len == 16, "length of encode only");
-    is(base64, "dGVzdCBtZXNzYWdl", "base64 only string");
-
-    /* debase 64 */
-    char * debase64 = gm_malloc(GM_BUFFERSIZE);
-    mod_gm_decrypt(ctx, &debase64, base64, GM_ENCODE_ONLY);
-    is(debase64, text, "debase64 text");
-    free(debase64);
-    free(base64);
-
 
     /* file_exists */
     ok(file_exists("01_utils") == 1, "file_exists('01_utils')");
@@ -269,7 +282,6 @@ int main(void) {
     ok(strlen(uniq) <= GEARMAN_MAX_UNIQUE_SIZE, "uniq string is smaller than GEARMAN_MAX_UNIQUE_SIZE");
 
     mod_gm_free_opt(mod_gm_opt);
-    mod_gm_crypt_deinit(ctx);
 
     return exit_status();
 }

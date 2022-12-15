@@ -139,11 +139,9 @@ int mod_gm_encrypt(EVP_CIPHER_CTX * ctx, char ** ciphertext, const char * plaint
     unsigned char * base64;
 
     if(mode == GM_ENCODE_AND_ENCRYPT) {
-        size = strlen(plaintext) + 1;
-        if(size%BLOCKSIZE != 0)
-            size += BLOCKSIZE - (size%BLOCKSIZE);
-        crypted = gm_malloc(sizeof(char) * size);
-        size = mod_gm_aes_encrypt(ctx, crypted, (const unsigned char*)plaintext);
+        size = strlen(plaintext)+1;
+        crypted = gm_malloc(sizeof(char) * (size + (2*BLOCKSIZE)));
+        size = mod_gm_aes_encrypt(ctx, crypted, (const unsigned char*)plaintext, size);
         if(size <= 0) {
             free(crypted);
             return -1;
@@ -163,14 +161,14 @@ int mod_gm_encrypt(EVP_CIPHER_CTX * ctx, char ** ciphertext, const char * plaint
 
 
 /* decrypt text with given key */
-int mod_gm_decrypt(EVP_CIPHER_CTX * ctx, char ** plaintext, const char * cipertext, int mode) {
+int mod_gm_decrypt(EVP_CIPHER_CTX * ctx, char ** plaintext, const char * ciphertext, int mode) {
     char *test;
     int bsize;
-    int input_size = strlen(cipertext);
+    int input_size = strlen(ciphertext);
     unsigned char * buffer = gm_malloc(sizeof(char) * ((input_size/4)*3)+5);
 
     /* first decode from base64 */
-    bsize = base64_decode(cipertext, input_size, buffer);
+    bsize = base64_decode(ciphertext, input_size, buffer);
     if(bsize == -1) {
         free(buffer);
         gm_log( GM_LOG_ERROR, "failed to decode base64 string.\n" );
@@ -1798,7 +1796,7 @@ void printf_hex(const char* text, int length, char*prefix) {
     int i;
     printf("%s%d: ", prefix, length);
     for(i=0; i<length; i++)
-        printf("%02x ",text[i]);
+        printf("%02hhX ",text[i]);
     printf("\n");
     return;
 }

@@ -67,16 +67,14 @@ void mod_gm_aes_deinit(EVP_CIPHER_CTX *ctx) {
 
 
 /* encrypt text with given key */
-int mod_gm_aes_encrypt(EVP_CIPHER_CTX * ctx, unsigned char * ciphertext, const unsigned char * plaintext) {
+int mod_gm_aes_encrypt(EVP_CIPHER_CTX * ctx, unsigned char * ciphertext, const unsigned char * plaintext, int plaintext_len) {
     int len;
-    int plaintext_len = strlen((const char*)plaintext);
     int ciphertext_len;
-    unsigned char *iv = (unsigned char *)""; // not used in ecb mode anyway
 
     assert(encryption_initialized == 1);
     assert(ctx != NULL);
 
-    if(1 != EVP_EncryptInit_ex(ctx, EVP_aes_256_ecb(), NULL, key, iv)) {
+    if(1 != EVP_EncryptInit_ex(ctx, EVP_aes_256_ecb(), NULL, key, NULL)) {
         fprintf(stderr, "EVP_EncryptInit_ex failed:\n");
         ERR_print_errors_fp(stderr);
         return -1;
@@ -106,7 +104,6 @@ int mod_gm_aes_encrypt(EVP_CIPHER_CTX * ctx, unsigned char * ciphertext, const u
         ERR_print_errors_fp(stderr);
         return -1;
     }
-    ciphertext_len += len;
 
     return ciphertext_len;
 }
@@ -114,14 +111,12 @@ int mod_gm_aes_encrypt(EVP_CIPHER_CTX * ctx, unsigned char * ciphertext, const u
 
 /* decrypt text with given key */
 int mod_gm_aes_decrypt(EVP_CIPHER_CTX * ctx, unsigned char * plaintext, unsigned char * ciphertext, int ciphertext_len) {
-    unsigned char *iv = (unsigned char *)""; // not used in ecb mode anyway
     int len;
-    int i = 0;
 
     assert(encryption_initialized == 1);
     assert(ctx != NULL);
 
-    if(1 != EVP_DecryptInit_ex(ctx, EVP_aes_256_ecb(), NULL, key, iv)) {
+    if(1 != EVP_DecryptInit_ex(ctx, EVP_aes_256_ecb(), NULL, key, NULL)) {
         fprintf(stderr, "EVP_DecryptInit_ex failed\n");
         ERR_print_errors_fp(stderr);
         return -1;
@@ -129,21 +124,6 @@ int mod_gm_aes_decrypt(EVP_CIPHER_CTX * ctx, unsigned char * plaintext, unsigned
 
     if(1 != EVP_DecryptUpdate(ctx, plaintext, &len, ciphertext, ciphertext_len)) {
         fprintf(stderr, "EVP_DecryptUpdate failed\n");
-        ERR_print_errors_fp(stderr);
-        return -1;
-    }
-
-    // do zero padding
-    if(len % BLOCKSIZE != 0) {
-        for(i = 0; i < BLOCKSIZE - (len % BLOCKSIZE); i++) {
-            plaintext[len++] = '\x0';
-        }
-    }
-
-    plaintext[len] = '\x0';
-
-    if(1 != EVP_DecryptFinal_ex(ctx, plaintext + len, &len)) {
-        fprintf(stderr, "EVP_DecodeFinal_ex failed\n");
         ERR_print_errors_fp(stderr);
         return -1;
     }

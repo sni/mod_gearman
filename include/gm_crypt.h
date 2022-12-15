@@ -58,13 +58,14 @@ void mod_gm_aes_deinit(EVP_CIPHER_CTX *);
 /**
  * encrypt text
  *
- * @param[in] ctx         - openssl context (from mod_gm_aes_init())
- * @param[out] ciphertext - pointer to encrypted text
- * @param[in] plaintext   - text which should be encrypted
+ * @param[in] ctx           - openssl context (from mod_gm_aes_init())
+ * @param[out] ciphertext   - pointer to encrypted text
+ * @param[in] plaintext     - text which should be encrypted
+ * @param[in] plaintext_len - length of plain text
  *
  * @return size of encrypted text
  */
-int mod_gm_aes_encrypt(EVP_CIPHER_CTX * ctx, unsigned char * ciphertext, const unsigned char * plaintext);
+int mod_gm_aes_encrypt(EVP_CIPHER_CTX * ctx, unsigned char * ciphertext, const unsigned char * plaintext, int plaintext_len);
 
 /**
  * decrypt text

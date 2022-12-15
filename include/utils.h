@@ -113,7 +113,7 @@ int mod_gm_encrypt(EVP_CIPHER_CTX * ctx, char ** ciphertext, const char * plaint
  *
  * @return 1 on success
  */
-int mod_gm_decrypt(EVP_CIPHER_CTX * ctx, char ** plaintext, const char * cipertext, int mode);
+int mod_gm_decrypt(EVP_CIPHER_CTX * ctx, char ** plaintext, const char * ciphertext, int mode);
 
 /**
  * file_exists
