@@ -20,8 +20,9 @@ sub create_suppressions {
     for my $test (@tests) {
         next if $test =~ m/^\s*$/;
         print "$test...\n";
-        `make $test >/dev/null 2>&1 && yes | valgrind --tool=memcheck --leak-check=yes --leak-check=full --show-reachable=yes --track-origins=yes --gen-suppressions=yes ./$test >> t/valgrind_suppress.cfg 2>&1`;
+        `make $test >/dev/null 2>&1 && yes | valgrind --tool=memcheck --leak-check=yes --leak-check=full --show-reachable=yes --track-origins=yes --error-limit=no --gen-suppressions=yes ./$test >> t/valgrind_suppress.cfg 2>&1`;
     }
+    make_uniq('t/valgrind_suppress.cfg');
 }
 
 #################################################
@@ -40,11 +41,15 @@ sub make_uniq {
         next if $line =~ m/^1\.\.\d+$/;
         next if $line =~ m/^\[\d+\-\d+\-\d+\s+/;
         next if $line =~ m/^core logger is not available/;
+        next if $line =~ m/WARNING: Serious error when reading debug/;
+        next if $line =~ m/When reading debug info from/;
+        next if $line =~ m/Ignoring non-Dwarf.*.debug_info/;
+        next if $line =~ m/is neither DWARF2/;
 
         if($line =~ m/^\s+<insert_a_suppression_name_here/) {
             $text = "{\n";
         }
-        die("line: ".$line) unless defined $text;
+        die("unknown error in line: ".$line) unless defined $text;
         $text .= $line;
         if($line =~ m/^\s*}\s*$/) {
             $all_suppressions->{$text} = 1 if $text =~ m/Perl_/;
