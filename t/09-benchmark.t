@@ -26,8 +26,8 @@ isnt($gearmand_pid, '', 'gearmand running: '.$gearmand_pid) or BAIL_OUT("no gear
 # double check gearmand
 my($gearman_running, $gearman_top_out);
 for(1..10) {
-    $gearman_top_out = `gearman_top -b -H localhost:$TESTPORT 2>&1`;
-    if($gearman_top_out =~ m/\s+\-\s+localhost:$TESTPORT\s+\-\s+v.*Waiting/sgmx) {
+    $gearman_top_out = `./gearman_top -b -H localhost:$TESTPORT 2>&1`;
+    if(($gearman_top_out//'') =~ m/\s+\-\s+localhost:$TESTPORT\s+\-\s+v.*Waiting/sgmx) {
         $gearman_running = 1;
         last;
     }
