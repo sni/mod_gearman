@@ -124,9 +124,9 @@ include contrib/Makefile.am
 mod_gearman_naemon.o: $(mod_gearman_naemon_so_OBJECTS) $(mod_gearman_naemon_so_DEPENDENCIES)
 	@echo '    $$(CC) $<'
 	@if [ "$(OS)" = "Darwin" ]; then \
-		$(CXX) $(LDFLAGS) -dynamiclib -single_module -undefined dynamic_lookup $(mod_gearman_naemon_so_OBJECTS) -o $@ -lpthread -lgearman; \
+		$(CXX) $(LDFLAGS) -dynamiclib -single_module -undefined dynamic_lookup $(mod_gearman_naemon_so_OBJECTS) -o $@ -lpthread -lgearman $(openssl_LIBS); \
 	else \
-		$(CXX) $(LDFLAGS) -fPIC -shared $(mod_gearman_naemon_so_OBJECTS) -o $@ -lpthread -lgearman; \
+		$(CXX) $(LDFLAGS) -fPIC -shared $(mod_gearman_naemon_so_OBJECTS) -o $@ -lpthread -lgearman $(openssl_LIBS); \
 	fi
 	chmod 644 mod_gearman_naemon.o
 	@$(RM) mod_gearman_naemon.so
