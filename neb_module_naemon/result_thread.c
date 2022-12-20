@@ -62,10 +62,8 @@ static void cancel_worker_thread (void * data) {
 
     gearman_worker_st *worker = (gearman_worker_st*) data;
 
-    if(worker == NULL)
-        return;
-
-    gm_free_worker(worker);
+    if(worker != NULL)
+        gm_free_worker(worker);
 
     mod_gm_crypt_deinit(result_ctx);
 
@@ -76,7 +74,7 @@ static void cancel_worker_thread (void * data) {
 
 /* callback for task completed */
 void *result_worker( void * data ) {
-    gearman_worker_st worker;
+    gearman_worker_st *worker = NULL;
     int *worker_num = (int*)data;
     gearman_return_t ret;
 
@@ -86,21 +84,21 @@ void *result_worker( void * data ) {
     pthread_setcancelstate (PTHREAD_CANCEL_ENABLE, NULL);
     pthread_setcanceltype (PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
 
-    set_worker(&worker);
-    pthread_cleanup_push(cancel_worker_thread, (void*) &worker);
+    set_worker(worker);
+    pthread_cleanup_push(cancel_worker_thread, (void*) worker);
 
     result_ctx = mod_gm_crypt_init(mod_gm_opt->crypt_key);
 
     while ( 1 ) {
-        ret = gearman_worker_work( &worker );
+        ret = gearman_worker_work( worker );
         if ( ret != GEARMAN_SUCCESS && ret != GEARMAN_WORK_FAIL ) {
             if ( ret != GEARMAN_TIMEOUT)
-                gm_log( GM_LOG_ERROR, "worker error: %s\n", gearman_worker_error( &worker ) );
+                gm_log( GM_LOG_ERROR, "worker error: %s\n", gearman_worker_error( worker ) );
 
-            gm_free_worker(&worker);
+            gm_free_worker(worker);
             sleep(1);
 
-            set_worker(&worker);
+            set_worker(worker);
         }
     }
 

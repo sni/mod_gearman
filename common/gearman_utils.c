@@ -266,9 +266,12 @@ void gm_free_client(gearman_client_st *client) {
 
 /* free worker structure */
 void gm_free_worker(gearman_worker_st *worker) {
+    if(worker == NULL)
+        return;
     gearman_worker_unregister_all(worker);
     gearman_worker_remove_servers(worker);
     gearman_worker_free(worker);
+    worker = NULL;
 }
 
 /* get worker/jobs data from gearman server */
