@@ -24,7 +24,7 @@ char * worker_logfile;
 int gearmand_pid;
 int worker_pid;
 extern gearman_worker_st *worker;
-extern gearman_client_st client;
+extern gearman_client_st *client;
 mod_gm_opt_t *mod_gm_opt;
 char * last_result;
 char hostname[GM_SMALLBUFSIZE];
@@ -196,7 +196,8 @@ void *get_results( gearman_job_st *job, void *context, size_t *result_size, gear
 /* create server / clients / worker */
 void create_modules(void);
 void create_modules() {
-    ok(create_client( mod_gm_opt->server_list, &client ) == GM_OK, "created test client");
+    client = create_client(mod_gm_opt->server_list);
+    ok(client != NULL, "created test client");
 
     worker = create_worker( mod_gm_opt->server_list);
     ok(worker != NULL, "created test worker");
