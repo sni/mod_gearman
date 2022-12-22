@@ -23,7 +23,7 @@
 char * worker_logfile;
 int gearmand_pid;
 int worker_pid;
-extern gearman_worker_st worker;
+extern gearman_worker_st *worker;
 extern gearman_client_st client;
 mod_gm_opt_t *mod_gm_opt;
 char * last_result;
@@ -198,10 +198,11 @@ void create_modules(void);
 void create_modules() {
     ok(create_client( mod_gm_opt->server_list, &client ) == GM_OK, "created test client");
 
-    ok(create_worker( mod_gm_opt->server_list, &worker ) == GM_OK, "created test worker");
-    ok(worker_add_function( &worker, GM_DEFAULT_RESULT_QUEUE, get_results ) == GM_OK, "added result worker");
-    ok(worker_add_function( &worker, "dummy", dummy ) == GM_OK, "added dummy worker");
-    gearman_worker_set_timeout(&worker, 1000);
+    worker = create_worker( mod_gm_opt->server_list);
+    ok(worker != NULL, "created test worker");
+    ok(worker_add_function( worker, GM_DEFAULT_RESULT_QUEUE, get_results ) == GM_OK, "added result worker");
+    ok(worker_add_function( worker, "dummy", dummy ) == GM_OK, "added dummy worker");
+    gearman_worker_set_timeout(worker, 1000);
     return;
 }
 
@@ -211,7 +212,7 @@ void do_result_work(int nr) {
     gearman_return_t ret;
     int x = 0;
     for(x=0;x<nr;x++) {
-        ret = gearman_worker_work( &worker );
+        ret = gearman_worker_work( worker );
         ok(ret == GEARMAN_SUCCESS, "got valid job from result queue" );
     }
     return;

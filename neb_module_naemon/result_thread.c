@@ -57,16 +57,12 @@ static struct check_engine mod_gearman_check_engine = {
 /* cleanup and exit this thread */
 static void cancel_worker_thread (void * data) {
 
-    if(data == NULL)
-        return;
-
-    gearman_worker_st *worker = (gearman_worker_st*) data;
-
-    if(worker != NULL)
+    if(data != NULL) {
+        gearman_worker_st **worker = (gearman_worker_st**) data;
         gm_free_worker(worker);
+    }
 
     mod_gm_crypt_deinit(result_ctx);
-
     gm_log( GM_LOG_DEBUG, "worker thread finished\n" );
 
     return;
@@ -84,21 +80,21 @@ void *result_worker( void * data ) {
     pthread_setcancelstate (PTHREAD_CANCEL_ENABLE, NULL);
     pthread_setcanceltype (PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
 
-    set_worker(worker);
-    pthread_cleanup_push(cancel_worker_thread, (void*) worker);
+    set_worker(&worker);
+    pthread_cleanup_push(cancel_worker_thread, (void*) &worker);
 
     result_ctx = mod_gm_crypt_init(mod_gm_opt->crypt_key);
 
     while ( 1 ) {
-        ret = gearman_worker_work( worker );
+        ret = gearman_worker_work(worker);
         if ( ret != GEARMAN_SUCCESS && ret != GEARMAN_WORK_FAIL ) {
             if ( ret != GEARMAN_TIMEOUT)
-                gm_log( GM_LOG_ERROR, "worker error: %s\n", gearman_worker_error( worker ) );
+                gm_log( GM_LOG_ERROR, "worker error: %s\n", gearman_worker_error(worker));
 
-            gm_free_worker(worker);
+            gm_free_worker(&worker);
             sleep(1);
 
-            set_worker(worker);
+            set_worker(&worker);
         }
     }
 
@@ -359,11 +355,14 @@ void *get_results( gearman_job_st *job, __attribute__((__unused__)) void *contex
 
 
 /* get the worker */
-int set_worker( gearman_worker_st *worker ) {
+int set_worker( gearman_worker_st **worker ) {
+    gm_free_worker(worker);
 
-    if(create_worker( mod_gm_opt->server_list, worker ) != GM_OK) {
+    gearman_worker_st *w = create_worker(mod_gm_opt->server_list);
+    if(w == NULL) {
         return GM_ERROR;
     }
+    *worker = w;
 
     if ( mod_gm_opt->result_queue == NULL ) {
         gm_log( GM_LOG_ERROR, "got no result queue!\n" );
@@ -371,16 +370,16 @@ int set_worker( gearman_worker_st *worker ) {
     }
     gm_log( GM_LOG_DEBUG, "started result_worker thread for queue: %s\n", mod_gm_opt->result_queue );
 
-    if(worker_add_function( worker, mod_gm_opt->result_queue, get_results ) != GM_OK) {
+    if(worker_add_function( w, mod_gm_opt->result_queue, get_results ) != GM_OK) {
         return GM_ERROR;
     }
 
     /* add our dummy queue, gearman sometimes forgets the last added queue */
-    worker_add_function( worker, "dummy", dummy);
+    worker_add_function( w, "dummy", dummy);
 
     /* let our worker renew itself every 30 seconds */
     if(mod_gm_opt->server_num > 1)
-        gearman_worker_set_timeout(worker, 30000);
+        gearman_worker_set_timeout(w, 30000);
 
     return GM_OK;
 }

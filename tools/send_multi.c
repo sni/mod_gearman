@@ -30,8 +30,8 @@
 #include <worker_dummy_functions.c>
 
 mod_gm_opt_t *mod_gm_opt;
-gearman_client_st client;
-gearman_client_st client_dup;
+gearman_client_st *client;
+gearman_client_st *client_dup;
 gearman_client_st *current_client;
 gearman_client_st *current_client_dup;
 char hostname[GM_SMALLBUFSIZE];
@@ -62,20 +62,22 @@ int main (int argc, char **argv) {
     }
 
     /* create client */
-    if ( create_client_blocking( mod_gm_opt->server_list, &client ) != GM_OK ) {
-        printf( "send_multi UNKNOWN: cannot start client\n" );
-        exit( STATE_UNKNOWN );
+    client = create_client_blocking(mod_gm_opt->server_list);
+    if(client == NULL ) {
+        printf("send_multi UNKNOWN: cannot start client\n");
+        exit(STATE_UNKNOWN);
     }
-    current_client = &client;
+    current_client = client;
 
     /* create duplicate client */
     if ( mod_gm_opt->dupserver_num > 0 ) {
-        if ( create_client_blocking( mod_gm_opt->dupserver_list, &client_dup ) != GM_OK ) {
-            printf( "send_multi UNKNOWN: cannot start client for duplicate server\n" );
-            exit( STATE_UNKNOWN );
+        client_dup = create_client_blocking(mod_gm_opt->dupserver_list);
+        if(client_dup == NULL) {
+            printf("send_multi UNKNOWN: cannot start client for duplicate server\n");
+            exit(STATE_UNKNOWN);
         }
     }
-    current_client_dup = &client_dup;
+    current_client_dup = client_dup;
 
     /* send result message */
     signal(SIGALRM, alarm_sighandler);
@@ -93,9 +95,9 @@ int main (int argc, char **argv) {
         rc*=-1;
     }
 
-    gm_free_client( &client );
-    if( mod_gm_opt->dupserver_num )
-        gm_free_client( &client_dup );
+    gm_free_client(&client);
+    if(mod_gm_opt->dupserver_num)
+        gm_free_client(&client_dup);
     mod_gm_free_opt(mod_gm_opt);
     mod_gm_crypt_deinit(ctx);
     exit( rc );
@@ -254,7 +256,7 @@ int send_result(EVP_CIPHER_CTX * ctx) {
 
     gm_log( GM_LOG_TRACE, "data:\n%s\n", temp_buffer1);
 
-    if(add_job_to_queue( &client,
+    if(add_job_to_queue(&client,
                          mod_gm_opt->server_list,
                          mod_gm_opt->result_queue,
                          NULL,
@@ -269,7 +271,7 @@ int send_result(EVP_CIPHER_CTX * ctx) {
         gm_log( GM_LOG_TRACE, "send_result_back() finished successfully\n" );
 
         if( mod_gm_opt->dupserver_num ) {
-            if(add_job_to_queue( &client,
+            if(add_job_to_queue(&client_dup,
                                  mod_gm_opt->dupserver_list,
                                  mod_gm_opt->result_queue,
                                  NULL,

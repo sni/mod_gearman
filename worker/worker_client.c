@@ -32,9 +32,9 @@
 #include "epn_utils.h"
 #endif
 
-gearman_worker_st worker;
-gearman_client_st client;
-gearman_client_st client_dup;
+gearman_worker_st *worker = NULL;
+gearman_client_st *client = NULL;
+gearman_client_st *client_dup;
 gearman_client_st *current_client;
 gearman_client_st *current_client_dup;
 gearman_job_st *current_gearman_job;
@@ -83,20 +83,22 @@ void worker_client(int worker_mode, int indx, int shid) {
     }
 
     /* create client */
-    if ( create_client_blocking( mod_gm_opt->server_list, &client ) != GM_OK ) {
+    client = create_client_blocking(mod_gm_opt->server_list);
+    if(client == NULL) {
         gm_log( GM_LOG_ERROR, "cannot start client\n" );
         clean_worker_exit(0);
         _exit( EXIT_FAILURE );
     }
-    current_client = &client;
+    current_client = client;
 
     /* create duplicate client */
     if( mod_gm_opt->dupserver_num ) {
-        if ( create_client_blocking( mod_gm_opt->dupserver_list, &client_dup ) != GM_OK ) {
+        client_dup = create_client_blocking(mod_gm_opt->dupserver_list);
+        if(client_dup == NULL) {
             gm_log( GM_LOG_ERROR, "cannot start client for duplicate server\n" );
             _exit( EXIT_FAILURE );
         }
-        current_client_dup = &client_dup;
+        current_client_dup = client_dup;
     }
 
 #ifdef EMBEDDEDPERL
@@ -125,7 +127,7 @@ void worker_loop() {
             alarm(mod_gm_opt->idle_timeout);
         }
 
-        ret = gearman_worker_work( &worker );
+        ret = gearman_worker_work(worker);
 
         if (mod_gm_opt->max_jobs > 0 && jobs_done >= mod_gm_opt->max_jobs) {
             gm_log( GM_LOG_TRACE, "jobs done: %i -> exiting...\n", jobs_done );
@@ -134,11 +136,11 @@ void worker_loop() {
         }
 
         if ( ret != GEARMAN_SUCCESS ) {
-            gm_log( GM_LOG_ERROR, "worker error: %s\n", gearman_worker_error( &worker ) );
+            gm_log( GM_LOG_ERROR, "worker error: %s\n", gearman_worker_error(worker) );
             gm_free_worker(&worker);
-            gm_free_client( &client );
-            if( mod_gm_opt->dupserver_num )
-                gm_free_client( &client_dup );
+            gm_free_client(&client);
+            if(mod_gm_opt->dupserver_num)
+                gm_free_client(&client_dup);
 
             /* sleep on error to avoid cpu intensive infinite loops */
             sleep(sleep_time_after_error);
@@ -147,12 +149,12 @@ void worker_loop() {
                 sleep_time_after_error = 60;
 
             /* create new connections */
-            set_worker( &worker );
-            create_client_blocking( mod_gm_opt->server_list, &client );
-            current_client = &client;
+            set_worker(&worker);
+            client = create_client_blocking(mod_gm_opt->server_list);
+            current_client = client;
             if( mod_gm_opt->dupserver_num ) {
-                create_client_blocking( mod_gm_opt->dupserver_list, &client_dup );
-                current_client_dup = &client_dup;
+                client_dup = create_client_blocking(mod_gm_opt->dupserver_list);
+                current_client_dup = client_dup;
             }
         }
     }
@@ -441,37 +443,39 @@ void do_exec_job( ) {
 
 
 /* create the worker */
-int set_worker( gearman_worker_st *w ) {
+int set_worker(gearman_worker_st **w) {
     int x = 0;
 
     gm_log( GM_LOG_TRACE, "set_worker()\n" );
 
-    create_worker( mod_gm_opt->server_list, w );
+    *w = create_worker(mod_gm_opt->server_list);
+    if(*w == NULL)
+        return GM_ERROR;
 
     if(worker_run_mode == GM_WORKER_STATUS) {
         /* register status function */
         char status_queue[GM_BUFFERSIZE];
         snprintf(status_queue, GM_BUFFERSIZE, "worker_%s", mod_gm_opt->identifier );
-        worker_add_function( w, status_queue, return_status );
+        worker_add_function(*w, status_queue, return_status);
     }
     else {
         /* normal worker */
         if(mod_gm_opt->hosts == GM_ENABLED)
-            worker_add_function( w, "host", get_job );
+            worker_add_function(*w, "host", get_job);
 
         if(mod_gm_opt->services == GM_ENABLED)
-            worker_add_function( w, "service", get_job );
+            worker_add_function(*w, "service", get_job);
 
         if(mod_gm_opt->events == GM_ENABLED)
-            worker_add_function( w, "eventhandler", get_job );
+            worker_add_function(*w, "eventhandler", get_job);
 
         if(mod_gm_opt->notifications == GM_ENABLED)
-            worker_add_function( w, "notification", get_job );
+            worker_add_function(*w, "notification", get_job);
 
         while ( mod_gm_opt->hostgroups_list[x] != NULL ) {
             char buffer[GM_BUFFERSIZE];
             snprintf( buffer, (sizeof(buffer)-1), "hostgroup_%s", mod_gm_opt->hostgroups_list[x] );
-            worker_add_function( w, buffer, get_job );
+            worker_add_function(*w, buffer, get_job);
             x++;
         }
 
@@ -479,13 +483,13 @@ int set_worker( gearman_worker_st *w ) {
         while ( mod_gm_opt->servicegroups_list[x] != NULL ) {
             char buffer[GM_BUFFERSIZE];
             snprintf( buffer, (sizeof(buffer)-1), "servicegroup_%s", mod_gm_opt->servicegroups_list[x] );
-            worker_add_function( w, buffer, get_job );
+            worker_add_function(*w, buffer, get_job);
             x++;
         }
     }
 
     /* add our dummy queue, gearman sometimes forgets the last added queue */
-    worker_add_function( w, "dummy", dummy);
+    worker_add_function(*w, "dummy", dummy);
 
     return GM_OK;
 }

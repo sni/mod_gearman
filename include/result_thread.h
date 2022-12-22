@@ -32,7 +32,7 @@
 #include <libgearman/gearman.h>
 
 void *result_worker(void *);
-int set_worker( gearman_worker_st *worker );
+int set_worker( gearman_worker_st **worker );
 void *get_results( gearman_job_st *, void *, size_t *, gearman_return_t * );
 #ifdef GM_DEBUG
 void write_debug_file(char ** text);

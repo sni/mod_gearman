@@ -28,6 +28,7 @@
 
 mod_gm_opt_t *mod_gm_opt;
 char hostname[GM_SMALLBUFSIZE];
+gearman_client_st *client = NULL;
 gearman_client_st *current_client;
 gearman_client_st *current_client_dup;
 EVP_CIPHER_CTX * mod_ctx = NULL;
@@ -49,7 +50,6 @@ extern int            log_notifications;
 static objectlist * mod_gm_result_list = NULL;
 static pthread_mutex_t mod_gm_result_list_mutex = PTHREAD_MUTEX_INITIALIZER;
 void *gearman_module_handle=NULL;
-gearman_client_st client;
 
 int result_threads_running;
 pthread_t result_thr[GM_LISTSIZE];
@@ -163,12 +163,12 @@ int nebmodule_init( int flags, char *args, nebmodule *handle ) {
     }
 
     /* create client */
-    if ( create_client( mod_gm_opt->server_list, &client ) != GM_OK ) {
-        current_client = &client;
+    client = create_client(mod_gm_opt->server_list);
+    if(client == NULL) {
         gm_log( GM_LOG_ERROR, "cannot start client\n" );
         return NEB_ERROR;
     }
-    current_client = &client;
+    current_client = client;
 
     /* register callback for process event where everything else starts */
     neb_register_callback( NEBCALLBACK_PROCESS_DATA, gearman_module_handle, 0, handle_process_events );
@@ -467,7 +467,7 @@ static int handle_eventhandler( int event_type, void *data ) {
                 ds->command_line
     );
 
-    if(add_job_to_queue( &client,
+    if(add_job_to_queue(&client,
                          mod_gm_opt->server_list,
                          target_queue,
                          NULL,
@@ -671,7 +671,7 @@ static int handle_notifications( int event_type, void *data ) {
                 svc != NULL ? svc->long_plugin_output : hst->long_plugin_output
     );
 
-    if(add_job_to_queue( &client,
+    if(add_job_to_queue(&client,
                          mod_gm_opt->server_list,
                          target_queue,
                          NULL,
@@ -874,7 +874,7 @@ static int handle_host_check( int event_type, void *data ) {
     if(mod_gm_opt->use_uniq_jobs == GM_ENABLED) {
         make_uniq(uniq, "%s", hst->name);
     }
-    if(add_job_to_queue( &client,
+    if(add_job_to_queue(&client,
                          mod_gm_opt->server_list,
                          target_queue,
                         (mod_gm_opt->use_uniq_jobs == GM_ENABLED ? uniq : NULL),
@@ -1024,7 +1024,7 @@ static int handle_svc_check( int event_type, void *data ) {
     if(mod_gm_opt->use_uniq_jobs == GM_ENABLED) {
         make_uniq(uniq, "%s-%s", svcdata->host_name, svcdata->service_description);
     }
-    if(add_job_to_queue( &client,
+    if(add_job_to_queue(&client,
                          mod_gm_opt->server_list,
                          target_queue,
                         (mod_gm_opt->use_uniq_jobs == GM_ENABLED ? uniq : NULL),
@@ -1383,7 +1383,7 @@ int handle_perfdata(int event_type, void *data) {
         for (i = 0; i < mod_gm_opt->perfdata_queues_num; i++) {
             char *perfdata_queue = mod_gm_opt->perfdata_queues_list[i];
             /* add our job onto the queue */
-            if(add_job_to_queue( &client,
+            if(add_job_to_queue(&client,
                                  mod_gm_opt->server_list,
                                  perfdata_queue,
                                  (mod_gm_opt->perfdata_mode == GM_PERFDATA_OVERWRITE ? uniq : NULL),
@@ -1525,7 +1525,7 @@ int handle_export(int callback_type, void *data) {
         int i = 0;
         for(i = 0; i<mod_gm_opt->exports[callback_type]->elem_number; i++) {
             return_code = mod_gm_opt->exports[callback_type]->return_code[i];
-            add_job_to_queue( &client,
+            add_job_to_queue(&client,
                               mod_gm_opt->server_list,
                               mod_gm_opt->exports[callback_type]->name[i], /* queue name */
                               NULL,

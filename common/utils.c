@@ -1635,7 +1635,7 @@ void send_result_back(gm_job_t * exec_job, EVP_CIPHER_CTX * ctx) {
 
     gm_log( GM_LOG_TRACE, "data:\n%s\n", temp_buffer1);
 
-    if(add_job_to_queue( current_client,
+    if(add_job_to_queue(&current_client,
                          mod_gm_opt->server_list,
                          exec_job->result_queue,
                          NULL,
@@ -1660,7 +1660,7 @@ void send_result_back(gm_job_t * exec_job, EVP_CIPHER_CTX * ctx) {
         }
         strcat(temp_buffer2, temp_buffer1);
         temp_buffer2[result_size]='\x0';
-        if( add_job_to_queue( current_client_dup,
+        if( add_job_to_queue(&current_client_dup,
                               mod_gm_opt->dupserver_list,
                               exec_job->result_queue,
                               NULL,

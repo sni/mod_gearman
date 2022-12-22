@@ -40,28 +40,28 @@ struct timeval total_submit_time;
 extern mod_gm_opt_t *mod_gm_opt;
 
 /* create the gearman worker */
-int create_worker( gm_server_t * server_list[GM_LISTSIZE], gearman_worker_st *worker ) {
+gearman_worker_st * create_worker(gm_server_t * server_list[GM_LISTSIZE]) {
     int x = 0;
-
     gearman_return_t ret;
+    gearman_worker_st *worker;
 
-    gearman_worker_create( worker );
-    if ( worker == NULL ) {
+    worker = gearman_worker_create(NULL);
+    if(worker == NULL) {
         gm_log( GM_LOG_ERROR, "Memory allocation failure on worker creation\n" );
-        return GM_ERROR;
+        return NULL;
     }
 
     while ( server_list[x] != NULL ) {
         ret = gearman_worker_add_server( worker, server_list[x]->host, server_list[x]->port );
         if ( ret != GEARMAN_SUCCESS ) {
             gm_log( GM_LOG_ERROR, "worker error: %s\n", gearman_worker_error( worker ) );
-            return GM_ERROR;
+            return NULL;
         }
         x++;
     }
     assert(x != 0);
 
-    return GM_OK;
+    return worker;
 }
 
 
@@ -78,32 +78,35 @@ int worker_add_function( gearman_worker_st * worker, char * queue, gearman_worke
 }
 
 /* create the gearman client with non-blocking io */
-int create_client( gm_server_t * server_list[GM_LISTSIZE], gearman_client_st *client ) {
-    if(create_client_blocking(server_list,client ) != GM_OK) {
-        return GM_ERROR;
+gearman_client_st * create_client( gm_server_t * server_list[GM_LISTSIZE]) {
+    gearman_client_st * client = NULL;
+    client = create_client_blocking(server_list);
+    if(client == NULL) {
+        return NULL;
     }
     gearman_client_add_options( client, GEARMAN_CLIENT_NON_BLOCKING|GEARMAN_CLIENT_FREE_TASKS|GEARMAN_CLIENT_UNBUFFERED_RESULT);
-    return GM_OK;
+    return client;
 }
 
 /* create the gearman client with blocking io */
-int create_client_blocking( gm_server_t * server_list[GM_LISTSIZE], gearman_client_st *client ) {
+gearman_client_st * create_client_blocking( gm_server_t * server_list[GM_LISTSIZE]) {
+    gearman_client_st * client = NULL;
     gearman_return_t ret;
     int x = 0;
 
     gm_log( GM_LOG_TRACE, "create_client()\n" );
 
     client = gearman_client_create(client);
-    if ( client == NULL ) {
+    if(client == NULL) {
         gm_log( GM_LOG_ERROR, "Memory allocation failure on client creation\n" );
-        return GM_ERROR;
+        return NULL;
     }
 
     while ( server_list[x] != NULL ) {
         ret = gearman_client_add_server( client, server_list[x]->host, server_list[x]->port );
         if ( ret != GEARMAN_SUCCESS ) {
             gm_log( GM_LOG_ERROR, "client error: %s\n", gearman_client_error( client ) );
-            return GM_ERROR;
+            return NULL;
         }
         x++;
     }
@@ -113,12 +116,12 @@ int create_client_blocking( gm_server_t * server_list[GM_LISTSIZE], gearman_clie
         gearman_client_set_timeout( client, mod_gm_opt->gearman_connection_timeout );
     }
 
-    return GM_OK;
+    return client;
 }
 
 
 /* create a task and send it */
-int add_job_to_queue( gearman_client_st *client, gm_server_t * server_list[GM_LISTSIZE], char * queue, char * uniq, char * data, int priority, int retries, int transport_mode, EVP_CIPHER_CTX * ctx, int async, int log_stats_interval) {
+int add_job_to_queue(gearman_client_st **client, gm_server_t * server_list[GM_LISTSIZE], char * queue, char * uniq, char * data, int priority, int retries, int transport_mode, EVP_CIPHER_CTX * ctx, int async, int log_stats_interval) {
     gearman_job_handle_t job_handle;
     gearman_return_t rc;
     char * crypted_data;
@@ -147,13 +150,13 @@ int add_job_to_queue( gearman_client_st *client, gm_server_t * server_list[GM_LI
     gm_log( GM_LOG_TRACE, "%d +++>\n%s\n<+++\n", size, crypted_data );
 
     if( priority == GM_JOB_PRIO_LOW ) {
-        rc = gearman_client_do_low_background(client, queue, uniq, ( void * )crypted_data, ( size_t )size, job_handle);
+        rc = gearman_client_do_low_background(*client, queue, uniq, ( void * )crypted_data, ( size_t )size, job_handle);
     }
     else if( priority == GM_JOB_PRIO_NORMAL ) {
-        rc = gearman_client_do_background(client, queue, uniq, ( void * )crypted_data, ( size_t )size, job_handle);
+        rc = gearman_client_do_background(*client, queue, uniq, ( void * )crypted_data, ( size_t )size, job_handle);
     }
     else if( priority == GM_JOB_PRIO_HIGH ) {
-        rc = gearman_client_do_high_background(client, queue, uniq, ( void * )crypted_data, ( size_t )size, job_handle);
+        rc = gearman_client_do_high_background(*client, queue, uniq, ( void * )crypted_data, ( size_t )size, job_handle);
     }
     else {
         gm_log( GM_LOG_ERROR, "add_job_to_queue() wrong priority: %d\n", priority );
@@ -201,22 +204,22 @@ int add_job_to_queue( gearman_client_st *client, gm_server_t * server_list[GM_LI
             /* only log the first error, otherwise we would fill the log very quickly */
             if( mod_gm_con_errors == 0 ) {
                 gettimeofday(&mod_gm_error_time,NULL);
-                gm_log( GM_LOG_ERROR, "sending job to gearmand failed: %s\n", gearman_client_error(client) );
+                gm_log( GM_LOG_ERROR, "sending job to gearmand failed: %s\n", gearman_client_error(*client) );
             }
             /* or every minute to give an update */
             else if( t2.tv_sec >= mod_gm_error_time.tv_sec + 60) {
                 gettimeofday(&mod_gm_error_time,NULL);
-                gm_log( GM_LOG_ERROR, "sending job to gearmand failed: %s (%i lost jobs so far)\n", gearman_client_error(client), mod_gm_con_errors );
+                gm_log( GM_LOG_ERROR, "sending job to gearmand failed: %s (%i lost jobs so far)\n", gearman_client_error(*client), mod_gm_con_errors );
             }
             mod_gm_con_errors++;
         }
 
         /* recreate client, otherwise gearman sigsegvs */
-        gm_free_client( client );
+        gm_free_client(client);
         if(async) {
-            create_client( server_list, client );
+            *client = create_client(server_list);
         } else {
-            create_client_blocking( server_list, client );
+            *client = create_client_blocking(server_list);
         }
 
         /* retry as long as we have retries */
@@ -228,7 +231,7 @@ int add_job_to_queue( gearman_client_st *client, gm_server_t * server_list[GM_LI
             } else {
                 gm_log( GM_LOG_TRACE, "add_job_to_queue() retrying... %d\n", retries );
             }
-            ret = add_job_to_queue( client, server_list, queue, uniq, data, priority, retries, transport_mode, ctx, async, log_stats_interval);
+            ret = add_job_to_queue(client, server_list, queue, uniq, data, priority, retries, transport_mode, ctx, async, log_stats_interval);
             return(ret);
         }
         /* no more retries... */
@@ -259,19 +262,26 @@ void *dummy( gearman_job_st *job, void *context, size_t *result_size, gearman_re
 }
 
 /* free client structure */
-void gm_free_client(gearman_client_st *client) {
-    gearman_client_remove_servers(client);
-    gearman_client_free(client);
+void gm_free_client(gearman_client_st **client) {
+    if(client == NULL)
+        return;
+    if(*client == NULL)
+        return;
+    gearman_client_remove_servers(*client);
+    gearman_client_free(*client);
+    *client = NULL;
 }
 
 /* free worker structure */
-void gm_free_worker(gearman_worker_st *worker) {
+void gm_free_worker(gearman_worker_st **worker) {
     if(worker == NULL)
         return;
-    gearman_worker_unregister_all(worker);
-    gearman_worker_remove_servers(worker);
-    gearman_worker_free(worker);
-    worker = NULL;
+    if(*worker == NULL)
+        return;
+    gearman_worker_unregister_all(*worker);
+    gearman_worker_remove_servers(*worker);
+    gearman_worker_free(*worker);
+    *worker = NULL;
 }
 
 /* get worker/jobs data from gearman server */

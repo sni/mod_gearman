@@ -29,6 +29,7 @@
 #include <worker_dummy_functions.c>
 
 mod_gm_opt_t *mod_gm_opt;
+gearman_client_st *client;
 gearman_client_st *current_client;
 gearman_client_st *current_client_dup;
 char hostname[GM_SMALLBUFSIZE];
@@ -47,9 +48,6 @@ int send_async           = 0;
 
 gm_server_t  * server_list[GM_LISTSIZE];
 int server_list_num = 0;
-
-gearman_client_st client;
-
 
 /* work starts here */
 int main (int argc, char **argv) {
@@ -339,19 +337,20 @@ int check_worker(char * queue, char * to_send, char * expect) {
     }
 
     /* create client */
-    if ( create_client_blocking( server_list, &client ) != GM_OK ) {
-        current_client = &client;
+    client = create_client_blocking(server_list);
+    if(client == NULL) {
+        current_client = client;
         printf("%s UNKNOWN - cannot create gearman client\n", PLUGIN_NAME);
-        return( STATE_UNKNOWN );
+        return(STATE_UNKNOWN);
     }
-    current_client = &client;
-    gearman_client_set_timeout(&client, (opt_timeout-1)*1000/server_list_num);
+    current_client = client;
+    gearman_client_set_timeout(client, (opt_timeout-1)*1000/server_list_num);
 
     while (1) {
         if (send_async) {
             result = gm_strdup("sending background job succeded");
             job_handle = gm_malloc(GEARMAN_JOB_HANDLE_SIZE * sizeof(char));
-            ret= gearman_client_do_high_background( &client,
+            ret= gearman_client_do_high_background( client,
                                                     queue,
                                                     unique_job_id,
                                                     (void *)to_send,
@@ -360,7 +359,7 @@ int check_worker(char * queue, char * to_send, char * expect) {
             free(job_handle);
         }
         else {
-            result= (char *)gearman_client_do_high( &client,
+            result= (char *)gearman_client_do_high( client,
                                                     queue,
                                                     unique_job_id,
                                                     (void *)to_send,
@@ -370,12 +369,12 @@ int check_worker(char * queue, char * to_send, char * expect) {
         }
 
         if(opt_verbose) {
-            fprintf(stderr, "code:   %s\n", gearman_client_error(&client));
+            fprintf(stderr, "code:   %s\n", gearman_client_error(client));
             fprintf(stderr, "result: %s\n", result);
         }
 
         if (ret == GEARMAN_IO_WAIT) {
-            ret = gearman_client_wait(&client);
+            ret = gearman_client_wait(client);
         }
 
         if (ret == GEARMAN_WORK_DATA) {
@@ -389,7 +388,7 @@ int check_worker(char * queue, char * to_send, char * expect) {
             gm_free_client(&client);
         }
         else {
-            printf("%s CRITICAL - job failed: %s\n", PLUGIN_NAME, gearman_client_error(&client));
+            printf("%s CRITICAL - job failed: %s\n", PLUGIN_NAME, gearman_client_error(client));
             gm_free_client(&client);
             return( STATE_CRITICAL );
         }
