@@ -1,6 +1,6 @@
 This file documents the revision history for mod_gearman.
 
-next:
+5.0.0 Wed Jan 11 11:49:36 CET 2023
           - switch to openssl for all aes/base64 and digest functions
 
 4.0.3 Wed Aug 24 10:48:50 CEST 2022
