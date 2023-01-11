@@ -146,20 +146,22 @@ char *mod_gm_hexsum(const char *text) {
 
 int base64_decode(const char *source, int sourcelen, unsigned char * target) {
     int n = EVP_DecodeBlock(target, (const unsigned char*)source, sourcelen);
-    if(n != -1) {
-        return(n);
+    if(n == -1) {
+        fprintf(stderr, "base64 decode failed: ");
+        ERR_print_errors_fp(stderr);
+        fprintf(stderr, "\n");
+        return(-1);
     }
-    fprintf(stderr, "EVP_DecodeBlock failed\n");
-    ERR_print_errors_fp(stderr);
-    return(-1);
+    return(n);
 }
 
 unsigned char * base64_encode(const unsigned char *source, size_t sourcelen) {
     unsigned char * target = gm_malloc(sizeof(char) * ((sourcelen/3)*4)+5);
-    if(EVP_EncodeBlock(target, source, sourcelen)) {
-        return(target);
+    if(!EVP_EncodeBlock(target, source, sourcelen)) {
+        fprintf(stderr, "base64 encode failed: ");
+        ERR_print_errors_fp(stderr);
+        fprintf(stderr, "\n");
+        return(NULL);
     }
-    fprintf(stderr, "EVP_EncodeBlock failed\n");
-    ERR_print_errors_fp(stderr);
-    return(NULL);
+    return(target);
 }
