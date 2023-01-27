@@ -162,7 +162,6 @@ int mod_gm_encrypt(EVP_CIPHER_CTX * ctx, char ** ciphertext, const char * plaint
 
 /* decrypt text with given key */
 int mod_gm_decrypt(EVP_CIPHER_CTX * ctx, char ** plaintext, const char * ciphertext, size_t ciphertext_size, int mode) {
-    char *test;
     int bsize;
     size_t max_size = ((ciphertext_size/4)*3)+5;
     unsigned char * buffer = gm_malloc(sizeof(char) * max_size);
@@ -174,8 +173,7 @@ int mod_gm_decrypt(EVP_CIPHER_CTX * ctx, char ** plaintext, const char * ciphert
         gm_log( GM_LOG_ERROR, "failed to decode base64 string.\n" );
         return -1;
     }
-    test = gm_strndup((char *)buffer, 5);
-    if(mode == GM_ENCODE_AND_ENCRYPT || (mode == GM_ENCODE_ACCEPT_ALL && strcmp(test, "type="))) {
+    if(mode == GM_ENCODE_AND_ENCRYPT || (mode == GM_ENCODE_ACCEPT_ALL && !strncmp(buffer, "type=", 5))) {
         /* decrypt if it is no plaintext already. */
         /* And if this is base64 encoded encrypted data, it is a multiple of blocksize, strip off
            trailing artefacts.
@@ -183,7 +181,6 @@ int mod_gm_decrypt(EVP_CIPHER_CTX * ctx, char ** plaintext, const char * ciphert
         bsize = bsize - bsize%BLOCKSIZE;
         *plaintext = gm_malloc(sizeof(char) * max_size);
         if(1 != mod_gm_aes_decrypt(ctx, (unsigned char*)*plaintext, buffer, bsize)) {
-            gm_free(test);
             gm_free(buffer);
             return -1;
         }
@@ -192,7 +189,6 @@ int mod_gm_decrypt(EVP_CIPHER_CTX * ctx, char ** plaintext, const char * ciphert
         buffer[bsize] = '\x0';
         *plaintext = gm_strndup((char*)buffer, bsize);
     }
-    gm_free(test);
     gm_free(buffer);
     return 1;
 }
