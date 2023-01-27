@@ -133,8 +133,6 @@ int mod_gm_aes_decrypt(EVP_CIPHER_CTX * ctx, unsigned char * plaintext, unsigned
         return -1;
     }
 
-    plaintext[len-1] = '\x0';
-
     return 1;
 }
 

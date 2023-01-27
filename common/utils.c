@@ -184,6 +184,7 @@ int mod_gm_decrypt(EVP_CIPHER_CTX * ctx, char ** plaintext, const char * ciphert
             gm_free(buffer);
             return -1;
         }
+        (*plaintext)[max_size-1] = '\x0';
     }
     else  {
         buffer[bsize] = '\x0';
