@@ -161,14 +161,13 @@ int mod_gm_encrypt(EVP_CIPHER_CTX * ctx, char ** ciphertext, const char * plaint
 
 
 /* decrypt text with given key */
-int mod_gm_decrypt(EVP_CIPHER_CTX * ctx, char ** plaintext, const char * ciphertext, int mode) {
+int mod_gm_decrypt(EVP_CIPHER_CTX * ctx, char ** plaintext, const char * ciphertext, size_t ciphertext_size, int mode) {
     char *test;
     int bsize;
-    int input_size = strlen(ciphertext);
-    unsigned char * buffer = gm_malloc(sizeof(char) * ((input_size/4)*3)+5);
+    unsigned char * buffer = gm_malloc(sizeof(char) * ((ciphertext_size/4)*3)+5);
 
     /* first decode from base64 */
-    bsize = base64_decode(ciphertext, input_size, buffer);
+    bsize = base64_decode(ciphertext, ciphertext_size, buffer);
     if(bsize == -1) {
         free(buffer);
         gm_log( GM_LOG_ERROR, "failed to decode base64 string.\n" );

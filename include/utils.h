@@ -109,11 +109,12 @@ int mod_gm_encrypt(EVP_CIPHER_CTX * ctx, char ** ciphertext, const char * plaint
  * @param[in] ctx - openssl context
  * @param[out] plaintext - pointer to target plaintext text
  * @param[in] ciphertext - source text to decrypt
+ * @param[in] ciphertext_size - size of ciphertext
  * @param[in] mode - do only base64 decoding or decryption too
  *
  * @return 1 on success
  */
-int mod_gm_decrypt(EVP_CIPHER_CTX * ctx, char ** plaintext, const char * ciphertext, int mode);
+int mod_gm_decrypt(EVP_CIPHER_CTX * ctx, char ** plaintext, const char * ciphertext, size_t ciphertext_size, int mode);
 
 /**
  * file_exists

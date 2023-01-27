@@ -93,7 +93,7 @@ void test_eventhandler(int transportmode) {
     char * testdata = strdup("type=eventhandler\ncommand_line=/bin/hostname\n\n\n");
     int rt = add_job_to_queue(&client, mod_gm_opt->server_list, "eventhandler", NULL, testdata, GM_JOB_PRIO_NORMAL, 1, transportmode, test_ctx, 0, 1);
     ok(rt == GM_OK, "eventhandler sent successfully in mode %s", transportmode == GM_ENCODE_ONLY ? "base64" : "aes256");
-    free(testdata);
+    gm_free(testdata);
     return;
 }
 
@@ -156,8 +156,8 @@ void send_big_jobs(int transportmode) {
 /* put back the result into the core */
 void *get_results( gearman_job_st *job, void *context, size_t *result_size, gearman_return_t *ret_ptr );
 void *get_results( gearman_job_st *job, void *context, size_t *result_size, gearman_return_t *ret_ptr ) {
-    int wsize;
-    char workload[GM_BUFFERSIZE];
+    size_t wsize;
+    const char *workload;
     char *decrypted_data;
 
     /* contect is unused */
@@ -171,12 +171,15 @@ void *get_results( gearman_job_st *job, void *context, size_t *result_size, gear
 
     /* get the data */
     wsize = gearman_job_workload_size(job);
-    strncpy(workload, (const char*)gearman_job_workload(job), wsize);
-    workload[wsize] = '\x0';
+    workload = (const char *)gearman_job_workload(job);
+    if(workload == NULL) {
+        *ret_ptr = GEARMAN_WORK_FAIL;
+        return NULL;
+    }
 
     /* decrypt data */
-    decrypted_data   = malloc(GM_BUFFERSIZE);
-    mod_gm_decrypt(test_ctx, &decrypted_data, workload, mod_gm_opt->transportmode);
+    decrypted_data = gm_malloc(wsize*2);
+    mod_gm_decrypt(test_ctx, &decrypted_data, workload, wsize, mod_gm_opt->transportmode);
 
     if(decrypted_data == NULL) {
         *ret_ptr = GEARMAN_WORK_FAIL;
@@ -187,7 +190,7 @@ void *get_results( gearman_job_st *job, void *context, size_t *result_size, gear
     like(decrypted_data, "output=", "output contains output");
 
     if(last_result != NULL)
-        free(last_result);
+        gm_free(last_result);
     last_result = decrypted_data;
 
     return NULL;
@@ -265,7 +268,7 @@ void check_logfile(char *logfile, int mode) {
         ok(TRUE, "not removed temporary logfile due to errors: %s", logfile);
     }
 
-    free(line);
+    gm_free(line);
     return;
 }
 
@@ -291,8 +294,8 @@ void diag_queues() {
             diag("%-35s %-9d %-9d\n", stats->function[x]->queue, stats->function[x]->waiting, stats->function[x]->running);
         }
     }
-    free(message);
-    free(version);
+    gm_free(message);
+    gm_free(version);
     free_mod_gm_status_server(stats);
     return;
 }
@@ -323,8 +326,8 @@ void wait_for_empty_queue(char *queue, int timeout) {
                 }
             }
         }
-        free(message);
-        free(version);
+        gm_free(message);
+        gm_free(version);
         free_mod_gm_status_server(stats);
         usleep(100000);
     }
@@ -344,7 +347,7 @@ char* my_tmpfile() {
     int fd = -1;
     if ((fd = mkstemp(sfn)) == -1) {
         fprintf(stderr, "%s: %s\n", sfn, strerror(errno));
-        free(sfn);
+        gm_free(sfn);
         return (NULL);
     }
     close(fd);
@@ -367,8 +370,8 @@ void check_no_worker_running(char* logfile) {
     if(rrc != 1) {
         check_logfile(logfile, 3);
     }
-    free(result);
-    free(error);
+    gm_free(result);
+    gm_free(error);
     return;
 }
 
@@ -546,8 +549,8 @@ int main (int argc, char **argv, char **env) {
     rrc = real_exit_code(run_check(cmd, &result, &error));
     cmp_ok(rrc, "==", 0, "cmd '%s' returned rc %d", cmd, rrc);
     like(result, "^\\s*$", "output from ./send_gearman");
-    free(result);
-    free(error);
+    gm_free(result);
+    gm_free(error);
 
     /*****************************************
      * send_multi
@@ -556,8 +559,8 @@ int main (int argc, char **argv, char **env) {
     rrc = real_exit_code(run_check(cmd, &result, &error));
     cmp_ok(rrc, "==", 0, "cmd '%s' returned rc %d", cmd, rrc);
     like(result, "send_multi OK: 2 check_multi child checks submitted", "output from ./send_multi");
-    free(result);
-    free(error);
+    gm_free(result);
+    gm_free(error);
 
     /*****************************************
      * check_gearman
@@ -568,8 +571,8 @@ int main (int argc, char **argv, char **env) {
     like(result, "check_gearman OK - sending background job succeded", "output from ./check_gearman");
 
     /* cleanup */
-    free(result);
-    free(error);
+    gm_free(result);
+    gm_free(error);
     gm_free_client(&client);
     gm_free_worker(&worker);
 
@@ -594,8 +597,8 @@ int main (int argc, char **argv, char **env) {
     deinit_embedded_perl(0);
 #endif
 
-    free(last_result);
-    free(worker_logfile);
+    gm_free(last_result);
+    gm_free(worker_logfile);
     end_skip;
     mod_gm_free_opt(mod_gm_opt);
     return exit_status();

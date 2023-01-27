@@ -166,14 +166,15 @@ void worker_loop() {
 /* get a job */
 void *get_job( gearman_job_st *job, __attribute__((__unused__)) void *context, size_t *result_size, gearman_return_t *ret_ptr ) {
     sigset_t block_mask;
-    int wsize, valid_lines;
-    char * workload;
+    int valid_lines;
+    const char * workload;
     char * decrypted_data;
     char * decrypted_data_c;
     char * decrypted_orig;
     char *ptr;
     int is_notification_job = FALSE;
     int is_eventhandler_job = FALSE;
+    size_t wsize = 0;
 
     /* reset timeout for now, will be set befor execution again */
     alarm(0);
@@ -200,18 +201,19 @@ void *get_job( gearman_job_st *job, __attribute__((__unused__)) void *context, s
     /* get the data */
     current_gearman_job = job;
     wsize = gearman_job_workload_size(job);
-    workload = gm_malloc(sizeof(char*)*wsize+1);
-    strncpy(workload, (const char*)gearman_job_workload(job), wsize);
-    workload[wsize] = '\0';
-    gm_log( GM_LOG_TRACE, "got new job %s\n", gearman_job_handle( job ) );
-    gm_log( GM_LOG_TRACE, "%zu +++>\n%s\n<+++\n", strlen(workload), workload );
+    workload = (const char *)gearman_job_workload(job);
+    if(workload == NULL) {
+        *ret_ptr = GEARMAN_WORK_FAIL;
+        return NULL;
+    }
+    gm_log( GM_LOG_TRACE, "got new job %s\n", gearman_job_handle(job));
+    gm_log( GM_LOG_TRACE, "%zu +++>\n%.*s\n<+++\n", wsize, wsize, workload);
 
     /* decrypt data */
     decrypted_data = gm_malloc(wsize*2);
     decrypted_data_c = decrypted_data;
-    mod_gm_decrypt(worker_ctx, &decrypted_data, workload, mod_gm_opt->transportmode);
+    mod_gm_decrypt(worker_ctx, &decrypted_data, workload, wsize, mod_gm_opt->transportmode);
     decrypted_orig = gm_strdup(decrypted_data);
-    free(workload);
 
     if(decrypted_data == NULL) {
         *ret_ptr = GEARMAN_WORK_FAIL;
@@ -620,19 +622,22 @@ void clean_worker_exit(int sig) {
 
 /* answer status querys */
 void *return_status( gearman_job_st *job, __attribute__((__unused__)) void *context, size_t *result_size, gearman_return_t *ret_ptr ) {
-    int wsize;
-    char workload[GM_BUFFERSIZE];
+    size_t wsize = 0;
+    const char *workload;
     int *shm;
-    char * result;
+    char * result = NULL;
 
     gm_log( GM_LOG_TRACE, "return_status()\n" );
 
     /* get the data */
     wsize = gearman_job_workload_size(job);
-    strncpy(workload, (const char*)gearman_job_workload(job), wsize);
-    workload[wsize] = '\0';
-    gm_log( GM_LOG_TRACE, "got status job %s\n", gearman_job_handle( job ) );
-    gm_log( GM_LOG_TRACE, "%zu +++>\n%s\n<+++\n", strlen(workload), workload );
+    workload = (const char *)gearman_job_workload(job);
+    if(workload == NULL) {
+        *ret_ptr = GEARMAN_WORK_FAIL;
+        return NULL;
+    }
+    gm_log( GM_LOG_TRACE, "got status job %s\n", gearman_job_handle(job));
+    gm_log( GM_LOG_TRACE, "%zu +++>\n%.*s\n<+++\n", wsize, wsize, workload);
 
     /* set result pointer to success */
     *ret_ptr= GEARMAN_SUCCESS;
@@ -650,7 +655,7 @@ void *return_status( gearman_job_st *job, __attribute__((__unused__)) void *cont
         perror("shmat");
         *result_size = 0;
         alarm(0);
-        free(result);
+        gm_free(result);
         return NULL;
     }
 

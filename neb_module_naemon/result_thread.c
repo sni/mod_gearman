@@ -104,8 +104,8 @@ void *result_worker( void * data ) {
 
 /* put back the result into the core */
 void *get_results( gearman_job_st *job, __attribute__((__unused__)) void *context, size_t *result_size, gearman_return_t *ret_ptr ) {
-    int wsize, transportmode;
-    char *workload;
+    int transportmode;
+    const char *workload;
     char *decrypted_data;
     char *decrypted_data_c;
     struct timeval now, core_start_time;
@@ -113,6 +113,7 @@ void *get_results( gearman_job_st *job, __attribute__((__unused__)) void *contex
     int active_check = TRUE;
     char *ptr;
     double now_f, core_starttime_f, starttime_f, finishtime_f, exec_time, latency;
+    size_t wsize = 0;
 
     /* for calculating real latency */
     gettimeofday(&now,NULL);
@@ -125,11 +126,13 @@ void *get_results( gearman_job_st *job, __attribute__((__unused__)) void *contex
 
     /* get the data */
     wsize = gearman_job_workload_size(job);
-    workload = gm_malloc(sizeof(char*)*wsize+1);
-    strncpy(workload, (const char*)gearman_job_workload(job), wsize);
-    workload[wsize] = '\x0';
-    gm_log( GM_LOG_TRACE, "got result %s\n", gearman_job_handle( job ));
-    gm_log( GM_LOG_TRACE, "%zu +++>\n%s\n<+++\n", strlen(workload), workload );
+    workload = (const char *)gearman_job_workload(job);
+    if(workload == NULL) {
+        *ret_ptr = GEARMAN_WORK_FAIL;
+        return NULL;
+    }
+    gm_log( GM_LOG_TRACE, "got result %s\n", gearman_job_handle(job));
+    gm_log( GM_LOG_TRACE, "%zu +++>\n%.*s\n<+++\n", wsize, wsize, workload );
 
     /* decrypt data */
     decrypted_data   = gm_malloc(wsize*2);
@@ -140,7 +143,7 @@ void *get_results( gearman_job_st *job, __attribute__((__unused__)) void *contex
     } else {
         transportmode = mod_gm_opt->transportmode;
     }
-    mod_gm_decrypt(result_ctx, &decrypted_data, workload, transportmode);
+    mod_gm_decrypt(result_ctx, &decrypted_data, workload, wsize, transportmode);
 
     if(!strcmp(workload, "check")) {
         char * result = gm_malloc(GM_BUFFERSIZE);
@@ -165,7 +168,6 @@ void *get_results( gearman_job_st *job, __attribute__((__unused__)) void *contex
         return NULL;
     }
     gm_log( GM_LOG_TRACE, "%zu --->\n%s\n<---\n", strlen(decrypted_data), decrypted_data );
-    free(workload);
 
     /*
      * save this result to a file, so when nagios crashes,
@@ -187,7 +189,7 @@ void *get_results( gearman_job_st *job, __attribute__((__unused__)) void *contex
     /* naemon will free it after processing */
     if ( ( chk_result = ( check_result * )gm_malloc( sizeof *chk_result ) ) == 0 ) {
         *ret_ptr = GEARMAN_WORK_FAIL;
-        free(decrypted_data);
+        gm_free(decrypted_data_c);
         return NULL;
     }
     init_check_result(chk_result);
@@ -222,8 +224,8 @@ void *get_results( gearman_job_st *job, __attribute__((__unused__)) void *contex
                 else
                     chk_result->output = gm_strdup( tmp_backslash );
 
-                free(tmp_newline);
-                free(tmp_backslash);
+                gm_free(tmp_newline);
+                gm_free(tmp_backslash);
             }
         }
 
@@ -324,7 +326,7 @@ void *get_results( gearman_job_st *job, __attribute__((__unused__)) void *contex
     /* reset pointer */
     chk_result = NULL;
 
-    free(decrypted_data_c);
+    gm_free(decrypted_data_c);
 
     return NULL;
 }
