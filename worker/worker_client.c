@@ -168,9 +168,8 @@ void *get_job( gearman_job_st *job, __attribute__((__unused__)) void *context, s
     sigset_t block_mask;
     int valid_lines;
     const char * workload;
-    char * decrypted_data;
+    char * decrypted_data = NULL;
     char * decrypted_data_c;
-    char * decrypted_orig;
     char *ptr;
     int is_notification_job = FALSE;
     int is_eventhandler_job = FALSE;
@@ -210,14 +209,11 @@ void *get_job( gearman_job_st *job, __attribute__((__unused__)) void *context, s
     gm_log( GM_LOG_TRACE, "%zu +++>\n%.*s\n<+++\n", wsize, wsize, workload);
 
     /* decrypt data */
-    decrypted_data = gm_malloc(wsize*2);
-    decrypted_data_c = decrypted_data;
     mod_gm_decrypt(worker_ctx, &decrypted_data, workload, wsize, mod_gm_opt->transportmode);
-    decrypted_orig = gm_strdup(decrypted_data);
+    decrypted_data_c = decrypted_data;
 
     if(decrypted_data == NULL) {
         *ret_ptr = GEARMAN_WORK_FAIL;
-        free(decrypted_orig);
         return NULL;
     }
     gm_log( GM_LOG_TRACE, "%zu --->\n%s\n<---\n", strlen(decrypted_data), decrypted_data );
@@ -286,11 +282,6 @@ void *get_job( gearman_job_st *job, __attribute__((__unused__)) void *context, s
         }
     }
 
-#ifdef GM_DEBUG
-    if(exec_job->next_check.tv_sec < 10000)
-        write_debug_file(&decrypted_orig);
-#endif
-
     if(exec_job->type != NULL && !strcmp( exec_job->type, "notification")) {
         is_notification_job = TRUE;
     }
@@ -341,7 +332,6 @@ void *get_job( gearman_job_st *job, __attribute__((__unused__)) void *context, s
         gm_log( GM_LOG_ERROR, "output: %s\n", exec_job->output );
     }
 
-    free(decrypted_orig);
     free(decrypted_data_c);
     free_job(exec_job);
 

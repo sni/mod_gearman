@@ -158,7 +158,7 @@ void *get_results( gearman_job_st *job, void *context, size_t *result_size, gear
 void *get_results( gearman_job_st *job, void *context, size_t *result_size, gearman_return_t *ret_ptr ) {
     size_t wsize;
     const char *workload;
-    char *decrypted_data;
+    char *decrypted_data = NULL;
 
     /* contect is unused */
     context = context;
@@ -178,7 +178,6 @@ void *get_results( gearman_job_st *job, void *context, size_t *result_size, gear
     }
 
     /* decrypt data */
-    decrypted_data = gm_malloc(wsize*2);
     mod_gm_decrypt(test_ctx, &decrypted_data, workload, wsize, mod_gm_opt->transportmode);
 
     if(decrypted_data == NULL) {

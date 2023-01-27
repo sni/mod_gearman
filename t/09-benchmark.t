@@ -73,7 +73,7 @@ exit(0);
 #################################################
 sub wait_for_empty_queue {
     my $queue = shift;
-    open(my $ph, "./gearman_top -b -i 0.1 -H localhost:$TESTPORT |") or die("cannot launch gearman_top: $!");
+    open(my $ph, "./gearman_top -b -i 0.05 -H localhost:$TESTPORT |") or die("cannot launch gearman_top: $!");
     while(my $line = <$ph>) {
         if($line =~ m/^\s*$queue\s*\|\s*(\d+)\s*\|\s*(\d+)\s*\|\s*(\d+)/mx) {
             my $worker  = $1;

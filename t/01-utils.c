@@ -118,7 +118,7 @@ int main(void) {
         is(base64, base64_tests[i].base64, "base64 encoded string");
 
         /* decode base64 */
-        char * debase64 = gm_malloc(GM_BUFFERSIZE);
+        char * debase64 = NULL;
         mod_gm_decrypt(NULL, &debase64, base64, strlen(base64), GM_ENCODE_ONLY);
         is(debase64, base64_tests[i].plaintext, "decoded base64 text is equal to source text");
         free(debase64);
@@ -150,8 +150,8 @@ int main(void) {
         is(encrypted, encryption_tests[i].base64, "encrypted string");
 
         /* decrypt */
-        char * decrypted = gm_malloc(GM_BUFFERSIZE);
-        mod_gm_decrypt(ctx, &decrypted, encrypted, strlen(encrypted), GM_ENCODE_AND_ENCRYPT); // TODO: move malloc to aes
+        char * decrypted = NULL;
+        mod_gm_decrypt(ctx, &decrypted, encrypted, strlen(encrypted), GM_ENCODE_AND_ENCRYPT);
         is(decrypted, encryption_tests[i].plaintext, "decrypted text");
         cmp_ok(strlen(encryption_tests[i].plaintext), "==", strlen(decrypted), "decryption string len");
         free(decrypted);

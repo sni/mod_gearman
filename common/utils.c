@@ -60,7 +60,7 @@ char *gm_escape_newlines(char *rawbuf, int trimmed) {
 
     /* allocate enough memory to escape all chars if necessary */
     if((newbuf=gm_malloc((strlen(tmpbuf)*2)+1))==NULL) {
-        free(tmpbuf);
+        gm_free(tmpbuf);
         return NULL;
     }
 
@@ -84,7 +84,7 @@ char *gm_escape_newlines(char *rawbuf, int trimmed) {
 
     newbuf[y]='\x0';
 
-    free(tmpbuf_dup);
+    gm_free(tmpbuf_dup);
 
     return newbuf;
 }
@@ -143,7 +143,7 @@ int mod_gm_encrypt(EVP_CIPHER_CTX * ctx, char ** ciphertext, const char * plaint
         crypted = gm_malloc(sizeof(char) * (size + (2*BLOCKSIZE)));
         size = mod_gm_aes_encrypt(ctx, crypted, (const unsigned char*)plaintext, size);
         if(size <= 0) {
-            free(crypted);
+            gm_free(crypted);
             return -1;
         }
     }
@@ -154,7 +154,7 @@ int mod_gm_encrypt(EVP_CIPHER_CTX * ctx, char ** ciphertext, const char * plaint
 
     /* now encode in base64 */
     base64 = base64_encode(crypted, size);
-    free(crypted);
+    gm_free(crypted);
     *ciphertext = (char*)base64;
     return strlen(*ciphertext);
 }
@@ -164,12 +164,13 @@ int mod_gm_encrypt(EVP_CIPHER_CTX * ctx, char ** ciphertext, const char * plaint
 int mod_gm_decrypt(EVP_CIPHER_CTX * ctx, char ** plaintext, const char * ciphertext, size_t ciphertext_size, int mode) {
     char *test;
     int bsize;
-    unsigned char * buffer = gm_malloc(sizeof(char) * ((ciphertext_size/4)*3)+5);
+    size_t max_size = ((ciphertext_size/4)*3)+5;
+    unsigned char * buffer = gm_malloc(sizeof(char) * max_size);
 
     /* first decode from base64 */
     bsize = base64_decode(ciphertext, ciphertext_size, buffer);
     if(bsize == -1) {
-        free(buffer);
+        gm_free(buffer);
         gm_log( GM_LOG_ERROR, "failed to decode base64 string.\n" );
         return -1;
     }
@@ -180,19 +181,19 @@ int mod_gm_decrypt(EVP_CIPHER_CTX * ctx, char ** plaintext, const char * ciphert
            trailing artefacts.
          */
         bsize = bsize - bsize%BLOCKSIZE;
+        *plaintext = gm_malloc(sizeof(char) * max_size);
         if(1 != mod_gm_aes_decrypt(ctx, (unsigned char*)*plaintext, buffer, bsize)) {
-            free(test);
-            free(buffer);
+            gm_free(test);
+            gm_free(buffer);
             return -1;
         }
     }
     else  {
-        *plaintext[0] = '\x0';
         buffer[bsize] = '\x0';
-        strncat(*plaintext, (char*)buffer, bsize);
+        *plaintext = gm_strndup((char*)buffer, bsize);
     }
-    free(test);
-    free(buffer);
+    gm_free(test);
+    gm_free(buffer);
     return 1;
 }
 
@@ -417,7 +418,7 @@ int parse_args_line(mod_gm_opt_t *opt, char * arg, int recursion_level) {
     if ( !strcmp( key, "daemon" ) ||  !strcmp( key, "d" ) ) {
         opt->daemon_mode = parse_yes_or_no(value, GM_ENABLED);
         if(value != NULL) {
-            free(opt->delimiter);
+            gm_free(opt->delimiter);
             opt->delimiter = gm_strdup( value );
         }
         return(GM_OK);
@@ -444,7 +445,7 @@ int parse_args_line(mod_gm_opt_t *opt, char * arg, int recursion_level) {
                 opt->perfdata_queues_list[opt->perfdata_queues_num] = gm_strdup(name);
                 opt->perfdata_queues_num++;
             }
-            free(values_original);
+            gm_free(values_original);
         }
         return(GM_OK);
     }
@@ -662,7 +663,7 @@ int parse_args_line(mod_gm_opt_t *opt, char * arg, int recursion_level) {
 
     /* delimiter */
     else if (   !strcmp( key, "delimiter" ) ) {
-        free(opt->delimiter);
+        gm_free(opt->delimiter);
         opt->delimiter = gm_strdup( value );
     }
 
@@ -935,7 +936,7 @@ int parse_args_line(mod_gm_opt_t *opt, char * arg, int recursion_level) {
                         if(!strcmp(type, callback)) {
                             callback_num = i;
                         }
-                        free(type);
+                        gm_free(type);
                     }
                     if(callback_num == -1) {
                         gm_log( GM_LOG_ERROR, "unknown nebcallback : %s\n", callback);
@@ -956,7 +957,7 @@ int parse_args_line(mod_gm_opt_t *opt, char * arg, int recursion_level) {
     else if ( !strcmp( key, "p1_file" ) ) {
 #ifdef EMBEDDEDPERL
         opt->p1_file = gm_strdup( value );
-        free(p1_file);
+        gm_free(p1_file);
         p1_file = gm_strdup(opt->p1_file);
 #endif
     }
@@ -969,7 +970,7 @@ int parse_args_line(mod_gm_opt_t *opt, char * arg, int recursion_level) {
 
     /* restrict_command_characters */
     else if ( !strcmp( key, "restrict_command_characters") ) {
-        free(opt->restrict_command_characters);
+        gm_free(opt->restrict_command_characters);
         opt->restrict_command_characters = gm_strdup(value);
     }
 
@@ -1035,7 +1036,7 @@ int read_config_file(mod_gm_opt_t *opt, char*filename, int recursion_level) {
         }
     }
     fclose(fp);
-    free(line_c);
+    gm_free(line_c);
     if(errors > 0)
         return(GM_ERROR);
     return(GM_OK);
@@ -1135,7 +1136,7 @@ void dumpconfig(mod_gm_opt_t *opt, int mode) {
             char * type = nebcallback2str(i);
             for(j=0;j<opt->exports[i]->elem_number;j++)
                 gm_log( GM_LOG_DEBUG, "export:                          %-45s -> %s\n", type, opt->exports[i]->name[j]);
-            free(type);
+            gm_free(type);
         }
     }
 
@@ -1167,45 +1168,45 @@ void mod_gm_free_opt(mod_gm_opt_t *opt) {
     if(opt == NULL)
         return;
     for(i=0;i<opt->server_num;i++) {
-        free(opt->server_list[i]->host);
-        free(opt->server_list[i]);
+        gm_free(opt->server_list[i]->host);
+        gm_free(opt->server_list[i]);
     }
     for(i=0;i<opt->dupserver_num;i++) {
-        free(opt->dupserver_list[i]->host);
-        free(opt->dupserver_list[i]);
+        gm_free(opt->dupserver_list[i]->host);
+        gm_free(opt->dupserver_list[i]);
     }
     for(i=0;i<opt->hostgroups_num;i++)
-        free(opt->hostgroups_list[i]);
+        gm_free(opt->hostgroups_list[i]);
     for(i=0;i<opt->servicegroups_num;i++)
-        free(opt->servicegroups_list[i]);
+        gm_free(opt->servicegroups_list[i]);
     for(i=0;i<opt->local_hostgroups_num;i++)
-        free(opt->local_hostgroups_list[i]);
+        gm_free(opt->local_hostgroups_list[i]);
     for(i=0;i<opt->local_servicegroups_num;i++)
-        free(opt->local_servicegroups_list[i]);
+        gm_free(opt->local_servicegroups_list[i]);
     for(i=0;i<GM_NEBTYPESSIZE;i++) {
         for(j=0;j<opt->exports[i]->elem_number;j++) {
-          free(opt->exports[i]->name[j]);
+          gm_free(opt->exports[i]->name[j]);
         }
-        free(opt->exports[i]);
+        gm_free(opt->exports[i]);
     }
     for(i=0;i<opt->restrict_path_num;i++) {
-        free(opt->restrict_path[i]);
+        gm_free(opt->restrict_path[i]);
     }
-    free(opt->restrict_command_characters);
-    free(opt->crypt_key);
-    free(opt->keyfile);
-    free(opt->message);
-    free(opt->delimiter);
-    free(opt->pidfile);
-    free(opt->logfile);
-    free(opt->host);
-    free(opt->service);
-    free(opt->identifier);
-    free(opt->queue_cust_var);
+    gm_free(opt->restrict_command_characters);
+    gm_free(opt->crypt_key);
+    gm_free(opt->keyfile);
+    gm_free(opt->message);
+    gm_free(opt->delimiter);
+    gm_free(opt->pidfile);
+    gm_free(opt->logfile);
+    gm_free(opt->host);
+    gm_free(opt->service);
+    gm_free(opt->identifier);
+    gm_free(opt->queue_cust_var);
 #ifdef EMBEDDEDPERL
-    free(opt->p1_file);
+    gm_free(opt->p1_file);
 #endif
-    free(opt);
+    gm_free(opt);
     opt=NULL;
     return;
 }
@@ -1225,7 +1226,7 @@ int read_keyfile(mod_gm_opt_t *opt) {
         return(GM_ERROR);
     }
     if(opt->crypt_key != NULL)
-        free(opt->crypt_key);
+        gm_free(opt->crypt_key);
     opt->crypt_key = gm_malloc(GM_BUFFERSIZE);
 
     if(!fgets(opt->crypt_key, 33, fp)) {
@@ -1293,20 +1294,20 @@ int set_default_job(gm_job_t *job, mod_gm_opt_t *opt) {
 /* free the job structure */
 int free_job(gm_job_t *job) {
 
-    free(job->type);
-    free(job->host_name);
-    free(job->service_description);
-    free(job->result_queue);
-    free(job->command_line);
+    gm_free(job->type);
+    gm_free(job->host_name);
+    gm_free(job->service_description);
+    gm_free(job->result_queue);
+    gm_free(job->command_line);
     if(job->output != NULL)
-        free(job->output);
+        gm_free(job->output);
     if(job->long_output != NULL)
-        free(job->long_output);
+        gm_free(job->long_output);
     if(job->source != NULL)
-        free(job->source);
+        gm_free(job->source);
     if(job->error != NULL)
-        free(job->error);
-    free(job);
+        gm_free(job->error);
+    gm_free(job);
 
     return(GM_OK);
 }
@@ -1680,8 +1681,8 @@ void send_result_back(gm_job_t * exec_job, EVP_CIPHER_CTX * ctx) {
     else {
         gm_log( GM_LOG_TRACE, "send_result_back() has no duplicate servers to send to.\n" );
     }
-    free(temp_buffer1);
-    free(temp_buffer2);
+    gm_free(temp_buffer1);
+    gm_free(temp_buffer2);
     return;
 }
 
@@ -1707,10 +1708,10 @@ void add_server(int * server_num, gm_server_t * server_list[GM_LISTSIZE], char *
         server_list[*server_num] = new_server;
         *server_num = *server_num + 1;
     } else {
-        free(new_server->host);
-        free(new_server);
+        gm_free(new_server->host);
+        gm_free(new_server);
     }
-    free(server_c);
+    gm_free(server_c);
     return;
 }
 

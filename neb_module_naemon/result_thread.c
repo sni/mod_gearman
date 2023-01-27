@@ -106,7 +106,7 @@ void *result_worker( void * data ) {
 void *get_results( gearman_job_st *job, __attribute__((__unused__)) void *context, size_t *result_size, gearman_return_t *ret_ptr ) {
     int transportmode;
     const char *workload;
-    char *decrypted_data;
+    char *decrypted_data = NULL;
     char *decrypted_data_c;
     struct timeval now, core_start_time;
     check_result * chk_result;
@@ -135,15 +135,13 @@ void *get_results( gearman_job_st *job, __attribute__((__unused__)) void *contex
     gm_log( GM_LOG_TRACE, "%zu +++>\n%.*s\n<+++\n", wsize, wsize, workload );
 
     /* decrypt data */
-    decrypted_data   = gm_malloc(wsize*2);
-    decrypted_data_c = decrypted_data;
-
     if(mod_gm_opt->transportmode == GM_ENCODE_AND_ENCRYPT && mod_gm_opt->accept_clear_results == GM_ENABLED) {
         transportmode = GM_ENCODE_ACCEPT_ALL;
     } else {
         transportmode = mod_gm_opt->transportmode;
     }
     mod_gm_decrypt(result_ctx, &decrypted_data, workload, wsize, transportmode);
+    decrypted_data_c = decrypted_data;
 
     if(!strcmp(workload, "check")) {
         char * result = gm_malloc(GM_BUFFERSIZE);
