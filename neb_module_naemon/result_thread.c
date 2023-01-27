@@ -108,9 +108,6 @@ void *get_results( gearman_job_st *job, __attribute__((__unused__)) void *contex
     char *workload;
     char *decrypted_data;
     char *decrypted_data_c;
-#ifdef GM_DEBUG
-    char *decrypted_orig;
-#endif
     struct timeval now, core_start_time;
     check_result * chk_result;
     int active_check = TRUE;
@@ -168,9 +165,6 @@ void *get_results( gearman_job_st *job, __attribute__((__unused__)) void *contex
         return NULL;
     }
     gm_log( GM_LOG_TRACE, "%zu --->\n%s\n<---\n", strlen(decrypted_data), decrypted_data );
-#ifdef GM_DEBUG
-    decrypted_orig   = gm_strdup(decrypted_data);
-#endif
     free(workload);
 
     /*
@@ -193,9 +187,6 @@ void *get_results( gearman_job_st *job, __attribute__((__unused__)) void *contex
     /* naemon will free it after processing */
     if ( ( chk_result = ( check_result * )gm_malloc( sizeof *chk_result ) ) == 0 ) {
         *ret_ptr = GEARMAN_WORK_FAIL;
-#ifdef GM_DEBUG
-    free(decrypted_orig);
-#endif
         free(decrypted_data);
         return NULL;
     }
@@ -271,9 +262,6 @@ void *get_results( gearman_job_st *job, __attribute__((__unused__)) void *contex
     if ( chk_result->host_name == NULL || chk_result->output == NULL ) {
         *ret_ptr= GEARMAN_WORK_FAIL;
         gm_log( GM_LOG_ERROR, "discarded invalid job (%s), check your encryption settings\n", gearman_job_handle( job ) );
-#ifdef GM_DEBUG
-    free(decrypted_orig);
-#endif
         return NULL;
     }
 
@@ -319,15 +307,6 @@ void *get_results( gearman_job_st *job, __attribute__((__unused__)) void *contex
     chk_result->check_options    = chk_result->check_options & ! CHECK_OPTION_FRESHNESS_CHECK;
 
     if ( chk_result->service_description != NULL ) {
-#ifdef GM_DEBUG
-        /* does this services exist */
-        service * svc = find_service( chk_result->host_name, chk_result->service_description );
-        if(svc == NULL) {
-            write_debug_file(&decrypted_orig);
-            gm_log( GM_LOG_ERROR, "service '%s' on host '%s' could not be found\n", chk_result->service_description, chk_result->host_name );
-            return NULL;
-        }
-#endif
         gm_log( GM_LOG_DEBUG, "service job completed: %s %s: exit %d, latency: %0.3f, exec_time: %0.3f\n", chk_result->host_name, chk_result->service_description, chk_result->return_code, chk_result->latency, exec_time );
     } else {
         if(active_check) {
@@ -346,9 +325,6 @@ void *get_results( gearman_job_st *job, __attribute__((__unused__)) void *contex
     chk_result = NULL;
 
     free(decrypted_data_c);
-#ifdef GM_DEBUG
-    free(decrypted_orig);
-#endif
 
     return NULL;
 }
@@ -383,19 +359,3 @@ int set_worker( gearman_worker_st **worker ) {
 
     return GM_OK;
 }
-
-#ifdef GM_DEBUG
-/* write text to a debug file */
-void write_debug_file(char ** text) {
-    FILE * fd;
-    fd = fopen( "/tmp/mod_gearman_result.txt", "a+" );
-    if(fd == NULL) {
-        perror("fopen");
-    } else {
-        fputs( "------------->\n", fd );
-        fputs( *text, fd );
-        fputs( "\n<-------------\n", fd );
-        fclose( fd );
-    }
-}
-#endif
