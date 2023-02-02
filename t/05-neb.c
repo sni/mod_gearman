@@ -30,7 +30,7 @@ int host_check_timeout;
 int currently_running_service_checks;
 int currently_running_host_checks;
 unsigned long event_broker_options;
-timed_event *schedule_event(time_t delay, event_callback callback, void *user_data) { delay = delay; callback = callback; user_data = user_data; return(NULL); }
+timed_event *schedule_event(__attribute__((unused)) time_t delay, __attribute__((unused)) event_callback callback, __attribute__((unused)) void *user_data) { return(NULL); }
 int process_performance_data;
 int log_notifications;
 
@@ -96,7 +96,7 @@ void write_core_log(char *data) {
 }
 
 /* fake some core functions */
-int neb_set_module_info(void *handle, int type, char *data) { handle=handle; type=type; data=data; return 0; }
+int neb_set_module_info(__attribute__((unused)) void *handle, __attribute__((unused)) int type, __attribute__((unused)) char *data) { return 0; }
 int neb_register_callback(__attribute__((__unused__)) enum NEBCallbackType callback_type, __attribute__((__unused__)) void *mod_handle, __attribute__((__unused__)) int priority, __attribute__((__unused__)) int (*callback_func)(int, void *)) { return 0; }
 int neb_deregister_callback(__attribute__((__unused__)) enum NEBCallbackType callback_type, __attribute__((__unused__)) void *callback_func) { return 0; }
 

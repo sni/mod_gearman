@@ -19,8 +19,7 @@ char hostname[GM_SMALLBUFSIZE];
 volatile sig_atomic_t shmid;
 mod_gm_opt_t *mod_gm_opt;
 
-int main (int argc, char **argv, char **env) {
-    argc = argc; argv = argv; env  = env;
+int main(__attribute__((unused)) int argc, __attribute__((unused)) char **argv, __attribute__((unused)) char **env) {
     int rc, rrc;
     char *result, *error;
     char cmd[4096];

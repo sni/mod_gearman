@@ -226,45 +226,45 @@ int check_server(char * server, in_port_t port) {
     rc = get_gearman_server_data(stats, &message, &version, server, port);
     if( rc == STATE_OK ) {
         for(x=0; x<stats->function_num;x++) {
-            if(opt_queue != NULL && strcmp(opt_queue, stats->function[x]->queue))
+            if(opt_queue != NULL && strcmp(opt_queue, stats->function[x].queue))
                 continue;
             checked++;
-            total_running += stats->function[x]->running;
-            total_waiting += stats->function[x]->waiting;
-            if(stats->function[x]->waiting > 0 && stats->function[x]->worker == 0) {
+            total_running += stats->function[x].running;
+            total_waiting += stats->function[x].waiting;
+            if(stats->function[x].waiting > 0 && stats->function[x].worker == 0) {
                 rc = STATE_CRITICAL;
                 buf = (char*)gm_malloc(GM_BUFFERSIZE);
-                snprintf(buf, GM_BUFFERSIZE, "Queue %s has %i job%s without any worker. ", stats->function[x]->queue, stats->function[x]->waiting, stats->function[x]->waiting > 1 ? "s":"" );
+                snprintf(buf, GM_BUFFERSIZE, "Queue %s has %i job%s without any worker. ", stats->function[x].queue, stats->function[x].waiting, stats->function[x].waiting > 1 ? "s":"" );
                 strncat(message, buf, GM_BUFFERSIZE);
             }
-            else if(opt_job_critical > 0 && stats->function[x]->waiting >= opt_job_critical) {
+            else if(opt_job_critical > 0 && stats->function[x].waiting >= opt_job_critical) {
                 rc = STATE_CRITICAL;
                 buf = (char*)gm_malloc(GM_BUFFERSIZE);
-                snprintf(buf, GM_BUFFERSIZE, "Queue %s has %i waiting job%s. ", stats->function[x]->queue, stats->function[x]->waiting, stats->function[x]->waiting > 1 ? "s":"" );
+                snprintf(buf, GM_BUFFERSIZE, "Queue %s has %i waiting job%s. ", stats->function[x].queue, stats->function[x].waiting, stats->function[x].waiting > 1 ? "s":"" );
                 strncat(message, buf, GM_BUFFERSIZE);
             }
-            else if(opt_worker_critical > 0 && stats->function[x]->worker >= opt_worker_critical) {
+            else if(opt_worker_critical > 0 && stats->function[x].worker >= opt_worker_critical) {
                 rc = STATE_CRITICAL;
                 buf = (char*)gm_malloc(GM_BUFFERSIZE);
-                snprintf(buf, GM_BUFFERSIZE, "Queue %s has %i worker. ", stats->function[x]->queue, stats->function[x]->worker );
+                snprintf(buf, GM_BUFFERSIZE, "Queue %s has %i worker. ", stats->function[x].queue, stats->function[x].worker );
                 strncat(message, buf, GM_BUFFERSIZE);
             }
-            else if(opt_crit_zero_worker == 1 && stats->function[x]->worker == 0) {
+            else if(opt_crit_zero_worker == 1 && stats->function[x].worker == 0) {
                 rc = STATE_CRITICAL;
                 buf = (char*)gm_malloc(GM_BUFFERSIZE);
-                snprintf(buf, GM_BUFFERSIZE, "Queue %s has no worker. ", stats->function[x]->queue);
+                snprintf(buf, GM_BUFFERSIZE, "Queue %s has no worker. ", stats->function[x].queue);
                 strncat(message, buf, GM_BUFFERSIZE);
             }
-            else if(opt_job_warning > 0 && stats->function[x]->waiting >= opt_job_warning) {
+            else if(opt_job_warning > 0 && stats->function[x].waiting >= opt_job_warning) {
                 rc = STATE_WARNING;
                 buf = (char*)gm_malloc(GM_BUFFERSIZE);
-                snprintf(buf, GM_BUFFERSIZE, "Queue %s has %i waiting job%s. ", stats->function[x]->queue, stats->function[x]->waiting, stats->function[x]->waiting > 1 ? "s":"" );
+                snprintf(buf, GM_BUFFERSIZE, "Queue %s has %i waiting job%s. ", stats->function[x].queue, stats->function[x].waiting, stats->function[x].waiting > 1 ? "s":"" );
                 strncat(message, buf, GM_BUFFERSIZE);
             }
-            else if(opt_worker_warning > 0 && stats->function[x]->worker >= opt_worker_warning) {
+            else if(opt_worker_warning > 0 && stats->function[x].worker >= opt_worker_warning) {
                 rc = STATE_WARNING;
                 buf = (char*)gm_malloc(GM_BUFFERSIZE);
-                snprintf(buf, GM_BUFFERSIZE, "Queue %s has %i worker. ", stats->function[x]->queue, stats->function[x]->worker );
+                snprintf(buf, GM_BUFFERSIZE, "Queue %s has %i worker. ", stats->function[x].queue, stats->function[x].worker );
                 strncat(message, buf, GM_BUFFERSIZE);
             }
             if(buf != NULL)
@@ -295,17 +295,17 @@ int check_server(char * server, in_port_t port) {
     if(stats->function_num > 0) {
         printf("|");
         for(x=0; x<stats->function_num;x++) {
-            if(opt_queue != NULL && strcmp(opt_queue, stats->function[x]->queue))
+            if(opt_queue != NULL && strcmp(opt_queue, stats->function[x].queue))
                 continue;
             printf( "'%s_waiting'=%i;%i;%i;0 '%s_running'=%i '%s_worker'=%i;%i;%i;0 ",
-                      stats->function[x]->queue,
-                      stats->function[x]->waiting,
+                      stats->function[x].queue,
+                      stats->function[x].waiting,
                       opt_job_warning,
                       opt_job_critical,
-                      stats->function[x]->queue,
-                      stats->function[x]->running,
-                      stats->function[x]->queue,
-                      stats->function[x]->worker,
+                      stats->function[x].queue,
+                      stats->function[x].running,
+                      stats->function[x].queue,
+                      stats->function[x].worker,
                       opt_worker_warning,
                       opt_worker_critical
                   );

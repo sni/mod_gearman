@@ -108,7 +108,7 @@ int main(void) {
             { "test\n", "dGVzdAo=", 8 },
             { "test message", "dGVzdCBtZXNzYWdl", 16 },
             { "test1 message\ntest2 message\ntest3 message1234567\n", "dGVzdDEgbWVzc2FnZQp0ZXN0MiBtZXNzYWdlCnRlc3QzIG1lc3NhZ2UxMjM0NTY3Cg==", 68 },
-            { NULL },
+            { NULL, NULL, 0 },
     };
     for (i = 0; base64_tests[i].plaintext != NULL; i++) {
         char * base64 = NULL;
@@ -138,7 +138,7 @@ int main(void) {
             { "123456789abcdef1", "CueC0iJAZL2J+zhEPgVFVYDKd5Fmk6oJnfJnxuj7f0U=", 44 },
             { "123456789abcdef12", "CueC0iJAZL2J+zhEPgVFVeiqJ0EDJEmrqx95Bewle4s=", 44 },
             { "123456789abcdef123", "CueC0iJAZL2J+zhEPgVFVUPX+fNRaJ7/VNIrGRAapGQ=", 44 },
-            { NULL },
+            { NULL, NULL, 0 },
     };
     const char *key = "test1234";
     EVP_CIPHER_CTX * ctx = mod_gm_crypt_init(key);

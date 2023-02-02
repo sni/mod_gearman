@@ -56,8 +56,7 @@ int check_logfile(char *logfile, char *match) {
 }
 
 
-int main (int argc, char **argv, char **env) {
-    argc = argc; argv = argv; env  = env;
+int main(__attribute__((unused)) int argc, __attribute__((unused)) char **argv, __attribute__((unused)) char **env) {
     char *result, *error;
     char cmd[120];
     char logf[150];

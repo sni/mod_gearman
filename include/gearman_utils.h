@@ -74,9 +74,9 @@ typedef struct mod_gm_status_worker {
 
 /** server status structure */
 typedef struct mod_gm_status_server {
-    mod_gm_status_worker_t    * worker[GM_LISTSIZE];   /**< list of worker */
+    mod_gm_status_worker_t      worker[GM_LISTSIZE];   /**< list of worker */
     int                         worker_num;            /**< number of worker */
-    mod_gm_status_function_t  * function[GM_LISTSIZE]; /**< number of functions */
+    mod_gm_status_function_t    function[GM_LISTSIZE]; /**< number of functions */
     int                         function_num;          /**< number of functions */
 } mod_gm_server_status_t;
 

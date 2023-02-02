@@ -33,8 +33,7 @@ EVP_CIPHER_CTX * test_ctx = NULL;
 
 /* start the gearmand server */
 void *start_gearmand(void*data);
-void *start_gearmand(void*data) {
-    data = data; // warning: unused parameter 'data'
+void *start_gearmand(__attribute__((unused)) void*data) {
     pid_t pid = fork();
     if(pid == 0) {
         setsid();
@@ -155,13 +154,10 @@ void send_big_jobs(int transportmode) {
 
 /* put back the result into the core */
 void *get_results( gearman_job_st *job, void *context, size_t *result_size, gearman_return_t *ret_ptr );
-void *get_results( gearman_job_st *job, void *context, size_t *result_size, gearman_return_t *ret_ptr ) {
+void *get_results( gearman_job_st *job, __attribute__((unused)) void *context, size_t *result_size, gearman_return_t *ret_ptr ) {
     size_t wsize;
     const char *workload;
     char *decrypted_data = NULL;
-
-    /* contect is unused */
-    context = context;
 
     /* set size of result */
     *result_size = 0;
@@ -290,7 +286,7 @@ void diag_queues() {
     if( rc == STATE_OK ) {
         diag("%-35s %-9s %-9s\n", "queue", "waiting", "running");
         for(x=0; x<stats->function_num;x++) {
-            diag("%-35s %-9d %-9d\n", stats->function[x]->queue, stats->function[x]->waiting, stats->function[x]->running);
+            diag("%-35s %-9d %-9d\n", stats->function[x].queue, stats->function[x].waiting, stats->function[x].running);
         }
     }
     gm_free(message);
@@ -317,9 +313,9 @@ void wait_for_empty_queue(char *queue, int timeout) {
         rc = get_gearman_server_data(stats, &message, &version, "127.0.0.1", GEARMAND_TEST_PORT);
         if( rc == STATE_OK ) {
             for(x=0; x<stats->function_num;x++) {
-                if(stats->function[x]->waiting == 0 &&
-                   stats->function[x]->running == 0 &&
-                   !strcmp( stats->function[x]->queue, queue )
+                if(stats->function[x].waiting == 0 &&
+                   stats->function[x].running == 0 &&
+                   !strcmp( stats->function[x].queue, queue )
                 ) {
                     found = 1;
                 }
@@ -376,8 +372,7 @@ void check_no_worker_running(char* logfile) {
 
 
 /* main tests */
-int main (int argc, char **argv, char **env) {
-    argc = argc; argv = argv; env  = env;
+int main (__attribute__((unused)) int argc, __attribute__((unused)) char **argv, __attribute__((unused)) char **env) {
     int status, chld;
     int tests = 123;
     int rrc;

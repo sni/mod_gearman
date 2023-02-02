@@ -281,7 +281,7 @@ void gm_free_worker(gearman_worker_st **worker) {
 int get_gearman_server_data(mod_gm_server_status_t *stats, char ** message, char ** version, char * hostnam, int port) {
     int rc;
     char *total, *running, *worker, *output, *output_c, *line, *name;
-    mod_gm_status_function_t *func;
+    mod_gm_status_function_t func;
 
     *version  = gm_malloc(GM_BUFFERSIZE);
     snprintf(*version,  GM_BUFFERSIZE, "%s", "" );
@@ -308,7 +308,7 @@ int get_gearman_server_data(mod_gm_server_status_t *stats, char ** message, char
             }
 
             /* sort our array by queue name */
-            qsort(stats->function, stats->function_num, sizeof(mod_gm_status_function_t*), struct_cmp_by_queue);
+            qsort(stats->function, stats->function_num, sizeof(mod_gm_status_function_t), struct_cmp_by_queue);
 
             free(output_c);
             return( STATE_OK );
@@ -325,22 +325,20 @@ int get_gearman_server_data(mod_gm_server_status_t *stats, char ** message, char
         worker  = strsep(&line, "\x0");
         if(worker == NULL)
             break;
-        func = gm_malloc(sizeof(mod_gm_status_function_t));
-        func->queue   = gm_strdup(name);
-        func->running = atoi(running);
-        func->total   = atoi(total);
-        func->worker  = atoi(worker);
-        func->waiting = func->total - func->running;
+        func.queue   = gm_strdup(name);
+        func.running = atoi(running);
+        func.total   = atoi(total);
+        func.worker  = atoi(worker);
+        func.waiting = func.total - func.running;
 
         /* skip the dummy queue if its empty */
-        if(!strcmp( name, "dummy") && func->total == 0) {
-            free(func->queue);
-            free(func);
+        if(!strcmp(name, "dummy") && func.total == 0) {
+            free(func.queue);
             continue;
         }
 
         stats->function[stats->function_num++] = func;
-        gm_log( GM_LOG_DEBUG, "%i: name:%-20s worker:%-5i waiting:%-5i running:%-5i\n", stats->function_num, func->queue, func->worker, func->waiting, func->running );
+        gm_log( GM_LOG_DEBUG, "%i: name:%-20s worker:%-5i waiting:%-5i running:%-5i\n", stats->function_num, func.queue, func.worker, func.waiting, func.running );
     }
 
     snprintf(*message, GM_BUFFERSIZE, "got no valid data from %s:%i\n", hostnam, (int)port);
@@ -468,14 +466,12 @@ void free_mod_gm_status_server(mod_gm_server_status_t *stats) {
     int x;
 
     for(x=0; x<stats->function_num;x++) {
-        free(stats->function[x]->queue);
-        free(stats->function[x]);
+        free(stats->function[x].queue);
     }
 
     for(x=0; x<stats->worker_num;x++) {
-        free(stats->worker[x]->ip);
-        free(stats->worker[x]->id);
-        free(stats->worker[x]);
+        free(stats->worker[x].ip);
+        free(stats->worker[x].id);
     }
 
     free(stats);
@@ -484,11 +480,9 @@ void free_mod_gm_status_server(mod_gm_server_status_t *stats) {
 
 /* qsort struct comparision function for queue name */
 int struct_cmp_by_queue(const void *a, const void *b) {
-    mod_gm_status_function_t **pa = (mod_gm_status_function_t **)a;
-    mod_gm_status_function_t *ia  = (mod_gm_status_function_t *)*pa;
+    const mod_gm_status_function_t *ia  = (const mod_gm_status_function_t*)a;
 
-    mod_gm_status_function_t **pb = (mod_gm_status_function_t **)b;
-    mod_gm_status_function_t *ib  = (mod_gm_status_function_t *)*pb;
+    const mod_gm_status_function_t *ib  = (const mod_gm_status_function_t *)b;
 
     return strcmp(ia->queue, ib->queue);
 }

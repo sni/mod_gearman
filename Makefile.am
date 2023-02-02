@@ -118,6 +118,8 @@ EXTRA_DIST = COPYING etc/*.in extras include \
              etc/mod_gearman_logrotate ./autogen.sh \
              debian
 
+export ARFLAGS="cr" # avoid: ar: `u' modifier ignored since `D' is the default (see `U')
+
 include contrib/Makefile.am
 
 # other targets

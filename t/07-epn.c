@@ -22,8 +22,7 @@ volatile sig_atomic_t shmid;
 extern char* p1_file;
 #endif
 
-int main (int argc, char **argv, char **env) {
-    argc = argc; argv = argv; env  = env;
+int main(__attribute__((unused)) int argc, __attribute__((unused)) char **argv, __attribute__((unused)) char **env) {
 #ifndef EMBEDDEDPERL
     plan(1);
     ok(1, "skipped epn tests");

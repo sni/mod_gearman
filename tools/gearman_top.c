@@ -235,10 +235,10 @@ void print_stats(char * hostnam) {
 
     if( rc == STATE_OK ) {
         for(x=0; x<stats->function_num;x++) {
-            if(opt_quiet == GM_ENABLED && stats->function[x]->worker == 0 && stats->function[x]->total == 0)
+            if(opt_quiet == GM_ENABLED && stats->function[x].worker == 0 && stats->function[x].total == 0)
                 continue;
-            if((int)strlen(stats->function[x]->queue) > max_length) {
-                max_length = (int)strlen(stats->function[x]->queue);
+            if((int)strlen(stats->function[x].queue) > max_length) {
+                max_length = (int)strlen(stats->function[x].queue);
             }
         }
         snprintf(format1, sizeof(format1), " %%-%is | %%16s | %%12s | %%12s\n", max_length);
@@ -248,9 +248,9 @@ void print_stats(char * hostnam) {
             my_printf("-");
         my_printf("\n");
         for(x=0; x<stats->function_num;x++) {
-            if(opt_quiet == GM_ENABLED && stats->function[x]->worker == 0 && stats->function[x]->total == 0)
+            if(opt_quiet == GM_ENABLED && stats->function[x].worker == 0 && stats->function[x].total == 0)
                 continue;
-            my_printf(format2, stats->function[x]->queue, stats->function[x]->worker, stats->function[x]->waiting, stats->function[x]->running);
+            my_printf(format2, stats->function[x].queue, stats->function[x].worker, stats->function[x].waiting, stats->function[x].running);
             found++;
         }
         if(found == 0) {
