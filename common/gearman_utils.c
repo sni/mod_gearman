@@ -249,15 +249,8 @@ int add_job_to_queue(gearman_client_st **client, gm_server_t * server_list[GM_LI
 }
 
 
-void *dummy( gearman_job_st *job, void *context, size_t *result_size, gearman_return_t *ret_ptr ) {
-
-    /* avoid "unused parameter" warning */
-    job         = job;
-    context     = context;
-    result_size = 0;
-    ret_ptr     = ret_ptr;
-    result_size = result_size;
-
+void *dummy(__attribute__((unused)) gearman_job_st *job, __attribute__((unused)) void *context, size_t *result_size, __attribute__((unused)) gearman_return_t *ret_ptr ) {
+    *result_size = 0;
     return NULL;
 }
 
