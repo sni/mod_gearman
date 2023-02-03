@@ -167,6 +167,7 @@ int main(void) {
     like(decrypted, "type=active", "plain base64 contains string I");
     like(decrypted, "source=Mod-Gearman", "plain base64 contains string II");
     like(decrypted, "output=OK - hostname123", "plain base64 contains string II");
+    free(decrypted);
 
     mod_gm_crypt_deinit(ctx);
 
