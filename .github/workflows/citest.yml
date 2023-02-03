@@ -20,7 +20,7 @@ jobs:
           wget -q "https://build.opensuse.org/projects/home:naemon:daily/public_key" -O - | sudo apt-key add -
           sudo apt-get update
           sudo apt-get autoremove -y
-          sudo apt-get install -y devscripts build-essential equivs dpkg-dev valgrind cppcheck
+          sudo apt-get install -y devscripts build-essential equivs dpkg-dev valgrind cppcheck clang-14
           sudo mk-build-deps
           sudo apt-get install -y ./*-build-deps*.deb
           sudo rm -f *-build-deps*{deb,buildinfo,changes}
@@ -40,3 +40,5 @@ jobs:
           make fulltest                         || exit 1
           make deb                              || exit 1
           make dist                             || exit 1
+          export CXX=clang++-14; export CC=clang-14; export CPP=clang-cpp-14; ./configure --enable-debug || exit 1
+          VERBOSE=1 HARNESS_VERBOSE=1 make test || exit 1
