@@ -163,7 +163,10 @@ AC_PROG_INSTALL
 ##############################################
 # enable -Werror after locating all libs, otherwise we could not find libs that generate warnings
 AC_ARG_ENABLE(debug,--enable-debug will enable debugging symbols,[
-    CFLAGS="${CFLAGS} -Werror -pedantic -Wfatal-errors -Wshadow -Wpointer-arith -Wcast-qual -Wcast-align -g3"
+    CFLAGS="${CFLAGS} -pedantic -Wfatal-errors -Wshadow -Wpointer-arith -Wcast-qual -Wcast-align -g3"
+    if test "$USEPERL" != "yes"; then
+        CFLAGS="${CFLAGS} -Werror"
+    fi
     ],
     CFLAGS="${CFLAGS} -g3"
 )
