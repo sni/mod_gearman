@@ -34,14 +34,15 @@ timed_event *schedule_event(__attribute__((unused)) time_t delay, __attribute__(
 int process_performance_data;
 int log_notifications;
 
+#pragma GCC diagnostic push    //Save actual diagnostics state
+#pragma GCC diagnostic ignored "-Wpedantic"    //Disable pedantic
+
 void check_neb(char * nebargs);
 void check_neb(char * nebargs) {
-    int (*initfunc)(int,char *,void *);
-    int (*deinitfunc)(int,int);
     int *module_version_ptr=NULL;
     void* neb_handle;
-    lt_ptr init_func;
-    lt_ptr deinit_func;
+    int (*init_func)(int,char *, void*);
+    int (*deinit_func)(int,int);
     char *err;
 
     /* set some external variables */
@@ -62,22 +63,20 @@ void check_neb(char * nebargs) {
 
     /* init neb module */
     dlerror();
-    init_func=(void *)dlsym(neb_handle,"nebmodule_init");
+    init_func = (int(*)(int,char *, void*))dlsym(neb_handle,"nebmodule_init");
     ok(init_func != NULL, "located nebmodule_init()");
     err = dlerror(); if(err != NULL) { BAIL_OUT("cannot load module: %s\n", err ); }
 
-    initfunc = init_func;
-    int result=(*initfunc)(NEBMODULE_NORMAL_LOAD, nebargs, neb_handle);
+    int result=init_func(NEBMODULE_NORMAL_LOAD, nebargs, neb_handle);
     ok(result == 0, "run nebmodule_init() -> %d", result);
 
     /* deinit neb module */
     dlerror();
-    deinit_func=(void *)dlsym(neb_handle,"nebmodule_deinit");
+    deinit_func = (int(*)(int,int))dlsym(neb_handle,"nebmodule_deinit");
     ok(deinit_func != NULL, "located nebmodule_deinit()");
     err = dlerror(); if(err != NULL) { BAIL_OUT("cannot load module: %s\n", err ); }
 
-    deinitfunc=deinit_func;
-    result=(*deinitfunc)(NEBMODULE_FORCE_UNLOAD,NEBMODULE_NEB_SHUTDOWN);
+    result=deinit_func(NEBMODULE_FORCE_UNLOAD,NEBMODULE_NEB_SHUTDOWN);
     ok(result == 0, "run nebmodule_deinit() -> %d", result);
     err = dlerror(); if(err != NULL) { BAIL_OUT("cannot load module: %s\n", err ); }
 
@@ -87,6 +86,8 @@ void check_neb(char * nebargs) {
 
     return;
 }
+
+#pragma GCC diagnostic pop    //Restore diagnostics state
 
 /* core log wrapper */
 void write_core_log(char *data);

@@ -14,13 +14,6 @@ m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 CFLAGS="${CFLAGS} -Wall -W -Wstrict-prototypes -Wmissing-prototypes -Wnested-externs -O -fPIC -D_GNU_SOURCE -D_REENTRANT -D_FILE_OFFSET_BITS=64"
 
 ##############################################
-AC_ARG_ENABLE(debug,--enable-debug will enable debugging symbols,[
-    CFLAGS="${CFLAGS} -pedantic -Wfatal-errors -Wshadow -Wpointer-arith -Wcast-qual -Wcast-align -g3"
-    ],
-    CFLAGS="${CFLAGS} -g3"
-)
-
-##############################################
 # Checks for programs.
 AC_PROG_CXX
 AC_PROG_CC
@@ -166,6 +159,14 @@ AC_TYPE_PID_T
 ##############################################
 # add a "make install" target
 AC_PROG_INSTALL
+
+##############################################
+# enable -Werror after locating all libs, otherwise we could not find libs that generate warnings
+AC_ARG_ENABLE(debug,--enable-debug will enable debugging symbols,[
+    CFLAGS="${CFLAGS} -Werror -pedantic -Wfatal-errors -Wshadow -Wpointer-arith -Wcast-qual -Wcast-align -g3"
+    ],
+    CFLAGS="${CFLAGS} -g3"
+)
 
 ##############################################
 # write out files
