@@ -40,5 +40,6 @@ jobs:
           make fulltest                         || exit 1
           make deb                              || exit 1
           make dist                             || exit 1
+          make clean                            || exit 1
           export CXX=clang++-14; export CC=clang-14; export CPP=clang-cpp-14; ./configure --enable-debug || exit 1
           VERBOSE=1 HARNESS_VERBOSE=1 make test || exit 1
