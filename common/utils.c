@@ -173,7 +173,7 @@ int mod_gm_decrypt(EVP_CIPHER_CTX * ctx, char ** plaintext, const char * ciphert
         gm_log( GM_LOG_ERROR, "failed to decode base64 string.\n" );
         return -1;
     }
-    if(mode == GM_ENCODE_AND_ENCRYPT || (mode == GM_ENCODE_ACCEPT_ALL && !strncmp((char*)buffer, "type=", 5))) {
+    if(mode == GM_ENCODE_AND_ENCRYPT || (mode == GM_ENCODE_ACCEPT_ALL && strncmp((char*)buffer, "type=", 5))) {
         /* decrypt if it is no plaintext already. */
         /* And if this is base64 encoded encrypted data, it is a multiple of blocksize, strip off
            trailing artefacts.

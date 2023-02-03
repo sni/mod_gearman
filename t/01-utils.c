@@ -30,7 +30,7 @@ mod_gm_opt_t * renew_opts() {
 }
 
 int main(void) {
-    plan(120);
+    plan(135);
 
     /* lowercase */
     char test[100];
@@ -119,7 +119,8 @@ int main(void) {
 
         /* decode base64 */
         char * debase64 = NULL;
-        mod_gm_decrypt(NULL, &debase64, base64, strlen(base64), GM_ENCODE_ONLY);
+        int rc = mod_gm_decrypt(NULL, &debase64, base64, strlen(base64), GM_ENCODE_ONLY);
+        cmp_ok(rc, "==", rc, "decrypt worked", rc);
         is(debase64, base64_tests[i].plaintext, "decoded base64 text is equal to source text");
         free(debase64);
         free(base64);
@@ -151,12 +152,22 @@ int main(void) {
 
         /* decrypt */
         char * decrypted = NULL;
-        mod_gm_decrypt(ctx, &decrypted, encrypted, strlen(encrypted), GM_ENCODE_AND_ENCRYPT);
+        int rc = mod_gm_decrypt(ctx, &decrypted, encrypted, strlen(encrypted), GM_ENCODE_AND_ENCRYPT);
+        cmp_ok(rc, "==", rc, "decrypt worked", rc);
         is(decrypted, encryption_tests[i].plaintext, "decrypted text");
         cmp_ok(strlen(encryption_tests[i].plaintext), "==", strlen(decrypted), "decryption string len");
         free(decrypted);
         free(encrypted);
     }
+
+    char *base64only = "dHlwZT1hY3RpdmUKaG9zdF9uYW1lPWhvc3RuYW1lMTIzCmNvcmVfc3RhcnRfdGltZT0xNjc1MzcyODM0LjAwMDAwOApzdGFydF90aW1lPTE2NzUzNzI4MzQuMDAwMDAwCmZpbmlzaF90aW1lPTE2NzUzNzI4MzQuMDAwMDAwCnJldHVybl9jb2RlPTAKZXhpdGVkX29rPTEKc291cmNlPU1vZC1HZWFybWFuIFdvcmtlciBAIGhvc3RuYW1lMTIzCm91dHB1dD1PSyAtIGhvc3RuYW1lMTIzOiBydGEgMjguODk1bXMsIGxvc3QgMCV8cnRhPTI4Ljg5NW1zOzUwMDAuMDAwOzUwMDAuMDAwOzA7IHBsPTAlOzEwMDsxMDA7OyBydG1heD0yOS4wNTdtczs7OzsgcnRtaW49MjguNjkxbXM7Ozs7CgoK";
+    char * decrypted = NULL;
+    int rc = mod_gm_decrypt(ctx, &decrypted, base64only, strlen(base64only), GM_ENCODE_ACCEPT_ALL);
+    cmp_ok(rc, "==", rc, "decrypt worked", rc);
+    like(decrypted, "type=active", "plain base64 contains string I");
+    like(decrypted, "source=Mod-Gearman", "plain base64 contains string II");
+    like(decrypted, "output=OK - hostname123", "plain base64 contains string II");
+
     mod_gm_crypt_deinit(ctx);
 
     /* file_exists */

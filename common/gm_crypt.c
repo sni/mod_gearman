@@ -128,7 +128,7 @@ int mod_gm_aes_decrypt(EVP_CIPHER_CTX * ctx, unsigned char * plaintext, unsigned
         return -1;
     }
 
-    if(len <= 0)  {
+    if(len < 0)  {
         fprintf(stderr, "EVP_DecryptUpdate return length: %d\n", len);
         return -1;
     }
