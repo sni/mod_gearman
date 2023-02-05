@@ -37,7 +37,7 @@ extern float current_avg_submit_duration;
 extern double current_submit_max;
 extern int result_threads_running;
 
-EVP_CIPHER_CTX * result_ctx = NULL;
+_Thread_local EVP_CIPHER_CTX * result_ctx = NULL;
 
 static const char *gearman_worker_source_name(void *source) {
     if(!source)

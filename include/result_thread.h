@@ -29,6 +29,7 @@
 
 #include "mod_gearman.h"
 
+#include <threads.h>
 #include <libgearman/gearman.h>
 
 void *result_worker(void *);

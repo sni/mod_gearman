@@ -1,5 +1,8 @@
 This file documents the revision history for mod_gearman.
 
+next:
+          - fix crash when using multiple result worker in neb module
+
 5.0.1 Fri Jan 27 16:21:36 CET 2023
           - fix accepting passive plaintext results
 
