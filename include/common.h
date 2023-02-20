@@ -177,6 +177,7 @@ typedef struct gm_server {
  * into this structure
  */
 typedef struct mod_gm_opt_struct {
+    pthread_mutex_t * lock;                                 /**< optional lock when using threaded logging */
     int            set_queues_by_hand;                      /**< flag whether there has been queues configured by hand */
 
     char         * crypt_key;                               /**< encryption key used for securing the messages sent over gearman */

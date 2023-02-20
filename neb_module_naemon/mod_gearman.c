@@ -49,6 +49,7 @@ extern int            log_notifications;
 /* global variables */
 static objectlist * mod_gm_result_list = NULL;
 static pthread_mutex_t mod_gm_result_list_mutex = PTHREAD_MUTEX_INITIALIZER;
+static pthread_mutex_t mod_gm_log_lock = PTHREAD_MUTEX_INITIALIZER;
 void *gearman_module_handle=NULL;
 
 int result_threads_running;
@@ -56,6 +57,7 @@ pthread_t result_thr[GM_LISTSIZE];
 char target_queue[GM_SMALLBUFSIZE];
 char temp_buffer[GM_MAX_OUTPUT];
 char uniq[GM_SMALLBUFSIZE];
+time_t gm_last_log_rotation = -1;
 
 static const char *gearman_worker_source_name(void *source) {
     if(!source)
@@ -74,6 +76,7 @@ static struct check_engine mod_gearman_check_engine = {
 
 static void  register_neb_callbacks(void);
 static int   read_arguments( const char * );
+static void  init_logging(mod_gm_opt_t *opt);
 static int   verify_options(mod_gm_opt_t *opt);
 static int   handle_host_check( int,void * );
 static int   handle_svc_check( int,void * );
@@ -83,6 +86,7 @@ static int   handle_perfdata(int, void *);
 static int   handle_export(int, void *);
 static void  set_target_queue( host *, service * );
 static int   handle_process_events( int, void * );
+static int   handle_progam_status_data_events( int, void * );
 static void move_results_to_core(struct nm_event_execution_properties *evprop);
 
 int nebmodule_init( int flags, char *args, nebmodule *handle ) {
@@ -102,6 +106,7 @@ int nebmodule_init( int flags, char *args, nebmodule *handle ) {
 
     mod_gm_opt = gm_malloc(sizeof(mod_gm_opt_t));
     set_default_options(mod_gm_opt);
+    mod_gm_opt->lock = &mod_gm_log_lock;
 
     /* parse arguments */
     gm_log( GM_LOG_DEBUG, "Version %s\n", GM_VERSION );
@@ -171,7 +176,8 @@ int nebmodule_init( int flags, char *args, nebmodule *handle ) {
     current_client = client;
 
     /* register callback for process event where everything else starts */
-    neb_register_callback( NEBCALLBACK_PROCESS_DATA, gearman_module_handle, 0, handle_process_events );
+    neb_register_callback(NEBCALLBACK_PROCESS_DATA,        gearman_module_handle, 0, handle_process_events );
+    neb_register_callback(NEBCALLBACK_PROGRAM_STATUS_DATA, gearman_module_handle, 0, handle_progam_status_data_events);
     schedule_event(1, move_results_to_core, NULL);
 
     /* log at least one line into the core logfile */
@@ -225,6 +231,7 @@ int nebmodule_deinit( int flags, int reason ) {
     /* should be removed already, but just for the case it wasn't */
     neb_deregister_callback( NEBCALLBACK_PROCESS_DATA, gearman_module_handle );
     neb_deregister_callback( NEBCALLBACK_TIMED_EVENT_DATA, gearman_module_handle );
+    neb_deregister_callback( NEBCALLBACK_PROGRAM_STATUS_DATA, gearman_module_handle );
 
     /* only if we have hostgroups defined or general hosts enabled */
     if ( mod_gm_opt->do_hostchecks == GM_ENABLED && ( mod_gm_opt->hostgroups_num > 0 || mod_gm_opt->hosts == GM_ENABLED ))
@@ -250,8 +257,6 @@ int nebmodule_deinit( int flags, int reason ) {
         if(mod_gm_opt->exports[x]->elem_number > 0)
             neb_deregister_callback( x, gearman_module_handle );
     }
-
-    neb_deregister_callback( NEBCALLBACK_PROCESS_DATA, gearman_module_handle );
 
     gm_log( GM_LOG_DEBUG, "deregistered callbacks\n" );
 
@@ -331,6 +336,21 @@ static void start_threads(void) {
             pthread_create ( &result_thr[x], NULL, result_worker, (void *)&result_threads_running);
         }
     }
+}
+
+/* handle process events */
+static int handle_progam_status_data_events(int event_type, void *data) {
+    struct nebstruct_program_status_struct *pd = (struct nebstruct_program_status_struct *)data;
+    gm_log( GM_LOG_TRACE, "handle_progam_status_data_events(%i, data)\n", event_type );
+
+    if (pd->type == NEBTYPE_PROGRAMSTATUS_UPDATE) {
+        if(pd->last_log_rotation != gm_last_log_rotation) {
+            gm_last_log_rotation = pd->last_log_rotation;
+            init_logging(mod_gm_opt);
+            gm_log( GM_LOG_TRACE, "log file rotated: %i\n", pd->last_log_rotation);
+        }
+    }
+    return NEB_OK;
 }
 
 /* handle process events */
@@ -1128,9 +1148,13 @@ static int read_arguments( const char *args_orig ) {
     return(verify);
 }
 
-
-/* verify our option */
-static int verify_options(mod_gm_opt_t *opt) {
+/* initialize logfile filehandles */
+void init_logging(mod_gm_opt_t *opt) {
+    pthread_mutex_lock(mod_gm_opt->lock);
+    if(opt->logfile_fp != NULL) {
+        fclose(opt->logfile_fp);
+        opt->logfile_fp = NULL;
+    }
 
     /* open new logfile */
     if ( opt->logmode == GM_LOG_MODE_AUTO && opt->logfile ) {
@@ -1145,6 +1169,14 @@ static int verify_options(mod_gm_opt_t *opt) {
     if ( opt->logmode == GM_LOG_MODE_AUTO ) {
         opt->logmode = GM_LOG_MODE_CORE;
     }
+    pthread_mutex_unlock(mod_gm_opt->lock);
+}
+
+/* verify our option */
+static int verify_options(mod_gm_opt_t *opt) {
+
+    init_logging(opt);
+
 
     /* did we get any server? */
     if(opt->server_num == 0) {

@@ -256,6 +256,7 @@ int set_default_options(mod_gm_opt_t *opt) {
 
     opt->set_queues_by_hand = 0;
     opt->result_workers     = 1;
+    opt->lock               = NULL;
     opt->crypt_key          = NULL;
     opt->result_queue       = NULL;
     opt->keyfile            = NULL;
@@ -1445,11 +1446,11 @@ void gm_log( int lvl, const char *text, ... ) {
     time_t t;
     va_list ap;
     struct tm now;
+    bool locked = false;
 
     if(mod_gm_opt != NULL) {
         debug_level = mod_gm_opt->debug_level;
         logmode     = mod_gm_opt->logmode;
-        fp          = mod_gm_opt->logfile_fp;
     }
 
     if(logmode == GM_LOG_MODE_CORE) {
@@ -1522,6 +1523,14 @@ void gm_log( int lvl, const char *text, ... ) {
         return;
     }
 
+    if(mod_gm_opt != NULL && logmode == GM_LOG_MODE_FILE) {
+        if(mod_gm_opt->lock != NULL) {
+            pthread_mutex_lock(mod_gm_opt->lock);
+            locked = true;
+        }
+        fp = mod_gm_opt->logfile_fp;
+    }
+
     if(logmode == GM_LOG_MODE_FILE && fp != NULL) {
         fprintf( fp, "%s%s %s", buffer1, buffer2, buffer3 );
         fflush( fp );
@@ -1533,6 +1542,9 @@ void gm_log( int lvl, const char *text, ... ) {
         /* stdout logging */
         printf( "%s%s %s", buffer1, buffer2, buffer3 );
     }
+
+    if(locked == true)
+        pthread_mutex_unlock(mod_gm_opt->lock);
 
     return;
 }
