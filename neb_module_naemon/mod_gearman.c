@@ -1163,7 +1163,9 @@ void init_logging(mod_gm_opt_t *opt) {
     if(opt->logmode == GM_LOG_MODE_FILE && opt->logfile && opt->debug_level < GM_LOG_STDOUT) {
         opt->logfile_fp = fopen(opt->logfile, "a+");
         if(opt->logfile_fp == NULL) {
+            opt->logmode = GM_LOG_MODE_CORE;
             gm_log( GM_LOG_ERROR, "error opening logfile: %s\n", opt->logfile );
+            opt->logmode = GM_LOG_MODE_FILE;
         }
     }
     if ( opt->logmode == GM_LOG_MODE_AUTO ) {
