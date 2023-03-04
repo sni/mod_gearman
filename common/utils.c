@@ -304,6 +304,7 @@ int set_default_options(mod_gm_opt_t *opt) {
     opt->has_starttime      = FALSE;
     opt->has_finishtime     = FALSE;
     opt->has_latency        = FALSE;
+    opt->latency_flatten_window = 30;
     opt->active             = GM_DISABLED;
 
     opt->restrict_command_characters = gm_strdup("$&();<>`\"'|");
@@ -558,6 +559,12 @@ int parse_args_line(mod_gm_opt_t *opt, char * arg, int recursion_level) {
     /* accept_clear_results */
     else if ( !strcmp( key, "accept_clear_results" ) ) {
         opt->accept_clear_results = parse_yes_or_no(value, GM_ENABLED);
+        return(GM_OK);
+    }
+
+    /* latency_flatten_window */
+    else if ( !strcmp( key, "latency_flatten_window" ) ) {
+        opt->latency_flatten_window = atoi(value);
         return(GM_OK);
     }
 
@@ -1096,6 +1103,11 @@ void dumpconfig(mod_gm_opt_t *opt, int mode) {
             gm_log( GM_LOG_DEBUG, "result_worker:                   %d\n", opt->result_workers);
         gm_log( GM_LOG_DEBUG, "do_hostchecks:                   %s\n", opt->do_hostchecks == GM_ENABLED ? "yes" : "no");
         gm_log( GM_LOG_DEBUG, "route_eventhandler_like_checks:  %s\n", opt->route_eventhandler_like_checks == GM_ENABLED ? "yes" : "no");
+        if(opt->latency_flatten_window > 0) {
+            gm_log( GM_LOG_DEBUG, "latency_flatten_window:          %d\n", opt->latency_flatten_window);
+        } else {
+            gm_log( GM_LOG_DEBUG, "latency_flatten_window:          disabled\n");
+        }
     }
     if(mode == GM_NEB_MODE || mode == GM_SEND_GEARMAN_MODE) {
         gm_log( GM_LOG_DEBUG, "result_queue:                    %s\n", opt->result_queue);

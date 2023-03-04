@@ -291,13 +291,17 @@ static void move_results_to_core(struct nm_event_execution_properties *evprop) {
     }
 
     gettimeofday(&tval_before, NULL);
-    gm_log( GM_LOG_DEBUG, "move_results_to_core()\n" );
+    gm_log( GM_LOG_TRACE3, "move_results_to_core()\n" );
+    schedule_event(1, move_results_to_core, NULL);
 
     /* safely move result list aside */
     pthread_mutex_lock(&mod_gm_result_list_mutex);
     tmp_list = mod_gm_result_list;
     mod_gm_result_list = NULL;
     pthread_mutex_unlock(&mod_gm_result_list_mutex);
+
+    if(tmp_list == NULL)
+        return;
 
     /* process result list */
     while(tmp_list) {
@@ -316,7 +320,6 @@ static void move_results_to_core(struct nm_event_execution_properties *evprop) {
     timersub(&tval_after, &tval_before, &tval_result);
 
     gm_log( GM_LOG_DEBUG, "move_results_to_core processed %d results in %ld.%06lds\n", count, (long int)tval_result.tv_sec, (long int)tval_result.tv_usec );
-    schedule_event(1, move_results_to_core, NULL);
 }
 
 /* add list to gearman result list */
@@ -856,7 +859,12 @@ static int handle_host_check( int event_type, void *data ) {
     if(hostdata->latency < 0)
         hostdata->latency = 0;
 
-    gm_log(GM_LOG_DEBUG, "received job for queue %s: %s, check_options: %d    latency so far: %.3fs\n", target_queue, hostdata->host_name, check_options, hostdata->latency);
+    gm_log(GM_LOG_DEBUG, "received job for queue %s: %s, check_options: %d    latency so far: %.3fs\n",
+            target_queue,
+            hostdata->host_name,
+            check_options,
+            hostdata->latency
+    );
 
     /* as we have to intercept host checks so early
      * (we cannot cancel checks otherwise)
@@ -1002,7 +1010,13 @@ static int handle_svc_check( int event_type, void *data ) {
     if(svcdata->latency < 0)
         svcdata->latency = 0;
 
-    gm_log(GM_LOG_DEBUG, "received job for queue %s: %s - %s, check_options: %d   latency so far: %.3fs\n", target_queue, svcdata->host_name, svcdata->service_description, check_options, svcdata->latency);
+    gm_log(GM_LOG_DEBUG, "received job for queue %s: %s - %s, check_options: %d   latency so far: %.3fs\n",
+        target_queue,
+        svcdata->host_name,
+        svcdata->service_description,
+        check_options,
+        svcdata->latency
+    );
 
     /* as we have to intercept service checks so early
      * (we cannot cancel checks otherwise)

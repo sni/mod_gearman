@@ -788,6 +788,17 @@ Default is no.
 ====
 
 
+latency_flatten_window::
+When enabled, reschedules host/service checks if their latency is more than
+one second. This value is the maximum delay in seconds applied to hosts/services.
+Set to 0 or less than 0 to disable rescheduling.
+Default is 30.
++
+====
+    latency_flatten_window=30
+====
+
+
 
 
 Worker Options
