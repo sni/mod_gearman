@@ -206,7 +206,7 @@ void *get_job( gearman_job_st *job, __attribute__((__unused__)) void *context, s
         return NULL;
     }
     gm_log( GM_LOG_TRACE, "got new job %s\n", gearman_job_handle(job));
-    gm_log( GM_LOG_TRACE, "%zu +++>\n%.*s\n<+++\n", wsize, wsize, workload);
+    gm_log( GM_LOG_TRACE, "%zu +++>\n%.*s\n<+++\n", wsize, (int)wsize, workload);
 
     /* decrypt data */
     mod_gm_decrypt(worker_ctx, &decrypted_data, workload, wsize, mod_gm_opt->transportmode);
@@ -627,7 +627,7 @@ void *return_status( gearman_job_st *job, __attribute__((__unused__)) void *cont
         return NULL;
     }
     gm_log( GM_LOG_TRACE, "got status job %s\n", gearman_job_handle(job));
-    gm_log( GM_LOG_TRACE, "%zu +++>\n%.*s\n<+++\n", wsize, wsize, workload);
+    gm_log( GM_LOG_TRACE, "%zu +++>\n%.*s\n<+++\n", wsize, (int)wsize, workload);
 
     /* set result pointer to success */
     *ret_ptr= GEARMAN_SUCCESS;

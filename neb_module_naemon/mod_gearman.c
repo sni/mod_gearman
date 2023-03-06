@@ -357,7 +357,7 @@ static int handle_progam_status_data_events(int event_type, void *data) {
         if(pd->last_log_rotation != gm_last_log_rotation) {
             gm_last_log_rotation = pd->last_log_rotation;
             init_logging(mod_gm_opt);
-            gm_log( GM_LOG_TRACE, "log file rotated: %i\n", pd->last_log_rotation);
+            gm_log( GM_LOG_TRACE, "log file rotated: %lu\n", pd->last_log_rotation);
         }
     }
     return NEB_OK;

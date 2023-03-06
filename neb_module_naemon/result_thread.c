@@ -132,7 +132,7 @@ void *get_results( gearman_job_st *job, __attribute__((__unused__)) void *contex
         return NULL;
     }
     gm_log( GM_LOG_TRACE, "got result %s\n", gearman_job_handle(job));
-    gm_log( GM_LOG_TRACE, "%zu +++>\n%.*s\n<+++\n", wsize, wsize, workload );
+    gm_log( GM_LOG_TRACE, "%zu +++>\n%.*s\n<+++\n", wsize, (int)wsize, workload );
 
     /* decrypt data */
     if(mod_gm_opt->transportmode == GM_ENCODE_AND_ENCRYPT && mod_gm_opt->accept_clear_results == GM_ENABLED) {
