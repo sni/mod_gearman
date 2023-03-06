@@ -199,6 +199,12 @@ orphan_return=2
 # Default is no.
 accept_clear_results=no
 
+# When latency_flatten_window is enabled, the module reschedules host/service checks
+# if their latency is more than one second. This value is the maximum delay in
+# seconds applied to hosts/services. Set to 0 or less than 0 to disable rescheduling.
+# Default is 30.
+latency_flatten_window=30
+
 # Gearman connection timeout(in milliseconds) while submitting jobs to
 # gearmand server
 # Default is -1(no timeout)

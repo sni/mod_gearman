@@ -87,7 +87,9 @@ static int   handle_export(int, void *);
 static void  set_target_queue( host *, service * );
 static int   handle_process_events( int, void * );
 static int   handle_progam_status_data_events( int, void * );
-static void move_results_to_core(struct nm_event_execution_properties *evprop);
+static void  move_results_to_core(struct nm_event_execution_properties *evprop);
+static int   handle_hst_check_result(int event_type, void *data);
+static int   handle_svc_check_result(int event_type, void *data);
 
 int nebmodule_init( int flags, char *args, nebmodule *handle ) {
     int broker_option_errors = 0;
@@ -217,6 +219,11 @@ static void register_neb_callbacks(void) {
 
     if ( mod_gm_opt->notifications == GM_ENABLED )
         neb_register_callback( NEBCALLBACK_CONTACT_NOTIFICATION_METHOD_DATA, gearman_module_handle, 0, handle_notifications );
+
+    if ( mod_gm_opt->latency_flatten_window > 0 ) {
+        neb_register_callback( NEBCALLBACK_HOST_CHECK_DATA, gearman_module_handle, 0, handle_hst_check_result );
+        neb_register_callback( NEBCALLBACK_SERVICE_CHECK_DATA, gearman_module_handle, 0, handle_svc_check_result );
+    }
 
     gm_log( GM_LOG_DEBUG, "registered neb callbacks\n" );
 }
@@ -1118,6 +1125,97 @@ static int handle_svc_check( int event_type, void *data ) {
     return NEBERROR_CALLBACKOVERRIDE;
 }
 
+/* reschedule high latency hosts */
+static int handle_hst_check_result( int event_type, void *data ) {
+    nebstruct_host_check_data *hstdata = ( nebstruct_host_check_data * )data;
+    host *hst;
+    check_result * chk_result;
+
+    if ( event_type != NEBCALLBACK_HOST_CHECK_DATA )
+        return NEB_OK;
+
+    /* ignore anything except processed checks */
+    if( hstdata->type != NEBTYPE_HOSTCHECK_PROCESSED)
+        return NEB_OK;
+
+    /* get objects */
+    if((hst=hstdata->object_ptr)==NULL) {
+        gm_log( GM_LOG_ERROR, "Host result handler received NULL host object pointer.\n" );
+        return NEB_ERROR;
+    }
+
+    if(hst->check_interval == 0.0)
+        return NEB_OK;
+
+    if((chk_result = hstdata->check_result_ptr)==NULL) {
+        gm_log( GM_LOG_ERROR, "Host result handler received NULL check result object pointer.\n" );
+        return NEB_ERROR;
+    }
+
+    if(chk_result->latency < 1)
+        return NEB_OK;
+
+    if(mod_gm_opt->latency_flatten_window <= 0)
+        return NEB_OK;
+
+    int delay_max = (int)(chk_result->latency);
+    if(delay_max < 5)
+        delay_max = 5;
+    if(delay_max > mod_gm_opt->latency_flatten_window)
+        delay_max = mod_gm_opt->latency_flatten_window;
+    int delay = ranged_urand(1, delay_max);
+    if(delay < 1)
+        delay = 1; // minimum to 1 second
+    schedule_host_check(hst, hst->next_check + delay, CHECK_OPTION_ALLOW_POSTPONE);
+    gm_log( GM_LOG_DEBUG, "delayed host %s by %d seconds (latency: %.3fs)\n", chk_result->host_name, delay, chk_result->latency);
+    return NEB_OK;
+}
+
+/* reschedule high latency services */
+static int handle_svc_check_result( int event_type, void *data ) {
+    nebstruct_service_check_data *svcdata = ( nebstruct_service_check_data * )data;
+    service *svc;
+    check_result * chk_result;
+
+    if ( event_type != NEBCALLBACK_SERVICE_CHECK_DATA )
+        return NEB_OK;
+
+    /* ignore anything except processed checks */
+    if( svcdata->type != NEBTYPE_SERVICECHECK_PROCESSED)
+        return NEB_OK;
+
+    /* get objects */
+    if((svc=svcdata->object_ptr)==NULL) {
+        gm_log( GM_LOG_ERROR, "Service result handler received NULL service object pointer.\n" );
+        return NEB_ERROR;
+    }
+
+    if(svc->check_interval == 0.0)
+        return NEB_OK;
+
+    if((chk_result = svcdata->check_result_ptr)==NULL) {
+        gm_log( GM_LOG_ERROR, "Service result handler received NULL check result object pointer.\n" );
+        return NEB_ERROR;
+    }
+
+    if(chk_result->latency < 1)
+        return NEB_OK;
+
+    if(mod_gm_opt->latency_flatten_window <= 0)
+        return NEB_OK;
+
+    int delay_max = (int)(chk_result->latency);
+    if(delay_max < 5)
+        delay_max = 5;
+    if(delay_max > mod_gm_opt->latency_flatten_window)
+        delay_max = mod_gm_opt->latency_flatten_window;
+    int delay = ranged_urand(1, delay_max);
+    if(delay < 1)
+        delay = 1; // minimum to 1 second
+    schedule_service_check(svc, svc->next_check + delay, CHECK_OPTION_ALLOW_POSTPONE);
+    gm_log( GM_LOG_DEBUG, "delayed service %s - %s by %d seconds (latency: %.3fs)\n", chk_result->host_name, chk_result->service_description, delay, chk_result->latency);
+    return NEB_OK;
+}
 
 /* parse the module arguments */
 static int read_arguments( const char *args_orig ) {

@@ -312,10 +312,6 @@ void *get_results( gearman_job_st *job, __attribute__((__unused__)) void *contex
         gm_log( GM_LOG_DEBUG, "host job completed: %s: exit %d, latency: %0.3f, exec_time: %0.3f\n", chk_result->host_name, chk_result->return_code, chk_result->latency, exec_time );
     }
 
-    /* reschedule next check if latency is to high to flatten curve */
-    if(active_check)
-        reschedule_high_latency(chk_result);
-
     /* add result to result list */
     mod_gm_add_result_to_list( chk_result );
 
@@ -356,34 +352,4 @@ int set_worker( gearman_worker_st **worker ) {
         gearman_worker_set_timeout(w, 30000);
 
     return GM_OK;
-}
-
-/* reschedule next check if latency is to high to flatten curve */
-void reschedule_high_latency(check_result * chk_result) {
-    if(chk_result->latency < 1)
-        return;
-
-    if(mod_gm_opt->latency_flatten_window <= 0)
-        return;
-
-    time_t current_time = time(NULL);
-    int delay_max = (int)(chk_result->latency);
-    if(delay_max > mod_gm_opt->latency_flatten_window)
-        delay_max = mod_gm_opt->latency_flatten_window;
-    int delay = ranged_urand(1, delay_max);
-    if(delay < 1)
-        delay = 1; // minimum to 1 second
-    if(chk_result->service_description != NULL) {
-        service * svc = find_service(chk_result->host_name, chk_result->service_description);
-        if(svc != NULL && svc->check_interval != 0.0 && svc->next_check > current_time) {
-            schedule_service_check(svc, svc->next_check + delay, CHECK_OPTION_ALLOW_POSTPONE);
-            gm_log( GM_LOG_DEBUG, "delayed service %s - %s by %d seconds (latency: %.3fs)\n", chk_result->host_name, chk_result->service_description, delay, chk_result->latency);
-        }
-    } else {
-        host * hst = find_host( chk_result->host_name );
-        if(hst != NULL && hst->check_interval != 0.0 && hst->next_check > current_time) {
-            schedule_host_check(hst, hst->next_check + delay, CHECK_OPTION_ALLOW_POSTPONE);
-            gm_log( GM_LOG_DEBUG, "delayed host %s by %d seconds (latency: %.3fs)\n", chk_result->host_name, delay, chk_result->latency);
-        }
-    }
 }
