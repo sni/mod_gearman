@@ -1838,6 +1838,24 @@ Default is no.
 </div></div>
 </div></div>
 </dd>
+<dt class="hdlist1">
+latency_flatten_window
+</dt>
+<dd>
+<p>
+When enabled, reschedules host/service checks if their latency is more than
+one second. This value is the maximum delay in seconds applied to hosts/services.
+Set to 0 or less than 0 to disable rescheduling.
+Default is 30.
+</p>
+<div class="exampleblock">
+<div class="content">
+<div class="literalblock">
+<div class="content">
+<pre><code>latency_flatten_window=30</code></pre>
+</div></div>
+</div></div>
+</dd>
 </dl></div>
 </div>
 <div class="sect2">
@@ -2711,7 +2729,7 @@ Make sure all your worker have the Monitoring-Plugins available under
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2022-08-24 16:29:59 CEST
+ 2023-03-05 04:41:38 CET
 </div>
 </div>
 </body>

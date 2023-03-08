@@ -1,3 +1,9 @@
+mod-gearman (5.1.0) UNRELEASED; urgency=low
+
+  * new upstream release
+
+ -- Sven Nierlein <sven@consol.de>  Wed, 08 Mar 2023 08:24:44 +0100
+
 mod-gearman (5.0.2) UNRELEASED; urgency=low
 
   * new upstream release

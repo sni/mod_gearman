@@ -1,6 +1,6 @@
 This file documents the revision history for mod_gearman.
 
-next:
+5.1.0 Wed Mar  8 08:24:27 CET 2023
           - reopen logfile after core rotation
           - add latency_flatten_window option
 
