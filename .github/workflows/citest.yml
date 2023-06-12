@@ -17,7 +17,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install apt-transport-https
           sudo sh -c "echo 'deb http://download.opensuse.org/repositories/home:/naemon:/daily/xUbuntu_$(lsb_release -rs)/ ./' >> /etc/apt/sources.list"
-          wget -q "https://build.opensuse.org/projects/home:naemon:daily/public_key" -O - | sudo apt-key add -
+          wget -q "https://build.opensuse.org/projects/home:naemon:daily/signing_keys/download?kind=gpg" -O - | sudo tee /etc/apt/trusted.gpg.d/obs.asc
           sudo apt-get update
           sudo apt-get autoremove -y
           sudo apt-get install -y devscripts build-essential equivs dpkg-dev valgrind cppcheck clang-14
