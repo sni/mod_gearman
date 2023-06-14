@@ -300,7 +300,7 @@ int get_gearman_server_data(mod_gm_server_status_t *stats, char ** message, char
             if((line = strsep( &output, "\n" )) != NULL) {
                 gm_log( GM_LOG_TRACE, "%s\n", line );
                 if(line[0] == 'O') {
-                    strncpy(*version, line+3, 10);
+                    snprintf(*version, GM_BUFFERSIZE, "%s", line+3);
                 } else {
                     snprintf(*version, GM_BUFFERSIZE, "%s", line);
                 }
