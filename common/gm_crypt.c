@@ -152,10 +152,23 @@ char *mod_gm_hexsum(const char *text) {
 int base64_decode(const char *source, int sourcelen, unsigned char * target) {
     int n = EVP_DecodeBlock(target, (const unsigned char*)source, sourcelen);
     if(n == -1) {
-        fprintf(stderr, "base64 decode failed: ");
-        ERR_print_errors_fp(stderr);
-        fprintf(stderr, "\n");
-        return(-1);
+        // try again and strip newlines, base64 decode fails if there are any newlines in the base64 string
+        char *stripped = gm_malloc(sizeof(char) * sourcelen);
+        int j = 0;
+        for(int i = 0; i < sourcelen; i++) {
+            if(source[i] != '\n') {
+                stripped[j++] = source[i];
+            }
+        }
+        stripped[j] = '\0';
+        n = EVP_DecodeBlock(target, (const unsigned char*)stripped, strlen(stripped));
+        gm_free(stripped);
+        if(n == -1) {
+            fprintf(stderr, "base64 decode failed: ");
+            ERR_print_errors_fp(stderr);
+            fprintf(stderr, "\n");
+            return(-1);
+        }
     }
     return(n);
 }

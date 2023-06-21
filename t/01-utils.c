@@ -30,7 +30,7 @@ mod_gm_opt_t * renew_opts() {
 }
 
 int main(void) {
-    plan(135);
+    plan(137);
 
     /* lowercase */
     char test[100];
@@ -98,6 +98,20 @@ int main(void) {
     is(mod_gm_opt->crypt_key, "11111111111111111111111111111111", "reading keyfile t/data/test3.key");
     ok(strlen(mod_gm_opt->crypt_key) == 32, "key size for t/data/test3.key");
 
+    // decode base 64 containing newlines
+    {
+        char * debase64 = NULL;
+        char * plaintext = "test test test test test test test testtest test test testtest test test testtest test test test test test test testtest test test testtest test test test\n";
+        char * base64_with_newlines = ""
+            "dGVzdCB0ZXN0IHRlc3QgdGVzdCB0ZXN0IHRlc3QgdGVzdCB0ZXN0dGVzdCB0ZXN0IHRlc3QgdGVz\n"
+            "dHRlc3QgdGVzdCB0ZXN0IHRlc3R0ZXN0IHRlc3QgdGVzdCB0ZXN0IHRlc3QgdGVzdCB0ZXN0IHRl\n"
+            "c3R0ZXN0IHRlc3QgdGVzdCB0ZXN0dGVzdCB0ZXN0IHRlc3QgdGVzdAo=";
+        int rc = mod_gm_decrypt(NULL, &debase64, base64_with_newlines, strlen(base64_with_newlines), GM_ENCODE_ONLY);
+        cmp_ok(rc, ">", 0, "decrypt worked", rc);
+        is(debase64, plaintext, "decoded base64 text is equal to source text");
+        free(debase64);
+    };
+
     /* base 64 en/decoding */
     struct {
             const char *plaintext;
@@ -120,7 +134,7 @@ int main(void) {
         /* decode base64 */
         char * debase64 = NULL;
         int rc = mod_gm_decrypt(NULL, &debase64, base64, strlen(base64), GM_ENCODE_ONLY);
-        cmp_ok(rc, "==", rc, "decrypt worked", rc);
+        cmp_ok(rc, ">", 0, "decrypt worked", rc);
         is(debase64, base64_tests[i].plaintext, "decoded base64 text is equal to source text");
         free(debase64);
         free(base64);
