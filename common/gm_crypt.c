@@ -155,7 +155,8 @@ int base64_decode(const char *source, int sourcelen, unsigned char * target) {
         // try again and strip newlines, base64 decode fails if there are any newlines in the base64 string
         char *stripped = gm_malloc(sizeof(char) * sourcelen);
         int j = 0;
-        for(int i = 0; i < sourcelen; i++) {
+        int i = 0;
+        for(i = 0; i < sourcelen; i++) {
             if(source[i] != '\n') {
                 stripped[j++] = source[i];
             }
