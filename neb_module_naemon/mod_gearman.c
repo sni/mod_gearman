@@ -170,7 +170,7 @@ int nebmodule_init( int flags, char *args, nebmodule *handle ) {
     }
 
     /* create client */
-    client = create_client(mod_gm_opt->server_list);
+    client = create_client_blocking(mod_gm_opt->server_list);
     if(client == NULL) {
         gm_log( GM_LOG_ERROR, "cannot start client\n" );
         return NEB_ERROR;
@@ -506,7 +506,7 @@ static int handle_eventhandler( int event_type, void *data ) {
                          GM_DEFAULT_JOB_RETRIES,
                          mod_gm_opt->transportmode,
                          mod_ctx,
-                         1,
+                         0,
                          mod_gm_opt->log_stats_interval
                         ) == GM_OK) {
         gm_log( GM_LOG_TRACE, "handle_eventhandler() finished successfully\n" );
@@ -710,7 +710,7 @@ static int handle_notifications( int event_type, void *data ) {
                          GM_DEFAULT_JOB_RETRIES,
                          mod_gm_opt->transportmode,
                          mod_ctx,
-                         1,
+                         0,
                          mod_gm_opt->log_stats_interval
                         ) == GM_OK) {
         gm_log( GM_LOG_TRACE, "handle_notifications() finished successfully\n" );
@@ -918,7 +918,7 @@ static int handle_host_check( int event_type, void *data ) {
                          GM_DEFAULT_JOB_RETRIES,
                          mod_gm_opt->transportmode,
                          mod_ctx,
-                         1,
+                         0,
                          mod_gm_opt->log_stats_interval
                         ) == GM_OK) {
     }
@@ -1074,7 +1074,7 @@ static int handle_svc_check( int event_type, void *data ) {
                          GM_DEFAULT_JOB_RETRIES,
                          mod_gm_opt->transportmode,
                          mod_ctx,
-                         1,
+                         0,
                          mod_gm_opt->log_stats_interval
                         ) == GM_OK) {
         gm_log( GM_LOG_TRACE, "handle_svc_check() finished successfully\n" );
@@ -1538,7 +1538,7 @@ int handle_perfdata(int event_type, void *data) {
                                  GM_DEFAULT_JOB_RETRIES,
                                  mod_gm_opt->transportmode,
                                  mod_ctx,
-                                 1,
+                                 0,
                                  mod_gm_opt->log_stats_interval
                                 ) == GM_OK) {
                 gm_log( GM_LOG_TRACE, "handle_perfdata() successfully added data to %s\n", perfdata_queue );
@@ -1680,7 +1680,7 @@ int handle_export(int callback_type, void *data) {
                               GM_DEFAULT_JOB_RETRIES,
                               mod_gm_opt->transportmode,
                               mod_ctx,
-                              1,
+                              0,
                               mod_gm_opt->log_stats_interval
                             );
         }
