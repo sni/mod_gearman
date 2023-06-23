@@ -1,13 +1,13 @@
 [Unit]
 Description=Mod-Gearman Worker
 Documentation=http://mod-gearman.org/docs.html
-After=network.target
+After=syslog.target network.target
 
 [Service]
 EnvironmentFile=/etc/sysconfig/mod-gearman-worker
-Type=forking
-PIDFile=%PIDFILE%
-ExecStart=%WORKERBIN% -d --config=%CONFIG_WORKER% --pidfile=%PIDFILE%
+Type=exec
+PIDFile=/run/mod-gearman-worker/mod-gearman-worker.pid
+ExecStart=%WORKERBIN% -d --config=%CONFIG_WORKER% --pidfile=/run/mod-gearman-worker/mod-gearman-worker.pid
 ExecReload=/bin/kill -HUP $MAINPID
 User=%USER%
 Group=%USER%

@@ -1,3 +1,4 @@
 debian/tmp/etc/mod_gearman/worker.conf etc/mod-gearman
 debian/tmp/usr/bin/mod_gearman_worker usr/sbin
 debian/tmp/usr/share/mod_gearman/mod_gearman_p1.pl usr/share/mod_gearman
+debian/tmp/run/mod-gearman-worker run/mod-gearman-worker

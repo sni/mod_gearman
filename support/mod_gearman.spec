@@ -58,6 +58,7 @@ test -f configure || ./autogen.sh
 
 # Install systemd entry
 %{__install} -D -m 0644 -p worker/daemon-systemd %{buildroot}%{_unitdir}/mod-gearman-worker.service
+mkdir -p %{buildroot}/run/mod-gearman-worker
 
 %if %{defined suse_version}
 mkdir -p %{buildroot}%{_fillupdir}
@@ -137,6 +138,7 @@ getent passwd naemon >/dev/null || \
 
 %attr(755,naemon,root) %{_localstatedir}/mod_gearman
 %attr(755,naemon,root) %{_localstatedir}/log/mod_gearman
+%attr(755,naemon,root) /run/mod-gearman-worker
 
 %defattr(-,root,root)
 %docdir %{_defaultdocdir}
