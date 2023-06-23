@@ -3,7 +3,7 @@
     notifempty
     sharedscripts
     postrotate
-        systemctl reload reload mod-gearman-worker > /dev/null 2>/dev/null || true
+        systemctl reload mod-gearman-worker > /dev/null 2>/dev/null || true
     endscript
     compress
 }
