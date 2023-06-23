@@ -105,8 +105,6 @@ replace_vars = sed -e 's:%CONFIG_WORKER%:$(sysconfdir)/mod_gearman/worker.conf:g
                -e 's:%LOGFILE_NEB%:$(localstatedir)/log/mod_gearman/mod_gearman_neb.log:g' \
                -e 's:%LOGFILE_WORKER%:$(localstatedir)/log/mod_gearman/mod_gearman_worker.log:g' \
                -e 's:%P1FILE%:$(datadir)/mod_gearman/mod_gearman_p1.pl:g' \
-               -e 's:%GPIDFILE%:$(localstatedir)/mod_gearman/gearmand.pid:g' \
-               -e 's:%GLOGFILE%:$(localstatedir)/mod_gearman/gearmand.log:g' \
                -e 's:%WORKERBIN%:$(bindir)/mod_gearman_worker:g' \
                -e 's:%USER%:$(user):g'
 
