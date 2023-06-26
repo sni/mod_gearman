@@ -1980,6 +1980,10 @@ static int try_check_dummy(const char * command_line, host * hst, service * svc)
 
     char *output = strtok( NULL, "");
 
+    if(output == NULL) {
+        output = "";
+    }
+
     // string starts with single quote, take string until next single quote
     if(output[0] == '"') {
         output++;
@@ -1992,7 +1996,10 @@ static int try_check_dummy(const char * command_line, host * hst, service * svc)
     }
     // string starts with something else, parse till first whitespace
     else {
-        output = strtok( output, " \t");
+        char *remain = strtok( output, " \t");
+        if(remain != NULL) {
+            output = remain;
+        }
     }
 
     if ( ( chk_result = ( check_result * )gm_malloc( sizeof *chk_result ) ) == 0 ) {
