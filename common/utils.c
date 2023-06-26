@@ -309,6 +309,7 @@ int set_default_options(mod_gm_opt_t *opt) {
 
     opt->restrict_command_characters = gm_strdup("$&();<>`\"'|");
     opt->workaround_rc_25            = GM_DISABLED;
+    opt->internal_check_dummy        = TRUE;
 
     opt->host               = NULL;
     opt->service            = NULL;
@@ -982,6 +983,12 @@ int parse_args_line(mod_gm_opt_t *opt, char * arg, int recursion_level) {
     /* timeout while connecting to gearmand server*/
     else if ( !strcmp( key, "gearman_connection_timeout" ) ) {
         opt->gearman_connection_timeout = atoi( value );
+    }
+
+    /* internal_check_dummy */
+    else if ( !strcmp( key, "internal_check_dummy" ) ) {
+        opt->internal_check_dummy = parse_yes_or_no(value, GM_ENABLED);
+        return(GM_OK);
     }
 
     else if ( !strcmp( key, "prometheus_server" )

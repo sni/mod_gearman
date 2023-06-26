@@ -1,5 +1,8 @@
 This file documents the revision history for mod_gearman.
 
+next:
+          - neb: add internal check_dummy
+
 5.1.1 Wed Jun 21 14:57:30 CEST 2023
           - neb: fix gearmand memory leak (#167)
           - gearman_top: fix extracting gearmand version

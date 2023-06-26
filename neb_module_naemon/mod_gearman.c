@@ -90,6 +90,7 @@ static int   handle_progam_status_data_events( int, void * );
 static void  move_results_to_core(struct nm_event_execution_properties *evprop);
 static int   handle_hst_check_result(int event_type, void *data);
 static int   handle_svc_check_result(int event_type, void *data);
+static int   try_check_dummy(const char *, host *, service * );
 
 int nebmodule_init( int flags, char *args, nebmodule *handle ) {
     int broker_option_errors = 0;
@@ -821,7 +822,6 @@ static int handle_notifications( int event_type, void *data ) {
 /* handle host check events */
 static int handle_host_check( int event_type, void *data ) {
     nebstruct_host_check_data * hostdata;
-    char *raw_command=NULL;
     char *processed_command=NULL;
     host * hst;
 #ifdef CHECK_OPTION_ORPHAN_CHECK
@@ -892,6 +892,11 @@ static int handle_host_check( int event_type, void *data ) {
         return NEBERROR_CALLBACKCANCEL;
     }
 
+    /* intercept dummy checks */
+    if(mod_gm_opt->internal_check_dummy && try_check_dummy(processed_command, hst, NULL) == GM_OK) {
+        return NEBERROR_CALLBACKOVERRIDE;
+    }
+
     /* set the execution flag */
     hst->is_executing=TRUE;
 
@@ -923,17 +928,12 @@ static int handle_host_check( int event_type, void *data ) {
                         ) == GM_OK) {
     }
     else {
-        my_free(raw_command);
-
         /* unset the execution flag */
         hst->is_executing=FALSE;
 
         gm_log( GM_LOG_ERROR, "failed to send host check to gearmand\n" );
         return NEBERROR_CALLBACKCANCEL;
     }
-
-    /* clean up */
-    my_free(raw_command);
 
     /* orphaned check - submit fake result to mark host as orphaned */
 #ifdef CHECK_OPTION_ORPHAN_CHECK
@@ -971,7 +971,6 @@ static int handle_host_check( int event_type, void *data ) {
 static int handle_svc_check( int event_type, void *data ) {
     host * hst   = NULL;
     service * svc = NULL;
-    char *raw_command=NULL;
     char *processed_command=NULL;
     nebstruct_service_check_data * svcdata;
     int prio = GM_JOB_PRIO_LOW;
@@ -1039,8 +1038,12 @@ static int handle_svc_check( int event_type, void *data ) {
     processed_command = svcdata->command_line;
     if(processed_command==NULL) {
         gm_log( GM_LOG_ERROR, "Processed check command for service '%s' on host '%s' was NULL - aborting.\n", svc->description, svc->host_name);
-        my_free(raw_command);
         return NEBERROR_CALLBACKCANCEL;
+    }
+
+    /* intercept dummy checks */
+    if(mod_gm_opt->internal_check_dummy && try_check_dummy(processed_command, hst, svc) == GM_OK) {
+        return NEBERROR_CALLBACKOVERRIDE;
     }
 
     /* set the execution flag */
@@ -1080,17 +1083,12 @@ static int handle_svc_check( int event_type, void *data ) {
         gm_log( GM_LOG_TRACE, "handle_svc_check() finished successfully\n" );
     }
     else {
-        my_free(raw_command);
-
         /* unset the execution flag */
         svc->is_executing=FALSE;
 
         gm_log( GM_LOG_ERROR, "failed to send service check to gearmand\n" );
         return NEBERROR_CALLBACKCANCEL;
     }
-
-    /* clean up */
-    my_free(raw_command);
 
     /* orphaned check - submit fake result to mark service as orphaned */
 #ifdef CHECK_OPTION_ORPHAN_CHECK
@@ -1955,4 +1953,102 @@ char * eventtype2str(int i) {
             return gm_strdup("EVENT_USER_FUNCTION"); break;
     }
     return gm_strdup("UNKNOWN");
+}
+
+/* intercept check_dummy calls and directly answer them */
+static int try_check_dummy(const char * command_line, host * hst, service * svc) {
+    check_result * chk_result;
+    int return_code = 3;
+
+    if(strstr(command_line, "/check_dummy") == NULL) {
+        return(GM_ERROR);
+    }
+
+    gm_log( GM_LOG_DEBUG, "using internal check dummy for cmd: '%s'\n", command_line);
+
+    char *cmd_line, *cmd_line_orig;
+    cmd_line_orig = cmd_line = gm_strdup(command_line);
+    char *check = strtok( cmd_line, " " );
+
+    if(strstr(check, "/check_dummy") == NULL) {
+        my_free(cmd_line_orig);
+        return(GM_ERROR);
+    }
+
+    char *arg1  = strtok( NULL, " " );
+    return_code = atoi(arg1);
+
+    char *output = strtok( NULL, "");
+
+    // string starts with single quote, take string until next single quote
+    if(output[0] == '"') {
+        output++;
+        output = strtok( output, "\"" );
+    }
+    // string starts with double quote, take string until next double quote
+    else if(output[0] == '\'') {
+        output++;
+        output = strtok( output, "'" );
+    }
+    // string starts with something else, parse till first whitespace
+    else {
+        output = strtok( output, " \t");
+    }
+
+    if ( ( chk_result = ( check_result * )gm_malloc( sizeof *chk_result ) ) == 0 ) {
+        my_free(cmd_line_orig);
+        return(GM_ERROR);
+    }
+
+    init_check_result(chk_result);
+    chk_result->host_name           = gm_strdup( hst->name );
+    if(svc != NULL) {
+        chk_result->service_description = gm_strdup( svc->description );
+    }
+    chk_result->scheduled_check     = TRUE;
+    chk_result->engine              = &mod_gearman_check_engine;
+    chk_result->output_file         = 0;
+    chk_result->output_file_fp      = NULL;
+    chk_result->output              = gm_strdup("dummy check result");
+    chk_result->return_code         = return_code;
+    chk_result->check_options       = CHECK_OPTION_NONE;
+    if(svc == NULL) {
+        chk_result->object_check_type   = HOST_CHECK;
+        chk_result->check_type          = HOST_CHECK_ACTIVE;
+    } else {
+        chk_result->object_check_type   = SERVICE_CHECK;
+        chk_result->check_type          = SERVICE_CHECK_ACTIVE;
+    }
+    chk_result->start_time.tv_sec   = (unsigned long)time(NULL);
+    chk_result->finish_time.tv_sec  = (unsigned long)time(NULL);
+    chk_result->latency             = 0;
+
+    switch(return_code) {
+        case 0:
+            gm_asprintf(&chk_result->output, "OK: %s\n", output);
+            chk_result->return_code = 0;
+            break;
+        case 1:
+            gm_asprintf(&chk_result->output, "WARNING: %s\n", output);
+            chk_result->return_code = 1;
+            break;
+        case 2:
+            gm_asprintf(&chk_result->output, "CRITICAL: %s\n", output);
+            chk_result->return_code = 2;
+            break;
+        case 3:
+            gm_asprintf(&chk_result->output, "UNKNOWN: %s\n", output);
+            chk_result->return_code = 3;
+            break;
+        default:
+            gm_asprintf(&chk_result->output, "UNKNOWN: Status %s is not a supported error state", arg1);
+            chk_result->return_code = 3;
+            break;
+    }
+
+    my_free(cmd_line_orig);
+    mod_gm_add_result_to_list( chk_result );
+    chk_result = NULL;
+
+    return(GM_OK);
 }

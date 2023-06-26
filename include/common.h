@@ -224,6 +224,7 @@ typedef struct mod_gm_opt_struct {
     int            orphan_service_checks;                   /**< generate fake result for orphaned service checks */
     int            accept_clear_results;                    /**< accept unencrypted results */
     int            latency_flatten_window;                  /**< postpone high latency checks */
+    int            internal_check_dummy;                    /**< handle check_dummy checks internally */
 /* worker */
     char         * identifier;                              /**< identifier for this worker */
     char         * pidfile;                                 /**< path to a pidfile */
