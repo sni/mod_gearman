@@ -9,8 +9,8 @@ PIDFile=/run/mod-gearman-worker/mod-gearman-worker.pid
 RuntimeDirectory=mod-gearman-worker
 ExecStart=/usr/sbin/mod_gearman_worker --config=/etc/mod-gearman/worker.conf --pidfile=/run/mod-gearman-worker/mod-gearman-worker.pid
 ExecReload=/bin/kill -HUP $MAINPID
-User=%USER%
-Group=%USER%
+User=naemon
+Group=naemon
 StandardOutput=journal
 StandardError=inherit
 
