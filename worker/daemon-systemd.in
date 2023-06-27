@@ -5,7 +5,6 @@ After=syslog.target network.target
 
 [Service]
 EnvironmentFile=/etc/sysconfig/mod-gearman-worker
-Type=exec
 PIDFile=/run/mod-gearman-worker/mod-gearman-worker.pid
 RuntimeDirectory=mod-gearman-worker
 ExecStart=%WORKERBIN% -d --config=%CONFIG_WORKER% --pidfile=/run/mod-gearman-worker/mod-gearman-worker.pid
