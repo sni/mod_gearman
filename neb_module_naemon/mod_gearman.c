@@ -1959,6 +1959,7 @@ char * eventtype2str(int i) {
 static int try_check_dummy(const char * command_line, host * hst, service * svc) {
     check_result * chk_result;
     int return_code = 3;
+    int check_for_shell_chars = FALSE;
 
     if(strstr(command_line, "/check_dummy") == NULL) {
         return(GM_ERROR);
@@ -1976,20 +1977,21 @@ static int try_check_dummy(const char * command_line, host * hst, service * svc)
     }
 
     char *arg1  = strtok( NULL, " " );
-    return_code = atoi(arg1);
+    if(arg1 == NULL)
+        arg1 = "";
 
     char *output = strtok( NULL, "");
-
     if(output == NULL) {
         output = "";
     }
 
-    // string starts with single quote, take string until next single quote
+    // string starts with double quote, take string until next double quote
     if(output[0] == '"') {
         output++;
         output = strtok( output, "\"" );
+        check_for_shell_chars = TRUE;
     }
-    // string starts with double quote, take string until next double quote
+    // string starts with single quote, take string until next single quote
     else if(output[0] == '\'') {
         output++;
         output = strtok( output, "'" );
@@ -2000,6 +2002,12 @@ static int try_check_dummy(const char * command_line, host * hst, service * svc)
         if(remain != NULL) {
             output = remain;
         }
+        check_for_shell_chars = TRUE;
+    }
+
+    if(check_for_shell_chars && strpbrk(output, "$&();<>`\"'|") != NULL) {
+        my_free(cmd_line_orig);
+        return(GM_ERROR);
     }
 
     if ( ( chk_result = ( check_result * )gm_malloc( sizeof *chk_result ) ) == 0 ) {
@@ -2016,8 +2024,6 @@ static int try_check_dummy(const char * command_line, host * hst, service * svc)
     chk_result->engine              = &mod_gearman_check_engine;
     chk_result->output_file         = 0;
     chk_result->output_file_fp      = NULL;
-    chk_result->output              = gm_strdup("dummy check result");
-    chk_result->return_code         = return_code;
     chk_result->check_options       = CHECK_OPTION_NONE;
     if(svc == NULL) {
         chk_result->object_check_type   = HOST_CHECK;
@@ -2030,27 +2036,37 @@ static int try_check_dummy(const char * command_line, host * hst, service * svc)
     chk_result->finish_time.tv_sec  = (unsigned long)time(NULL);
     chk_result->latency             = 0;
 
-    switch(return_code) {
-        case 0:
-            gm_asprintf(&chk_result->output, "OK: %s\n", output);
-            chk_result->return_code = 0;
-            break;
-        case 1:
-            gm_asprintf(&chk_result->output, "WARNING: %s\n", output);
-            chk_result->return_code = 1;
-            break;
-        case 2:
-            gm_asprintf(&chk_result->output, "CRITICAL: %s\n", output);
-            chk_result->return_code = 2;
-            break;
-        case 3:
-            gm_asprintf(&chk_result->output, "UNKNOWN: %s\n", output);
-            chk_result->return_code = 3;
-            break;
-        default:
-            gm_asprintf(&chk_result->output, "UNKNOWN: Status %s is not a supported error state", arg1);
-            chk_result->return_code = 3;
-            break;
+    if(!strcmp(arg1, "-V") || !strcmp(arg1, "--version")) {
+        gm_asprintf(&chk_result->output, "internal mod-gearman check_dummy, v%s\n", GM_VERSION);
+        chk_result->return_code = 3;
+    }
+    else if(!strcmp(arg1, "-h") || !strcmp(arg1, "--help") || strspn (arg1, "0123456789 ") != strlen (arg1)) {
+        gm_asprintf(&chk_result->output, "usage: check_dummy <state> <output>\nsee check_dummy --help for complete help.");
+        chk_result->return_code = 3;
+    } else {
+        return_code = atoi(arg1);
+        switch(return_code) {
+            case 0:
+                gm_asprintf(&chk_result->output, "OK: %s\n", output);
+                chk_result->return_code = 0;
+                break;
+            case 1:
+                gm_asprintf(&chk_result->output, "WARNING: %s\n", output);
+                chk_result->return_code = 1;
+                break;
+            case 2:
+                gm_asprintf(&chk_result->output, "CRITICAL: %s\n", output);
+                chk_result->return_code = 2;
+                break;
+            case 3:
+                gm_asprintf(&chk_result->output, "UNKNOWN: %s\n", output);
+                chk_result->return_code = 3;
+                break;
+            default:
+                gm_asprintf(&chk_result->output, "UNKNOWN: Status %s is not a supported error state", arg1);
+                chk_result->return_code = 3;
+                break;
+        }
     }
 
     my_free(cmd_line_orig);
