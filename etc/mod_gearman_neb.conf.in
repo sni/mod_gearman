@@ -205,6 +205,11 @@ accept_clear_results=no
 # Default is 30.
 latency_flatten_window=30
 
+# Use internal check_dummy which directly creates a check result instead of
+# pushing the command to a worker. Only used if first file in command ends with /check_dummy
+# and no shell special characters are used (except quotes)
+internal_check_dummy=yes
+
 # Gearman connection timeout(in milliseconds) while submitting jobs to
 # gearmand server
 # Default is -1(no timeout)
