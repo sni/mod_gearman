@@ -2,6 +2,7 @@ This file documents the revision history for mod_gearman.
 
 next:
           - neb: add internal check_dummy
+          - change pid file location to /run in packages
 
 5.1.1 Wed Jun 21 14:57:30 CEST 2023
           - neb: fix gearmand memory leak (#167)
