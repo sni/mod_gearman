@@ -1976,20 +1976,34 @@ static int try_check_dummy(const char * command_line, host * hst, service * svc)
         return(GM_ERROR);
     }
 
+
     char *arg1  = strtok( NULL, " " );
+    char *output = strtok( NULL, "");
     if(arg1 == NULL)
         arg1 = "";
-
-    char *output = strtok( NULL, "");
-    if(output == NULL) {
-        output = "";
+    // return code starts with double quote, take string until next double quote
+    if(arg1[0] == '"') {
+        arg1++;
+        arg1 = strtok( arg1, "\"" );
+        if(arg1 == NULL)
+            arg1 = "";
     }
+    // return code starts with single quote, take string until next single quote
+    else if(arg1[0] == '\'') {
+        arg1++;
+        arg1 = strtok( arg1, "'" );
+    }
+
+    if(output == NULL)
+        output = "";
 
     // string starts with double quote, take string until next double quote
     if(output[0] == '"') {
         output++;
         output = strtok( output, "\"" );
         check_for_shell_chars = TRUE;
+        if(output == NULL)
+            output = "";
     }
     // string starts with single quote, take string until next single quote
     else if(output[0] == '\'') {

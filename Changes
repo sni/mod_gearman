@@ -1,5 +1,9 @@
 This file documents the revision history for mod_gearman.
 
+next:
+          - check_dummy: fix crash if output is empty
+          - check_dummy: support putting return code in quotes
+
 5.1.2 Thu Jun 29 11:02:35 CEST 2023
           - neb: add internal check_dummy
           - change pid file location to /run in packages
