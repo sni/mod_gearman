@@ -215,15 +215,10 @@ void *get_results( gearman_job_st *job, __attribute__((__unused__)) void *contex
                 char *tmp_newline = replace_str(value, "\\n", "\n");
                 if (tmp_newline == NULL)
                     chk_result->output = gm_strdup("(null)");
-
-                char *tmp_backslash = replace_str(tmp_newline, "\\\\", "\\");
-                if (tmp_backslash == NULL)
-                    chk_result->output = gm_strdup("(null)");
                 else
-                    chk_result->output = gm_strdup( tmp_backslash );
+                    chk_result->output = gm_strdup( tmp_newline );
 
                 gm_free(tmp_newline);
-                gm_free(tmp_backslash);
             }
         }
 
