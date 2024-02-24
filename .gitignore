@@ -49,3 +49,6 @@ perlxsi.c
 mod_gearman_mini_epn
 worker/daemon-systemd
 .vscode/
+config.guess
+config.sub
+configure~
