@@ -144,6 +144,9 @@ if test "$USEPERL" = "yes"; then
 fi
 
 ##############################################
+AC_DEFINE_UNQUOTED([GIT_HASH], "`git describe --always 2>/dev/null`", ["git version information"])
+
+##############################################
 AM_CONDITIONAL(USEBSD, test "$(uname)" = "FreeBSD")
 
 ##############################################

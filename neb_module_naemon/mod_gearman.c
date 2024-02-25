@@ -187,7 +187,10 @@ int nebmodule_init( int flags, char *args, nebmodule *handle ) {
     if ( mod_gm_opt->logmode != GM_LOG_MODE_CORE ) {
         int logmode_saved = mod_gm_opt->logmode;
         mod_gm_opt->logmode = GM_LOG_MODE_CORE;
-        gm_log( GM_LOG_INFO,  "initialized version %s (libgearman %s)\n", GM_VERSION, gearman_version() );
+        if(strlen(GIT_HASH) > 0)
+            gm_log( GM_LOG_INFO,  "initialized version %s (build: %s) (libgearman %s)\n", GM_VERSION, GIT_HASH, gearman_version() );
+        else
+            gm_log( GM_LOG_INFO,  "initialized version %s (libgearman %s)\n", GM_VERSION, gearman_version() );
         mod_gm_opt->logmode = logmode_saved;
     }
 
