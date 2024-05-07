@@ -67,7 +67,7 @@ int main (int argc, char **argv) {
     /*
      * and parse command line
      */
-    while((opt = getopt(argc, argv, "qvVhH:s:i:b")) != -1) {
+    while((opt = getopt(argc, argv, "qvVhH:s:i:bt:")) != -1) {
         switch(opt) {
             case 'h':   print_usage();
                         break;
@@ -81,6 +81,8 @@ int main (int argc, char **argv) {
             case 'q':   opt_quiet = GM_ENABLED;
                         break;
             case 'i':   opt_interval = atof(optarg) * 1000000;
+                        break;
+            case 't':   con_timeout = atoi(optarg);
                         break;
             case 'b':   opt_batch = GM_ENABLED;
                         break;
@@ -171,14 +173,15 @@ void print_version() {
 void print_usage() {
     printf("usage:\n");
     printf("\n");
-    printf("gearman_top   [ -H <hostname>[:port]           ]\n");
-    printf("              [ -i <sec>       seconds         ]\n");
-    printf("              [ -q             quiet mode      ]\n");
-    printf("              [ -b             batch mode      ]\n");
+    printf("gearman_top   [ -H <hostname>[:port]               ]\n");
+    printf("              [ -i <sec>       interval in seconds ]\n");
+    printf("              [ -t <sec>       timeout in seconds  ]\n");
+    printf("              [ -q             quiet mode          ]\n");
+    printf("              [ -b             batch mode          ]\n");
     printf("\n");
-    printf("              [ -h             print help      ]\n");
-    printf("              [ -v             verbose output  ]\n");
-    printf("              [ -V             print version   ]\n");
+    printf("              [ -h             print help          ]\n");
+    printf("              [ -v             verbose output      ]\n");
+    printf("              [ -V             print version       ]\n");
     printf("\n");
 
     exit( EXIT_SUCCESS );
