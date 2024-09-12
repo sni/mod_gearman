@@ -45,7 +45,7 @@ extern int            service_check_timeout;
 extern int            host_check_timeout;
 extern int            process_performance_data;
 extern int            log_notifications;
-extern int            log_global_notificatons;
+extern int            log_global_notifications;
 
 /* global variables */
 static objectlist * mod_gm_result_list = NULL;
@@ -732,7 +732,7 @@ static int handle_notifications( int event_type, void *data ) {
     my_free(processed_command);
 
     /* log the notification to program log file */
-    if ((ds->contact_name == NULL && log_global_notificatons == TRUE) || (ds->contact_name != NULL && log_notifications == TRUE)) {
+    if ((ds->contact_name == NULL && log_global_notifications == TRUE) || (ds->contact_name != NULL && log_notifications == TRUE)) {
         if(svc != NULL) {
             switch(ds->reason_type) {
                 case NOTIFICATION_CUSTOM:

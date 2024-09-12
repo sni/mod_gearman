@@ -33,7 +33,7 @@ unsigned long event_broker_options;
 timed_event *schedule_event(__attribute__((unused)) time_t delay, __attribute__((unused)) event_callback callback, __attribute__((unused)) void *user_data) { return(NULL); }
 int process_performance_data;
 int log_notifications;
-int log_global_notificatons;
+int log_global_notifications;
 
 #pragma GCC diagnostic push    //Save actual diagnostics state
 #pragma GCC diagnostic ignored "-Wpedantic"    //Disable pedantic
