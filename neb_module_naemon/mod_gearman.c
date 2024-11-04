@@ -911,8 +911,9 @@ static int handle_host_check( int event_type, void *data ) {
     gm_log( GM_LOG_TRACE, "cmd_line: %s\n", processed_command );
 
     temp_buffer[0]='\x0';
-    snprintf( temp_buffer,GM_MAX_OUTPUT-1,"type=host\nresult_queue=%s\nhost_name=%s\ncore_time=%Lf\ntimeout=%d\ncommand_line=%s\n\n\n",
+    snprintf( temp_buffer,GM_MAX_OUTPUT-1,"type=host\nresult_queue=%s\ntarget_queue=%s\nhost_name=%s\ncore_time=%Lf\ntimeout=%d\ncommand_line=%s\n\n\n",
               mod_gm_opt->result_queue,
+              target_queue,
               hst->name,
               timeval2double(&core_time) - hostdata->latency, // can only assume planned start date since next_check already advanced to next check and last_check still points to previous check
               host_check_timeout,
@@ -1060,8 +1061,9 @@ static int handle_svc_check( int event_type, void *data ) {
     gm_log( GM_LOG_TRACE, "cmd_line: %s\n", processed_command );
 
     temp_buffer[0]='\x0';
-    snprintf( temp_buffer,GM_MAX_OUTPUT-1,"type=service\nresult_queue=%s\nhost_name=%s\nservice_description=%s\ncore_time=%Lf\ntimeout=%d\ncommand_line=%s\n\n\n",
+    snprintf( temp_buffer,GM_MAX_OUTPUT-1,"type=service\nresult_queue=%s\ntarget_queue=%s\nhost_name=%s\nservice_description=%s\ncore_time=%Lf\ntimeout=%d\ncommand_line=%s\n\n\n",
               mod_gm_opt->result_queue,
+              target_queue,
               svcdata->host_name,
               svcdata->service_description,
               timeval2double(&core_time) - svcdata->latency, // can only assume planned start date since next_check already advanced to next check and last_check still points to previous check
