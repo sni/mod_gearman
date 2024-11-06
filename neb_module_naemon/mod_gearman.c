@@ -352,7 +352,7 @@ static void start_threads(void) {
         int x;
         for(x = 0; x < mod_gm_opt->result_workers; x++) {
             result_threads_running++;
-            thr = malloc(sizeof(pthread_t));
+            thr = gm_malloc(sizeof(pthread_t));
             if((ret = pthread_create ( thr, NULL, result_worker, (void *)&result_threads_running)) != OK) {
                 gm_log( GM_LOG_ERROR, "failed to create result thread: %s\n", strerror(ret));
                 result_thr[x] = NULL;
