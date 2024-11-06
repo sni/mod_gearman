@@ -11,6 +11,6 @@ char * eventtype2str(__attribute__((__unused__)) int i) {
 }
 
 void nm_log(__attribute__((__unused__)) int, __attribute__((__unused__))const char *, ...);
-void nm_log(__attribute__((__unused__)) int, __attribute__((__unused__))const char *, ...) {
+void nm_log(__attribute__((__unused__)) int lvl, __attribute__((__unused__))const char * data, ...) {
     return;
 }
