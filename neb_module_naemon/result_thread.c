@@ -74,6 +74,7 @@ void *result_worker( void * data ) {
         case GEARMAN_SUCCESS:
         case GEARMAN_TIMEOUT:
             break;
+        case GEARMAN_UNKNOWN_STATE:
         case GEARMAN_NO_JOBS:
         case GEARMAN_IO_WAIT:
             usleep(100000); // wait 100ms
