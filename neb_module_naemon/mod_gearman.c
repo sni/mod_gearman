@@ -54,7 +54,8 @@ static pthread_mutex_t mod_gm_log_lock = PTHREAD_MUTEX_INITIALIZER;
 void *gearman_module_handle=NULL;
 
 int result_threads_running;
-pthread_t result_thr[GM_LISTSIZE];
+int gm_should_terminate = FALSE;
+pthread_t * result_thr[GM_LISTSIZE];
 char target_queue[GM_SMALLBUFSIZE];
 char temp_buffer[GM_MAX_OUTPUT];
 char uniq[GM_SMALLBUFSIZE];
@@ -96,6 +97,7 @@ static int   try_check_dummy(const char *, host *, service * );
 int nebmodule_init( int flags, char *args, nebmodule *handle ) {
     int broker_option_errors = 0;
     result_threads_running   = 0;
+    gm_should_terminate = FALSE;
 
     /* save our handle */
     gearman_module_handle=handle;
@@ -185,15 +187,10 @@ int nebmodule_init( int flags, char *args, nebmodule *handle ) {
     schedule_event(1, move_results_to_core, NULL);
 
     /* log at least one line into the core logfile */
-    if ( mod_gm_opt->logmode != GM_LOG_MODE_CORE ) {
-        int logmode_saved = mod_gm_opt->logmode;
-        mod_gm_opt->logmode = GM_LOG_MODE_CORE;
-        if(strlen(GIT_HASH) > 0)
-            gm_log( GM_LOG_INFO,  "initialized version %s (build: %s) (libgearman %s)\n", GM_VERSION, GIT_HASH, gearman_version() );
-        else
-            gm_log( GM_LOG_INFO,  "initialized version %s (libgearman %s)\n", GM_VERSION, gearman_version() );
-        mod_gm_opt->logmode = logmode_saved;
-    }
+    if(strlen(GIT_HASH) > 0)
+        nm_log( NSLOG_INFO_MESSAGE, "mod_gearman: initialized version %s (build: %s) (libgearman %s)\n", GM_VERSION, GIT_HASH, gearman_version() );
+    else
+        nm_log( NSLOG_INFO_MESSAGE, "mod_gearman: initialized version %s (libgearman %s)\n", GM_VERSION, gearman_version() );
 
     gm_log( GM_LOG_DEBUG, "finished initializing\n" );
 
@@ -238,6 +235,7 @@ static void register_neb_callbacks(void) {
 int nebmodule_deinit( int flags, int reason ) {
     int x;
 
+    nm_log( NSLOG_INFO_MESSAGE, "mod_gearman: deinitializing\n" );
     gm_log( GM_LOG_TRACE, "nebmodule_deinit(%i, %i)\n", flags, reason );
 
     /* should be removed already, but just for the case it wasn't */
@@ -273,9 +271,13 @@ int nebmodule_deinit( int flags, int reason ) {
     gm_log( GM_LOG_DEBUG, "deregistered callbacks\n" );
 
     /* stop result threads */
+    gm_should_terminate = TRUE;
     for(x = 0; x < result_threads_running; x++) {
-        pthread_cancel(result_thr[x]);
-        pthread_join(result_thr[x], NULL);
+        if(pthread_join(*(result_thr[x]), NULL) != OK) {
+            gm_log( GM_LOG_ERROR, "failed to join result thread\n" );
+        }
+        gm_free(result_thr[x]);
+        result_thr[x] = NULL;
     }
 
     /* cleanup */
@@ -343,12 +345,21 @@ void mod_gm_add_result_to_list(check_result * newcheckresult) {
 
 /* start our threads */
 static void start_threads(void) {
+    int ret = 0;
+    pthread_t *thr;
     if ( result_threads_running < mod_gm_opt->result_workers ) {
         /* create result worker */
         int x;
         for(x = 0; x < mod_gm_opt->result_workers; x++) {
             result_threads_running++;
-            pthread_create ( &result_thr[x], NULL, result_worker, (void *)&result_threads_running);
+            thr = malloc(sizeof(pthread_t));
+            if((ret = pthread_create ( thr, NULL, result_worker, (void *)&result_threads_running)) != OK) {
+                gm_log( GM_LOG_ERROR, "failed to create result thread: %s\n", strerror(ret));
+                result_thr[x] = NULL;
+                result_threads_running--;
+            } else {
+                result_thr[x] = thr;
+            }
         }
     }
 }

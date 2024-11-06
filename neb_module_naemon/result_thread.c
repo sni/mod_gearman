@@ -36,6 +36,7 @@ extern float current_submit_rate;
 extern float current_avg_submit_duration;
 extern double current_submit_max;
 extern int result_threads_running;
+extern int gm_should_terminate;
 
 __thread EVP_CIPHER_CTX * result_ctx = NULL; /* make ssl context local in each thread */
 
@@ -54,20 +55,6 @@ static struct check_engine mod_gearman_check_engine = {
     NULL
 };
 
-/* cleanup and exit this thread */
-static void cancel_worker_thread (void * data) {
-
-    if(data != NULL) {
-        gearman_worker_st **worker = (gearman_worker_st**) data;
-        gm_free_worker(worker);
-    }
-
-    mod_gm_crypt_deinit(result_ctx);
-    gm_log( GM_LOG_DEBUG, "worker thread finished\n" );
-
-    return;
-}
-
 /* callback for task completed */
 void *result_worker( void * data ) {
     gearman_worker_st *worker = NULL;
@@ -77,28 +64,40 @@ void *result_worker( void * data ) {
     gm_log( GM_LOG_TRACE, "worker %d started\n", *worker_num );
     gethostname(hostname, GM_SMALLBUFSIZE-1);
 
-    pthread_setcancelstate (PTHREAD_CANCEL_ENABLE, NULL);
-    pthread_setcanceltype (PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
-
     set_worker(&worker);
-    pthread_cleanup_push(cancel_worker_thread, (void*) &worker);
 
     result_ctx = mod_gm_crypt_init(mod_gm_opt->crypt_key);
 
-    while ( 1 ) {
+    while( gm_should_terminate == FALSE ) {
         ret = gearman_worker_work(worker);
-        if ( ret != GEARMAN_SUCCESS && ret != GEARMAN_WORK_FAIL ) {
-            if ( ret != GEARMAN_TIMEOUT)
-                gm_log( GM_LOG_ERROR, "worker error: %s\n", gearman_worker_error(worker));
+        switch(ret) {
+        case GEARMAN_SUCCESS:
+        case GEARMAN_TIMEOUT:
+            break;
+        case GEARMAN_NO_JOBS:
+        case GEARMAN_IO_WAIT:
+            usleep(100000); // wait 100ms
+            break;
+        case GEARMAN_WORK_FAIL:
+        default:
+            gm_log( GM_LOG_ERROR, "worker error: %s\n", gearman_worker_error(worker));
 
             gm_free_worker(&worker);
             sleep(1);
-
             set_worker(&worker);
+            break;
+            gm_log( GM_LOG_ERROR, "worker error: %s\n", gearman_worker_error(worker));
+            break;
         }
     }
 
-    pthread_cleanup_pop(0);
+    if(worker != NULL) {
+        gm_free_worker(&worker);
+    }
+
+    mod_gm_crypt_deinit(result_ctx);
+    gm_log( GM_LOG_DEBUG, "worker thread finished\n" );
+
     return NULL;
 }
 
@@ -342,9 +341,10 @@ int set_worker( gearman_worker_st **worker ) {
     /* add our dummy queue, gearman sometimes forgets the last added queue */
     worker_add_function( w, "dummy", dummy);
 
-    /* let our worker renew itself every 30 seconds */
-    if(mod_gm_opt->server_num > 1)
-        gearman_worker_set_timeout(w, 30000);
+    // required to gracefully shutdown
+    // shutdown conditions are checked after each check result, so in worst case
+    // without any job, shutdown will take up to 5 seconds.
+    gearman_worker_set_timeout(w, 5000);
 
     return GM_OK;
 }
