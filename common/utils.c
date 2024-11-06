@@ -1462,9 +1462,9 @@ void gm_log( int lvl, const char *text, ... ) {
     char buffer1[GM_BUFFERSIZE];
     char buffer2[GM_BUFFERSIZE];
     char buffer3[GM_BUFFERSIZE];
-    time_t t;
-    va_list ap;
+    struct timeval tv;
     struct tm now;
+    va_list ap;
     bool locked = false;
 
     if(mod_gm_opt != NULL) {
@@ -1521,12 +1521,12 @@ void gm_log( int lvl, const char *text, ... ) {
     }
 
     /* set timestring */
-    t = time(NULL);
-    localtime_r(&t, &now);
-    strftime(buffer1, sizeof(buffer1), "[%Y-%m-%d %H:%M:%S]", &now );
+    gettimeofday(&tv, NULL);
+    localtime_r(&tv.tv_sec, &now);
+    strftime(buffer1, sizeof(buffer1), "[%Y-%m-%d %H:%M:%S", &now);
 
-    /* set timestring */
-    snprintf(buffer2, sizeof(buffer2), "[%i][%s]", getpid(), level );
+    /* append milliseconds and pid */
+    snprintf(buffer2, sizeof(buffer2), ",%03ld][%i][%s]", tv.tv_usec/1000, getpid(), level);
 
     va_start( ap, text );
     vsnprintf( buffer3, GM_BUFFERSIZE, text, ap );
