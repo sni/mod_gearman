@@ -373,7 +373,7 @@ void check_no_worker_running(char* logfile) {
 /* main tests */
 int main (__attribute__((unused)) int argc, __attribute__((unused)) char **argv, __attribute__((unused)) char **env) {
     int status, chld;
-    int tests = 123;
+    int tests = 122;
     int rrc;
     char cmd[150];
     char *result, *error;
