@@ -339,13 +339,10 @@ int set_worker( gearman_worker_st **worker ) {
         return GM_ERROR;
     }
 
-    /* add our dummy queue, gearman sometimes forgets the last added queue */
-    worker_add_function( w, "dummy", dummy);
-
     // required to gracefully shutdown
     // shutdown conditions are checked after each check result, so in worst case
-    // without any job, shutdown will take up to 5 seconds.
-    gearman_worker_set_timeout(w, 5000);
+    // without any job, shutdown will take up to 2 seconds.
+    gearman_worker_set_timeout(w, 2000);
 
     return GM_OK;
 }
