@@ -691,9 +691,9 @@ static int handle_notifications( int event_type, void *data ) {
 
     /* set the notification id macro */
     if(svc != NULL) {
-        gm_asprintf(&mac.x[MACRO_SERVICENOTIFICATIONID], "%lu", svc->current_notification_id);
+        gm_asprintf(&mac.x[MACRO_SERVICENOTIFICATIONID], "%s", svc->current_notification_id);
     } else {
-        gm_asprintf(&mac.x[MACRO_HOSTNOTIFICATIONID], "%lu", hst->current_notification_id);
+        gm_asprintf(&mac.x[MACRO_HOSTNOTIFICATIONID], "%s", hst->current_notification_id);
     }
 
     /* process any macros contained in the argument */

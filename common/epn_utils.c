@@ -311,8 +311,8 @@ int init_embedded_perl(char **env){
     exitstatus=perl_parse(my_perl,xs_init,2,(char **)embedding,env);
     if(!exitstatus)
         exitstatus=perl_run(my_perl);
-    free(*embedding);
     free(*(embedding+1));
+    free(*embedding);
 #endif
     return GM_OK;
 }
