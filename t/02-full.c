@@ -200,7 +200,6 @@ void create_modules() {
     worker = create_worker( mod_gm_opt->server_list);
     ok(worker != NULL, "created test worker");
     ok(worker_add_function( worker, GM_DEFAULT_RESULT_QUEUE, get_results ) == GM_OK, "added result worker");
-    ok(worker_add_function( worker, "dummy", dummy ) == GM_OK, "added dummy worker");
     gearman_worker_set_timeout(worker, 1000);
     return;
 }

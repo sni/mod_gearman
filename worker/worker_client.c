@@ -480,9 +480,6 @@ int set_worker(gearman_worker_st **w) {
         }
     }
 
-    /* add our dummy queue, gearman sometimes forgets the last added queue */
-    worker_add_function(*w, "dummy", dummy);
-
     return GM_OK;
 }
 
