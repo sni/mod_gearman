@@ -1,5 +1,13 @@
 This file documents the revision history for mod_gearman.
 
+5.1.5 Thu Nov  7 09:52:24 CET 2024
+          - improve result worker shutdown
+          - fix occasional crashes during core reload
+          - add millisecond precision to logs
+          - add support for global notifications
+          - add initial target queue into job data
+          - send_gearman: use encryption if key is available
+
 5.1.4 Wed Aug 28 09:55:09 CEST 2024
           - fix backslashes in plugin_output
 
