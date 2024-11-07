@@ -52,14 +52,15 @@ int main (int argc, char **argv) {
     }
 
     /* set logging */
-    mod_gm_opt->debug_level = GM_LOG_INFO;
-    mod_gm_opt->logmode     = GM_LOG_MODE_TOOLS;
+    mod_gm_opt->logmode = GM_LOG_MODE_TOOLS;
 
     /* init crypto functions */
     if(mod_gm_opt->encryption == GM_ENABLED) {
         ctx = mod_gm_crypt_init(mod_gm_opt->crypt_key);
+        gm_log(GM_LOG_DEBUG, "encryption enabled\n");
     } else {
         mod_gm_opt->transportmode = GM_ENCODE_ONLY;
+        gm_log(GM_LOG_DEBUG, "encryption is disabled\n");
     }
 
     /* create client */
@@ -102,8 +103,8 @@ int parse_arguments(int argc, char **argv) {
     mod_gm_opt = gm_malloc(sizeof(mod_gm_opt_t));
     set_default_options(mod_gm_opt);
 
-    /* special default: encryption disabled */
-    mod_gm_opt->encryption = GM_DISABLED;
+    /* special default: encryption enabled if key present */
+    mod_gm_opt->encryption = GM_AUTO;
 
     for(i=1;i<argc;i++) {
         char * arg   = gm_strdup( argv[i] );
@@ -145,6 +146,13 @@ int verify_options(mod_gm_opt_t *opt) {
     if(opt->server_num == 0) {
         printf("please specify at least one server\n" );
         return(GM_ERROR);
+    }
+
+    if(opt->encryption == GM_AUTO) {
+        opt->encryption = GM_DISABLED;
+        if(opt->crypt_key != NULL || opt->keyfile != NULL) {
+            opt->encryption = GM_ENABLED;
+        }
     }
 
     /* encryption without key? */

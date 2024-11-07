@@ -64,9 +64,9 @@ void *result_worker( void * data ) {
     gm_log( GM_LOG_TRACE, "worker %d started\n", *worker_num );
     gethostname(hostname, GM_SMALLBUFSIZE-1);
 
-    set_worker(&worker);
-
     result_ctx = mod_gm_crypt_init(mod_gm_opt->crypt_key);
+
+    set_worker(&worker);
 
     while( gm_should_terminate == FALSE ) {
         ret = gearman_worker_work(worker);
@@ -317,7 +317,6 @@ void *get_results( gearman_job_st *job, __attribute__((__unused__)) void *contex
 
     return NULL;
 }
-
 
 /* get the worker */
 int set_worker( gearman_worker_st **worker ) {

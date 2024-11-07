@@ -58,6 +58,7 @@
 #define GM_VERSION                 "5.1.4"
 #define GM_ENABLED                      1
 #define GM_DISABLED                     0
+#define GM_AUTO                         2
 #define GM_BUFFERSIZE               65536
 #define GM_SMALLBUFSIZE              1024
 #define GM_MAX_OUTPUT            10485760   /* limit plugin output size to 10mb */
