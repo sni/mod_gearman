@@ -275,44 +275,43 @@ int file_uses_embedded_perl(char *fname) {
 /* initializes embedded perl interpreter */
 int init_embedded_perl(char **env){
 #ifdef EMBEDDEDPERL
-    void **embedding;
+    char **argv;
     int exitstatus=0;
     int argc=2;
     argc=argc;
     struct stat stat_buf;
 
     /* make sure the P1 file exists... */
-    if(p1_file==NULL || stat(p1_file,&stat_buf)!=0){
+    if(p1_file == NULL || stat(p1_file,&stat_buf) != 0){
         use_embedded_perl=FALSE;
         gm_log(GM_LOG_ERROR,"Error: p1.pl file (%s) required for embedded Perl interpreter is missing!\n", p1_file);
-    }
-
-    else{
-        embedding=(void **)gm_malloc(2*sizeof(char *));
-        if(embedding==NULL)
+    } else {
+        argv = gm_malloc(3 * sizeof(char*));
+        if(argv == NULL)
             return GM_ERROR;
-        *embedding=gm_strdup("");
-        *(embedding+1)=gm_strdup(p1_file);
-        use_embedded_perl=TRUE;
-        PERL_SYS_INIT3(&argc,(char ***)&embedding,&env);
-        if((my_perl=perl_alloc())==NULL){
+        argv[0] = gm_strdup("");
+        argv[1] = gm_strdup(p1_file);
+        use_embedded_perl = TRUE;
+        PERL_SYS_INIT3(&argc, &argv, &env);
+        if((my_perl=perl_alloc()) == NULL){
             use_embedded_perl=FALSE;
             gm_log(GM_LOG_ERROR,"Error: Could not allocate memory for embedded Perl interpreter!\n");
         }
     }
 
     /* a fatal error occurred... */
-    if(use_embedded_perl==FALSE){
+    if(use_embedded_perl == FALSE){
         gm_log(GM_LOG_ERROR,"Bailing out due to errors encountered while initializing the embedded Perl interpreter.\n");
         return GM_ERROR;
     }
 
     perl_construct(my_perl);
-    exitstatus=perl_parse(my_perl,xs_init,2,(char **)embedding,env);
+    exitstatus=perl_parse(my_perl, xs_init, 2, argv, env);
     if(!exitstatus)
         exitstatus=perl_run(my_perl);
-    free(*(embedding+1));
-    free(*embedding);
+    free(argv[0]);
+    free(argv[1]);
+    free(argv);
 #endif
     return GM_OK;
 }
