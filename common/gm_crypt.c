@@ -29,7 +29,6 @@
 #include <gm_crypt.h>
 #include "common.h"
 
-int encryption_initialized = 0;
 unsigned char key[KEYBYTES];
 
 /* initialize encryption */
@@ -51,7 +50,6 @@ EVP_CIPHER_CTX * mod_gm_aes_init(const char * password) {
     // is not supported by openssl
     EVP_CIPHER_CTX_set_padding(ctx, 0);
 
-    encryption_initialized = 1;
     return(ctx);
 }
 
@@ -61,7 +59,6 @@ void mod_gm_aes_deinit(EVP_CIPHER_CTX *ctx) {
         EVP_CIPHER_CTX_free(ctx);
     ctx = NULL;
 
-    encryption_initialized = 0;
     return;
 }
 
@@ -71,7 +68,6 @@ int mod_gm_aes_encrypt(EVP_CIPHER_CTX * ctx, unsigned char * ciphertext, const u
     int len;
     int ciphertext_len;
 
-    assert(encryption_initialized == 1);
     assert(ctx != NULL);
 
     if(1 != EVP_EncryptInit_ex(ctx, EVP_aes_256_ecb(), NULL, key, NULL)) {
@@ -113,7 +109,6 @@ int mod_gm_aes_encrypt(EVP_CIPHER_CTX * ctx, unsigned char * ciphertext, const u
 int mod_gm_aes_decrypt(EVP_CIPHER_CTX * ctx, unsigned char * plaintext, unsigned char * ciphertext, int ciphertext_len) {
     int len;
 
-    assert(encryption_initialized == 1);
     assert(ctx != NULL);
 
     if(1 != EVP_DecryptInit_ex(ctx, EVP_aes_256_ecb(), NULL, key, NULL)) {
