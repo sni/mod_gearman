@@ -233,8 +233,6 @@ static void register_neb_callbacks(void) {
 
 /* deregister all events */
 int nebmodule_deinit( int flags, int reason ) {
-    int x;
-
     nm_log( NSLOG_INFO_MESSAGE, "mod_gearman: deinitializing\n" );
     gm_log( GM_LOG_TRACE, "nebmodule_deinit(%i, %i)\n", flags, reason );
 
@@ -263,7 +261,7 @@ int nebmodule_deinit( int flags, int reason ) {
     }
 
     /* register export callbacks */
-    for(x=0;x<GM_NEBTYPESSIZE;x++) {
+    for(int x = 0; x < GM_NEBTYPESSIZE; x++) {
         if(mod_gm_opt->exports[x]->elem_number > 0)
             neb_deregister_callback( x, gearman_module_handle );
     }
@@ -272,7 +270,7 @@ int nebmodule_deinit( int flags, int reason ) {
 
     /* stop result threads */
     gm_should_terminate = TRUE;
-    for(x = 0; x < result_threads_running; x++) {
+    for(int x = 0; x < result_threads_running; x++) {
         if(pthread_join(*(result_thr[x]), NULL) != OK) {
             gm_log( GM_LOG_ERROR, "failed to join result thread\n" );
         }
@@ -353,7 +351,7 @@ static void start_threads(void) {
         for(x = 0; x < mod_gm_opt->result_workers; x++) {
             result_threads_running++;
             thr = gm_malloc(sizeof(pthread_t));
-            if((ret = pthread_create ( thr, NULL, result_worker, (void *)&result_threads_running)) != OK) {
+            if((ret = pthread_create ( thr, NULL, result_worker, NULL)) != OK) {
                 gm_log( GM_LOG_ERROR, "failed to create result thread: %s\n", strerror(ret));
                 result_thr[x] = NULL;
                 result_threads_running--;

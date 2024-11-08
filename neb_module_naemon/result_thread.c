@@ -58,10 +58,10 @@ static struct check_engine mod_gearman_check_engine = {
 /* callback for task completed */
 void *result_worker( void * data ) {
     gearman_worker_st *worker = NULL;
-    int *worker_num = (int*)data;
     gearman_return_t ret;
 
-    gm_log( GM_LOG_TRACE, "worker %d started\n", *worker_num );
+    gm_log( GM_LOG_DEBUG, "worker thr-%ld started\n", pthread_self() );
+    gm_log( GM_LOG_TRACE, "worker args: %s\n", data );
     gethostname(hostname, GM_SMALLBUFSIZE-1);
 
     result_ctx = mod_gm_crypt_init(mod_gm_opt->crypt_key);
@@ -99,7 +99,7 @@ void *result_worker( void * data ) {
     }
 
     mod_gm_crypt_deinit(result_ctx);
-    gm_log( GM_LOG_DEBUG, "worker thread finished\n" );
+    gm_log( GM_LOG_DEBUG, "worker thr-%ld finished\n", pthread_self() );
 
     return NULL;
 }
