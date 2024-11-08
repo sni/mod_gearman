@@ -77,17 +77,19 @@ void *result_worker( void * data ) {
         case GEARMAN_UNKNOWN_STATE:
         case GEARMAN_NO_JOBS:
         case GEARMAN_IO_WAIT:
+            if( gm_should_terminate == TRUE )
+                break;
             usleep(100000); // wait 100ms
             break;
         case GEARMAN_WORK_FAIL:
         default:
             gm_log( GM_LOG_ERROR, "worker error: %s\n", gearman_worker_error(worker));
+            if( gm_should_terminate == TRUE )
+                break;
 
             gm_free_worker(&worker);
             sleep(1);
             set_worker(&worker);
-            break;
-            gm_log( GM_LOG_ERROR, "worker error: %s\n", gearman_worker_error(worker));
             break;
         }
     }
