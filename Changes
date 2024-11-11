@@ -1,5 +1,8 @@
 This file documents the revision history for mod_gearman.
 
+next:
+          - remove delay in result worker shutdown
+
 5.1.5 Thu Nov  7 09:52:24 CET 2024
           - improve result worker shutdown
           - fix occasional crashes during core reload
