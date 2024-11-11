@@ -93,6 +93,7 @@ static void  move_results_to_core(struct nm_event_execution_properties *evprop);
 static int   handle_hst_check_result(int event_type, void *data);
 static int   handle_svc_check_result(int event_type, void *data);
 static int   try_check_dummy(const char *, host *, service * );
+void shutdown_threads(void);
 
 int nebmodule_init( int flags, char *args, nebmodule *handle ) {
     int broker_option_errors = 0;
@@ -268,15 +269,7 @@ int nebmodule_deinit( int flags, int reason ) {
 
     gm_log( GM_LOG_DEBUG, "deregistered callbacks\n" );
 
-    /* stop result threads */
-    gm_should_terminate = TRUE;
-    for(int x = 0; x < result_threads_running; x++) {
-        if(pthread_join(*(result_thr[x]), NULL) != OK) {
-            gm_log( GM_LOG_ERROR, "failed to join result thread\n" );
-        }
-        gm_free(result_thr[x]);
-        result_thr[x] = NULL;
-    }
+    shutdown_threads();
 
     /* cleanup */
     gm_free_client(&client);
@@ -290,6 +283,24 @@ int nebmodule_deinit( int flags, int reason ) {
 
     mod_gm_crypt_deinit(mod_ctx);
     return NEB_OK;
+}
+
+void shutdown_threads() {
+    /* stop result threads */
+    gm_should_terminate = TRUE;
+    for(int x = 0; x < result_threads_running; x++) {
+        if(result_thr[x] == NULL) {
+            continue;
+        }
+        if(pthread_cancel(*(result_thr[x])) != OK) {
+            gm_log( GM_LOG_ERROR, "failed to join cancel thread: %s\n", strerror(errno) );
+        }
+        if(pthread_join(*(result_thr[x]), NULL) != OK) {
+            gm_log( GM_LOG_ERROR, "failed to join result thread: %s\n", strerror(errno) );
+        }
+        gm_free(result_thr[x]);
+        result_thr[x] = NULL;
+    }
 }
 
 /* insert results list into naemon core */
@@ -385,6 +396,10 @@ static int handle_process_events( int event_type, void *data ) {
     gm_log( GM_LOG_TRACE, "handle_process_events(%i, data)\n", event_type );
 
     ps = ( struct nebstruct_process_struct * )data;
+    if(ps->type == NEBTYPE_PROCESS_EVENTLOOPEND ) {
+        shutdown_threads();
+        return NEB_OK;
+    }
     if(ps->type != NEBTYPE_PROCESS_EVENTLOOPSTART ) {
         return NEB_OK;
     }

@@ -55,6 +55,18 @@ static struct check_engine mod_gearman_check_engine = {
     NULL
 };
 
+/* cleanup and exit this thread */
+static void cancel_worker_thread(void * data) {
+    if(data == NULL) {
+        return;
+    }
+
+    gearman_worker_st **worker = (gearman_worker_st**) data;
+    gm_free_worker(worker);
+
+    return;
+}
+
 /* callback for task completed */
 void *result_worker( void * data ) {
     gearman_worker_st *worker = NULL;
@@ -65,6 +77,10 @@ void *result_worker( void * data ) {
     gethostname(hostname, GM_SMALLBUFSIZE-1);
 
     result_ctx = mod_gm_crypt_init(mod_gm_opt->crypt_key);
+
+    pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
+    pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
+    pthread_cleanup_push(cancel_worker_thread, (void*) &worker);
 
     set_worker(&worker);
 
@@ -94,9 +110,8 @@ void *result_worker( void * data ) {
         }
     }
 
-    if(worker != NULL) {
-        gm_free_worker(&worker);
-    }
+    pthread_cleanup_pop(0);
+    gm_free_worker(&worker);
 
     mod_gm_crypt_deinit(result_ctx);
     gm_log( GM_LOG_DEBUG, "worker thr-%ld finished\n", pthread_self() );
@@ -340,10 +355,7 @@ int set_worker( gearman_worker_st **worker ) {
         return GM_ERROR;
     }
 
-    // required to gracefully shutdown
-    // shutdown conditions are checked after each check result, so in worst case
-    // without any job, shutdown will take up to 2 seconds.
-    gearman_worker_set_timeout(w, 2000);
+    gearman_worker_set_timeout(w, 30000);
 
     return GM_OK;
 }
