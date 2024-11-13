@@ -234,6 +234,8 @@ static void register_neb_callbacks(void) {
 
 /* deregister all events */
 int nebmodule_deinit( int flags, int reason ) {
+    int x = 0;
+
     nm_log( NSLOG_INFO_MESSAGE, "mod_gearman: deinitializing\n" );
     gm_log( GM_LOG_TRACE, "nebmodule_deinit(%i, %i)\n", flags, reason );
 
@@ -262,7 +264,7 @@ int nebmodule_deinit( int flags, int reason ) {
     }
 
     /* register export callbacks */
-    for(int x = 0; x < GM_NEBTYPESSIZE; x++) {
+    for(x = 0; x < GM_NEBTYPESSIZE; x++) {
         if(mod_gm_opt->exports[x]->elem_number > 0)
             neb_deregister_callback( x, gearman_module_handle );
     }
@@ -286,9 +288,11 @@ int nebmodule_deinit( int flags, int reason ) {
 }
 
 void shutdown_threads() {
+    int x = 0;
+
     /* stop result threads */
     gm_should_terminate = TRUE;
-    for(int x = 0; x < result_threads_running; x++) {
+    for(x = 0; x < result_threads_running; x++) {
         if(result_thr[x] == NULL) {
             continue;
         }
