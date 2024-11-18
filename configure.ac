@@ -11,6 +11,9 @@ AC_CONFIG_HEADER([config.h])
 
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 
+# silence warnings from perl inclues
+CFLAGS="${CFLAGS} -isystem /usr/lib64/perl5/CORE/"
+
 CFLAGS="${CFLAGS} -Wall -W -Wstrict-prototypes -Wmissing-prototypes -Wnested-externs -O -fPIC -D_GNU_SOURCE -D_REENTRANT -D_FILE_OFFSET_BITS=64"
 
 ##############################################
