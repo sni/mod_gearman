@@ -39,7 +39,6 @@ extern int result_threads_running;
 extern int gm_should_terminate;
 
 __thread EVP_CIPHER_CTX * result_ctx = NULL; /* make ssl context local in each thread */
-__thread int is_processing_job = FALSE;
 
 static const char *gearman_worker_source_name(void *source) {
     if(!source)
@@ -59,9 +58,6 @@ static struct check_engine mod_gearman_check_engine = {
 /* cleanup and exit this thread */
 static void cancel_worker_thread(void * data) {
     if(data == NULL) {
-        return;
-    }
-    if(is_processing_job == TRUE) {
         return;
     }
 
@@ -106,9 +102,10 @@ void *result_worker( void * data ) {
             gm_log( GM_LOG_ERROR, "worker error: %s\n", gearman_worker_error(worker));
             if( gm_should_terminate == TRUE )
                 break;
-
             gm_free_worker(&worker);
             sleep(1);
+            if( gm_should_terminate == TRUE )
+                break;
             set_worker(&worker);
             break;
         }
@@ -135,7 +132,6 @@ void *get_results( gearman_job_st *job, __attribute__((__unused__)) void *contex
     char *ptr;
     double now_f, core_starttime_f, starttime_f, finishtime_f, exec_time, latency;
     size_t wsize = 0;
-    is_processing_job = TRUE;
 
     /* for calculating real latency */
     gettimeofday(&now,NULL);
@@ -151,7 +147,6 @@ void *get_results( gearman_job_st *job, __attribute__((__unused__)) void *contex
     workload = (const char *)gearman_job_workload(job);
     if(workload == NULL) {
         *ret_ptr = GEARMAN_WORK_FAIL;
-        is_processing_job = FALSE;
         return NULL;
     }
     gm_log( GM_LOG_TRACE, "got result %s\n", gearman_job_handle(job));
@@ -181,13 +176,11 @@ void *get_results( gearman_job_st *job, __attribute__((__unused__)) void *contex
                                             total_submit_jobs,
                                             total_submit_errors
         );
-        is_processing_job = FALSE;
         return((void*)result);
     }
 
     if(decrypted_data == NULL) {
         *ret_ptr = GEARMAN_WORK_FAIL;
-        is_processing_job = FALSE;
         return NULL;
     }
     gm_log( GM_LOG_TRACE, "%zu --->\n%s\n<---\n", strlen(decrypted_data), decrypted_data );
@@ -213,7 +206,6 @@ void *get_results( gearman_job_st *job, __attribute__((__unused__)) void *contex
     if ( ( chk_result = ( check_result * )gm_malloc( sizeof *chk_result ) ) == 0 ) {
         *ret_ptr = GEARMAN_WORK_FAIL;
         gm_free(decrypted_data_c);
-        is_processing_job = FALSE;
         return NULL;
     }
     init_check_result(chk_result);
@@ -283,7 +275,6 @@ void *get_results( gearman_job_st *job, __attribute__((__unused__)) void *contex
     if ( chk_result->host_name == NULL || chk_result->output == NULL ) {
         *ret_ptr= GEARMAN_WORK_FAIL;
         gm_log( GM_LOG_ERROR, "discarded invalid job (%s), check your encryption settings\n", gearman_job_handle( job ) );
-        is_processing_job = FALSE;
         return NULL;
     }
 
@@ -342,7 +333,6 @@ void *get_results( gearman_job_st *job, __attribute__((__unused__)) void *contex
 
     gm_free(decrypted_data_c);
 
-    is_processing_job = FALSE;
     return NULL;
 }
 
