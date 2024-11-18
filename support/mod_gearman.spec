@@ -16,7 +16,7 @@ Requires:      libgearman, perl, logrotate, openssl
 BuildRequires: autoconf, automake, gcc-c++, pkgconfig, ncurses-devel
 BuildRequires: libtool, libtool-ltdl-devel, libevent-devel, openssl-devel
 BuildRequires: libgearman-devel
-BuildRequires: naemon-devel
+BuildRequires: naemon-devel >= 1.4.3
 BuildRequires: perl
 %if %{defined suse_version}
 %else
@@ -142,6 +142,9 @@ getent passwd naemon >/dev/null || \
 %docdir %{_defaultdocdir}
 
 %changelog
+* Mon Nov 18 2024 Sven Nierlein <sven@consol.de>
+- set minimum naemon to 1.4.3
+
 * Sat Jun 12 2021 Sven Nierlein <sven@consol.de>
 - remove init.d
 - build with upstream gearmand
