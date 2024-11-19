@@ -79,7 +79,7 @@ void *result_worker( void * data ) {
     result_ctx = mod_gm_crypt_init(mod_gm_opt->crypt_key);
 
     pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
-    pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
+    pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, NULL);
     pthread_cleanup_push(cancel_worker_thread, (void*) &worker);
 
     set_worker(&worker);
