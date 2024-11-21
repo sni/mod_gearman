@@ -133,6 +133,9 @@ void *get_results( gearman_job_st *job, __attribute__((__unused__)) void *contex
     double now_f, core_starttime_f, starttime_f, finishtime_f, exec_time, latency;
     size_t wsize = 0;
 
+    // disable thread cancellation while working on the job
+    pthread_setcancelstate( PTHREAD_CANCEL_DISABLE, NULL);
+
     /* for calculating real latency */
     gettimeofday(&now,NULL);
 
@@ -147,6 +150,7 @@ void *get_results( gearman_job_st *job, __attribute__((__unused__)) void *contex
     workload = (const char *)gearman_job_workload(job);
     if(workload == NULL) {
         *ret_ptr = GEARMAN_WORK_FAIL;
+        pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL); // restore thread cancellation
         return NULL;
     }
     gm_log( GM_LOG_TRACE, "got result %s\n", gearman_job_handle(job));
@@ -176,11 +180,13 @@ void *get_results( gearman_job_st *job, __attribute__((__unused__)) void *contex
                                             total_submit_jobs,
                                             total_submit_errors
         );
+        pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL); // restore thread cancellation
         return((void*)result);
     }
 
     if(decrypted_data == NULL) {
         *ret_ptr = GEARMAN_WORK_FAIL;
+        pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL); // restore thread cancellation
         return NULL;
     }
     gm_log( GM_LOG_TRACE, "%zu --->\n%s\n<---\n", strlen(decrypted_data), decrypted_data );
@@ -206,6 +212,7 @@ void *get_results( gearman_job_st *job, __attribute__((__unused__)) void *contex
     if ( ( chk_result = ( check_result * )gm_malloc( sizeof *chk_result ) ) == 0 ) {
         *ret_ptr = GEARMAN_WORK_FAIL;
         gm_free(decrypted_data_c);
+        pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL); // restore thread cancellation
         return NULL;
     }
     init_check_result(chk_result);
@@ -275,6 +282,7 @@ void *get_results( gearman_job_st *job, __attribute__((__unused__)) void *contex
     if ( chk_result->host_name == NULL || chk_result->output == NULL ) {
         *ret_ptr= GEARMAN_WORK_FAIL;
         gm_log( GM_LOG_ERROR, "discarded invalid job (%s), check your encryption settings\n", gearman_job_handle( job ) );
+        pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL); // restore thread cancellation
         return NULL;
     }
 
@@ -333,6 +341,7 @@ void *get_results( gearman_job_st *job, __attribute__((__unused__)) void *contex
 
     gm_free(decrypted_data_c);
 
+    pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL); // restore thread cancellation
     return NULL;
 }
 
