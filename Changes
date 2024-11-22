@@ -1,5 +1,8 @@
 This file documents the revision history for mod_gearman.
 
+5.1.7 Fri Nov 22 13:24:08 CET 2024
+          - fix occasional crash during reload
+
 5.1.6 Wed Nov 13 16:32:58 CET 2024
           - remove delay in result worker shutdown
 
