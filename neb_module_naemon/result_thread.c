@@ -111,6 +111,7 @@ void *result_worker( void * data ) {
         }
     }
 
+    pthread_setcancelstate( PTHREAD_CANCEL_DISABLE, NULL);
     pthread_cleanup_pop(0);
     gm_free_worker(&worker);
 
