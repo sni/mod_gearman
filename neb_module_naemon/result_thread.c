@@ -73,7 +73,7 @@ void *result_worker( void * data ) {
     gearman_return_t ret;
 
     gm_log( GM_LOG_DEBUG, "worker thr-%ld started\n", pthread_self() );
-    gm_log( GM_LOG_TRACE, "worker args: %s\n", data );
+    gm_log( GM_LOG_TRACE, "worker args: %s\n", (char*)data );
     gethostname(hostname, GM_SMALLBUFSIZE-1);
 
     result_ctx = mod_gm_crypt_init(mod_gm_opt->crypt_key);
