@@ -108,10 +108,10 @@ int main(void) {
     plan(32);
 
     char * test_nebargs[] = {
-        "encryption=no server=localhost",
-        "key=test12345 server=localhost",
-        "encryption=no server=localhost export=log_queue:1:NEBCALLBACK_LOG_DATA",
-        "encryption=no server=localhost export=log_queue:1:NEBCALLBACK_LOG_DATA export=proc_queue:0:NEBCALLBACK_PROCESS_DATA",
+        "encryption=no server=127.0.0.1",
+        "key=test12345 server=127.0.0.1",
+        "encryption=no server=127.0.0.1 export=log_queue:1:NEBCALLBACK_LOG_DATA",
+        "encryption=no server=127.0.0.1 export=log_queue:1:NEBCALLBACK_LOG_DATA export=proc_queue:0:NEBCALLBACK_PROCESS_DATA",
     };
 
     int num = sizeof(test_nebargs) / sizeof(test_nebargs[0]);
