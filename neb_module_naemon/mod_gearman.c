@@ -278,7 +278,7 @@ int nebmodule_deinit( int flags, int reason ) {
 
     shutdown_threads();
 
-    // process final check result list
+    // clean check result list
     process_check_result_list();
 
     /* cleanup */
@@ -349,7 +349,10 @@ void process_check_result_list() {
         cur = tmp_list;
         tmp_list = tmp_list->next;
 
-        process_check_result(cur->object_ptr);
+        // simply clean the results, we cannot put them back to core anymore
+        if(gm_should_terminate == FALSE)
+            process_check_result(cur->object_ptr);
+
         free_check_result(cur->object_ptr);
         free(cur->object_ptr);
         free(cur);
