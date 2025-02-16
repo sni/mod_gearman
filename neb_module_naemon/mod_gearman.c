@@ -53,9 +53,8 @@ static pthread_mutex_t mod_gm_result_list_mutex = PTHREAD_MUTEX_INITIALIZER;
 static pthread_mutex_t mod_gm_log_lock = PTHREAD_MUTEX_INITIALIZER;
 void *gearman_module_handle=NULL;
 
-int result_threads_running;
 int gm_should_terminate = FALSE;
-pthread_t * result_thr[GM_LISTSIZE];
+pthread_t * result_thr;
 char target_queue[GM_SMALLBUFSIZE];
 char temp_buffer[GM_MAX_OUTPUT];
 char uniq[GM_SMALLBUFSIZE];
@@ -94,10 +93,11 @@ static int   handle_hst_check_result(int event_type, void *data);
 static int   handle_svc_check_result(int event_type, void *data);
 static int   try_check_dummy(const char *, host *, service * );
 void shutdown_threads(void);
+void process_check_result_list(void);
+static int start_threads(void);
 
 int nebmodule_init( int flags, char *args, nebmodule *handle ) {
     int broker_option_errors = 0;
-    result_threads_running   = 0;
     gm_should_terminate = FALSE;
 
     /* save our handle */
@@ -181,6 +181,11 @@ int nebmodule_init( int flags, char *args, nebmodule *handle ) {
         return NEB_ERROR;
     }
     current_client = client;
+
+    if(start_threads() != GM_OK) {
+        gm_log( GM_LOG_ERROR, "failed to start result threads\n" );
+        return NEB_ERROR;
+    }
 
     /* register callback for process event where everything else starts */
     neb_register_callback(NEBCALLBACK_PROCESS_DATA,        gearman_module_handle, 0, handle_process_events );
@@ -273,6 +278,9 @@ int nebmodule_deinit( int flags, int reason ) {
 
     shutdown_threads();
 
+    // process final check result list
+    process_check_result_list();
+
     /* cleanup */
     gm_free_client(&client);
 
@@ -290,36 +298,42 @@ int nebmodule_deinit( int flags, int reason ) {
 void shutdown_threads() {
     int x = 0;
 
-    /* stop result threads */
     gm_should_terminate = TRUE;
-    for(x = 0; x < result_threads_running; x++) {
-        if(result_thr[x] == NULL) {
-            continue;
-        }
-        if(pthread_cancel(*(result_thr[x])) != OK) {
+    if(result_thr == NULL) {
+        return;
+    }
+
+    /* stop result threads */
+    for(x = 0; x < mod_gm_opt->result_workers; x++) {
+        if(pthread_cancel(result_thr[x]) != OK) {
             gm_log( GM_LOG_ERROR, "failed to join cancel thread: %s\n", strerror(errno) );
         }
-        if(pthread_join(*(result_thr[x]), NULL) != OK) {
+        if(pthread_join(result_thr[x], NULL) != OK) {
             gm_log( GM_LOG_ERROR, "failed to join result thread: %s\n", strerror(errno) );
         }
-        gm_free(result_thr[x]);
-        result_thr[x] = NULL;
     }
+    gm_free(result_thr);
+    result_thr = NULL;
 }
 
 /* insert results list into naemon core */
 static void move_results_to_core(struct nm_event_execution_properties *evprop) {
-    struct timeval tval_before, tval_after, tval_result;
-    objectlist *tmp_list = NULL;
-    objectlist *cur = NULL;
-    int count = 0;
     if(evprop->execution_type != EVENT_EXEC_NORMAL) {
         return;
     }
 
+    process_check_result_list();
+    schedule_event(1, move_results_to_core, NULL);
+}
+
+void process_check_result_list() {
+    objectlist *tmp_list = NULL;
+    objectlist *cur = NULL;
+    struct timeval tval_before, tval_after, tval_result;
+    int count = 0;
+
     gettimeofday(&tval_before, NULL);
     gm_log( GM_LOG_TRACE3, "move_results_to_core()\n" );
-    schedule_event(1, move_results_to_core, NULL);
 
     /* safely move result list aside */
     pthread_mutex_lock(&mod_gm_result_list_mutex);
@@ -357,24 +371,22 @@ void mod_gm_add_result_to_list(check_result * newcheckresult) {
 }
 
 /* start our threads */
-static void start_threads(void) {
+static int start_threads(void) {
+    int x;
     int ret = 0;
-    pthread_t *thr;
-    if ( result_threads_running < mod_gm_opt->result_workers ) {
-        /* create result worker */
-        int x;
-        for(x = 0; x < mod_gm_opt->result_workers; x++) {
-            result_threads_running++;
-            thr = gm_malloc(sizeof(pthread_t));
-            if((ret = pthread_create ( thr, NULL, result_worker, NULL)) != OK) {
-                gm_log( GM_LOG_ERROR, "failed to create result thread: %s\n", strerror(ret));
-                result_thr[x] = NULL;
-                result_threads_running--;
-            } else {
-                result_thr[x] = thr;
-            }
+    if( mod_gm_opt->result_workers <= 0 ) {
+        return(GM_OK);
+    }
+    result_thr = gm_malloc(mod_gm_opt->result_workers * sizeof *result_thr);
+
+    /* create result worker */
+    for(x = 0; x < mod_gm_opt->result_workers; x++) {
+        if((ret = pthread_create(&result_thr[x], NULL, result_worker, NULL)) != OK) {
+            gm_log( GM_LOG_ERROR, "failed to create result thread: %s\n", strerror(ret));
+            return(GM_ERROR);
         }
     }
+    return(GM_OK);
 }
 
 /* handle process events */
@@ -409,7 +421,6 @@ static int handle_process_events( int event_type, void *data ) {
     }
 
     register_neb_callbacks();
-    start_threads();
 
     /* verify names of supplied groups
         * this cannot be done befor naemon has finished reading his config

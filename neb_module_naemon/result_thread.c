@@ -35,7 +35,6 @@ extern unsigned long total_submit_errors;
 extern float current_submit_rate;
 extern float current_avg_submit_duration;
 extern double current_submit_max;
-extern int result_threads_running;
 extern int gm_should_terminate;
 
 __thread EVP_CIPHER_CTX * result_ctx = NULL; /* make ssl context local in each thread */
@@ -174,7 +173,7 @@ void *get_results( gearman_job_st *job, __attribute__((__unused__)) void *contex
                                             current_submit_rate,
                                             (current_avg_submit_duration*1000),
                                             GM_VERSION,
-                                            result_threads_running,
+                                            mod_gm_opt->result_workers,
                                             mod_gm_opt->result_workers,
                                             current_avg_submit_duration,
                                             current_submit_max,
@@ -234,15 +233,19 @@ void *get_results( gearman_job_st *job, __attribute__((__unused__)) void *contex
 
         if ( !strcmp( key, "output" ) ) {
             if ( value == NULL ) {
+                gm_free(chk_result->output);
                 chk_result->output = gm_strdup("(null)");
             }
             else {
 
                 char *tmp_newline = replace_str(value, "\\n", "\n");
-                if (tmp_newline == NULL)
+                if (tmp_newline == NULL) {
+                    gm_free(chk_result->output);
                     chk_result->output = gm_strdup("(null)");
-                else
+                } else {
+                    gm_free(chk_result->output);
                     chk_result->output = gm_strdup( tmp_newline );
+                }
 
                 gm_free(tmp_newline);
             }
@@ -252,8 +255,10 @@ void *get_results( gearman_job_st *job, __attribute__((__unused__)) void *contex
             break;
 
         if ( !strcmp( key, "host_name" ) ) {
+            gm_free(chk_result->host_name);
             chk_result->host_name = gm_strdup( value );
         } else if ( !strcmp( key, "service_description" ) ) {
+            gm_free(chk_result->service_description);
             chk_result->service_description = gm_strdup( value );
         } else if ( !strcmp( key, "source" ) ) {
             chk_result->source = value;
@@ -284,6 +289,8 @@ void *get_results( gearman_job_st *job, __attribute__((__unused__)) void *contex
         *ret_ptr= GEARMAN_WORK_FAIL;
         gm_log( GM_LOG_ERROR, "discarded invalid job (%s), check your encryption settings\n", gearman_job_handle( job ) );
         pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL); // restore thread cancellation
+        free_check_result(chk_result);
+        gm_free(chk_result);
         return NULL;
     }
 
