@@ -381,7 +381,7 @@ static int start_threads(void) {
 
     /* create result worker */
     for(x = 0; x < mod_gm_opt->result_workers; x++) {
-        if((ret = pthread_create(&result_thr[x], NULL, result_worker, NULL)) != OK) {
+        if((ret = pthread_create(&result_thr[x], NULL, &result_worker, NULL)) != OK) {
             gm_log( GM_LOG_ERROR, "failed to create result thread: %s\n", strerror(ret));
             return(GM_ERROR);
         }

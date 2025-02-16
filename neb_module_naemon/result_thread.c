@@ -62,6 +62,7 @@ static void cancel_worker_thread(void * data) {
 
     gearman_worker_st **worker = (gearman_worker_st**) data;
     gm_free_worker(worker);
+    mod_gm_crypt_deinit(result_ctx);
 
     return;
 }
