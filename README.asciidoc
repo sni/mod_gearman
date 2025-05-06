@@ -4,7 +4,7 @@ Naemon Gearman Module
 What is Mod-Gearman
 -------------------
 
-http://labs.consol.de/nagios/mod-gearman[Mod_Gearman] is an easy way
+https://omd.consol.de/docs/mod-gearman/[Mod_Gearman] is an easy way
 of distributing active Naemon checks across your network and
 increasing Naemon scalability. Mod-Gearman can even help to reduce the
 load on a single Naemon host, because its much smaller and more
@@ -20,7 +20,7 @@ It consists of three parts:
    Worker can be configured to only run checks for specific host- or
    servicegroups.
    There is a (deprecated) worker included. The new worker is here:
-   https://github.com/ConSol/mod-gearman-worker-go/[mod-gearman-worker-go].
+   https://github.com/ConSol-Monitoring/mod-gearman-worker-go/[mod-gearman-worker-go].
  * And you need at least one http://gearman.org[Gearman Job Server]
    running.
  * See the <<common-scenarios,common scenarios>> for some examples.
@@ -60,9 +60,8 @@ Download
 
 Support
 -------
- * Professional support and consulting is available via http://www.consol.de/open-source-monitoring/support/[www.consol.de]
+ * Professional support and consulting is available via http://www.consol.com/monitoring[www.consol.com]
  * https://groups.google.com/group/mod_gearman[google groups mailinglist]
- * http://www.monitoring-portal.org[german monitoring portal]
  * Mod-Gearman has been succesfully tested with latest Naemon.
    See <<supported-dependencies,Supported Dependencies>> for details.
  * There are no known bugs at the moment. Let me know if you find one.
@@ -152,7 +151,7 @@ worker which covers the other queues. There can be more than one
 worker on each queue to share the load.
 
 ++++
-<a title="mod gearman queues" rel="lightbox[mod_gm]" href="http://labs.consol.de/nagios/mod-gearman/mod_gearman_queues.png"><img src="http://labs.consol.de/nagios/mod-gearman/mod_gearman_queues.png" alt="mod_gearman architecture " width="360" height="270" style="float:none" /></a>
+<a title="mod gearman queues" rel="lightbox[mod_gm]" href="https://omd.consol.de/docs/mod-gearman/usage/mod_gearman_queues.png"><img src="https://omd.consol.de/docs/mod-gearman/usage/mod_gearman_queues.png" alt="mod_gearman architecture " width="360" height="270" style="float:none" /></a>
 ++++
 
 
@@ -163,7 +162,7 @@ Load Balancing
 ~~~~~~~~~~~~~~
 
 ++++
-<a title="Load Balancing" rel="lightbox[mod_gm]" href="http://labs.consol.de/nagios/mod-gearman/sample_load_balancing.png"><img src="http://labs.consol.de/nagios/mod-gearman/sample_load_balancing.png" alt="Load Balancing" width="300" height="125" style="float:none" /></a>
+<a title="Load Balancing" rel="lightbox[mod_gm]" href="https://omd.consol.de/docs/mod-gearman/usage/sample_load_balancing.png"><img src="https://omd.consol.de/docs/mod-gearman/usage/sample_load_balancing.png" alt="Load Balancing" width="300" height="125" style="float:none" /></a>
 ++++
 
 The easiest variant is a simple load balancing. For example if your
@@ -186,7 +185,7 @@ Distributed Monitoring
 ~~~~~~~~~~~~~~~~~~~~~~
 
 ++++
-<a title="Distributed Monitoring" rel="lightbox[mod_gm]" href="http://labs.consol.de/nagios/mod-gearman/sample_distributed.png"><img src="http://labs.consol.de/nagios/mod-gearman/sample_distributed.png" alt="Distributed Monitoring" width="350" height="125" style="float:none" /></a>
+<a title="Distributed Monitoring" rel="lightbox[mod_gm]" href="https://omd.consol.de/docs/mod-gearman/usage/sample_distributed.png"><img src="https://omd.consol.de/docs/mod-gearman/usage/sample_distributed.png" alt="Distributed Monitoring" width="350" height="125" style="float:none" /></a>
 ++++
 
 If your checks have to be run from different network segments, then
@@ -210,9 +209,7 @@ Distributed Monitoring with Load Balancing
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ++++
-<a title="Distributed Monitoring with Load Balancing" rel="lightbox[mod_gm]"
-href="http://labs.consol.de/nagios/mod-gearman/sample_distributed_load_balanced.png"><img
-src="http://labs.consol.de/nagios/mod-gearman/sample_distributed_load_balanced.png" alt="Distributed Monitoring with Load Balancing" width="350" height="225" style="float:none" /></a>
+<a title="Distributed Monitoring with Load Balancing" rel="lightbox[mod_gm]" href="https://omd.consol.de/docs/mod-gearman/usage/sample_distributed_load_balanced.png"><img src="https://omd.consol.de/docs/mod-gearman/usage/sample_distributed_load_balanced.png" alt="Distributed Monitoring with Load Balancing" width="350" height="225" style="float:none" /></a>
 ++++
 
 Your distributed setup could easily be extended to a load balanced
@@ -234,9 +231,7 @@ NSCA Replacement
 ~~~~~~~~~~~~~~~~
 
 ++++
-<a title="NSCA Replacement" rel="lightbox[mod_gm]"
-href="http://labs.consol.de/nagios/mod-gearman/nsca_replacement.png"><img
-src="http://labs.consol.de/nagios/mod-gearman/nsca_replacement.png" alt="NSCA Replacement" width="300" height="220" style="float:none" /></a>
+<a title="NSCA Replacement" rel="lightbox[mod_gm]" href="https://omd.consol.de/docs/mod-gearman/usage/nsca_replacement.png"><img src="https://omd.consol.de/docs/mod-gearman/usage/nsca_replacement.png" alt="NSCA Replacement" width="300" height="220" style="float:none" /></a>
 ++++
 
 If you just want to replace a current NSCA solution, you could load
@@ -256,7 +251,7 @@ Distributed Setup With Remote Scheduler
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ++++
-<a title="Distributed Setup With Remote Scheduler" rel="lightbox[mod_gm]" href="http://labs.consol.de/nagios/mod-gearman/advanced_distributed.png"><img src="http://labs.consol.de/nagios/mod-gearman/advanced_distributed.png" alt="Distributed Setup With Remote Scheduler" width="360" height="270" style="float:none" /></a>
+<a title="Distributed Setup With Remote Scheduler" rel="lightbox[mod_gm]" href="https://omd.consol.de/docs/mod-gearman/usage/advanced_distributed.png"><img src="https://omd.consol.de/docs/mod-gearman/usage/advanced_distributed.png" alt="Distributed Setup With Remote Scheduler" width="360" height="270" style="float:none" /></a>
 ++++
 
 In case your network is unstable or you need a gui view from the
@@ -283,7 +278,7 @@ Gearman Proxy
 ~~~~~~~~~~~~~
 
 ++++
-<a title="Gearman Proxy" rel="lightbox[mod_gm]" href="http://labs.consol.de/nagios/mod-gearman/gearman_proxy.png"><img src="http://labs.consol.de/nagios/mod-gearman/gearman_proxy.png" alt="Gearman Proxy" width="360" height="270" style="float:none" /></a>
+<a title="Gearman Proxy" rel="lightbox[mod_gm]" href="https://omd.consol.de/docs/mod-gearman/usage/gearman_proxy.png"><img src="https://omd.consol.de/docs/mod-gearman/usage/gearman_proxy.png" alt="Gearman Proxy" width="360" height="270" style="float:none" /></a>
 ++++
 
 Sometimes you may need to reverse the direction of the initial
@@ -1131,8 +1126,8 @@ easily setup 100.000 services at a 5 minute interval with a single
 Nagios box. The amount of worker boxes depends on your check types.
 
 ++++
-<a title="mod gearman performance" rel="lightbox[mod_gm]" href="http://labs.consol.de/nagios/mod-gearman/mod_gearman_performance_2.png"><img src="http://labs.consol.de/nagios/mod-gearman/mod_gearman_performance_2.png" alt="mod_gearman performance" width="473" height="122" style="float:none" /></a>
-<a title="mod gearman performance" rel="lightbox[mod_gm]" href="http://labs.consol.de/nagios/mod-gearman/mod_gearman_performance_1.png"><img src="http://labs.consol.de/nagios/mod-gearman/mod_gearman_performance_1.png" alt="mod_gearman performance" width="424" height="176" style="float:none" /></a>
+<a title="mod gearman performance" rel="lightbox[mod_gm]" href="https://omd.consol.de/docs/mod-gearman/usage/mod_gearman_performance_2.png"><img src="https://omd.consol.de/docs/mod-gearman/usage/mod_gearman_performance_2.png" alt="mod_gearman performance" width="473" height="122" style="float:none" /></a>
+<a title="mod gearman performance" rel="lightbox[mod_gm]" href="https://omd.consol.de/docs/mod-gearman/usage/mod_gearman_performance_1.png"><img src="https://omd.consol.de/docs/mod-gearman/usage/mod_gearman_performance_1.png" alt="mod_gearman performance" width="424" height="176" style="float:none" /></a>
 ++++
 
 See this article about benchmarks with https://labs.consol.de/mod-gearman/nagios/omd/2012/10/23/monitoring-core-benchmarks.html[Nagios3, Nagios4 and Mod-Gearman].
@@ -1245,8 +1240,7 @@ After installing strawberry perl, you need to install the
   pp -l zlib1__.dll -l ssleay32__.dll -l libeay32__.dll -x -z 9 -o send_gearman.exe send_gearman.pl
 --------------------------------------
 
-Or just use the prebuild one from labs.consol.de:
-http://mod-gearman.org/archive/send_gearman.zip[send_gearman.exe].
+Or just use the prebuild one from labs.consol.de: http://mod-gearman.org/archive/send_gearman.zip[send_gearman.exe].
 
 
 
