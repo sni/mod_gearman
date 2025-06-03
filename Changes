@@ -1,5 +1,8 @@
 This file documents the revision history for mod_gearman.
 
+5.1.9 Tue Jun  3 14:47:56 CEST 2025
+          - rebuild with naemon 1.4.4
+
 5.1.8 Sun Feb 16 23:15:47 CET 2025
           - fix minor memory leak
 

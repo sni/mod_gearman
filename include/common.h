@@ -55,7 +55,7 @@
 #define MOD_GM_COMMON_H
 
 /* constants */
-#define GM_VERSION                 "5.1.8"
+#define GM_VERSION                 "5.1.9"
 #define GM_ENABLED                      1
 #define GM_DISABLED                     0
 #define GM_AUTO                         2

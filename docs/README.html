@@ -591,7 +591,7 @@ body.manpage div.sectionbody {
 <div class="sect1">
 <h2 id="_what_is_mod_gearman">What is Mod-Gearman</h2>
 <div class="sectionbody">
-<div class="paragraph"><p><a href="http://labs.consol.de/nagios/mod-gearman">Mod_Gearman</a> is an easy way
+<div class="paragraph"><p><a href="https://omd.consol.de/docs/mod-gearman/">Mod_Gearman</a> is an easy way
 of distributing active Naemon checks across your network and
 increasing Naemon scalability. Mod-Gearman can even help to reduce the
 load on a single Naemon host, because its much smaller and more
@@ -617,7 +617,7 @@ The counterpart is one or more worker clients executing the checks.
    Worker can be configured to only run checks for specific host- or
    servicegroups.
    There is a (deprecated) worker included. The new worker is here:
-   <a href="https://github.com/ConSol/mod-gearman-worker-go/">mod-gearman-worker-go</a>.
+   <a href="https://github.com/ConSol-Monitoring/mod-gearman-worker-go/">mod-gearman-worker-go</a>.
 </p>
 </li>
 <li>
@@ -747,17 +747,12 @@ Debian/Ubuntu users might also want to check out the <a href="http://mod-gearman
 <div class="ulist"><ul>
 <li>
 <p>
-Professional support and consulting is available via <a href="http://www.consol.de/open-source-monitoring/support/">www.consol.de</a>
+Professional support and consulting is available via <a href="http://www.consol.com/monitoring">www.consol.com</a>
 </p>
 </li>
 <li>
 <p>
 <a href="https://groups.google.com/group/mod_gearman">google groups mailinglist</a>
-</p>
-</li>
-<li>
-<p>
-<a href="http://www.monitoring-portal.org">german monitoring portal</a>
 </p>
 </li>
 <li>
@@ -871,7 +866,7 @@ or more queues. So you could start a worker which only handles the
 <em>hostgroup_japan</em> group.  One worker for the <em>selenium</em> checks and one
 worker which covers the other queues. There can be more than one
 worker on each queue to share the load.</p></div>
-<a title="mod gearman queues" rel="lightbox[mod_gm]" href="http://labs.consol.de/nagios/mod-gearman/mod_gearman_queues.png"><img src="http://labs.consol.de/nagios/mod-gearman/mod_gearman_queues.png" alt="mod_gearman architecture " width="360" height="270" style="float:none" /></a>
+<a title="mod gearman queues" rel="lightbox[mod_gm]" href="https://omd.consol.de/docs/mod-gearman/usage/mod_gearman_queues.png"><img src="https://omd.consol.de/docs/mod-gearman/usage/mod_gearman_queues.png" alt="mod_gearman architecture " width="360" height="270" style="float:none" /></a>
 </div>
 </div>
 <div class="sect1">
@@ -879,7 +874,7 @@ worker on each queue to share the load.</p></div>
 <div class="sectionbody">
 <div class="sect2">
 <h3 id="_load_balancing">Load Balancing</h3>
-<a title="Load Balancing" rel="lightbox[mod_gm]" href="http://labs.consol.de/nagios/mod-gearman/sample_load_balancing.png"><img src="http://labs.consol.de/nagios/mod-gearman/sample_load_balancing.png" alt="Load Balancing" width="300" height="125" style="float:none" /></a>
+<a title="Load Balancing" rel="lightbox[mod_gm]" href="https://omd.consol.de/docs/mod-gearman/usage/sample_load_balancing.png"><img src="https://omd.consol.de/docs/mod-gearman/usage/sample_load_balancing.png" alt="Load Balancing" width="300" height="125" style="float:none" /></a>
 <div class="paragraph"><p>The easiest variant is a simple load balancing. For example if your
 single Naemon box just cannot handle the load, you could just add a
 worker in the same network (or even on the same host) to reduce your
@@ -904,7 +899,7 @@ no failover
 </div>
 <div class="sect2">
 <h3 id="_distributed_monitoring">Distributed Monitoring</h3>
-<a title="Distributed Monitoring" rel="lightbox[mod_gm]" href="http://labs.consol.de/nagios/mod-gearman/sample_distributed.png"><img src="http://labs.consol.de/nagios/mod-gearman/sample_distributed.png" alt="Distributed Monitoring" width="350" height="125" style="float:none" /></a>
+<a title="Distributed Monitoring" rel="lightbox[mod_gm]" href="https://omd.consol.de/docs/mod-gearman/usage/sample_distributed.png"><img src="https://omd.consol.de/docs/mod-gearman/usage/sample_distributed.png" alt="Distributed Monitoring" width="350" height="125" style="float:none" /></a>
 <div class="paragraph"><p>If your checks have to be run from different network segments, then
 you can use the hostgroups (or servicegroups) to define a hostgroup
 for specific worker. The general hosts and services queue is disabled
@@ -934,9 +929,7 @@ no failover
 </div>
 <div class="sect2">
 <h3 id="_distributed_monitoring_with_load_balancing">Distributed Monitoring with Load Balancing</h3>
-<a title="Distributed Monitoring with Load Balancing" rel="lightbox[mod_gm]"
-href="http://labs.consol.de/nagios/mod-gearman/sample_distributed_load_balanced.png"><img
-src="http://labs.consol.de/nagios/mod-gearman/sample_distributed_load_balanced.png" alt="Distributed Monitoring with Load Balancing" width="350" height="225" style="float:none" /></a>
+<a title="Distributed Monitoring with Load Balancing" rel="lightbox[mod_gm]" href="https://omd.consol.de/docs/mod-gearman/usage/sample_distributed_load_balanced.png"><img src="https://omd.consol.de/docs/mod-gearman/usage/sample_distributed_load_balanced.png" alt="Distributed Monitoring with Load Balancing" width="350" height="225" style="float:none" /></a>
 <div class="paragraph"><p>Your distributed setup could easily be extended to a load balanced
 setup with just adding more worker of the same config.</p></div>
 <div class="paragraph"><p>Pro:</p></div>
@@ -968,9 +961,7 @@ no failover for the master
 </div>
 <div class="sect2">
 <h3 id="_nsca_replacement">NSCA Replacement</h3>
-<a title="NSCA Replacement" rel="lightbox[mod_gm]"
-href="http://labs.consol.de/nagios/mod-gearman/nsca_replacement.png"><img
-src="http://labs.consol.de/nagios/mod-gearman/nsca_replacement.png" alt="NSCA Replacement" width="300" height="220" style="float:none" /></a>
+<a title="NSCA Replacement" rel="lightbox[mod_gm]" href="https://omd.consol.de/docs/mod-gearman/usage/nsca_replacement.png"><img src="https://omd.consol.de/docs/mod-gearman/usage/nsca_replacement.png" alt="NSCA Replacement" width="300" height="220" style="float:none" /></a>
 <div class="paragraph"><p>If you just want to replace a current NSCA solution, you could load
 the Mod-Gearman NEB module and disable all distribution features. You
 still can receive passive results by the core send via
@@ -988,7 +979,7 @@ easy to setup in existing environments
 </div>
 <div class="sect2">
 <h3 id="_distributed_setup_with_remote_scheduler">Distributed Setup With Remote Scheduler</h3>
-<a title="Distributed Setup With Remote Scheduler" rel="lightbox[mod_gm]" href="http://labs.consol.de/nagios/mod-gearman/advanced_distributed.png"><img src="http://labs.consol.de/nagios/mod-gearman/advanced_distributed.png" alt="Distributed Setup With Remote Scheduler" width="360" height="270" style="float:none" /></a>
+<a title="Distributed Setup With Remote Scheduler" rel="lightbox[mod_gm]" href="https://omd.consol.de/docs/mod-gearman/usage/advanced_distributed.png"><img src="https://omd.consol.de/docs/mod-gearman/usage/advanced_distributed.png" alt="Distributed Setup With Remote Scheduler" width="360" height="270" style="float:none" /></a>
 <div class="paragraph"><p>In case your network is unstable or you need a gui view from the
 remote location or any other reason which makes a remote core
 unavoidable you may want this setup. Thist setup consists of 2
@@ -1025,7 +1016,7 @@ requires configuration sync
 </div>
 <div class="sect2">
 <h3 id="_gearman_proxy">Gearman Proxy</h3>
-<a title="Gearman Proxy" rel="lightbox[mod_gm]" href="http://labs.consol.de/nagios/mod-gearman/gearman_proxy.png"><img src="http://labs.consol.de/nagios/mod-gearman/gearman_proxy.png" alt="Gearman Proxy" width="360" height="270" style="float:none" /></a>
+<a title="Gearman Proxy" rel="lightbox[mod_gm]" href="https://omd.consol.de/docs/mod-gearman/usage/gearman_proxy.png"><img src="https://omd.consol.de/docs/mod-gearman/usage/gearman_proxy.png" alt="Gearman Proxy" width="360" height="270" style="float:none" /></a>
 <div class="paragraph"><p>Sometimes you may need to reverse the direction of the initial
 connection attempt. Usually the worker and the neb module open the
 initial connection so they need to access the gearmand port. In cases
@@ -2380,8 +2371,8 @@ interval and a sample plugin which returns just a single line of
 output. I got over 300 Servicechecks per second, which means you could
 easily setup 100.000 services at a 5 minute interval with a single
 Nagios box. The amount of worker boxes depends on your check types.</p></div>
-<a title="mod gearman performance" rel="lightbox[mod_gm]" href="http://labs.consol.de/nagios/mod-gearman/mod_gearman_performance_2.png"><img src="http://labs.consol.de/nagios/mod-gearman/mod_gearman_performance_2.png" alt="mod_gearman performance" width="473" height="122" style="float:none" /></a>
-<a title="mod gearman performance" rel="lightbox[mod_gm]" href="http://labs.consol.de/nagios/mod-gearman/mod_gearman_performance_1.png"><img src="http://labs.consol.de/nagios/mod-gearman/mod_gearman_performance_1.png" alt="mod_gearman performance" width="424" height="176" style="float:none" /></a>
+<a title="mod gearman performance" rel="lightbox[mod_gm]" href="https://omd.consol.de/docs/mod-gearman/usage/mod_gearman_performance_2.png"><img src="https://omd.consol.de/docs/mod-gearman/usage/mod_gearman_performance_2.png" alt="mod_gearman performance" width="473" height="122" style="float:none" /></a>
+<a title="mod gearman performance" rel="lightbox[mod_gm]" href="https://omd.consol.de/docs/mod-gearman/usage/mod_gearman_performance_1.png"><img src="https://omd.consol.de/docs/mod-gearman/usage/mod_gearman_performance_1.png" alt="mod_gearman performance" width="424" height="176" style="float:none" /></a>
 <div class="paragraph"><p>See this article about benchmarks with <a href="https://labs.consol.de/mod-gearman/nagios/omd/2012/10/23/monitoring-core-benchmarks.html">Nagios3, Nagios4 and Mod-Gearman</a>.</p></div>
 </div>
 </div>
@@ -2514,8 +2505,7 @@ check would do.</p></div>
 <div class="content">
 <pre><code>  pp -l zlib1__.dll -l ssleay32__.dll -l libeay32__.dll -x -z 9 -o send_gearman.exe send_gearman.pl</code></pre>
 </div></div>
-<div class="paragraph"><p>Or just use the prebuild one from labs.consol.de:
-<a href="http://mod-gearman.org/archive/send_gearman.zip">send_gearman.exe</a>.</p></div>
+<div class="paragraph"><p>Or just use the prebuild one from labs.consol.de: <a href="http://mod-gearman.org/archive/send_gearman.zip">send_gearman.exe</a>.</p></div>
 </div>
 <div class="sect2">
 <h3 id="_how_to_submit_check_multi_results">How to Submit check_multi Results</h3>
@@ -2729,7 +2719,7 @@ Make sure all your worker have the Monitoring-Plugins available under
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2023-03-05 04:41:38 CET
+ 2025-05-07 03:56:51 CEST
 </div>
 </div>
 </body>
