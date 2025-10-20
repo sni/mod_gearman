@@ -2157,7 +2157,7 @@ static int xpddefault_preprocess_file_templates(char *template)
 		return OK;
 
 	/* allocate temporary buffer */
-	tempbuf = nm_malloc(strlen(template) + 1);
+	tempbuf = gm_malloc(strlen(template) + 1);
 	strcpy(tempbuf, "");
 
 	for (x = 0, y = 0; x < strlen(template); x++, y++) {
@@ -2179,7 +2179,7 @@ static int xpddefault_preprocess_file_templates(char *template)
 	tempbuf[y] = '\x0';
 
 	strcpy(template, tempbuf);
-	nm_free(tempbuf);
+	gm_free(tempbuf);
 
 	return OK;
 }
