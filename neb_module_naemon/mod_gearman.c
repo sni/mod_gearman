@@ -92,6 +92,7 @@ static void  move_results_to_core(struct nm_event_execution_properties *evprop);
 static int   handle_hst_check_result(int event_type, void *data);
 static int   handle_svc_check_result(int event_type, void *data);
 static int   try_check_dummy(const char *, host *, service * );
+static int   xpddefault_preprocess_file_templates(char *);
 void shutdown_threads(void);
 void process_check_result_list(void);
 static int start_threads(void);
@@ -161,6 +162,10 @@ int nebmodule_init( int flags, char *args, nebmodule *handle ) {
         gm_log( GM_LOG_ERROR, "minimum version of libgearman is %.2f, yours is %.2f\n", (float)GM_MIN_LIB_GEARMAN_VERSION, (float)atof(gearman_version()) );
         return NEB_ERROR;
     }
+
+    /* initialize templates*/
+	xpddefault_preprocess_file_templates(mod_gm_opt->host_perfdata_template);
+	xpddefault_preprocess_file_templates(mod_gm_opt->service_perfdata_template);
 
     /* init crypto functions */
     if(mod_gm_opt->encryption == GM_ENABLED) {
@@ -1478,7 +1483,9 @@ int handle_perfdata(int event_type, void *data) {
     host *hst        = NULL;
     service *svc     = NULL;
     int has_perfdata = FALSE;
-    char *perf_data;
+    nagios_macros mac;
+    char *raw_output = NULL;
+    char *processed_output = NULL;
 
     gm_log( GM_LOG_TRACE, "handle_perfdata(%d)\n", event_type );
     if(process_performance_data == 0) {
@@ -1490,7 +1497,7 @@ int handle_perfdata(int event_type, void *data) {
     switch (event_type) {
 
         case NEBCALLBACK_HOST_CHECK_DATA:
-            /* an aggregated status data dump just started or ended */
+            /* incoming host check result */
             if ((hostchkdata = (nebstruct_host_check_data *) data)) {
 
                 if (hostchkdata->type != NEBTYPE_HOSTCHECK_PROCESSED || hostchkdata->perf_data == NULL ) {
@@ -1503,31 +1510,25 @@ int handle_perfdata(int event_type, void *data) {
                     break;
                 }
 
-                /* replace newlines with actual newlines */
-                perf_data = replace_str(hostchkdata->perf_data, "\\n", "\n");
+                memset(&mac, 0, sizeof(mac));
+                grab_host_macros_r(&mac, hst);
 
-                temp_buffer[0]='\x0';
-                snprintf( temp_buffer,GM_MAX_OUTPUT-1,
-                            "DATATYPE::HOSTPERFDATA\t"
-                            "TIMET::%d\t"
-                            "HOSTNAME::%s\t"
-                            "HOSTPERFDATA::%s\t"
-                            "HOSTCHECKCOMMAND::%s!%s\t"
-                            "HOSTSTATE::%d\t"
-                            "HOSTSTATETYPE::%d\n"
-                            "HOSTINTERVAL::%f\n\n",
-                            (int)hostchkdata->timestamp.tv_sec,
-                            hostchkdata->host_name, perf_data,
-                            hostchkdata->command_name, hostchkdata->command_args,
-                            hostchkdata->state, hostchkdata->state_type,
-                            hst->check_interval);
+                gm_asprintf(&raw_output, "%s\n", mod_gm_opt->host_perfdata_template);
+                gm_log( GM_LOG_TRACE, "handle_perfdata() raw host template: %s\n", raw_output );
+
+                process_macros_r(&mac, raw_output, &processed_output, 0);
+                if(processed_output == NULL) {
+                    gm_free(raw_output);
+                    return ERROR;
+                }
+
+                gm_log( GM_LOG_TRACE, "handle_perfdata() processed host template: %s\n", processed_output );
                 has_perfdata = TRUE;
-                free(perf_data);
             }
             break;
 
         case NEBCALLBACK_SERVICE_CHECK_DATA:
-            /* an aggregated status data dump just started or ended */
+            /* incoming service check result */
             if ((srvchkdata = (nebstruct_service_check_data *) data)) {
 
                 if(srvchkdata->type != NEBTYPE_SERVICECHECK_PROCESSED || srvchkdata->perf_data == NULL) {
@@ -1541,28 +1542,20 @@ int handle_perfdata(int event_type, void *data) {
                     break;
                 }
 
-                /* replace newlines with actual newlines */
-                perf_data = replace_str(srvchkdata->perf_data, "\\n", "\n");
+                memset(&mac, 0, sizeof(mac));
+                grab_service_macros_r(&mac, svc);
 
-                temp_buffer[0]='\x0';
-                snprintf( temp_buffer,GM_MAX_OUTPUT-1,
-                            "DATATYPE::SERVICEPERFDATA\t"
-                            "TIMET::%d\t"
-                            "HOSTNAME::%s\t"
-                            "SERVICEDESC::%s\t"
-                            "SERVICEPERFDATA::%s\t"
-                            "SERVICECHECKCOMMAND::%s\t"
-                            "SERVICESTATE::%d\t"
-                            "SERVICESTATETYPE::%d\n"
-                            "SERVICEINTERVAL::%f\n\n",
-                            (int)srvchkdata->timestamp.tv_sec,
-                            srvchkdata->host_name, srvchkdata->service_description,
-                            perf_data, svc->check_command,
-                            srvchkdata->state, srvchkdata->state_type,
-                            svc->check_interval);
-                temp_buffer[GM_MAX_OUTPUT-1]='\x0';
+                gm_asprintf(&raw_output, "%s\n", mod_gm_opt->service_perfdata_template);
+                gm_log( GM_LOG_TRACE, "handle_perfdata() raw host template: %s\n", raw_output );
+
+                process_macros_r(&mac, raw_output, &processed_output, 0);
+                if(processed_output == NULL) {
+                    gm_free(raw_output);
+                    return ERROR;
+                }
+
+                gm_log( GM_LOG_TRACE, "handle_perfdata() processed service template: %s\n", processed_output );
                 has_perfdata = TRUE;
-                free(perf_data);
             }
             break;
 
@@ -1592,7 +1585,7 @@ int handle_perfdata(int event_type, void *data) {
                                  mod_gm_opt->server_list,
                                  perfdata_queue,
                                  (mod_gm_opt->perfdata_mode == GM_PERFDATA_OVERWRITE ? uniq : NULL),
-                                 temp_buffer,
+                                 processed_output,
                                  GM_JOB_PRIO_NORMAL,
                                  GM_DEFAULT_JOB_RETRIES,
                                  mod_gm_opt->transportmode,
@@ -1607,6 +1600,9 @@ int handle_perfdata(int event_type, void *data) {
             }
         }
     }
+
+    gm_free(processed_output);
+    gm_free(raw_output);
 
     return 0;
 }
@@ -2149,4 +2145,41 @@ static int try_check_dummy(const char * command_line, host * hst, service * svc)
     chk_result = NULL;
 
     return(GM_OK);
+}
+
+/* processes delimiter characters in templates (adopted from naemon-core source )*/
+static int xpddefault_preprocess_file_templates(char *template)
+{
+	char *tempbuf;
+	unsigned int x, y;
+
+	if (template == NULL)
+		return OK;
+
+	/* allocate temporary buffer */
+	tempbuf = nm_malloc(strlen(template) + 1);
+	strcpy(tempbuf, "");
+
+	for (x = 0, y = 0; x < strlen(template); x++, y++) {
+		if (template[x] == '\\') {
+			if (template[x + 1] == 't') {
+				tempbuf[y] = '\t';
+				x++;
+			} else if (template[x + 1] == 'r') {
+				tempbuf[y] = '\r';
+				x++;
+			} else if (template[x + 1] == 'n') {
+				tempbuf[y] = '\n';
+				x++;
+			} else
+				tempbuf[y] = template[x];
+		} else
+			tempbuf[y] = template[x];
+	}
+	tempbuf[y] = '\x0';
+
+	strcpy(template, tempbuf);
+	nm_free(tempbuf);
+
+	return OK;
 }

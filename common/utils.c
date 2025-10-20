@@ -306,6 +306,8 @@ int set_default_options(mod_gm_opt_t *opt) {
     opt->has_latency        = FALSE;
     opt->latency_flatten_window = 30;
     opt->active             = GM_DISABLED;
+    opt->host_perfdata_template    = gm_strdup(GM_DEFAULT_HOST_PERFDATA_FILE_TEMPLATE);
+    opt->service_perfdata_template = gm_strdup(GM_DEFAULT_SERVICE_PERFDATA_FILE_TEMPLATE);
 
     opt->restrict_command_characters = gm_strdup("$&();<>`\"'|");
     opt->workaround_rc_25            = GM_DISABLED;
@@ -739,6 +741,18 @@ int parse_args_line(mod_gm_opt_t *opt, char * arg, int recursion_level) {
     /* identifier */
     else if ( !strcmp( key, "identifier" ) ) {
         opt->identifier = gm_strdup( value );
+    }
+
+    /* host_perfdata_template */
+    else if ( !strcmp( key, "host_perfdata_template" ) ) {
+        gm_free(opt->host_perfdata_template);
+        opt->host_perfdata_template = gm_strdup( value );
+    }
+
+    /* service_perfdata_template */
+    else if ( !strcmp( key, "service_perfdata_template" ) ) {
+        gm_free(opt->service_perfdata_template);
+        opt->service_perfdata_template = gm_strdup( value );
     }
 
     /* timeout */
@@ -1220,6 +1234,8 @@ void mod_gm_free_opt(mod_gm_opt_t *opt) {
     gm_free(opt->service);
     gm_free(opt->identifier);
     gm_free(opt->queue_cust_var);
+    gm_free(opt->host_perfdata_template);
+    gm_free(opt->service_perfdata_template);
 #ifdef EMBEDDEDPERL
     gm_free(opt->p1_file);
 #endif

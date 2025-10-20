@@ -58,7 +58,7 @@
 
 /** main NEB module init function
  *
- * this function gets initally called when loading the module
+ * this function gets initially called when loading the module
  *
  * @param[in] flags  - module flags
  * @param[in] args   - module arguments from the core config

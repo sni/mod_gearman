@@ -150,6 +150,9 @@
 
 #define GM_SHM_SIZE                  4096    /**< size of the shared memory segment */
 
+#define GM_DEFAULT_HOST_PERFDATA_FILE_TEMPLATE    "DATATYPE::HOSTPERFDATA\tTIMET::$TIMET$\tHOSTNAME::$HOSTNAME$\tHOSTPERFDATA::$HOSTPERFDATA$\tHOSTCHECKCOMMAND::$HOSTCHECKCOMMAND$\tHOSTSTATE::$HOSTSTATE$\tHOSTSTATETYPE::$HOSTSTATETYPE$"
+#define GM_DEFAULT_SERVICE_PERFDATA_FILE_TEMPLATE "DATATYPE::SERVICEPERFDATA\tTIMET::$TIMET$\tHOSTNAME::$HOSTNAME$\tSERVICEDESC::$SERVICEDESC$\tSERVICEPERFDATA::$SERVICEPERFDATA$\tSERVICECHECKCOMMAND::$SERVICECHECKCOMMAND$\tHOSTSTATE::$HOSTSTATE$\tHOSTSTATETYPE::$HOSTSTATETYPE$\tSERVICESTATE::$SERVICESTATE$\tSERVICESTATETYPE::$SERVICESTATETYPE$"
+
 /** options exports structure
  *
  * structure for export definition
@@ -226,6 +229,8 @@ typedef struct mod_gm_opt_struct {
     int            accept_clear_results;                    /**< accept unencrypted results */
     int            latency_flatten_window;                  /**< postpone high latency checks */
     int            internal_check_dummy;                    /**< handle check_dummy checks internally */
+    char         * host_perfdata_template;                  /**< template used for host performance data */
+    char         * service_perfdata_template;               /**< template used for service performance data */
 /* worker */
     char         * identifier;                              /**< identifier for this worker */
     char         * pidfile;                                 /**< path to a pidfile */
