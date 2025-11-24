@@ -20,7 +20,7 @@ jobs:
           wget -q "https://build.opensuse.org/projects/home:naemon:daily/signing_keys/download?kind=gpg" -O - | sudo tee /etc/apt/trusted.gpg.d/obs.asc
           sudo apt-get update
           sudo apt-get autoremove -y
-          sudo apt-get install -y devscripts build-essential equivs dpkg-dev valgrind cppcheck clang-14
+          sudo apt-get install -y devscripts build-essential equivs dpkg-dev valgrind cppcheck clang-19
           sudo mk-build-deps
           sudo apt-get install -y ./*-build-deps*.deb
           sudo rm -f *-build-deps*{deb,buildinfo,changes}
