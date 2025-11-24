@@ -155,7 +155,7 @@ result_workers=1
 # to gearman.
 # Note: processing of perfdata is not part of
 # mod_gearman. You will need additional worker for
-# handling performance data, like ex. pnp4nagios.
+# handling performance data, like ex. pnp4nagios or nagflux.
 # Performance data is just written to the gearman
 # queue and not further processed.
 # You can specify multiple queues by comma separated list.
@@ -172,6 +172,12 @@ perfdata_send_all=no
 # 1 = overwrote
 # 2 = append
 perfdata_mode=1
+
+# template used for host performance data.
+#host_perfdata_template=DATATYPE::HOSTPERFDATA\tTIMET::$TIMET$\tHOSTNAME::$HOSTNAME$\tHOSTPERFDATA::$HOSTPERFDATA$\tHOSTCHECKCOMMAND::$HOSTCHECKCOMMAND$\tHOSTSTATE::$HOSTSTATE$\tHOSTSTATETYPE::$HOSTSTATETYPE$
+
+# template used for service performance data.
+#service_perfdata_template=DATATYPE::SERVICEPERFDATA\tTIMET::$TIMET$\tHOSTNAME::$HOSTNAME$\tSERVICEDESC::$SERVICEDESC$\tSERVICEPERFDATA::$SERVICEPERFDATA$\tSERVICECHECKCOMMAND::$SERVICECHECKCOMMAND$\tHOSTSTATE::$HOSTSTATE$\tHOSTSTATETYPE::$HOSTSTATETYPE$\tSERVICESTATE::$SERVICESTATE$\tSERVICESTATETYPE::$SERVICESTATETYPE$
 
 # The Mod-Gearman NEB module will submit a fake result for orphaned host
 # checks with a message saying there is no worker running for this
