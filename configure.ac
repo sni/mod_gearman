@@ -9,11 +9,6 @@ AM_INIT_AUTOMAKE([-Wall foreign subdir-objects])
 AC_CONFIG_SRCDIR([neb_module_naemon/mod_gearman.c],[worker/worker.c],[tools/send_gearman.c],[tools/check_gearman.c],[tools/gearman_top.c])
 AC_CONFIG_HEADER([config.h])
 
-m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
-
-# silence warnings from perl inclues
-CFLAGS="${CFLAGS} -isystem /usr/lib64/perl5/CORE/"
-
 CFLAGS="${CFLAGS} -Wall -W -Wstrict-prototypes -Wmissing-prototypes -Wnested-externs -O -fPIC -D_GNU_SOURCE -D_REENTRANT -D_FILE_OFFSET_BITS=64"
 
 ##############################################
@@ -142,8 +137,11 @@ if test "$USEPERL" = "yes"; then
     echo "creating common/perlxsi.c"
     perl -MExtUtils::Embed -e xsinit -- -o common/perlxsi.c
     echo "Embedded Perl interpreter will be compiled in..."
-    PERLLIBS="`perl -MExtUtils::Embed -e ccopts -e ldopts | tr -d '\n'`"
+    PERLLIBS="`perl -MExtUtils::Embed -e ccopts -e ldopts | tr -d '\n'` -isystem /usr/lib64/perl5/CORE/ -isystem /usr/lib/x86_64-linux-gnu/perl/5.40/CORE/"
     AC_SUBST(PERLLIBS)
+    # silence internal perl warnings
+    PERLSYSTEM="-isystem /usr/lib64/perl5/CORE/ -isystem /usr/lib/x86_64-linux-gnu/perl/5.40/CORE/"
+    AC_SUBST(PERLSYSTEM)
 fi
 
 ##############################################
@@ -175,6 +173,7 @@ AC_ARG_ENABLE(debug,--enable-debug will enable debugging symbols,[
     fi
     ],
     CFLAGS="${CFLAGS} -g3"
+    m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 )
 
 ##############################################

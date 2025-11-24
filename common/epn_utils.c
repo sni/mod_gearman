@@ -31,8 +31,6 @@
 extern mod_gm_opt_t *mod_gm_opt;
 
 #ifdef EMBEDDEDPERL
-#include <EXTERN.h>
-#include <perl.h>
 #include  "epn_mod_gearman.h"
 int use_embedded_perl            = TRUE;
 int deinit_rc                    = 0;

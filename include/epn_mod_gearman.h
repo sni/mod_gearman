@@ -8,7 +8,9 @@
 
 /******** BEGIN EMBEDDED PERL INTERPRETER DECLARATIONS ********/
 
+#pragma GCC system_header
 #include <EXTERN.h>
+#pragma GCC system_header
 #include <perl.h>
 
 #include <fcntl.h>

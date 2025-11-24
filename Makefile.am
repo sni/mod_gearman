@@ -134,7 +134,7 @@ mod_gearman_naemon.o: $(mod_gearman_naemon_so_OBJECTS) $(mod_gearman_naemon_so_D
 common/perlxsi.o:
 	@echo '    $$(CC) $<'
 	@depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.o$$||'`;\
-	$(COMPILE) `perl -MExtUtils::Embed -e ccopts` -MT $@ -MD -MP -MF $$depbase.Tpo -c -o $@ common/perlxsi.c &&\
+	$(COMPILE) `perl -MExtUtils::Embed -e ccopts` @PERLSYSTEM@ -MT $@ -MD -MP -MF $$depbase.Tpo -c -o $@ common/perlxsi.c &&\
 	$(am__mv) $$depbase.Tpo $$depbase.Po
 
 common/epn_utils.o:
