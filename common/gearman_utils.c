@@ -147,6 +147,10 @@ int add_job_to_queue(gearman_client_st **client, gm_server_t * server_list[GM_LI
 
     gettimeofday(&t1,NULL);
     size = mod_gm_encrypt(ctx, &crypted_data, data, transport_mode);
+    if(size <= 0) {
+        gm_log( GM_LOG_ERROR, "encrypting job failed\n" );
+        return GM_ERROR;
+    }
     gm_log( GM_LOG_TRACE, "%d +++>\n%s\n<+++\n", size, crypted_data );
 
     if( priority == GM_JOB_PRIO_LOW ) {
