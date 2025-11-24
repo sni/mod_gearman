@@ -300,7 +300,7 @@ int nebmodule_deinit( int flags, int reason ) {
     return NEB_OK;
 }
 
-void shutdown_threads() {
+void shutdown_threads(void) {
     int x = 0;
 
     gm_should_terminate = TRUE;
@@ -331,7 +331,7 @@ static void move_results_to_core(struct nm_event_execution_properties *evprop) {
     schedule_event(1, move_results_to_core, NULL);
 }
 
-void process_check_result_list() {
+void process_check_result_list(void) {
     objectlist *tmp_list = NULL;
     objectlist *cur = NULL;
     struct timeval tval_before, tval_after, tval_result;

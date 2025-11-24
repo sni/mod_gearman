@@ -237,7 +237,7 @@ diag (const char *fmt, ...) {
 }
 
 int
-exit_status () {
+exit_status (void) {
     int retval = 0;
     if (expected_tests == NO_PLAN) {
         printf("1..%d\n", current_test);
@@ -292,7 +292,7 @@ tap_todo (int ignore, const char *fmt, ...) {
 }
 
 void
-tap_end_todo () {
+tap_end_todo (void) {
     free(todo_mesg);
     todo_mesg = NULL;
 }

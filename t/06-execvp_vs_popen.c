@@ -18,7 +18,7 @@ char hostname[GM_SMALLBUFSIZE];
 volatile sig_atomic_t shmid;
 
 char* my_tmpfile(void);
-char* my_tmpfile() {
+char* my_tmpfile(void) {
     char *sfn = strdup("/tmp/modgm.XXXXXX");
     int fd = -1;
     if ((fd = mkstemp(sfn)) == -1) {

@@ -178,7 +178,7 @@ int verify_options(mod_gm_opt_t *opt) {
 
 
 /* print usage */
-void print_usage() {
+void print_usage(void) {
     printf("usage:\n");
     printf("\n");
     printf("send_multi   [ --debug=<lvl>            ]\n");
@@ -308,7 +308,7 @@ void alarm_sighandler(int sig) {
 
 
 /* print version */
-void print_version() {
+void print_version(void) {
     printf("send_gearman: version %s running on libgearman %s\n", GM_VERSION, gearman_version());
     printf("\n");
     exit( STATE_UNKNOWN );

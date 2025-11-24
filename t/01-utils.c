@@ -18,7 +18,7 @@ char hostname[GM_SMALLBUFSIZE];
 volatile sig_atomic_t shmid;
 
 mod_gm_opt_t * renew_opts(void);
-mod_gm_opt_t * renew_opts() {
+mod_gm_opt_t * renew_opts(void) {
     if(mod_gm_opt != NULL)
         mod_gm_free_opt(mod_gm_opt);
 

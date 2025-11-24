@@ -116,7 +116,7 @@ void worker_client(int worker_mode, int indx, int shid) {
 
 
 /* main loop of jobs */
-void worker_loop() {
+void worker_loop(void) {
 
     while ( 1 ) {
         gearman_return_t ret;
@@ -354,7 +354,7 @@ void *get_job( gearman_job_st *job, __attribute__((__unused__)) void *context, s
 
 
 /* do some job */
-void do_exec_job( ) {
+void do_exec_job(void) {
     struct timeval start_time, end_time;
     int latency, age;
 

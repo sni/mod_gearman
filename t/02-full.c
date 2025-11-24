@@ -193,7 +193,7 @@ void *get_results( gearman_job_st *job, __attribute__((unused)) void *context, s
 
 /* create server / clients / worker */
 void create_modules(void);
-void create_modules() {
+void create_modules(void) {
     client = create_client(mod_gm_opt->server_list);
     ok(client != NULL, "created test client");
 
@@ -268,7 +268,7 @@ void check_logfile(char *logfile, int mode) {
 
 /* diag queues */
 void diag_queues(void);
-void diag_queues() {
+void diag_queues(void) {
     char * message = NULL;
     char * version = NULL;
     int rc, x;
@@ -336,7 +336,7 @@ void wait_for_empty_queue(char *queue, int timeout) {
 }
 
 char* my_tmpfile(void);
-char* my_tmpfile() {
+char* my_tmpfile(void) {
     char *sfn = strdup("/tmp/modgm.XXXXXX");
     int fd = -1;
     if ((fd = mkstemp(sfn)) == -1) {

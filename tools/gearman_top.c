@@ -162,7 +162,7 @@ void clean_exit(int sig) {
 }
 
 /* print version */
-void print_version() {
+void print_version(void) {
     printf("gearman_top: version %s\n", GM_VERSION );
     printf("\n");
     exit( EXIT_SUCCESS );
@@ -170,7 +170,7 @@ void print_version() {
 
 
 /* print usage */
-void print_usage() {
+void print_usage(void) {
     printf("usage:\n");
     printf("\n");
     printf("gearman_top   [ -H <hostname>[:port]               ]\n");

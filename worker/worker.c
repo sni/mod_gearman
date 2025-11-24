@@ -172,7 +172,7 @@ int main (int argc, char **argv) {
 
 
 /* main loop for checking worker */
-void monitor_loop() {
+void monitor_loop(void) {
 
     /* maintain the population */
     while (1) {
@@ -239,7 +239,7 @@ void count_current_worker(int restart) {
 }
 
 /* start new worker if needed */
-void check_worker_population() {
+void check_worker_population(void) {
     int x, now, status, target_number_of_workers;
 
     gm_log( GM_LOG_TRACE3, "check_worker_population()\n");
@@ -477,7 +477,7 @@ int verify_options(mod_gm_opt_t *opt) {
 
 
 /* print usage */
-void print_usage() {
+void print_usage(void) {
     printf("Usage: worker [OPTION]...\n");
     printf("\n");
     printf("Mod-Gearman worker executes host- and servicechecks.\n");
@@ -540,7 +540,7 @@ void print_usage() {
 
 
 /* create shared memory segments */
-void setup_child_communicator() {
+void setup_child_communicator(void) {
     int x;
     int now = (int)time(NULL);
 
@@ -744,7 +744,7 @@ void stop_children(int mode) {
 
 
 /* check for pid file and write new one */
-int write_pid_file() {
+int write_pid_file(void) {
     FILE *fp;
     char pid_path[GM_BUFFERSIZE];
 
@@ -829,7 +829,7 @@ void reload_config(int sig) {
 
 
 /* return and reserve next shm index*/
-int get_next_shm_index() {
+int get_next_shm_index(void) {
     int x;
     int next_index = 0;
 
@@ -870,7 +870,7 @@ void write_core_log(char *data) {
 }
 
 /* print version */
-void print_version() {
+void print_version(void) {
     printf("mod_gearman_worker: version %s running on libgearman %s\n", GM_VERSION, gearman_version());
     printf("\n");
     exit( STATE_UNKNOWN );

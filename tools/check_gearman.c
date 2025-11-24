@@ -129,7 +129,7 @@ int main (int argc, char **argv) {
 
 
 /* print version */
-void print_version() {
+void print_version(void) {
     printf("check_gearman: version %s running on libgearman %s\n", GM_VERSION, gearman_version());
     printf("\n");
     exit( STATE_UNKNOWN );
@@ -137,7 +137,7 @@ void print_version() {
 
 
 /* print usage */
-void print_usage() {
+void print_usage(void) {
     printf("usage:\n");
     printf("\n");
     printf("check_gearman [ -H=<hostname>[:port]         ]\n");
