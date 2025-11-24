@@ -344,7 +344,8 @@ int get_gearman_server_data(mod_gm_server_status_t *stats, char ** message, char
 
 /* send gearman admin */
 int send2gearmandadmin(char * cmd, char * hostnam, int port, char ** output, char ** error) {
-    int sockfd, n;
+    int sockfd = -1;
+    int n;
     char buf[GM_BUFFERSIZE];
 
     *error  = gm_malloc(GM_BUFFERSIZE);
@@ -353,6 +354,9 @@ int send2gearmandadmin(char * cmd, char * hostnam, int port, char ** output, cha
     snprintf(*output,  GM_BUFFERSIZE, "%s", "" );
 
     if(gm_net_connect(hostnam, port, &sockfd, error) != GM_OK) {
+        return(STATE_CRITICAL);
+    }
+    if(sockfd <= 0) {
         return(STATE_CRITICAL);
     }
 
