@@ -2,7 +2,7 @@
 
 This file documents the revision history for the mod_gearman NEB module.
 
-next:
+5.2.1 Fri Dec 12 13:49:21 CET 2025
           - add support for conf.d folder
 
 5.2.0 Mon Nov 24 14:10:11 CET 2025
