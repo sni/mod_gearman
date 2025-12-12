@@ -1,4 +1,9 @@
-This file documents the revision history for mod_gearman.
+# Changelog
+
+This file documents the revision history for the mod_gearman NEB module.
+
+next:
+          - add support for conf.d folder
 
 5.2.0 Mon Nov 24 14:10:11 CET 2025
           - add support for configurable performance data templates

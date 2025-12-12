@@ -25,6 +25,8 @@
 #include "utils.h"
 #include "gm_crypt.h"
 #include "gearman_utils.h"
+
+#include <dirent.h>
 #include "popenRWE.h"
 
 #ifdef EMBEDDEDPERL
@@ -1024,10 +1026,12 @@ int parse_args_line(mod_gm_opt_t *opt, char * arg, int recursion_level) {
 
 /* read an entire config file */
 int read_config_file(mod_gm_opt_t *opt, char*filename, int recursion_level) {
-    FILE * fp;
+    struct stat st;
     int errors = 0;
     char *line;
     char *line_c;
+    DIR *dir = NULL;
+    struct dirent *entry;
 
     gm_log( GM_LOG_TRACE, "read_config_file(%s, %d)\n", filename, recursion_level );
 
@@ -1035,9 +1039,43 @@ int read_config_file(mod_gm_opt_t *opt, char*filename, int recursion_level) {
         gm_log( GM_LOG_ERROR, "deep recursion in config files!\n" );
         return GM_ERROR;
     }
-    fp = fopen(filename, "r");
+
+    if(stat(filename, &st) == 0 && S_ISDIR(st.st_mode)) {
+        dir = opendir(filename);
+        if (!dir) {
+            gm_log( GM_LOG_ERROR, "could not open directory: %s: %s\n", filename, strerror(errno));
+            return GM_ERROR;
+        }
+        while((entry = readdir(dir)) != NULL) {
+            if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0)
+                continue;
+            char path[4096];
+            if(snprintf(path, sizeof(path), "%s/%s", filename, entry->d_name) < 0) {
+                gm_log( GM_LOG_ERROR, "path too long: %s/%s\n", filename, entry->d_name);
+                errors++;
+                continue;
+            }
+            if(entry->d_type == DT_DIR) {
+                // recurse into subdirectories
+                if (read_config_file(opt, path, recursion_level + 1) != GM_OK) {
+                    errors++;
+                }
+            } else {
+                const char *dot = strrchr(entry->d_name, '.');
+                if(!dot || (strcmp(dot, ".cfg") != 0 && strcmp(dot, ".conf") != 0))
+                    continue;
+                if(read_config_file(opt, path, recursion_level + 1) != GM_OK) {
+                    errors++;
+                }
+            }
+        }
+        closedir(dir);
+        return (errors > 0) ? GM_ERROR : GM_OK;
+    }
+
+    FILE *fp = fopen(filename, "r");
     if(fp == NULL) {
-        perror(filename);
+        gm_log( GM_LOG_ERROR, "could not open file: %s: %s\n", filename, strerror(errno));
         return GM_ERROR;
     }
 
@@ -1255,7 +1293,7 @@ int read_keyfile(mod_gm_opt_t *opt) {
 
     fp = fopen(opt->keyfile,"rb");
     if(fp == NULL) {
-        perror(opt->keyfile);
+        gm_log( GM_LOG_ERROR, "could not open file: %s: %s\n", opt->keyfile, strerror(errno));
         return(GM_ERROR);
     }
     if(opt->crypt_key != NULL)
