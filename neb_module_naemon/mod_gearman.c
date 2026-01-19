@@ -297,6 +297,13 @@ int nebmodule_deinit( int flags, int reason ) {
     mod_gm_free_opt(mod_gm_opt);
 
     mod_gm_crypt_deinit(mod_ctx);
+
+    if(reason == NEBMODULE_NEB_SHUTDOWN) {
+        // breaks reloading the module and usually done automatically at exit, but at exit
+        // this modules is already unloaded
+        OPENSSL_cleanup();
+    }
+
     return NEB_OK;
 }
 
