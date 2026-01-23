@@ -215,6 +215,10 @@ void print_stats(char * hostnam) {
     if(port_c != NULL)
         port = atoi(port_c);
 
+    if(strlen(server) == 0) {
+        server = "localhost";
+    }
+
     /* get stats */
     stats = (mod_gm_server_status_t*)gm_malloc(sizeof(mod_gm_server_status_t));
     stats->function_num = 0;
