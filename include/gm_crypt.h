@@ -33,7 +33,9 @@
 #include <string.h>
 #include <openssl/evp.h>
 #include <openssl/hmac.h>
+#if OPENSSL_VERSION_NUMBER >= 0x30000000L
 #include <openssl/core_names.h>
+#endif
 #include <openssl/err.h>
 
 #define KEYBITS     256     /**< key size */

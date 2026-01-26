@@ -139,9 +139,18 @@ int mod_gm_aes_decrypt(EVP_CIPHER_CTX * ctx, unsigned char * plaintext, unsigned
     return 1;
 }
 
+#if OPENSSL_VERSION_NUMBER >= 0x30000000L
+/* OpenSSL 3.0+ */
 static TLS EVP_MAC     *mac      = NULL;
 static TLS EVP_MAC_CTX *mac_ctx  = NULL;
+#else
+/* OpenSSL 1.1.x and earlier */
+static TLS HMAC_CTX    *hmac_ctx = NULL;
+#endif
+
 int hmac_sha256_init() {
+#if OPENSSL_VERSION_NUMBER >= 0x30000000L
+    /* OpenSSL 3.0+ */
     OSSL_PARAM params[] = {
         OSSL_PARAM_construct_utf8_string(OSSL_MAC_PARAM_DIGEST,
                                          (char *)"SHA256", 0),
@@ -161,6 +170,19 @@ int hmac_sha256_init() {
     }
 
     return EVP_MAC_init(mac_ctx, key, KEYBYTES, params) == 1;
+#else
+    /* OpenSSL 1.1.x and earlier */
+    if (hmac_ctx == NULL) {
+        hmac_ctx = HMAC_CTX_new();
+        if (!hmac_ctx)
+            return 0;
+    }
+
+    if (HMAC_Init_ex(hmac_ctx, key, KEYBYTES, EVP_sha256(), NULL) != 1)
+        return 0;
+
+    return 1;
+#endif
 }
 
 /* create hex sum for char[] */
@@ -170,6 +192,9 @@ void mod_gm_hexsum(char *dest, char *text) {
     unsigned int i = 0;
 
     hmac_sha256_init();
+
+#if OPENSSL_VERSION_NUMBER >= 0x30000000L
+    /* OpenSSL 3.0+ */
     if(mac_ctx == NULL) {
         fprintf(stderr, "failed to initialize HMAC context\n");
         exit(1);
@@ -179,6 +204,24 @@ void mod_gm_hexsum(char *dest, char *text) {
         fprintf(stderr, "HMAC computation failed\n");
         exit(1);
     }
+#else
+    /* OpenSSL 1.1.x and earlier */
+    if(hmac_ctx == NULL) {
+        fprintf(stderr, "failed to initialize HMAC context\n");
+        exit(1);
+    }
+
+    if(HMAC_Update(hmac_ctx, (const unsigned char*)text, strlen(text)) != 1) {
+        fprintf(stderr, "HMAC computation failed\n");
+        exit(1);
+    }
+
+    resultlen = sizeof(result);
+    if(HMAC_Final(hmac_ctx, result, (unsigned int*)&resultlen) != 1) {
+        fprintf(stderr, "HMAC computation failed\n");
+        exit(1);
+    }
+#endif
 
     dest[0] = 0;
     for(i = 0; i < resultlen; i++){
