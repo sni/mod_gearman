@@ -313,7 +313,7 @@ int main(void) {
 
     int iters = 100; /* increase number when really doing benchmarks */
     long start = ns_now();
-    for (int i = 0; i < iters; i++) {
+    for (i = 0; i < iters; i++) {
         make_uniq(uniq, "%s-%s;%d", "xxx-xxxxx-xxxxxx.xxxxxxxxxx.xxxxxx.xx", "xxxx_xxxx_xxxxx_xxx_xx", i);
     }
     long end = ns_now();
