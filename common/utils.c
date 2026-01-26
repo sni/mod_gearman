@@ -1853,6 +1853,7 @@ int read_pipe(char **target, int input) {
     return(size);
 }
 
+// create hash sum to avoid nasty characters and make string smaller than GEARMAN_MAX_UNIQUE_SIZE
 void make_uniq(char *uniq, const char *format, ... ) {
     va_list ap;
 
@@ -1861,10 +1862,7 @@ void make_uniq(char *uniq, const char *format, ... ) {
     vsnprintf(uniq, GM_SMALLBUFSIZE, format, ap);
     va_end(ap);
 
-    // create hash sum to avoid nasty characters and make string smaller than GEARMAN_MAX_UNIQUE_SIZE
-    char * hex =  mod_gm_hexsum(uniq);
-    snprintf(uniq, GM_SMALLBUFSIZE, "%s", hex);
-    gm_free(hex);
+    mod_gm_hexsum(uniq, uniq);
 }
 
 double elapsed_time(struct timeval t1, struct timeval t2) {

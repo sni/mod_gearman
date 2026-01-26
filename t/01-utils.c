@@ -265,16 +265,14 @@ int main(void) {
     free(escaped);
 
     /* sha256 hash sum */
-    char * sum;
+    char sum[65];
     strcpy(test, "");
-    sum = (char*)mod_gm_hexsum(test);
+    mod_gm_hexsum(sum, test);
     is(sum, "3490E034A1F8B9F65333848E51F32C519FD49E727910A0E998968AD8C2C87EC3", "sha256sum()");
-    free(sum);
 
     strcpy(test, "The quick brown fox jumps over the lazy dog.");
-    sum = (char*)mod_gm_hexsum(test);
+    mod_gm_hexsum(sum, test);
     is(sum, "5C8C8F7E5314C1A46211ABCBC5024700CFFFC8EC719F11A5369683B11CACD72F", "sha256sum()");
-    free(sum);
 
     /* starts_with */
     strcpy(test, "test123");

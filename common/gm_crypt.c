@@ -31,6 +31,14 @@
 
 unsigned char key[KEYBYTES];
 
+#if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 201112L
+#define TLS _Thread_local
+#elif defined(__GNUC__)
+#define TLS __thread
+#else
+#error "No thread-local storage support"
+#endif
+
 /* initialize encryption */
 EVP_CIPHER_CTX * mod_gm_aes_init(const char * password) {
     EVP_CIPHER_CTX * ctx;
@@ -131,17 +139,53 @@ int mod_gm_aes_decrypt(EVP_CIPHER_CTX * ctx, unsigned char * plaintext, unsigned
     return 1;
 }
 
-/* create hex sum for char[] */
-char *mod_gm_hexsum(const char *text) {
-    unsigned char *result = NULL;
-    unsigned int resultlen = -1;
-    unsigned int i = 0;
-    char *hex = gm_malloc(sizeof(char)*((KEYBYTES*2)+1));
-    result = HMAC(EVP_sha256(), key, KEYBYTES, (const unsigned char*)text, strlen(text), result, &resultlen);
-    for(i = 0; i < resultlen; i++){
-        snprintf(hex+(i*2), 3, "%02hhX", result[i]);
+static TLS EVP_MAC     *mac      = NULL;
+static TLS EVP_MAC_CTX *mac_ctx  = NULL;
+int hmac_sha256_init() {
+    OSSL_PARAM params[] = {
+        OSSL_PARAM_construct_utf8_string(OSSL_MAC_PARAM_DIGEST,
+                                         (char *)"SHA256", 0),
+        OSSL_PARAM_construct_end()
+    };
+
+    if (mac == NULL) {
+        mac = EVP_MAC_fetch(NULL, "HMAC", NULL);
+        if (!mac)
+            return 0;
     }
-    return(hex);
+
+    if (mac_ctx == NULL) {
+        mac_ctx = EVP_MAC_CTX_new(mac);
+        if (!mac_ctx)
+            return 0;
+    }
+
+    return EVP_MAC_init(mac_ctx, key, KEYBYTES, params) == 1;
+}
+
+/* create hex sum for char[] */
+void mod_gm_hexsum(char *dest, char *text) {
+    uint8_t result[32] = {0};
+    size_t resultlen = 0;
+    unsigned int i = 0;
+
+    hmac_sha256_init();
+    if(mac_ctx == NULL) {
+        fprintf(stderr, "failed to initialize HMAC context\n");
+        exit(1);
+    }
+
+    if(EVP_MAC_update(mac_ctx, (const unsigned char*)text, strlen(text)) != 1 || EVP_MAC_final(mac_ctx, result, &resultlen, KEYBYTES) != 1) {
+        fprintf(stderr, "HMAC computation failed\n");
+        exit(1);
+    }
+
+    dest[0] = 0;
+    for(i = 0; i < resultlen; i++){
+        snprintf(dest+(i*2), 3, "%02hhX", result[i]);
+    }
+
+    return;
 }
 
 int base64_decode(const char *source, int sourcelen, unsigned char * target) {

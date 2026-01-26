@@ -33,6 +33,7 @@
 #include <string.h>
 #include <openssl/evp.h>
 #include <openssl/hmac.h>
+#include <openssl/core_names.h>
 #include <openssl/err.h>
 
 #define KEYBITS     256     /**< key size */
@@ -82,12 +83,12 @@ int mod_gm_aes_decrypt(EVP_CIPHER_CTX * ctx, unsigned char * plaintext, unsigned
 /**
  * create hex sum of text
  *
- * @param[out] hexsum - pointer to hex sum
+ * @param[out] dest - pointer to hex sum
  * @param[in] text  - source text for check sum
  *
  * @return nothing
  */
-char *mod_gm_hexsum(const char *text);
+void mod_gm_hexsum(char *dest, char *text);
 
 /**
  * decode base64 encoded data
@@ -107,6 +108,8 @@ int base64_decode(const char *source, int sourcelen, unsigned char * target);
  * @return encodede bytes or NULL on error
  */
 unsigned char * base64_encode(const unsigned char *source, size_t sourcelen);
+
+int hmac_sha256_init(void);
 
 /*
  * @}
