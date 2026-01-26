@@ -29,6 +29,12 @@ mod_gm_opt_t * renew_opts(void) {
     return mod_gm_opt;
 }
 
+static inline long ns_now(void) {
+    struct timespec ts;
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+    return ts.tv_sec * 1000000000L + ts.tv_nsec;
+}
+
 int main(void) {
     plan(137);
 
@@ -304,6 +310,15 @@ int main(void) {
     is(uniq, "9E94C0A8F100FCB3EC917C14D0B766FBFF06F40868DD6E6345AA19EB692E9224", "make_uniq()");
     ok(strlen(uniq) == 64, "length of uniq string is 64");
     ok(strlen(uniq) <= GEARMAN_MAX_UNIQUE_SIZE, "uniq string is smaller than GEARMAN_MAX_UNIQUE_SIZE");
+
+    int iters = 100; /* increase number when really doing benchmarks */
+    long start = ns_now();
+    for (int i = 0; i < iters; i++) {
+        make_uniq(uniq, "%s-%s;%d", "xxx-xxxxx-xxxxxx.xxxxxxxxxx.xxxxxx.xx", "xxxx_xxxx_xxxxx_xxx_xx", i);
+    }
+    long end = ns_now();
+    printf("make_uniq ns/call: %.2f\n", (double)(end - start) / iters);
+
 
     mod_gm_free_opt(mod_gm_opt);
 
