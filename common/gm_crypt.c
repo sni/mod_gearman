@@ -148,7 +148,7 @@ static TLS EVP_MAC_CTX *mac_ctx  = NULL;
 static TLS HMAC_CTX    *hmac_ctx = NULL;
 #endif
 
-int hmac_sha256_init() {
+int hmac_sha256_init(void) {
 #if OPENSSL_VERSION_NUMBER >= 0x30000000L
     /* OpenSSL 3.0+ */
     OSSL_PARAM params[] = {
@@ -173,7 +173,12 @@ int hmac_sha256_init() {
 #else
     /* OpenSSL 1.1.x and earlier */
     if (hmac_ctx == NULL) {
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L
         hmac_ctx = HMAC_CTX_new();
+#else
+        hmac_ctx = gm_malloc(sizeof(HMAC_CTX));
+        HMAC_CTX_init(hmac_ctx);
+#endif
         if (!hmac_ctx)
             return 0;
     }
