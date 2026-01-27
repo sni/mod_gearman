@@ -31,12 +31,15 @@
 
 unsigned char key[KEYBYTES];
 
-#if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 201112L
-#define TLS _Thread_local
-#elif defined(__GNUC__)
-#define TLS __thread
+#ifndef _Thread_local
+#  define _Thread_local __thread
+#endif
+#if __STDC_VERSION__ >= 201112L && !defined(__STDC_NO_THREADS__)
+  #define THREAD_LOCAL _Thread_local
+#elif defined(__GNUC__) || defined(__clang__)
+  #define THREAD_LOCAL __thread
 #else
-#error "No thread-local storage support"
+  #error "No thread-local storage support"
 #endif
 
 /* initialize encryption */
@@ -141,11 +144,11 @@ int mod_gm_aes_decrypt(EVP_CIPHER_CTX * ctx, unsigned char * plaintext, unsigned
 
 #if OPENSSL_VERSION_NUMBER >= 0x30000000L
 /* OpenSSL 3.0+ */
-static TLS EVP_MAC     *mac      = NULL;
-static TLS EVP_MAC_CTX *mac_ctx  = NULL;
+static THREAD_LOCAL EVP_MAC     *mac      = NULL;
+static THREAD_LOCAL EVP_MAC_CTX *mac_ctx  = NULL;
 #else
 /* OpenSSL 1.1.x and earlier */
-static TLS HMAC_CTX    *hmac_ctx = NULL;
+static THREAD_LOCAL HMAC_CTX    *hmac_ctx = NULL;
 #endif
 
 int hmac_sha256_init(void) {
