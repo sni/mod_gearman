@@ -42,6 +42,8 @@ unsigned char key[KEYBYTES];
   #error "No thread-local storage support"
 #endif
 
+static const char hex[] = "0123456789ABCDEF";
+
 /* initialize encryption */
 EVP_CIPHER_CTX * mod_gm_aes_init(const char * password) {
     EVP_CIPHER_CTX * ctx;
@@ -231,10 +233,15 @@ void mod_gm_hexsum(char *dest, char *text) {
     }
 #endif
 
+    // convert to hex string
     dest[0] = 0;
-    for(i = 0; i < resultlen; i++){
-        snprintf(dest+(i*2), 3, "%02hhX", result[i]);
+    for(i = 0; i < resultlen; i++) {
+        // this is faster than using snprintf in a loop
+        // snprintf(dest+(i*2), 3, "%02hhX", result[i]);
+        dest[i*2]     = hex[(result[i] >> 4) & 0xF];
+        dest[i*2 + 1] = hex[result[i] & 0xF];
     }
+    dest[resultlen*2] = '\0';
 
     return;
 }
