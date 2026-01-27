@@ -4,7 +4,7 @@ Priority: extra
 Maintainer: Sven Nierlein <sven.nierlein@consol.de>
 Build-Depends: debhelper (>= 10), automake, libtool, libgearman-dev (>= 1.1), libncurses5-dev,
                libltdl-dev, gearman-job-server, help2man, dctrl-tools, libperl-dev, gearman-tools,
-               naemon-dev (>= 1.4.3), pkg-config, libssl-dev, openssl
+               naemon-dev (>= 1.4.3), pkg-config, libssl-dev, openssl, autoconf-archive, autoconf
 Standards-Version: 3.9.1
 Homepage: http://labs.consol.de/nagios/mod-gearman/
 

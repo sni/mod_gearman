@@ -7,17 +7,17 @@ AC_PREREQ([2.60])
 AC_INIT([mod_gearman], [5.2.1], [sven.nierlein@consol.de])
 AM_INIT_AUTOMAKE([-Wall foreign subdir-objects])
 AC_CONFIG_SRCDIR([neb_module_naemon/mod_gearman.c],[worker/worker.c],[tools/send_gearman.c],[tools/check_gearman.c],[tools/gearman_top.c])
-AC_CONFIG_HEADER([config.h])
+AC_CONFIG_HEADERS([config.h])
 
 CFLAGS="${CFLAGS} -Wall -W -Wstrict-prototypes -Wmissing-prototypes -Wnested-externs -O -fPIC -D_GNU_SOURCE -D_REENTRANT -D_FILE_OFFSET_BITS=64"
 
 ##############################################
 # Checks for programs.
-AC_PROG_CXX
 AC_PROG_CC
 AM_PROG_CC_C_O
 AC_PROG_RANLIB
-AM_PROG_AR
+
+AX_CHECK_COMPILE_FLAG([-std=gnu11], CFLAGS="${CFLAGS} -std=gnu11")
 
 ##############################################
 # gearman wants this

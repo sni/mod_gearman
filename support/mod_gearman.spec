@@ -13,7 +13,7 @@ Source0:       mod_gearman-%{version}.tar.gz
 Group:         System/Monitoring
 Summary:       Mod-Gearman module for Naemon
 Requires:      libgearman, perl, logrotate, openssl
-BuildRequires: autoconf, automake, gcc-c++, pkgconfig, ncurses-devel
+BuildRequires: autoconf, autoconf-archive, automake, gcc-c++, pkgconfig, ncurses-devel
 BuildRequires: libtool, libtool-ltdl-devel, libevent-devel, openssl-devel
 BuildRequires: libgearman-devel
 BuildRequires: naemon-devel >= 1.4.3
