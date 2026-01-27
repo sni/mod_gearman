@@ -47,7 +47,7 @@ test -f configure || ./autogen.sh
      --with-init-dir="%{_initrddir}" \
      --enable-embedded-perl
 
-%{__make} %{_smp_mflags}
+%{__make} -j1 %{_smp_mflags}
 
 %install
 %{__rm} -rf %{buildroot}
