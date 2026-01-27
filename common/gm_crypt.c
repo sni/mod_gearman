@@ -153,96 +153,66 @@ static THREAD_LOCAL EVP_MAC_CTX *mac_ctx  = NULL;
 static THREAD_LOCAL HMAC_CTX    *hmac_ctx = NULL;
 #endif
 
-int hmac_sha256_init(void) {
+int md5sum_init(void) {
 #if OPENSSL_VERSION_NUMBER >= 0x30000000L
     /* OpenSSL 3.0+ */
-    OSSL_PARAM params[] = {
-        OSSL_PARAM_construct_utf8_string(OSSL_MAC_PARAM_DIGEST,
-                                         (char *)"SHA256", 0),
-        OSSL_PARAM_construct_end()
-    };
-
     if (mac == NULL) {
-        mac = EVP_MAC_fetch(NULL, "HMAC", NULL);
+        mac = EVP_MAC_fetch(NULL, "CMAC", NULL);
         if (!mac)
             return 0;
     }
-
     if (mac_ctx == NULL) {
         mac_ctx = EVP_MAC_CTX_new(mac);
         if (!mac_ctx)
             return 0;
     }
-
-    return EVP_MAC_init(mac_ctx, key, KEYBYTES, params) == 1;
+    // CMAC does not use digest param, so skip OSSL_PARAM
+    return EVP_MAC_init(mac_ctx, key, KEYBYTES, NULL) == 1;
 #else
     /* OpenSSL 1.1.x and earlier */
-    if (hmac_ctx == NULL) {
-#if OPENSSL_VERSION_NUMBER >= 0x10100000L
-        hmac_ctx = HMAC_CTX_new();
-#else
-        hmac_ctx = gm_malloc(sizeof(HMAC_CTX));
-        HMAC_CTX_init(hmac_ctx);
-#endif
-        if (!hmac_ctx)
-            return 0;
-    }
-
-    if (HMAC_Init_ex(hmac_ctx, key, KEYBYTES, EVP_sha256(), NULL) != 1)
-        return 0;
-
+    // No HMAC, use EVP_MD_CTX for MD5
     return 1;
 #endif
 }
 
 /* create hex sum for char[] */
 void mod_gm_hexsum(char *dest, char *text) {
-    uint8_t result[32] = {0};
-    size_t resultlen = 0;
+    unsigned char result[16] = {0};
+    unsigned int resultlen = 0;
     unsigned int i = 0;
 
-    hmac_sha256_init();
-
 #if OPENSSL_VERSION_NUMBER >= 0x30000000L
-    /* OpenSSL 3.0+ */
-    if(mac_ctx == NULL) {
-        fprintf(stderr, "failed to initialize HMAC context\n");
+    md5sum_init();
+    EVP_MD_CTX *mdctx = EVP_MD_CTX_new();
+    if(mdctx == NULL) {
+        fprintf(stderr, "failed to initialize MD5 context\n");
         exit(1);
     }
-
-    if(EVP_MAC_update(mac_ctx, (const unsigned char*)text, strlen(text)) != 1 || EVP_MAC_final(mac_ctx, result, &resultlen, KEYBYTES) != 1) {
-        fprintf(stderr, "HMAC computation failed\n");
+    if(EVP_DigestInit_ex(mdctx, EVP_md5(), NULL) != 1 || EVP_DigestUpdate(mdctx, text, strlen(text)) != 1 || EVP_DigestFinal_ex(mdctx, result, &resultlen) != 1) {
+        fprintf(stderr, "MD5 computation failed\n");
         exit(1);
     }
+    EVP_MD_CTX_free(mdctx);
 #else
-    /* OpenSSL 1.1.x and earlier */
-    if(hmac_ctx == NULL) {
-        fprintf(stderr, "failed to initialize HMAC context\n");
+    EVP_MD_CTX *mdctx = EVP_MD_CTX_new();
+    if(mdctx == NULL) {
+        fprintf(stderr, "failed to initialize MD5 context\n");
         exit(1);
     }
-
-    if(HMAC_Update(hmac_ctx, (const unsigned char*)text, strlen(text)) != 1) {
-        fprintf(stderr, "HMAC computation failed\n");
+    if(EVP_DigestInit_ex(mdctx, EVP_md5(), NULL) != 1 || EVP_DigestUpdate(mdctx, text, strlen(text)) != 1 || EVP_DigestFinal_ex(mdctx, result, &resultlen) != 1) {
+        fprintf(stderr, "MD5 computation failed\n");
         exit(1);
     }
-
-    resultlen = sizeof(result);
-    if(HMAC_Final(hmac_ctx, result, (unsigned int*)&resultlen) != 1) {
-        fprintf(stderr, "HMAC computation failed\n");
-        exit(1);
-    }
+    EVP_MD_CTX_free(mdctx);
 #endif
 
     // convert to hex string
     dest[0] = 0;
     for(i = 0; i < resultlen; i++) {
-        // this is faster than using snprintf in a loop
-        // snprintf(dest+(i*2), 3, "%02hhX", result[i]);
         dest[i*2]     = hex[(result[i] >> 4) & 0xF];
         dest[i*2 + 1] = hex[result[i] & 0xF];
     }
     dest[resultlen*2] = '\0';
-
     return;
 }
 

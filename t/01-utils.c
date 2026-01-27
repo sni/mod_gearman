@@ -270,15 +270,14 @@ int main(void) {
     is(escaped, "test", "trimmed escape string");
     free(escaped);
 
-    /* sha256 hash sum */
+    /* md5 hash sum */
     char sum[65];
     strcpy(test, "");
     mod_gm_hexsum(sum, test);
-    is(sum, "3490E034A1F8B9F65333848E51F32C519FD49E727910A0E998968AD8C2C87EC3", "sha256sum()");
-
+    is(sum, "D41D8CD98F00B204E9800998ECF8427E", "md5sum()");
     strcpy(test, "The quick brown fox jumps over the lazy dog.");
     mod_gm_hexsum(sum, test);
-    is(sum, "5C8C8F7E5314C1A46211ABCBC5024700CFFFC8EC719F11A5369683B11CACD72F", "sha256sum()");
+    is(sum, "E4D909C290D0FB1CA068FFADDF22CBD0", "md5sum()");
 
     /* starts_with */
     strcpy(test, "test123");
@@ -297,18 +296,18 @@ int main(void) {
 
     char uniq[GM_SMALLBUFSIZE];
     make_uniq(uniq, "%s", "test - test");
-    is(uniq, "31121DCCD068B90014ADCC5D500F0E0F5C49C8CAE5E893C58FE3C77283B83086", "make_uniq()");
-    ok(strlen(uniq) == 64, "length of uniq string is 64");
+    is(uniq, "3A9E4A6A2E66AF990948D81E004B3AC0", "make_uniq()");
+    ok(strlen(uniq) == 32, "length of uniq string is 32");
     ok(strlen(uniq) <= GEARMAN_MAX_UNIQUE_SIZE, "uniq string is smaller than GEARMAN_MAX_UNIQUE_SIZE");
 
     make_uniq(uniq, "%s", "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
-    is(uniq, "6915CE3CDB89789E8B6DD53FC103E7E7ADD6873AD41A0F40274E5CB63D6B0D04", "make_uniq()");
-    ok(strlen(uniq) == 64, "length of uniq string is 64");
+    is(uniq, "06750ADDEC6E07D61B2EAF2D24FAE87E", "make_uniq()");
+    ok(strlen(uniq) == 32, "length of uniq string is 32");
     ok(strlen(uniq) <= GEARMAN_MAX_UNIQUE_SIZE, "uniq string is smaller than GEARMAN_MAX_UNIQUE_SIZE");
 
     make_uniq(uniq, "%s-%s", "xxx-xxxxx-xxxxxx.xxxxxxxxxx.xxxxxx.xx", "xxxx_xxxx_xxxxx_xxx_xx");
-    is(uniq, "9E94C0A8F100FCB3EC917C14D0B766FBFF06F40868DD6E6345AA19EB692E9224", "make_uniq()");
-    ok(strlen(uniq) == 64, "length of uniq string is 64");
+    is(uniq, "91DE277E8197840A3261751C712698E0", "make_uniq()");
+    ok(strlen(uniq) == 32, "length of uniq string is 32");
     ok(strlen(uniq) <= GEARMAN_MAX_UNIQUE_SIZE, "uniq string is smaller than GEARMAN_MAX_UNIQUE_SIZE");
 
     int iters = 100; /* increase number when really doing benchmarks */

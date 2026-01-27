@@ -111,7 +111,7 @@ int base64_decode(const char *source, int sourcelen, unsigned char * target);
  */
 unsigned char * base64_encode(const unsigned char *source, size_t sourcelen);
 
-int hmac_sha256_init(void);
+int md5sum_init(void);
 
 /*
  * @}
