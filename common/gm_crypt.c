@@ -42,6 +42,7 @@ unsigned char key[KEYBYTES];
   #error "No thread-local storage support"
 #endif
 
+static THREAD_LOCAL EVP_MD_CTX *mdctx  = NULL;
 static const char hex[] = "0123456789ABCDEF";
 
 /* initialize encryption */
@@ -144,46 +145,17 @@ int mod_gm_aes_decrypt(EVP_CIPHER_CTX * ctx, unsigned char * plaintext, unsigned
     return 1;
 }
 
-#if OPENSSL_VERSION_NUMBER >= 0x30000000L
-/* OpenSSL 3.0+ */
-static THREAD_LOCAL EVP_MAC     *mac      = NULL;
-static THREAD_LOCAL EVP_MAC_CTX *mac_ctx  = NULL;
-#else
-/* OpenSSL 1.1.x and earlier */
-static THREAD_LOCAL HMAC_CTX    *hmac_ctx = NULL;
-#endif
-
-int md5sum_init(void) {
-#if OPENSSL_VERSION_NUMBER >= 0x30000000L
-    /* OpenSSL 3.0+ */
-    if (mac == NULL) {
-        mac = EVP_MAC_fetch(NULL, "CMAC", NULL);
-        if (!mac)
-            return 0;
-    }
-    if (mac_ctx == NULL) {
-        mac_ctx = EVP_MAC_CTX_new(mac);
-        if (!mac_ctx)
-            return 0;
-    }
-    // CMAC does not use digest param, so skip OSSL_PARAM
-    return EVP_MAC_init(mac_ctx, key, KEYBYTES, NULL) == 1;
-#else
-    /* OpenSSL 1.1.x and earlier */
-    // No HMAC, use EVP_MD_CTX for MD5
-    return 1;
-#endif
-}
-
 /* create hex sum for char[] */
 void mod_gm_hexsum(char *dest, char *text) {
     unsigned char result[16] = {0};
     unsigned int resultlen = 0;
     unsigned int i = 0;
 
-#if OPENSSL_VERSION_NUMBER >= 0x30000000L
-    md5sum_init();
-    EVP_MD_CTX *mdctx = EVP_MD_CTX_new();
+    if(mdctx == NULL)
+        mdctx = EVP_MD_CTX_new();
+    else
+        EVP_MD_CTX_reset(mdctx);
+
     if(mdctx == NULL) {
         fprintf(stderr, "failed to initialize MD5 context\n");
         exit(1);
@@ -192,19 +164,6 @@ void mod_gm_hexsum(char *dest, char *text) {
         fprintf(stderr, "MD5 computation failed\n");
         exit(1);
     }
-    EVP_MD_CTX_free(mdctx);
-#else
-    EVP_MD_CTX *mdctx = EVP_MD_CTX_new();
-    if(mdctx == NULL) {
-        fprintf(stderr, "failed to initialize MD5 context\n");
-        exit(1);
-    }
-    if(EVP_DigestInit_ex(mdctx, EVP_md5(), NULL) != 1 || EVP_DigestUpdate(mdctx, text, strlen(text)) != 1 || EVP_DigestFinal_ex(mdctx, result, &resultlen) != 1) {
-        fprintf(stderr, "MD5 computation failed\n");
-        exit(1);
-    }
-    EVP_MD_CTX_free(mdctx);
-#endif
 
     // convert to hex string
     dest[0] = 0;
