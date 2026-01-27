@@ -301,7 +301,9 @@ int nebmodule_deinit( int flags, int reason ) {
     if(reason == NEBMODULE_NEB_SHUTDOWN) {
         // breaks reloading the module and usually done automatically at exit, but at exit
         // this modules is already unloaded
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L
         OPENSSL_cleanup();
+#endif
     }
 
     return NEB_OK;

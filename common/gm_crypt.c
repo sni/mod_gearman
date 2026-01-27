@@ -151,10 +151,19 @@ void mod_gm_hexsum(char *dest, char *text) {
     unsigned int resultlen = 0;
     unsigned int i = 0;
 
-    if(mdctx == NULL)
+    if(mdctx == NULL) {
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
+        mdctx = EVP_MD_CTX_create();
+#else
         mdctx = EVP_MD_CTX_new();
-    else
+#endif
+    } else {
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
+        EVP_MD_CTX_cleanup(mdctx);
+#else
         EVP_MD_CTX_reset(mdctx);
+#endif
+    }
 
     if(mdctx == NULL) {
         fprintf(stderr, "failed to initialize MD5 context\n");
