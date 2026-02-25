@@ -41,8 +41,6 @@ extern unsigned long  event_broker_options;
 #define my_free nm_free
 extern int            currently_running_host_checks;
 extern int            currently_running_service_checks;
-extern int            service_check_timeout;
-extern int            host_check_timeout;
 extern int            process_performance_data;
 extern int            log_notifications;
 extern int            log_global_notifications;
@@ -972,7 +970,7 @@ static int handle_host_check( int event_type, void *data ) {
               target_queue,
               hst->name,
               timeval2double(&core_time) - hostdata->latency, // can only assume planned start date since next_check already advanced to next check and last_check still points to previous check
-              host_check_timeout,
+              hostdata->timeout,
               processed_command
             );
 
@@ -1020,6 +1018,7 @@ static int handle_host_check( int event_type, void *data ) {
         chk_result->check_type          = HOST_CHECK_ACTIVE;
         chk_result->start_time.tv_sec   = (unsigned long)time(NULL);
         chk_result->finish_time.tv_sec  = (unsigned long)time(NULL);
+        chk_result->timeout             = 0;
         chk_result->latency             = 0;
         mod_gm_add_result_to_list( chk_result );
         chk_result = NULL;
@@ -1123,7 +1122,7 @@ static int handle_svc_check( int event_type, void *data ) {
               svcdata->host_name,
               svcdata->service_description,
               timeval2double(&core_time) - svcdata->latency, // can only assume planned start date since next_check already advanced to next check and last_check still points to previous check
-              service_check_timeout,
+              svcdata->timeout,
               processed_command
             );
 
@@ -1178,6 +1177,7 @@ static int handle_svc_check( int event_type, void *data ) {
         chk_result->start_time.tv_sec   = (unsigned long)time(NULL);
         chk_result->finish_time.tv_sec  = (unsigned long)time(NULL);
         chk_result->latency             = 0;
+        chk_result->timeout             = 0;
         mod_gm_add_result_to_list( chk_result );
         chk_result = NULL;
     }
