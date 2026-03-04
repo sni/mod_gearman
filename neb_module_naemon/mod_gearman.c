@@ -886,9 +886,7 @@ static int handle_host_check( int event_type, void *data ) {
     nebstruct_host_check_data * hostdata;
     char *processed_command=NULL;
     host * hst;
-#ifdef CHECK_OPTION_ORPHAN_CHECK
     check_result * chk_result;
-#endif
     int check_options;
     struct timeval core_time;
 
@@ -940,10 +938,8 @@ static int handle_host_check( int event_type, void *data ) {
      * we have to do some host check logic here
      * taken from checks.c:
      */
-#ifdef CHECK_OPTION_ORPHAN_CHECK
     /* clear check options - we don't want old check options retained */
     hst->check_options = CHECK_OPTION_NONE;
-#endif
 
     /* unset the freshening flag, otherwise only the first freshness check would be run */
     hst->is_being_freshened=FALSE;
@@ -999,7 +995,6 @@ static int handle_host_check( int event_type, void *data ) {
     }
 
     /* orphaned check - submit fake result to mark host as orphaned */
-#ifdef CHECK_OPTION_ORPHAN_CHECK
     if(mod_gm_opt->orphan_host_checks == GM_ENABLED && check_options & CHECK_OPTION_ORPHAN_CHECK) {
         gm_log( GM_LOG_DEBUG, "host check for %s orphaned\n", hst->name );
         if ( ( chk_result = ( check_result * )gm_malloc( sizeof *chk_result ) ) == 0 )
@@ -1023,7 +1018,6 @@ static int handle_host_check( int event_type, void *data ) {
         mod_gm_add_result_to_list( chk_result );
         chk_result = NULL;
     }
-#endif
 
     /* tell naemon to not execute */
     gm_log( GM_LOG_TRACE, "handle_host_check() finished successfully -> %d\n", NEBERROR_CALLBACKOVERRIDE );
@@ -1038,9 +1032,7 @@ static int handle_svc_check( int event_type, void *data ) {
     char *processed_command=NULL;
     nebstruct_service_check_data * svcdata;
     int prio = GM_JOB_PRIO_LOW;
-#ifdef CHECK_OPTION_ORPHAN_CHECK
     check_result * chk_result;
-#endif
     int check_options;
     struct timeval core_time;
 
@@ -1156,7 +1148,6 @@ static int handle_svc_check( int event_type, void *data ) {
     }
 
     /* orphaned check - submit fake result to mark service as orphaned */
-#ifdef CHECK_OPTION_ORPHAN_CHECK
     if(mod_gm_opt->orphan_service_checks == GM_ENABLED && check_options & CHECK_OPTION_ORPHAN_CHECK) {
         gm_log( GM_LOG_DEBUG, "service check for %s - %s orphaned\n", svc->host_name, svc->description );
         if ( ( chk_result = ( check_result * )gm_malloc( sizeof *chk_result ) ) == 0 )
@@ -1181,7 +1172,6 @@ static int handle_svc_check( int event_type, void *data ) {
         mod_gm_add_result_to_list( chk_result );
         chk_result = NULL;
     }
-#endif
 
     /* tell naemon to not execute */
     gm_log( GM_LOG_TRACE, "handle_svc_check() finished successfully -> %d\n", NEBERROR_CALLBACKOVERRIDE );

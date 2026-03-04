@@ -10,7 +10,7 @@ increasing Naemon scalability. Mod-Gearman can even help to reduce the
 load on a single Naemon host, because its much smaller and more
 efficient in executing checks.
 
- * Mod-Gearman 4.x works with https://www.naemon.io[Naemon Core]
+ * Mod-Gearman works with https://www.naemon.io[Naemon Core]
 
 It consists of three parts:
 
@@ -1333,7 +1333,7 @@ for host notifications.
 Supported Dependencies
 ----------------------
 
-NOTE: Mod-Gearman works best with libgearman/gearmand 0.33 and Naemon. If in
+NOTE: Mod-Gearman works best with libgearman/gearmand 0.33 (or newer) and Naemon. If in
 doubt, use these versions.
 
 Lib-Gearman
