@@ -1,4 +1,4 @@
 #/bin/sh
 
-autoreconf -if
+autoreconf -if && \
 ./configure --enable-silent-rules "$@"

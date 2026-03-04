@@ -17,6 +17,16 @@ AC_PROG_CC
 AM_PROG_CC_C_O
 AC_PROG_RANLIB
 
+m4_ifdef([AX_CHECK_COMPILE_FLAG],, [
+  m4_fatal([AX_CHECK_COMPILE_FLAG macro not found.
+
+          Please install the Autoconf‑Archive.
+          Hint:
+            Debian: apt install autoconf-archive
+            RHEL:   dnf install autoconf-archive
+  ])
+])
+
 AX_CHECK_COMPILE_FLAG([-std=gnu11], CFLAGS="${CFLAGS} -std=gnu11")
 
 ##############################################
