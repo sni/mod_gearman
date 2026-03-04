@@ -13,7 +13,6 @@ override_dh_installinit:
 
 override_dh_clean:
 	rm -f compile depcomp install-sh missing
-	rm -f extras/gearmand-init
 	dh_clean
 
 override_dh_auto_configure:
