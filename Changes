@@ -2,6 +2,9 @@
 
 This file documents the revision history for the mod_gearman NEB module.
 
+5.2.3 Fri Mar 20 17:33:02 CET 2026
+          - add support for service/host specific timeouts
+
 5.2.2 Mon Jan 26 22:01:16 CET 2026
           - improve neb module performance
 
