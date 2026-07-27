@@ -36,7 +36,7 @@ static inline long ns_now(void) {
 }
 
 int main(void) {
-    plan(137);
+    plan(138);
 
     /* lowercase */
     char test[100];
@@ -188,6 +188,14 @@ int main(void) {
     like(decrypted, "source=Mod-Gearman", "plain base64 contains string II");
     like(decrypted, "output=OK - hostname123", "plain base64 contains string II");
     free(decrypted);
+
+    /* invalid base64 without newlines must fail cleanly (no OOB write) */
+    {
+        char * invalid = NULL;
+        const char * malformed = "!!!!";
+        rc = mod_gm_decrypt(NULL, &invalid, malformed, strlen(malformed), GM_ENCODE_ONLY);
+        cmp_ok(rc, "==", -1, "invalid base64 without newlines is rejected");
+    }
 
     mod_gm_crypt_deinit(ctx);
 

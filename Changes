@@ -2,6 +2,9 @@
 
 This file documents the revision history for the mod_gearman NEB module.
 
+next:
+          - fix crash on malformatted base64 data (GHSA-v6j8-h9j2-xqv3)
+
 5.2.3 Fri Mar 20 17:33:02 CET 2026
           - add support for service/host specific timeouts
 

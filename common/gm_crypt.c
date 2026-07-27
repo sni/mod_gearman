@@ -188,7 +188,7 @@ int base64_decode(const char *source, int sourcelen, unsigned char * target) {
     int n = EVP_DecodeBlock(target, (const unsigned char*)source, sourcelen);
     if(n == -1) {
         // try again and strip newlines, base64 decode fails if there are any newlines in the base64 string
-        char *stripped = gm_malloc(sizeof(char) * sourcelen);
+        char *stripped = gm_malloc(sizeof(char) * (sourcelen + 1));
         int j = 0;
         int i = 0;
         for(i = 0; i < sourcelen; i++) {
@@ -197,7 +197,7 @@ int base64_decode(const char *source, int sourcelen, unsigned char * target) {
             }
         }
         stripped[j] = '\0';
-        n = EVP_DecodeBlock(target, (const unsigned char*)stripped, strlen(stripped));
+        n = EVP_DecodeBlock(target, (const unsigned char*)stripped, j);
         gm_free(stripped);
         if(n == -1) {
             fprintf(stderr, "base64 decode failed: ");
