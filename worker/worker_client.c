@@ -173,6 +173,7 @@ void *get_job( gearman_job_st *job, __attribute__((__unused__)) void *context, s
     char *ptr;
     int is_notification_job = FALSE;
     int is_eventhandler_job = FALSE;
+    int is_service_notification = FALSE;
     size_t wsize = 0;
 
     /* reset timeout for now, will be set befor execution again */
@@ -284,6 +285,9 @@ void *get_job( gearman_job_st *job, __attribute__((__unused__)) void *context, s
 
     if(exec_job->type != NULL && !strcmp( exec_job->type, "notification")) {
         is_notification_job = TRUE;
+        if(exec_job->service_description != NULL) {
+            is_service_notification = TRUE;
+        }
     }
     else if (exec_job->type != NULL &&  !strcmp( exec_job->type, "eventhandler" ) ) {
         is_eventhandler_job = TRUE;
@@ -337,7 +341,7 @@ void *get_job( gearman_job_st *job, __attribute__((__unused__)) void *context, s
 
     if(is_notification_job == TRUE) {
         /* clear the environment */
-        if(exec_job->service_description != NULL) {
+        if(is_service_notification == TRUE) {
             unsetenv("NAGIOS_SERVICEOUTPUT");
             unsetenv("NAGIOS_LONGSERVICEOUTPUT");
         } else {
