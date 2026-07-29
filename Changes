@@ -2,7 +2,7 @@
 
 This file documents the revision history for the mod_gearman NEB module.
 
-next:
+5.2.4 Wed Jul 29 15:45:28 CEST 2026
           - fix crash on malformatted base64 data (GHSA-v6j8-h9j2-xqv3)
 
 5.2.3 Fri Mar 20 17:33:02 CET 2026
