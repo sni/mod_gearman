@@ -45,6 +45,28 @@ unsigned char key[KEYBYTES];
 static THREAD_LOCAL EVP_MD_CTX *mdctx  = NULL;
 static const char hex[] = "0123456789ABCDEF";
 
+/* under openssl 3 the legacy EVP_aes_256_ecb()/EVP_md5() pointers make every
+ * Init_ex() look the implementation up in the provider registry again, so
+ * fetch them once. thread local because results are decrypted on own threads. */
+#if OPENSSL_VERSION_NUMBER >= 0x30000000L
+static THREAD_LOCAL EVP_CIPHER *gm_aes256ecb = NULL;
+static THREAD_LOCAL EVP_MD     *gm_md5       = NULL;
+
+static const EVP_CIPHER *gm_get_aes256ecb(void) {
+    if(gm_aes256ecb == NULL)
+        gm_aes256ecb = EVP_CIPHER_fetch(NULL, "AES-256-ECB", NULL);
+    return gm_aes256ecb;
+}
+static const EVP_MD *gm_get_md5(void) {
+    if(gm_md5 == NULL)
+        gm_md5 = EVP_MD_fetch(NULL, "MD5", NULL);
+    return gm_md5;
+}
+#else
+#define gm_get_aes256ecb() EVP_aes_256_ecb()
+#define gm_get_md5()       EVP_md5()
+#endif
+
 /* initialize encryption */
 EVP_CIPHER_CTX * mod_gm_aes_init(const char * password) {
     EVP_CIPHER_CTX * ctx;
@@ -84,7 +106,7 @@ int mod_gm_aes_encrypt(EVP_CIPHER_CTX * ctx, unsigned char * ciphertext, const u
 
     assert(ctx != NULL);
 
-    if(1 != EVP_EncryptInit_ex(ctx, EVP_aes_256_ecb(), NULL, key, NULL)) {
+    if(1 != EVP_EncryptInit_ex(ctx, gm_get_aes256ecb(), NULL, key, NULL)) {
         fprintf(stderr, "EVP_EncryptInit_ex failed:\n");
         ERR_print_errors_fp(stderr);
         return -1;
@@ -125,7 +147,7 @@ int mod_gm_aes_decrypt(EVP_CIPHER_CTX * ctx, unsigned char * plaintext, unsigned
 
     assert(ctx != NULL);
 
-    if(1 != EVP_DecryptInit_ex(ctx, EVP_aes_256_ecb(), NULL, key, NULL)) {
+    if(1 != EVP_DecryptInit_ex(ctx, gm_get_aes256ecb(), NULL, key, NULL)) {
         fprintf(stderr, "EVP_DecryptInit_ex failed\n");
         ERR_print_errors_fp(stderr);
         return -1;
@@ -169,7 +191,7 @@ void mod_gm_hexsum(char *dest, char *text) {
         fprintf(stderr, "failed to initialize MD5 context\n");
         exit(1);
     }
-    if(EVP_DigestInit_ex(mdctx, EVP_md5(), NULL) != 1 || EVP_DigestUpdate(mdctx, text, strlen(text)) != 1 || EVP_DigestFinal_ex(mdctx, result, &resultlen) != 1) {
+    if(EVP_DigestInit_ex(mdctx, gm_get_md5(), NULL) != 1 || EVP_DigestUpdate(mdctx, text, strlen(text)) != 1 || EVP_DigestFinal_ex(mdctx, result, &resultlen) != 1) {
         fprintf(stderr, "MD5 computation failed\n");
         exit(1);
     }
