@@ -1507,7 +1507,26 @@ char *replace_str(const char *str, const char *old, const char *new) {
 }
 
 /* generic logger function */
+static void gm_log_body( int lvl, const char *text, va_list ap_in );
+
+/* the body needs a 192kb stack frame, so filter the level out before entering it */
 void gm_log( int lvl, const char *text, ... ) {
+    va_list ap;
+    int debug_level = GM_LOG_ERROR;
+
+    if(mod_gm_opt != NULL)
+        debug_level = mod_gm_opt->debug_level;
+
+    if ( lvl != GM_LOG_ERROR && lvl > debug_level )
+        return;
+
+    va_start( ap, text );
+    gm_log_body( lvl, text, ap );
+    va_end( ap );
+}
+
+__attribute__((noinline))
+static void gm_log_body( int lvl, const char *text, va_list ap_in ) {
     FILE * fp       = NULL;
     int debug_level = GM_LOG_ERROR;
     int logmode     = GM_LOG_MODE_STDOUT;
@@ -1518,7 +1537,6 @@ void gm_log( int lvl, const char *text, ... ) {
     char buffer3[GM_BUFFERSIZE];
     struct timeval tv;
     struct tm now;
-    va_list ap;
     bool locked = false;
 
     if(mod_gm_opt != NULL) {
@@ -1537,9 +1555,7 @@ void gm_log( int lvl, const char *text, ... ) {
         } else {
             snprintf( buffer1, 14, "mod_gearman: " );
         }
-        va_start( ap, text );
-        vsnprintf( buffer1 + strlen( buffer1 ), sizeof( buffer1 ) - strlen( buffer1 ), text, ap );
-        va_end( ap );
+        vsnprintf( buffer1 + strlen( buffer1 ), sizeof( buffer1 ) - strlen( buffer1 ), text, ap_in );
 
         if ( debug_level >= GM_LOG_STDOUT ) {
             printf( "%s", buffer1 );
@@ -1582,9 +1598,7 @@ void gm_log( int lvl, const char *text, ... ) {
     /* append milliseconds and pid */
     snprintf(buffer2, sizeof(buffer2), ",%03ld][%i][%s]", tv.tv_usec/1000, getpid(), level);
 
-    va_start( ap, text );
-    vsnprintf( buffer3, GM_BUFFERSIZE, text, ap );
-    va_end( ap );
+    vsnprintf( buffer3, GM_BUFFERSIZE, text, ap_in );
 
     if ( debug_level >= GM_LOG_STDOUT || logmode == GM_LOG_MODE_CHECKS ) {
         fprintf(stderr, "%s", buffer3 );
