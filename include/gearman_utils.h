@@ -47,6 +47,9 @@ gearman_client_st * create_client_blocking( gm_server_t * server_list[GM_LISTSIZ
 gearman_worker_st * create_worker(gm_server_t * server_list[GM_LISTSIZE]);
 int add_job_to_queue(gearman_client_st **client, gm_server_t * server_list[GM_LISTSIZE], char * queue, char * uniq, char * data, int priority, int retries, int transport_mode, EVP_CIPHER_CTX * ctx, int async, int stats_log_interval);
 int worker_add_function( gearman_worker_st * worker, char * queue, gearman_worker_fn *function);
+/* drive pipelined background submits; blocking=TRUE waits for them to finish */
+int gm_flush_submits(gearman_client_st *client, int blocking);
+
 void gm_free_client(gearman_client_st **client);
 void gm_free_worker(gearman_worker_st **worker);
 
