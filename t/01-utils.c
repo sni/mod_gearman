@@ -36,7 +36,7 @@ static inline long ns_now(void) {
 }
 
 int main(void) {
-    plan(138);
+    plan(142);
 
     /* lowercase */
     char test[100];
@@ -269,6 +269,18 @@ int main(void) {
     is(mod_gm_opt->server_list[2]->host, "host", "duplicate server");
     ok(mod_gm_opt->server_list[2]->port == 4730, "duplicate server");
     ok(mod_gm_opt->server_num == 3, "server_number = %d", mod_gm_opt->server_num);
+
+    /* test for issue #190 - argument without = sign should not crash */
+    renew_opts();
+    strcpy(test, "/etc/mod_gearman/module.conf");
+    parse_args_line(mod_gm_opt, test, 0);
+    ok(1, "parse_args_line with argument without = does not crash (issue #190)");
+    strcpy(test, "someargument");
+    parse_args_line(mod_gm_opt, test, 0);
+    ok(1, "parse_args_line with simple argument without = does not crash (issue #190)");
+    strcpy(test, "  spaced-argument  ");
+    parse_args_line(mod_gm_opt, test, 0);
+    ok(1, "parse_args_line with spaced argument without = does not crash (issue #190)");
 
     /* escape newlines */
     char * escaped = gm_escape_newlines(" test\n", GM_DISABLED);

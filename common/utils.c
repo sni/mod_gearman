@@ -412,7 +412,9 @@ int parse_args_line(mod_gm_opt_t *opt, char * arg, int recursion_level) {
 
     lc(key);
     key   = trim(key);
-    value = trim(value);
+    if ( value != NULL ) {
+        value = trim(value);
+    }
 
     /* skip leading hyphen */
     while(key[0] == '-')
