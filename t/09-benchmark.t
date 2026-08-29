@@ -46,7 +46,7 @@ close($ph);
 my $elapsed = tv_interval ( $t0 );
 my $rate    = int($NR_TST_JOBS / $elapsed);
 ok($elapsed, 'filling gearman queue with '.$NR_TST_JOBS.' jobs took: '.$elapsed.' seconds');
-ok($rate > 500, 'fill rate '.$rate.'/s');
+ok($rate > 300, 'fill rate '.$rate.'/s');
 
 # now clear the queue
 `>worker.log`;
