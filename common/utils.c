@@ -1513,13 +1513,18 @@ static void gm_log_body( int lvl, const char *text, va_list ap_in );
 void gm_log( int lvl, const char *text, ... ) {
     va_list ap;
     int debug_level = GM_LOG_ERROR;
+    int logmode     = GM_LOG_MODE_STDOUT;
 
-    if(mod_gm_opt != NULL)
+    if(mod_gm_opt != NULL) {
         debug_level = mod_gm_opt->debug_level;
+        logmode     = mod_gm_opt->logmode;
+    }
+
+    if ( logmode == GM_LOG_MODE_CORE && debug_level < 0 )
+        return;
 
     if ( lvl != GM_LOG_ERROR && lvl > debug_level )
         return;
-
     va_start( ap, text );
     gm_log_body( lvl, text, ap );
     va_end( ap );
