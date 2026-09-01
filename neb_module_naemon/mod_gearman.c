@@ -187,6 +187,10 @@ int nebmodule_init( int flags, char *args, nebmodule *handle ) {
         gm_log( GM_LOG_ERROR, "cannot start client\n" );
         return NEB_ERROR;
     }
+    if(check_client == NULL) {
+        gm_log( GM_LOG_ERROR, "cannot start async check client\n" );
+        return NEB_ERROR;
+    }
     current_client = client;
 
     if(start_threads() != GM_OK) {
@@ -290,6 +294,7 @@ int nebmodule_deinit( int flags, int reason ) {
 
     /* cleanup */
     gm_free_client(&client);
+    gm_free_client(&check_client);
 
     /* close old logfile */
     if(mod_gm_opt->logfile_fp != NULL) {

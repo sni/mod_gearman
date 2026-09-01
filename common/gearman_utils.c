@@ -319,7 +319,9 @@ submit_done:
         }
 
         /* recreate client, otherwise gearman sigsegvs */
-        gm_release_pending();
+        if(async) {
+            gm_release_pending();
+        }
         gm_free_client(client);
         if(async) {
             *client = create_client(server_list);
