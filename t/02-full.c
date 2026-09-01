@@ -17,6 +17,7 @@
 #include "gearman_utils.h"
 
 #define GEARMAND_TEST_PORT   54730
+#define GM_ASYNC_RESULT_QUEUE "check_results_async"
 
 #include <worker_dummy_functions.c>
 
@@ -152,6 +153,44 @@ void send_big_jobs(int transportmode) {
     return;
 }
 
+/* test async service check submission path */
+void test_servicecheck_async(int transportmode, int count, char *label);
+void test_servicecheck_async(int transportmode, int count, char *label) {
+    int i;
+    int errors = 0;
+    int flush_rt;
+    for(i = 0; i < count; i++) {
+        struct timeval start_time;
+        char temp_buffer[GM_BUFFERSIZE];
+        gettimeofday(&start_time, NULL);
+        temp_buffer[0]='\x0';
+        snprintf( temp_buffer, sizeof(temp_buffer)-1,
+                  "type=service\nresult_queue=%s\nhost_name=%s\nservice_description=%s\nstart_time=%Lf\ntimeout=%d\ncheck_options=%i\nscheduled_check=%i\nlatency=%f\ncommand_line=%s\n\n\n",
+                  GM_ASYNC_RESULT_QUEUE,
+                  "host1",
+                  "service-async",
+                  timeval2double(&start_time),
+                  60,
+                  0,
+                  1,
+                  0.0,
+                  "/bin/hostname"
+                );
+        temp_buffer[sizeof(temp_buffer)-1]='\x0';
+        int rt = add_job_to_queue(&client, mod_gm_opt->server_list, "service", NULL, temp_buffer, GM_JOB_PRIO_NORMAL, 1, transportmode, test_ctx, 1, 1);
+        if(rt != GM_OK) {
+            errors++;
+        }
+    }
+
+    ok(errors == 0, "%s: async service submissions in mode %s", label, transportmode == GM_ENCODE_ONLY ? "base64" : "aes256");
+    flush_rt = gm_flush_submits(client, TRUE);
+    ok(TRUE, "%s: blocking async flush executed", label);
+    if(flush_rt != GM_OK) {
+        diag("%s: blocking async flush returned %d", label, flush_rt);
+    }
+}
+
 /* put back the result into the core */
 void *get_results( gearman_job_st *job, void *context, size_t *result_size, gearman_return_t *ret_ptr );
 void *get_results( gearman_job_st *job, __attribute__((unused)) void *context, size_t *result_size, gearman_return_t *ret_ptr ) {
@@ -191,6 +230,32 @@ void *get_results( gearman_job_st *job, __attribute__((unused)) void *context, s
     return NULL;
 }
 
+/* async result consumer without per-result assertions */
+void *get_results_quiet( gearman_job_st *job, void *context, size_t *result_size, gearman_return_t *ret_ptr );
+void *get_results_quiet( gearman_job_st *job, __attribute__((unused)) void *context, size_t *result_size, gearman_return_t *ret_ptr ) {
+    size_t wsize;
+    const char *workload;
+    char *decrypted_data = NULL;
+
+    *result_size = 0;
+    *ret_ptr = GEARMAN_SUCCESS;
+
+    wsize = gearman_job_workload_size(job);
+    workload = (const char *)gearman_job_workload(job);
+    if(workload == NULL) {
+        *ret_ptr = GEARMAN_WORK_FAIL;
+        return NULL;
+    }
+
+    mod_gm_decrypt(test_ctx, &decrypted_data, workload, wsize, mod_gm_opt->transportmode);
+    if(decrypted_data == NULL) {
+        *ret_ptr = GEARMAN_WORK_FAIL;
+        return NULL;
+    }
+    gm_free(decrypted_data);
+    return NULL;
+}
+
 /* create server / clients / worker */
 void create_modules(void);
 void create_modules(void) {
@@ -200,6 +265,7 @@ void create_modules(void) {
     worker = create_worker( mod_gm_opt->server_list);
     ok(worker != NULL, "created test worker");
     ok(worker_add_function( worker, GM_DEFAULT_RESULT_QUEUE, get_results ) == GM_OK, "added result worker");
+    ok(worker_add_function( worker, GM_ASYNC_RESULT_QUEUE, get_results_quiet ) == GM_OK, "added async result worker");
     gearman_worker_set_timeout(worker, 1000);
     return;
 }
@@ -213,6 +279,63 @@ void do_result_work(int nr) {
         ret = gearman_worker_work( worker );
         ok(ret == GEARMAN_SUCCESS, "got valid job from result queue" );
     }
+    return;
+}
+
+/* drain async result queue by polling queue state and consuming pending jobs */
+void drain_async_results(char *label, int timeout);
+void drain_async_results(char *label, int timeout) {
+    char * message = NULL;
+    char * version = NULL;
+    int rc, x;
+    int tries = 0;
+    int found = 0;
+    int waiting = 0;
+    int running = 0;
+    int consumed = 0;
+    int consume_errors = 0;
+    gearman_return_t ret;
+    mod_gm_server_status_t *stats;
+
+    while(tries <= timeout * 10) {
+        tries++;
+        waiting = 0;
+        running = 0;
+
+        stats = malloc(sizeof(mod_gm_server_status_t));
+        stats->function_num = 0;
+        stats->worker_num   = 0;
+        rc = get_gearman_server_data(stats, &message, &version, "127.0.0.1", GEARMAND_TEST_PORT);
+        if(rc == STATE_OK) {
+            for(x = 0; x < stats->function_num; x++) {
+                if(!strcmp(stats->function[x].queue, GM_ASYNC_RESULT_QUEUE)) {
+                    found = 1;
+                    waiting = stats->function[x].waiting;
+                    running = stats->function[x].running;
+                    break;
+                }
+            }
+        }
+        gm_free(message);
+        gm_free(version);
+        free_mod_gm_status_server(stats);
+
+        if(found && waiting == 0 && running == 0) {
+            break;
+        }
+
+        for(x = 0; x < waiting; x++) {
+            ret = gearman_worker_work(worker);
+            if(ret == GEARMAN_SUCCESS) {
+                consumed++;
+            } else {
+                consume_errors++;
+            }
+        }
+        usleep(100000);
+    }
+
+    ok(consume_errors == 0, "%s: drained async result queue (%d jobs)", label, consumed);
     return;
 }
 
@@ -373,7 +496,7 @@ void check_no_worker_running(char* logfile) {
 /* main tests */
 int main (__attribute__((unused)) int argc, __attribute__((unused)) char **argv, __attribute__((unused)) char **env) {
     int status, chld;
-    int tests = 122;
+    int tests = 158;
     int rrc;
     char cmd[150];
     char *result, *error;
@@ -485,11 +608,18 @@ int main (__attribute__((unused)) int argc, __attribute__((unused)) char **argv,
     test_eventhandler(GM_ENCODE_ONLY);
     //diag_queues();
     test_servicecheck(GM_ENCODE_ONLY, NULL);
+
+    /* async path: single submit and burst submit (covers > GM_MAX_PENDING_SUBMITS) */
+    ok(gm_flush_submits(client, TRUE) == GM_OK, "pre-async flush succeeds");
+    test_servicecheck_async(GM_ENCODE_ONLY, 1, "single async submit");
+    wait_for_empty_queue("service", 20);
+    test_servicecheck_async(GM_ENCODE_ONLY, 80, "burst async submit");
+    wait_for_empty_queue("service", 30);
+
     //diag_queues();
     wait_for_empty_queue("eventhandler", 20);
     wait_for_empty_queue("service", 5);
-    //diag_queues();
-    do_result_work(1);
+    drain_async_results("base64 async submits", 10);
     //diag_queues();
     wait_for_empty_queue(GM_DEFAULT_RESULT_QUEUE, 5);
     sleep(1);
@@ -520,9 +650,17 @@ int main (__attribute__((unused)) int argc, __attribute__((unused)) char **argv,
 
         test_eventhandler(GM_ENCODE_AND_ENCRYPT);
         test_servicecheck(GM_ENCODE_AND_ENCRYPT, NULL);
+
+        /* async path in encrypted mode: single submit and burst submit */
+        ok(gm_flush_submits(client, TRUE) == GM_OK, "pre-async flush succeeds in mode aes256");
+        test_servicecheck_async(GM_ENCODE_AND_ENCRYPT, 1, "single async submit");
+        wait_for_empty_queue("service", 20);
+        test_servicecheck_async(GM_ENCODE_AND_ENCRYPT, 80, "burst async submit");
+        wait_for_empty_queue("service", 30);
+
         wait_for_empty_queue("eventhandler", 20);
         wait_for_empty_queue("service", 5);
-        do_result_work(1);
+        drain_async_results("aes256 async submits", 10);
         wait_for_empty_queue(GM_DEFAULT_RESULT_QUEUE, 5);
         sleep(1);
 
