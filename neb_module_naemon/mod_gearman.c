@@ -29,6 +29,9 @@
 mod_gm_opt_t *mod_gm_opt;
 char hostname[GM_SMALLBUFSIZE];
 gearman_client_st *client = NULL;
+/* separate non-blocking client for host/service checks, so the blocking
+ * submits (eventhandler, notifications, perfdata) keep their behaviour */
+gearman_client_st *check_client = NULL;
 gearman_client_st *current_client;
 gearman_client_st *current_client_dup;
 EVP_CIPHER_CTX * mod_ctx = NULL;
@@ -179,8 +182,13 @@ int nebmodule_init( int flags, char *args, nebmodule *handle ) {
 
     /* create client */
     client = create_client_blocking(mod_gm_opt->server_list);
+    check_client = create_client(mod_gm_opt->server_list);
     if(client == NULL) {
         gm_log( GM_LOG_ERROR, "cannot start client\n" );
+        return NEB_ERROR;
+    }
+    if(check_client == NULL) {
+        gm_log( GM_LOG_ERROR, "cannot start async check client\n" );
         return NEB_ERROR;
     }
     current_client = client;
@@ -286,6 +294,7 @@ int nebmodule_deinit( int flags, int reason ) {
 
     /* cleanup */
     gm_free_client(&client);
+    gm_free_client(&check_client);
 
     /* close old logfile */
     if(mod_gm_opt->logfile_fp != NULL) {
@@ -335,6 +344,8 @@ static void move_results_to_core(struct nm_event_execution_properties *evprop) {
     }
 
     process_check_result_list();
+    /* make sure nothing is left queued when checks stop coming */
+    gm_flush_submits(check_client, FALSE);
     schedule_event(1, move_results_to_core, NULL);
 }
 
@@ -973,7 +984,7 @@ static int handle_host_check( int event_type, void *data ) {
     if(mod_gm_opt->use_uniq_jobs == GM_ENABLED) {
         make_uniq(uniq, "%s", hst->name);
     }
-    if(add_job_to_queue(&client,
+    if(add_job_to_queue(&check_client,
                          mod_gm_opt->server_list,
                          target_queue,
                         (mod_gm_opt->use_uniq_jobs == GM_ENABLED ? uniq : NULL),
@@ -982,7 +993,7 @@ static int handle_host_check( int event_type, void *data ) {
                          GM_DEFAULT_JOB_RETRIES,
                          mod_gm_opt->transportmode,
                          mod_ctx,
-                         0,
+                         1,
                          mod_gm_opt->log_stats_interval
                         ) == GM_OK) {
     }
@@ -1125,7 +1136,7 @@ static int handle_svc_check( int event_type, void *data ) {
     if(mod_gm_opt->use_uniq_jobs == GM_ENABLED) {
         make_uniq(uniq, "%s-%s", svcdata->host_name, svcdata->service_description);
     }
-    if(add_job_to_queue(&client,
+    if(add_job_to_queue(&check_client,
                          mod_gm_opt->server_list,
                          target_queue,
                         (mod_gm_opt->use_uniq_jobs == GM_ENABLED ? uniq : NULL),
@@ -1134,7 +1145,7 @@ static int handle_svc_check( int event_type, void *data ) {
                          GM_DEFAULT_JOB_RETRIES,
                          mod_gm_opt->transportmode,
                          mod_ctx,
-                         0,
+                         1,
                          mod_gm_opt->log_stats_interval
                         ) == GM_OK) {
         gm_log( GM_LOG_TRACE, "handle_svc_check() finished successfully\n" );

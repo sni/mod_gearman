@@ -120,6 +120,59 @@ gearman_client_st * create_client_blocking( gm_server_t * server_list[GM_LISTSIZ
 }
 
 
+/*
+ * Pipelined background submits.
+ *
+ * gearman_client_do_background() waits for the JOB_CREATED reply, which costs a
+ * round-trip per job on the caller's thread. For check submissions that thread
+ * is the naemon event loop, so the wait is time it cannot spend dispatching.
+ *
+ * In async mode the task is only queued here and driven on the next call or by
+ * the periodic flush, so the round-trip overlaps with the core's own work.
+ * Bounded: once GM_MAX_PENDING_SUBMITS are in flight we flush synchronously,
+ * which is exactly the old behaviour and keeps this from growing without limit
+ * when gearmand stalls.
+ *
+ * The payloads are held until a flush reports all tasks done. libgearman does
+ * not document whether it copies the workload, so we keep it alive rather than
+ * depend on it.
+ */
+#define GM_MAX_PENDING_SUBMITS 64
+static char         *gm_pending_data[GM_MAX_PENDING_SUBMITS];
+static unsigned int  gm_pending_submits = 0;
+
+static void gm_release_pending(void) {
+    unsigned int i;
+    for(i = 0; i < gm_pending_submits; i++) {
+        free(gm_pending_data[i]);
+        gm_pending_data[i] = NULL;
+    }
+    gm_pending_submits = 0;
+}
+
+int gm_flush_submits(gearman_client_st *client, int blocking) {
+    gearman_return_t rc;
+
+    if(client == NULL || gm_pending_submits == 0)
+        return GM_OK;
+
+    if(blocking)
+        gearman_client_remove_options(client, GEARMAN_CLIENT_NON_BLOCKING);
+    rc = gearman_client_run_tasks(client);
+    if(blocking)
+        gearman_client_add_options(client, GEARMAN_CLIENT_NON_BLOCKING);
+
+    if(rc == GEARMAN_SUCCESS) {
+        /* every task finished, so the payloads are no longer referenced */
+        gm_release_pending();
+        return GM_OK;
+    }
+    if(rc == GEARMAN_IO_WAIT)
+        return GM_OK;
+
+    return GM_ERROR;
+}
+
 /* create a task and send it */
 int add_job_to_queue(gearman_client_st **client, gm_server_t * server_list[GM_LISTSIZE], char * queue, char * uniq, char * data, int priority, int retries, int transport_mode, EVP_CIPHER_CTX * ctx, int async, int log_stats_interval) {
     gearman_job_handle_t job_handle;
@@ -153,20 +206,67 @@ int add_job_to_queue(gearman_client_st **client, gm_server_t * server_list[GM_LI
     }
     gm_log( GM_LOG_TRACE, "%d +++>\n%s\n<+++\n", size, crypted_data );
 
-    if( priority == GM_JOB_PRIO_LOW ) {
-        rc = gearman_client_do_low_background(*client, queue, uniq, ( void * )crypted_data, ( size_t )size, job_handle);
-    }
-    else if( priority == GM_JOB_PRIO_NORMAL ) {
-        rc = gearman_client_do_background(*client, queue, uniq, ( void * )crypted_data, ( size_t )size, job_handle);
-    }
-    else if( priority == GM_JOB_PRIO_HIGH ) {
-        rc = gearman_client_do_high_background(*client, queue, uniq, ( void * )crypted_data, ( size_t )size, job_handle);
+    if(async) {
+        /*
+         * Reap whatever the previous calls left in flight. If that fails the
+         * connection is gone, and libgearman must not be called again on this
+         * client -- run_tasks() segfaults on a client that already errored.
+         * Fall through to the recreate path below instead.
+         */
+        if(gm_flush_submits(*client, FALSE) != GM_OK) {
+            free(crypted_data);
+            rc = GEARMAN_ERRNO;
+            goto submit_done;
+        }
+
+        if( priority == GM_JOB_PRIO_LOW ) {
+            gearman_client_add_task_low_background(*client, NULL, NULL, queue, uniq, ( void * )crypted_data, ( size_t )size, &rc);
+        }
+        else if( priority == GM_JOB_PRIO_NORMAL ) {
+            gearman_client_add_task_background(*client, NULL, NULL, queue, uniq, ( void * )crypted_data, ( size_t )size, &rc);
+        }
+        else if( priority == GM_JOB_PRIO_HIGH ) {
+            gearman_client_add_task_high_background(*client, NULL, NULL, queue, uniq, ( void * )crypted_data, ( size_t )size, &rc);
+        }
+        else {
+            gm_log( GM_LOG_ERROR, "add_job_to_queue() wrong priority: %d\n", priority );
+            free(crypted_data);
+            return GM_ERROR;
+        }
+
+        if(rc == GEARMAN_SUCCESS || rc == GEARMAN_IO_WAIT) {
+            gm_pending_data[gm_pending_submits++] = crypted_data;
+            /* push it out now, but do not wait for the reply */
+            if(gm_flush_submits(*client, FALSE) != GM_OK) {
+                rc = GEARMAN_ERRNO;
+            }
+            else if(gm_pending_submits >= GM_MAX_PENDING_SUBMITS) {
+                /* too many in flight: fall back to waiting, as before */
+                if(gm_flush_submits(*client, TRUE) != GM_OK)
+                    rc = GEARMAN_ERRNO;
+            }
+        } else {
+            free(crypted_data);
+        }
     }
     else {
-        gm_log( GM_LOG_ERROR, "add_job_to_queue() wrong priority: %d\n", priority );
-        return GM_ERROR;
+        if( priority == GM_JOB_PRIO_LOW ) {
+            rc = gearman_client_do_low_background(*client, queue, uniq, ( void * )crypted_data, ( size_t )size, job_handle);
+        }
+        else if( priority == GM_JOB_PRIO_NORMAL ) {
+            rc = gearman_client_do_background(*client, queue, uniq, ( void * )crypted_data, ( size_t )size, job_handle);
+        }
+        else if( priority == GM_JOB_PRIO_HIGH ) {
+            rc = gearman_client_do_high_background(*client, queue, uniq, ( void * )crypted_data, ( size_t )size, job_handle);
+        }
+        else {
+            gm_log( GM_LOG_ERROR, "add_job_to_queue() wrong priority: %d\n", priority );
+            free(crypted_data);
+            return GM_ERROR;
+        }
+        free(crypted_data);
     }
-    free(crypted_data);
+submit_done:
     gettimeofday(&t2,NULL);
 
     // log some statistics
@@ -219,6 +319,9 @@ int add_job_to_queue(gearman_client_st **client, gm_server_t * server_list[GM_LI
         }
 
         /* recreate client, otherwise gearman sigsegvs */
+        if(async) {
+            gm_release_pending();
+        }
         gm_free_client(client);
         if(async) {
             *client = create_client(server_list);
