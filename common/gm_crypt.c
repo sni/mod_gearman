@@ -106,7 +106,14 @@ int mod_gm_aes_encrypt(EVP_CIPHER_CTX * ctx, unsigned char * ciphertext, const u
 
     assert(ctx != NULL);
 
-    if(1 != EVP_EncryptInit_ex(ctx, gm_get_aes256ecb(), NULL, key, NULL)) {
+    const EVP_CIPHER *cipher = gm_get_aes256ecb();
+    if(cipher == NULL) {
+        fprintf(stderr, "EVP_CIPHER_fetch(AES-256-ECB) failed:\n");
+        ERR_print_errors_fp(stderr);
+        return -1;
+    }
+
+    if(1 != EVP_EncryptInit_ex(ctx, cipher, NULL, key, NULL)) {
         fprintf(stderr, "EVP_EncryptInit_ex failed:\n");
         ERR_print_errors_fp(stderr);
         return -1;
@@ -191,7 +198,15 @@ void mod_gm_hexsum(char *dest, char *text) {
         fprintf(stderr, "failed to initialize MD5 context\n");
         exit(1);
     }
-    if(EVP_DigestInit_ex(mdctx, gm_get_md5(), NULL) != 1 || EVP_DigestUpdate(mdctx, text, strlen(text)) != 1 || EVP_DigestFinal_ex(mdctx, result, &resultlen) != 1) {
+
+    const EVP_MD *md = gm_get_md5();
+    if(md == NULL) {
+        fprintf(stderr, "EVP_MD_fetch(MD5) failed:\n");
+        ERR_print_errors_fp(stderr);
+        exit(1);
+    }
+
+    if(EVP_DigestInit_ex(mdctx, md, NULL) != 1 || EVP_DigestUpdate(mdctx, text, strlen(text)) != 1 || EVP_DigestFinal_ex(mdctx, result, &resultlen) != 1) {
         fprintf(stderr, "MD5 computation failed\n");
         exit(1);
     }
