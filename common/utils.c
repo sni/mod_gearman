@@ -1543,6 +1543,7 @@ static void gm_log_body( int lvl, const char *text, va_list ap_in ) {
     struct timeval tv;
     struct tm now;
     bool locked = false;
+    va_list ap_copy;
 
     if(mod_gm_opt != NULL) {
         debug_level = mod_gm_opt->debug_level;
@@ -1560,7 +1561,9 @@ static void gm_log_body( int lvl, const char *text, va_list ap_in ) {
         } else {
             snprintf( buffer1, 14, "mod_gearman: " );
         }
-        vsnprintf( buffer1 + strlen( buffer1 ), sizeof( buffer1 ) - strlen( buffer1 ), text, ap_in );
+        va_copy(ap_copy, ap_in);
+        vsnprintf( buffer1 + strlen( buffer1 ), sizeof( buffer1 ) - strlen( buffer1 ), text, ap_copy );
+        va_end(ap_copy);
 
         if ( debug_level >= GM_LOG_STDOUT ) {
             printf( "%s", buffer1 );
@@ -1603,7 +1606,9 @@ static void gm_log_body( int lvl, const char *text, va_list ap_in ) {
     /* append milliseconds and pid */
     snprintf(buffer2, sizeof(buffer2), ",%03ld][%i][%s]", tv.tv_usec/1000, getpid(), level);
 
-    vsnprintf( buffer3, GM_BUFFERSIZE, text, ap_in );
+    va_copy(ap_copy, ap_in);
+    vsnprintf( buffer3, GM_BUFFERSIZE, text, ap_copy );
+    va_end(ap_copy);
 
     if ( debug_level >= GM_LOG_STDOUT || logmode == GM_LOG_MODE_CHECKS ) {
         fprintf(stderr, "%s", buffer3 );
