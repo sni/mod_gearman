@@ -177,13 +177,31 @@ AC_PROG_INSTALL
 ##############################################
 # enable -Werror after locating all libs, otherwise we could not find libs that generate warnings
 AC_ARG_ENABLE(debug,--enable-debug will enable debugging symbols,[
-    CFLAGS="${CFLAGS} -pedantic -Wfatal-errors -Wshadow -Wpointer-arith -Wcast-qual -Wcast-align -Wnested-externs -Wformat -Werror=format-security -W -Wstrict-prototypes -Wmissing-prototypes -Wnested-externs -Wdate-time -Wuninitialized -gdwarf-4 -g3 -fsanitize=address"
-    if test "$USEPERL" != "yes"; then
-        CFLAGS="${CFLAGS} -Werror"
-    fi
-    ],
-    CFLAGS="${CFLAGS} -g3"
-    m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
+      if test "$USEPERL" != "yes"; then
+          CFLAGS="${CFLAGS} -Werror"
+      fi
+      CFLAGS="${CFLAGS} -g3"
+      CFLAGS="${CFLAGS} -pedantic"
+      CFLAGS="${CFLAGS} -Wfatal-errors"
+      CFLAGS="${CFLAGS} -Wshadow"
+      CFLAGS="${CFLAGS} -Wpointer-arith"
+      CFLAGS="${CFLAGS} -Wcast-qual"
+      CFLAGS="${CFLAGS} -Wcast-align"
+      CFLAGS="${CFLAGS} -Wnested-externs"
+      CFLAGS="${CFLAGS} -Wformat"
+      CFLAGS="${CFLAGS} -Werror=format-security"
+      CFLAGS="${CFLAGS} -W"
+      CFLAGS="${CFLAGS} -Wstrict-prototypes"
+      CFLAGS="${CFLAGS} -Wmissing-prototypes"
+      CFLAGS="${CFLAGS} -Wnested-externs"
+      CFLAGS="${CFLAGS} -Wdate-time"
+      CFLAGS="${CFLAGS} -Wuninitialized"
+      CFLAGS="${CFLAGS} -gdwarf-4"
+      #CFLAGS="${CFLAGS} -fsanitize=address" # enables additional memory checks
+    ], [
+      CFLAGS="${CFLAGS} -g3"
+      m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
+    ]
 )
 
 ##############################################

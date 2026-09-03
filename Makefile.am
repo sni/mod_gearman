@@ -82,21 +82,21 @@ gearman_top_SOURCES        = $(common_SOURCES) \
 gearman_top_LDADD          = $(LDFLAGS) -lncurses
 
 # tests
-check_PROGRAMS   = 01_utils 02_full 03_exec 04_log 05_neb 06_exec 07_epn
-#check_PROGRAMS  += 08_roundtrip
-01_utils_SOURCES = $(common_SOURCES) t/tap.h t/tap.c t/01-utils.c $(common_check_SOURCES)
-02_full_SOURCES  = $(common_SOURCES) t/tap.h t/tap.c t/02-full.c $(common_check_SOURCES)
-03_exec_SOURCES  = $(common_SOURCES) t/tap.h t/tap.c t/03-exec_checks.c $(common_check_SOURCES)
-04_log_SOURCES   = $(common_SOURCES) t/tap.h t/tap.c t/04-log.c
-05_neb_SOURCES   = $(common_SOURCES) t/tap.h t/tap.c t/05-neb.c
-05_neb_LDFLAGS   = -Wl,--export-dynamic -rdynamic
-05_neb_LDADD     = $(NAEMON_LDFLAGS) -ldl
-07_epn_SOURCES   = $(common_SOURCES) t/tap.h t/tap.c t/07-epn.c $(common_check_SOURCES)
+check_PROGRAMS       = 01_utils 02_full 03_exec 04_log 05_neb 06_exec 07_epn
+01_utils_SOURCES     = $(common_SOURCES) t/tap.h t/tap.c t/01-utils.c $(common_check_SOURCES)
+02_full_SOURCES      = $(common_SOURCES) t/tap.h t/tap.c t/02-full.c $(common_check_SOURCES)
+02_full_DEPENDENCIES = mod_gearman_worker check_gearman send_multi send_gearman
+03_exec_SOURCES      = $(common_SOURCES) t/tap.h t/tap.c t/03-exec_checks.c $(common_check_SOURCES)
+03_exec_DEPENDENCIES = send_gearman send_multi
+04_log_SOURCES       = $(common_SOURCES) t/tap.h t/tap.c t/04-log.c
+05_neb_SOURCES       = t/tap.h t/tap.c t/05-neb.c
+05_neb_LDFLAGS       = -Wl,--export-dynamic -rdynamic
+05_neb_LDADD         = $(NAEMON_LDFLAGS) -ldl
+05_neb_DEPENDENCIES  = mod_gearman_naemon.o
+07_epn_SOURCES       = $(common_SOURCES) t/tap.h t/tap.c t/07-epn.c $(common_check_SOURCES)
 # only used for performance tests
-06_exec_SOURCES  = $(common_SOURCES) t/tap.h t/tap.c t/06-execvp_vs_popen.c $(common_check_SOURCES)
-#08_roundtrip_SOURCES  = $(common_SOURCES) t/08-roundtrip.c
-#08_roundtrip_LDFLAGS = -Wl,--export-dynamic -rdynamic
-TESTS            = $(check_PROGRAMS) t/09-benchmark.t t/10-large-result.t t/11-alloc.t t/12-cppcheck.t t/13-tools.t t/14-symbols.t
+06_exec_SOURCES      = $(common_SOURCES) t/tap.h t/tap.c t/06-execvp_vs_popen.c $(common_check_SOURCES)
+TESTS                = $(check_PROGRAMS) t/09-benchmark.t t/10-large-result.t t/11-alloc.t t/12-cppcheck.t t/13-tools.t t/14-symbols.t
 
 
 GEARMANDS=/usr/sbin/gearmand /opt/sbin/gearmand

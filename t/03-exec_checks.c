@@ -25,7 +25,7 @@ int main(__attribute__((unused)) int argc, __attribute__((unused)) char **argv, 
     char cmd[4096];
     char cwd[1024];
 
-    plan(76);
+    plan(82);
 
     /* set hostname and cwd */
     gethostname(hostname, GM_SMALLBUFSIZE-1);
@@ -73,6 +73,7 @@ int main(__attribute__((unused)) int argc, __attribute__((unused)) char **argv, 
     } else {
         like(result, "sending job to gearmand failed:", "result");
     }
+    is(error, "", "stderr is empty");
     free(result);
     free(error);
 
@@ -87,6 +88,7 @@ int main(__attribute__((unused)) int argc, __attribute__((unused)) char **argv, 
     } else {
         like(result, "sending job to gearmand failed:", "result");
     }
+    is(error, "", "stderr is empty");
     free(result);
     free(error);
 
@@ -101,6 +103,7 @@ int main(__attribute__((unused)) int argc, __attribute__((unused)) char **argv, 
     } else {
         like(result, "sending job to gearmand failed:", "result");
     }
+    is(error, "", "stderr is empty");
     free(result);
     free(error);
 
@@ -112,6 +115,7 @@ int main(__attribute__((unused)) int argc, __attribute__((unused)) char **argv, 
     cmp_ok(rc, "==", 0, "pclose for cmd '%s' returned rc %d", cmd, rc);
     rrc = real_exit_code(rc);
     cmp_ok(rrc, "==", 0, "cmd '%s' returned rc %d", cmd, rrc);
+    is(error, "", "stderr is empty");
     free(result);
     free(error);
 
@@ -123,6 +127,7 @@ int main(__attribute__((unused)) int argc, __attribute__((unused)) char **argv, 
     cmp_ok(rc, "==", 0, "pclose for cmd '%s' returned rc %d", cmd, rc);
     rrc = real_exit_code(rc);
     cmp_ok(rrc, "==", 0, "cmd '%s' returned rc %d", cmd, rrc);
+    is(error, "", "stderr is empty");
     free(result);
     free(error);
 
@@ -134,6 +139,7 @@ int main(__attribute__((unused)) int argc, __attribute__((unused)) char **argv, 
     rrc = real_exit_code(rc);
     cmp_ok(rrc, "==", 2, "cmd '%s' returned rc %d", cmd, rrc);
     like(result, "test", "returned result string");
+    is(error, "", "stderr is empty");
     free(result);
     free(error);
 
