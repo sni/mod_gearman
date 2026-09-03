@@ -2,6 +2,9 @@
 
 This file documents the revision history for the mod_gearman NEB module.
 
+5.2.5 Thu Sep  3 16:48:33 CEST 2026
+          - fix crash when argument is passed without = sign
+
 5.2.4 Wed Jul 29 15:45:28 CEST 2026
           - fix crash on malformatted base64 data (GHSA-v6j8-h9j2-xqv3)
 
