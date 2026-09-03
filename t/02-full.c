@@ -16,6 +16,8 @@
 #endif
 #include "gearman_utils.h"
 
+int num_tests = 132;
+
 #define GEARMAND_TEST_PORT   54730
 
 #include <worker_dummy_functions.c>
@@ -72,9 +74,9 @@ void *start_worker(void*data) {
         if(key != NULL) {
             char encryption[150];
             snprintf(encryption, 150, "key=%s", key);
-            execl("./mod_gearman_worker", "./mod_gearman_worker", "debug=2", encryption,      logf, "max-worker=1", "p1_file=./worker/mod_gearman_p1.pl", options, (char *)NULL);
+            execl("./mod_gearman_worker", "./mod_gearman_worker", "debug=2", encryption,      logf, "max-worker=1", "p1_file=./worker/mod_gearman_p1.pl", "identifier=test", options, (char *)NULL);
         } else {
-            execl("./mod_gearman_worker", "./mod_gearman_worker", "debug=2", "encryption=no", logf, "max-worker=1", "p1_file=./worker/mod_gearman_p1.pl", options, (char *)NULL);
+            execl("./mod_gearman_worker", "./mod_gearman_worker", "debug=2", "encryption=no", logf, "max-worker=1", "p1_file=./worker/mod_gearman_p1.pl", "identifier=test", options, (char *)NULL);
         }
         perror("mod_gearman_worker");
         exit(1);
@@ -373,11 +375,10 @@ void check_no_worker_running(char* logfile) {
 /* main tests */
 int main (__attribute__((unused)) int argc, __attribute__((unused)) char **argv, __attribute__((unused)) char **env) {
     int status, chld;
-    int tests = 122;
     int rrc;
     char cmd[150];
     char *result, *error;
-    plan(tests);
+    plan(num_tests);
 
     mod_gm_opt = malloc(sizeof(mod_gm_opt_t));
     set_default_options(mod_gm_opt);
@@ -432,7 +433,7 @@ int main (__attribute__((unused)) int argc, __attribute__((unused)) char **argv,
     }
 
     skip(gearmand_pid <= 0 || worker_pid <= 0,
-               tests-3,             /* Number of tests to skip */
+               num_tests-3,             /* Number of tests to skip */
                "Skipping all tests, no need to go on without gearmand or worker");
 
     /* create server / clients */
@@ -542,6 +543,7 @@ int main (__attribute__((unused)) int argc, __attribute__((unused)) char **argv,
     rrc = real_exit_code(run_check(cmd, &result, &error));
     cmp_ok(rrc, "==", 0, "cmd '%s' returned rc %d", cmd, rrc);
     like(result, "^\\s*$", "output from ./send_gearman");
+    is(error, "", "stderr is empty");
     gm_free(result);
     gm_free(error);
 
@@ -552,6 +554,19 @@ int main (__attribute__((unused)) int argc, __attribute__((unused)) char **argv,
     rrc = real_exit_code(run_check(cmd, &result, &error));
     cmp_ok(rrc, "==", 0, "cmd '%s' returned rc %d", cmd, rrc);
     like(result, "send_multi OK: 2 check_multi child checks submitted", "output from ./send_multi");
+    is(error, "", "stderr is empty");
+    gm_free(result);
+    gm_free(error);
+
+    /*****************************************
+     * gearman_top
+     */
+    snprintf(cmd, 150, "./gearman_top -H 127.0.0.1:%d -b", GEARMAND_TEST_PORT);
+    rrc = real_exit_code(run_check(cmd, &result, &error));
+    cmp_ok(rrc, "==", 0, "cmd '%s' returned rc %d", cmd, rrc);
+    like(result, "Worker Available", "output from ./gearman_top");
+    like(result, "Jobs Waiting", "output from ./gearman_top");
+    is(error, "", "stderr is empty");
     gm_free(result);
     gm_free(error);
 
@@ -561,11 +576,20 @@ int main (__attribute__((unused)) int argc, __attribute__((unused)) char **argv,
     snprintf(cmd, 150, "./check_gearman -H 127.0.0.1:%d -s check -a -q worker_test", GEARMAND_TEST_PORT);
     rrc = real_exit_code(run_check(cmd, &result, &error));
     cmp_ok(rrc, "==", 0, "cmd '%s' returned rc %d", cmd, rrc);
-    like(result, "check_gearman OK - sending background job succeded", "output from ./check_gearman");
-
-    /* cleanup */
+    like(result, "check_gearman OK - sending background job succeeded", "output from ./check_gearman");
+    is(error, "", "stderr is empty");
     gm_free(result);
     gm_free(error);
+
+    snprintf(cmd, 150, "./check_gearman -H 127.0.0.1:%d -s check -t 1 -q worker_test", GEARMAND_TEST_PORT);
+    rrc = real_exit_code(run_check(cmd, &result, &error));
+    cmp_ok(rrc, "==", 2, "cmd '%s' returned rc %d", cmd, rrc);
+    like(result, "check_gearman CRITICAL - job failed: gearman_wait", "output from ./check_gearman");
+    is(error, "", "stderr is empty");
+    gm_free(result);
+    gm_free(error);
+
+    /* cleanup */
     gm_free_client(&client);
     gm_free_worker(&worker);
 

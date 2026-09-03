@@ -325,7 +325,7 @@ int check_server(char * server, in_port_t port) {
 /* send job to worker and check result */
 int check_worker(char * queue, char * to_send, char * expect) {
     gearman_return_t ret;
-    char * result;
+    char * result = NULL;
     size_t result_size;
     char * job_handle;
     const char * unique_job_id;
@@ -348,7 +348,7 @@ int check_worker(char * queue, char * to_send, char * expect) {
 
     while (1) {
         if (send_async) {
-            result = gm_strdup("sending background job succeded");
+            result = gm_strdup("sending background job succeeded");
             job_handle = gm_malloc(GEARMAN_JOB_HANDLE_SIZE * sizeof(char));
             ret= gearman_client_do_high_background( client,
                                                     queue,
@@ -390,6 +390,7 @@ int check_worker(char * queue, char * to_send, char * expect) {
         else {
             printf("%s CRITICAL - job failed: %s\n", PLUGIN_NAME, gearman_client_error(client));
             gm_free_client(&client);
+            gm_free(result);
             return( STATE_CRITICAL );
         }
         break;
@@ -398,10 +399,12 @@ int check_worker(char * queue, char * to_send, char * expect) {
     if( !send_async && expect != NULL && result != NULL ) {
         if( strstr(result, expect) != NULL) {
             printf("%s OK - send worker '%s' response: '%s'\n", PLUGIN_NAME, to_send, result);
+            gm_free(result);
             return( STATE_OK );
         }
         else {
             printf("%s CRITICAL - send worker: '%s' response: '%s', expected '%s'\n", PLUGIN_NAME, to_send, result, expect);
+            gm_free(result);
             return( STATE_CRITICAL );
         }
     }
@@ -409,12 +412,13 @@ int check_worker(char * queue, char * to_send, char * expect) {
     // if result starts with a number followed by a colon, use this as exit code
     if(result != NULL && strlen(result) > 1 && result[1] == ':') {
         int rc = result[0] - '0';
-        result += 2;
-        printf("%s\n", result);
+        printf("%s\n", result + 2);
+        gm_free(result);
         return(rc);
     }
 
-    printf("%s OK - %s\n", PLUGIN_NAME, result );
+    printf("%s OK - %s\n", PLUGIN_NAME, result == NULL ? "" : result );
+    gm_free(result);
     return( STATE_OK );
 }
 

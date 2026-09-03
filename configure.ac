@@ -197,7 +197,7 @@ AC_ARG_ENABLE(debug,--enable-debug will enable debugging symbols,[
       CFLAGS="${CFLAGS} -Wdate-time"
       CFLAGS="${CFLAGS} -Wuninitialized"
       CFLAGS="${CFLAGS} -gdwarf-4"
-      #CFLAGS="${CFLAGS} -fsanitize=address" # enables additional memory checks
+      CFLAGS="${CFLAGS} -fsanitize=address" # enables additional memory checks
     ], [
       CFLAGS="${CFLAGS} -g3"
       m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])

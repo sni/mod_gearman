@@ -106,6 +106,7 @@ gearman_client_st * create_client_blocking( gm_server_t * server_list[GM_LISTSIZ
         ret = gearman_client_add_server( client, server_list[x]->host, server_list[x]->port );
         if ( ret != GEARMAN_SUCCESS ) {
             gm_log( GM_LOG_ERROR, "client error: %s\n", gearman_client_error( client ) );
+            gearman_client_free( client );
             return NULL;
         }
         x++;

@@ -425,6 +425,7 @@ int read_child_check(char *bufstart, char *bufend, struct timeval * end_time) {
     /* service description */
     if ((attribute=read_multi_attribute(bufstart,bufend,"name")) == NULL)
         return 0;
+    gm_free(mod_gm_opt->service);
     mod_gm_opt->service=gm_strdup(attribute);
     gm_log( GM_LOG_TRACE, "service_description: %s\n", mod_gm_opt->service);
 
@@ -482,6 +483,7 @@ int read_child_check(char *bufstart, char *bufend, struct timeval * end_time) {
             snprintf( temp_buffer, sizeof( temp_buffer )-1, "%s%s|%s::%s::%s", decode_xml(attribute), decode_xml(error), mod_gm_opt->service, decode_xml(attribute3), decode_xml(attribute2));
         }
     }
+    gm_free(mod_gm_opt->message);
     mod_gm_opt->message=gm_strdup(temp_buffer);
     gm_log( GM_LOG_TRACE, "mod_gm_opt->message: %s\n", mod_gm_opt->message);
 
