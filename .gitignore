@@ -13,6 +13,7 @@ depcomp
 compile
 install-sh
 test-driver
+tap-driver.sh
 missing
 mod_gearman*.so
 stamp-h1

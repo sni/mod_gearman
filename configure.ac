@@ -6,6 +6,7 @@
 AC_PREREQ([2.60])
 AC_INIT([mod_gearman], [5.2.4], [sven.nierlein@consol.de])
 AM_INIT_AUTOMAKE([-Wall foreign subdir-objects])
+AC_REQUIRE_AUX_FILE([tap-driver.sh])
 AC_CONFIG_SRCDIR([neb_module_naemon/mod_gearman.c],[worker/worker.c],[tools/send_gearman.c],[tools/check_gearman.c],[tools/gearman_top.c])
 AC_CONFIG_HEADERS([config.h])
 
