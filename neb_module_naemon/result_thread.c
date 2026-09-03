@@ -39,6 +39,9 @@ extern int gm_should_terminate;
 
 __thread EVP_CIPHER_CTX * result_ctx = NULL; /* make ssl context local in each thread */
 
+/* The worker-provided source value will never be freed, so provide a static string */
+static char gearman_worker_source[] = "Mod-Gearman Worker";
+
 static const char *gearman_worker_source_name(void *source) {
     if(!source)
         return "unknown internal source (voodoo, perhaps?)";
@@ -262,7 +265,7 @@ void *get_results( gearman_job_st *job, __attribute__((__unused__)) void *contex
             gm_free(chk_result->service_description);
             chk_result->service_description = gm_strdup( value );
         } else if ( !strcmp( key, "source" ) ) {
-            chk_result->source = value;
+            chk_result->source = gearman_worker_source;
         } else if ( !strcmp( key, "check_options" ) ) {
             chk_result->check_options = atoi( value );
         } else if ( !strcmp( key, "scheduled_check" ) ) {
