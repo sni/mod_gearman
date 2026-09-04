@@ -198,11 +198,18 @@ AC_ARG_ENABLE(debug,--enable-debug will enable debugging symbols,[
       CFLAGS="${CFLAGS} -Wdate-time"
       CFLAGS="${CFLAGS} -Wuninitialized"
       CFLAGS="${CFLAGS} -gdwarf-4"
-      CFLAGS="${CFLAGS} -fsanitize=address" # enables additional memory checks
-    ], [
-      CFLAGS="${CFLAGS} -g3"
-      m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
-    ]
+     ], [
+       CFLAGS="${CFLAGS} -g3"
+       m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
+     ]
+)
+
+##############################################
+# enable address sanitizer
+AC_ARG_ENABLE(asan,
+  AS_HELP_STRING([--enable-asan],[enable address sanitizer]), [
+    CFLAGS="${CFLAGS} -fsanitize=address"
+  ], []
 )
 
 ##############################################
