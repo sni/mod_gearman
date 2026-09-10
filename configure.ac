@@ -208,7 +208,7 @@ AC_ARG_ENABLE(debug,--enable-debug will enable debugging symbols,[
 # enable address sanitizer
 AC_ARG_ENABLE(asan,
   AS_HELP_STRING([--enable-asan],[enable address sanitizer]), [
-    CFLAGS="${CFLAGS} -fsanitize=address"
+    CFLAGS="${CFLAGS} -fsanitize=address -fno-omit-frame-pointer"
   ], []
 )
 
