@@ -366,11 +366,11 @@ void process_check_result_list(void) {
             process_check_result(cur->object_ptr);
 
         free_check_result(cur->object_ptr);
-        free(cur->object_ptr);
-        free(cur);
+        gm_free(cur->object_ptr);
+        gm_free(cur);
         count++;
     }
-    free(tmp_list);
+    gm_free(tmp_list);
 
     gettimeofday(&tval_after, NULL);
     timersub(&tval_after, &tval_before, &tval_result);
@@ -615,10 +615,12 @@ static int handle_notifications( int event_type, void *data ) {
     if(ds->service_description != NULL) {
         if((svc=ds->object_ptr)==NULL) {
             gm_log( GM_LOG_ERROR, "Notification handler received NULL service object pointer.\n" );
+            gm_free(contact_name);
             return NEB_OK;
         }
         if((hst=svc->host_ptr)==NULL) {
             gm_log( GM_LOG_ERROR, "Notification handler received NULL host object pointer.\n" );
+            gm_free(contact_name);
             return NEB_OK;
         }
         gm_log( GM_LOG_DEBUG, "got notifications event, service: %s - %s for contact %s\n", ds->host_name, ds->service_description, contact_name );
@@ -626,6 +628,7 @@ static int handle_notifications( int event_type, void *data ) {
     else {
         if((hst=ds->object_ptr)==NULL) {
             gm_log( GM_LOG_ERROR, "Notification handler received NULL host object pointer.\n" );
+            gm_free(contact_name);
             return NEB_OK;
         }
         gm_log( GM_LOG_DEBUG, "got notifications event, host: %s for contact %s\n", ds->host_name, contact_name );
@@ -639,6 +642,7 @@ static int handle_notifications( int event_type, void *data ) {
         } else {
             gm_log( GM_LOG_DEBUG, "passing by local host notification: %s\n", hst->name );
         }
+        gm_free(contact_name);
         return NEB_OK;
     }
     target_queue[0] = '\x0';
@@ -659,6 +663,7 @@ static int handle_notifications( int event_type, void *data ) {
     get_raw_command_line_r(&mac, temp_command, ds->command_name, &raw_command, macro_options);
     if(raw_command==NULL){
         gm_log( GM_LOG_ERROR, "Raw notification command for host '%s' was NULL - aborting.\n",hst->name );
+        gm_free(contact_name);
         return NEBERROR_CALLBACKCANCEL;
     }
 
@@ -743,14 +748,15 @@ static int handle_notifications( int event_type, void *data ) {
     process_macros_r(&mac, raw_command, &processed_command, macro_options);
     if(processed_command==NULL){
         gm_log( GM_LOG_ERROR, "Processed check command for host '%s' was NULL - aborting.\n",hst->name);
+        gm_free(contact_name);
         return NEBERROR_CALLBACKCANCEL;
     }
     /* naemon sends unescaped newlines from ex.: the LONGPLUGINOUTPUT macro, so we have to escape
      * them ourselves: https://github.com/naemon/naemon-core/issues/153 */
     tmp = replace_str(processed_command, "\n", "\\n");
-    free(processed_command);
+    gm_free(processed_command);
     processed_command = replace_str(tmp, "\n", "\\n");
-    free(tmp);
+    gm_free(tmp);
 
     temp_buffer[0]='\x0';
     snprintf( temp_buffer,GM_MAX_OUTPUT-1,
@@ -852,29 +858,30 @@ static int handle_notifications( int event_type, void *data ) {
             process_macros_r(&mac, log_buffer, &processed_buffer, macro_options);
             log_core(NSLOG_HOST_NOTIFICATION, processed_buffer);
         }
-        free(contact_name);
-        free(log_buffer);
-        free(processed_buffer);
+        gm_free(log_buffer);
+        gm_free(processed_buffer);
     }
+
+    gm_free(contact_name);
 
     clear_volatile_macros_r(&mac);
 
     /* clear out all macros we created */
-    free(mac.x[MACRO_NOTIFICATIONNUMBER]);
-    free(mac.x[MACRO_SERVICENOTIFICATIONNUMBER]);
-    free(mac.x[MACRO_SERVICENOTIFICATIONID]);
-    free(mac.x[MACRO_NOTIFICATIONCOMMENT]);
-    free(mac.x[MACRO_NOTIFICATIONTYPE]);
-    free(mac.x[MACRO_NOTIFICATIONAUTHOR]);
-    free(mac.x[MACRO_NOTIFICATIONAUTHORNAME]);
-    free(mac.x[MACRO_NOTIFICATIONAUTHORALIAS]);
-    free(mac.x[MACRO_SERVICEACKAUTHORNAME]);
-    free(mac.x[MACRO_SERVICEACKAUTHORALIAS]);
-    free(mac.x[MACRO_SERVICEACKAUTHOR]);
-    free(mac.x[MACRO_SERVICEACKCOMMENT]);
+    gm_free(mac.x[MACRO_NOTIFICATIONNUMBER]);
+    gm_free(mac.x[MACRO_SERVICENOTIFICATIONNUMBER]);
+    gm_free(mac.x[MACRO_SERVICENOTIFICATIONID]);
+    gm_free(mac.x[MACRO_NOTIFICATIONCOMMENT]);
+    gm_free(mac.x[MACRO_NOTIFICATIONTYPE]);
+    gm_free(mac.x[MACRO_NOTIFICATIONAUTHOR]);
+    gm_free(mac.x[MACRO_NOTIFICATIONAUTHORNAME]);
+    gm_free(mac.x[MACRO_NOTIFICATIONAUTHORALIAS]);
+    gm_free(mac.x[MACRO_SERVICEACKAUTHORNAME]);
+    gm_free(mac.x[MACRO_SERVICEACKAUTHORALIAS]);
+    gm_free(mac.x[MACRO_SERVICEACKAUTHOR]);
+    gm_free(mac.x[MACRO_SERVICEACKCOMMENT]);
 
     /* this gets set in add_notification() */
-    free(mac.x[MACRO_NOTIFICATIONRECIPIENTS]);
+    gm_free(mac.x[MACRO_NOTIFICATIONRECIPIENTS]);
 
     /* tell naemon to not execute */
     return NEBERROR_CALLBACKOVERRIDE;
@@ -1305,7 +1312,7 @@ static int read_arguments( const char *args_orig ) {
         dumpconfig(mod_gm_opt, GM_NEB_MODE);
     }
 
-    free(args_c);
+    gm_free(args_c);
 
     if(errors > 0) {
         return(GM_ERROR);
@@ -1634,7 +1641,7 @@ int handle_export(int callback_type, void *data) {
                     npd->attr,
                     timeval2double(&npd->timestamp)
                     );
-            free(type);
+            gm_free(type);
             break;
         case NEBCALLBACK_TIMED_EVENT_DATA:                  /*  8 */
             nted       = (nebstruct_timed_event_data *)data;
@@ -1650,8 +1657,8 @@ int handle_export(int callback_type, void *data) {
                     nted->recurring,
                     (int)nted->run_time
                     );
-            free(event_type);
-            free(type);
+            gm_free(event_type);
+            gm_free(type);
             break;
         case NEBCALLBACK_LOG_DATA:                          /*  9 */
             nld    = (nebstruct_log_data *)data;
@@ -1666,8 +1673,8 @@ int handle_export(int callback_type, void *data) {
                     (int)nld->entry_time,
                     nld->data_type,
                     buffer);
-            free(type);
-            free(buffer);
+            gm_free(type);
+            gm_free(buffer);
             break;
         case NEBCALLBACK_SYSTEM_COMMAND_DATA:               /* 10 */
             break;
