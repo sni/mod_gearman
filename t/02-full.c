@@ -16,7 +16,7 @@
 #endif
 #include "gearman_utils.h"
 
-int num_tests = 132;
+int num_tests = 168;
 
 #define GEARMAND_TEST_PORT   54730
 #define GM_ASYNC_RESULT_QUEUE "check_results_async"
