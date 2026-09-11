@@ -142,7 +142,7 @@ gearman_client_st * create_client_blocking( gm_server_t * server_list[GM_LISTSIZ
 static char         *gm_pending_data[GM_MAX_PENDING_SUBMITS];
 static unsigned int  gm_pending_submits = 0;
 
-static void gm_release_pending(void) {
+void gm_release_pending(void) {
     unsigned int i;
     for(i = 0; i < gm_pending_submits; i++) {
         free(gm_pending_data[i]);

@@ -32,8 +32,8 @@ gearman_client_st *client = NULL;
 /* separate non-blocking client for host/service checks, so the blocking
  * submits (eventhandler, notifications, perfdata) keep their behaviour */
 gearman_client_st *check_client = NULL;
-gearman_client_st *current_client;
-gearman_client_st *current_client_dup;
+gearman_client_st *current_client = NULL;
+gearman_client_st *current_client_dup = NULL;
 EVP_CIPHER_CTX * mod_ctx = NULL;
 
 /* specify event broker API version (required) */
@@ -291,6 +291,10 @@ int nebmodule_deinit( int flags, int reason ) {
 
     // clean check result list
     process_check_result_list();
+
+    /* release any async submits still in flight so their payloads are freed */
+    gm_flush_submits(check_client, TRUE);
+    gm_release_pending();
 
     /* cleanup */
     gm_free_client(&client);
