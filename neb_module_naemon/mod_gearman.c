@@ -296,6 +296,10 @@ int nebmodule_deinit( int flags, int reason ) {
 
     mod_gm_crypt_deinit(mod_ctx);
 
+    /* release the fetched openssl 3 provider objects, all threads are
+     * stopped above so the shared crypto cache is no longer in use */
+    mod_gm_crypt_fini();
+
     if(reason == NEBMODULE_NEB_SHUTDOWN) {
         // breaks reloading the module and usually done automatically at exit, but at exit
         // this modules is already unloaded

@@ -90,6 +90,18 @@ EVP_CIPHER_CTX * mod_gm_crypt_init(const char * key);
 void mod_gm_crypt_deinit(EVP_CIPHER_CTX *);
 
 /**
+ * mod_gm_crypt_fini
+ *
+ * wrapper to release process-wide crypto objects
+ *
+ * must be called from the thread using the crypto functions, after all
+ * other threads have terminated (e.g. on module unload)
+ *
+ * @return nothing
+ */
+void mod_gm_crypt_fini(void);
+
+/**
  * mod_gm_encrypt
  *
  * wrapper to encrypt text

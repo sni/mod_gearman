@@ -47,10 +47,14 @@ static const char hex[] = "0123456789ABCDEF";
 
 /* under openssl 3 the legacy EVP_aes_256_ecb()/EVP_md5() pointers make every
  * Init_ex() look the implementation up in the provider registry again, so
- * fetch them once. thread local because results are decrypted on own threads. */
+ * fetch them once. the fetched objects are immutable, refcounted and
+ * thread-safe, so a single process-wide cache is shared by all threads.
+ * mod_gearman is a loadable module and the daemon outlives the module, so
+ * the fetched references must be released on module unload (see
+ * mod_gm_aes_fini()). */
 #if OPENSSL_VERSION_NUMBER >= 0x30000000L
-static THREAD_LOCAL EVP_CIPHER *gm_aes256ecb = NULL;
-static THREAD_LOCAL EVP_MD     *gm_md5       = NULL;
+static EVP_CIPHER *gm_aes256ecb = NULL;
+static EVP_MD     *gm_md5       = NULL;
 
 static const EVP_CIPHER *gm_get_aes256ecb(void) {
     if(gm_aes256ecb == NULL)
@@ -66,6 +70,21 @@ static const EVP_MD *gm_get_md5(void) {
 #define gm_get_aes256ecb() EVP_aes_256_ecb()
 #define gm_get_md5()       EVP_md5()
 #endif
+
+/* release the fetched provider objects, must be called once after all
+ * threads using the crypto functions have terminated */
+void mod_gm_aes_fini(void) {
+#if OPENSSL_VERSION_NUMBER >= 0x30000000L
+    if(gm_aes256ecb != NULL) {
+        EVP_CIPHER_free(gm_aes256ecb);
+        gm_aes256ecb = NULL;
+    }
+    if(gm_md5 != NULL) {
+        EVP_MD_free(gm_md5);
+        gm_md5 = NULL;
+    }
+#endif
+}
 
 /* initialize encryption */
 EVP_CIPHER_CTX * mod_gm_aes_init(const char * password) {
@@ -219,6 +238,20 @@ void mod_gm_hexsum(char *dest, char *text) {
     }
     dest[resultlen*2] = '\0';
     return;
+}
+
+/* free the MD5 context of the calling thread (the context is thread local,
+ * so this has to be called from the thread which used mod_gm_hexsum()),
+ * e.g. once on module shutdown */
+void mod_gm_hexsum_fini(void) {
+    if(mdctx != NULL) {
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
+        EVP_MD_CTX_cleanup(mdctx);
+#else
+        EVP_MD_CTX_free(mdctx);
+#endif
+        mdctx = NULL;
+    }
 }
 
 int base64_decode(const char *source, int sourcelen, unsigned char * target) {

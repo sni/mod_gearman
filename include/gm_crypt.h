@@ -55,6 +55,17 @@ EVP_CIPHER_CTX * mod_gm_aes_init(const char * password);
 void mod_gm_aes_deinit(EVP_CIPHER_CTX *);
 
 /**
+ * release process-wide crypto objects
+ *
+ * releases the fetched provider objects (openssl 3). must be called after
+ * all threads using the crypto functions have terminated (e.g. on module
+ * unload)
+ *
+ * @return nothing
+ */
+void mod_gm_aes_fini(void);
+
+/**
  * encrypt text
  *
  * @param[in] ctx           - openssl context (from mod_gm_aes_init())
@@ -87,6 +98,16 @@ int mod_gm_aes_decrypt(EVP_CIPHER_CTX * ctx, unsigned char * plaintext, unsigned
  * @return nothing
  */
 void mod_gm_hexsum(char *dest, char *text);
+
+/**
+ * release the MD5 context of the calling thread
+ *
+ * the context is thread local, so this must be called from the thread
+ * which used mod_gm_hexsum(), e.g. once on module shutdown
+ *
+ * @return nothing
+ */
+void mod_gm_hexsum_fini(void);
 
 /**
  * decode base64 encoded data

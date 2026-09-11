@@ -134,6 +134,14 @@ void mod_gm_crypt_deinit(EVP_CIPHER_CTX * ctx) {
 }
 
 
+/* release process-wide crypto objects */
+void mod_gm_crypt_fini(void) {
+    mod_gm_hexsum_fini();
+    mod_gm_aes_fini();
+    return;
+}
+
+
 /* encrypt text with given key */
 int mod_gm_encrypt(EVP_CIPHER_CTX * ctx, char ** ciphertext, const char * plaintext, int mode) {
     int size;
