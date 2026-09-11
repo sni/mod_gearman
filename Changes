@@ -2,6 +2,10 @@
 
 This file documents the revision history for the mod_gearman NEB module.
 
+next:
+          - improve neb module performance (#191 and #192)
+          - fix memory in notification handler
+
 5.2.5 Thu Sep  3 16:48:33 CEST 2026
           - fix crash when argument is passed without = sign
 
