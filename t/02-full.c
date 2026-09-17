@@ -565,49 +565,35 @@ int main (__attribute__((unused)) int argc, __attribute__((unused)) char **argv,
 
     /* send big job */
     send_big_jobs(GM_ENCODE_ONLY);
-    //diag_queues();
     wait_for_empty_queue("eventhandler", 20);
     wait_for_empty_queue("service", 20);
-    //diag_queues();
     do_result_work(1);
-    //diag_queues();
     wait_for_empty_queue(GM_DEFAULT_RESULT_QUEUE, 5);
 
     /*****************************************
      * test check
      */
-    //diag_queues();
     test_servicecheck(GM_ENCODE_ONLY, "./t/crit.pl");
-    //diag_queues();
     wait_for_empty_queue("eventhandler", 20);
     wait_for_empty_queue("service", 5);
-    //diag_queues();
     do_result_work(1);
-    //diag_queues();
     wait_for_empty_queue(GM_DEFAULT_RESULT_QUEUE, 5);
-    //diag_queues();
     like(last_result, "test plugin CRITICAL", "stdout output from ./t/crit.pl");
     like(last_result, "some errors on stderr", "stderr output from ./t/crit.pl");
 
     /*****************************************
      * test check2
      */
-    //diag_queues();
     test_servicecheck(GM_ENCODE_ONLY, "./t/both");
-    //diag_queues();
     wait_for_empty_queue("eventhandler", 20);
     wait_for_empty_queue("service", 5);
-    //diag_queues();
     do_result_work(1);
-    //diag_queues();
     wait_for_empty_queue(GM_DEFAULT_RESULT_QUEUE, 5);
     like(last_result, "stdout output", "stdout output from ./t/both");
     like(last_result, "stderr output", "stderr output from ./t/both");
 
     /* try to send some data with base64 only */
-    //diag_queues();
     test_eventhandler(GM_ENCODE_ONLY);
-    //diag_queues();
     test_servicecheck(GM_ENCODE_ONLY, NULL);
 
     /* async path: single submit and burst submit (covers > GM_MAX_PENDING_SUBMITS) */
@@ -617,11 +603,9 @@ int main (__attribute__((unused)) int argc, __attribute__((unused)) char **argv,
     test_servicecheck_async(GM_ENCODE_ONLY, 80, "burst async submit");
     wait_for_empty_queue("service", 30);
 
-    //diag_queues();
     wait_for_empty_queue("eventhandler", 20);
     wait_for_empty_queue("service", 5);
     drain_async_results("base64 async submits", 10);
-    //diag_queues();
     wait_for_empty_queue(GM_DEFAULT_RESULT_QUEUE, 5);
     sleep(1);
     kill(worker_pid, SIGTERM);

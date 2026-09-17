@@ -193,6 +193,7 @@ void *get_results( gearman_job_st *job, __attribute__((__unused__)) void *contex
         pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL); // restore thread cancellation
         return NULL;
     }
+    rtrim(decrypted_data);
     gm_log( GM_LOG_TRACE, "%zu --->\n%s\n<---\n", strlen(decrypted_data), decrypted_data );
 
     /*

@@ -174,6 +174,45 @@ int gm_flush_submits(gearman_client_st *client, int blocking) {
     return GM_ERROR;
 }
 
+void log_submit_statistic(int log_stats_interval, gearman_return_t rc, struct timeval t1, struct timeval t2) {
+    double elapsed;
+
+    // log some statistics
+    if(log_stats_interval <= 0)
+        return;
+
+    elapsed = elapsed_time(t1, t2);
+    total_submit_sum += elapsed;
+    total_submit_jobs_delta++;
+    total_submit_jobs++;
+    if(elapsed > total_submit_max)
+        total_submit_max = elapsed;
+    if(rc != GEARMAN_SUCCESS && rc != GEARMAN_IO_WAIT) {
+        total_submit_errors++;
+        total_submit_errors_delta++;
+    }
+    if(t2.tv_sec >= total_submit_time.tv_sec + log_stats_interval) {
+        if(total_submit_time.tv_sec > 0) {
+            current_submit_rate = (total_submit_jobs_delta-total_submit_errors_delta) / elapsed_time(total_submit_time, t2);
+            current_avg_submit_duration = total_submit_sum/total_submit_jobs_delta;
+            current_submit_max = total_submit_max;
+            gm_log(GM_LOG_INFO, "gearmand submission statistics: jobs:%7lu   errors: %7lu   submit_rate: %6.1f/s   avg_submit_duration: %.6fs   max_submit_duration: %.6fs\n",
+                total_submit_jobs_delta,
+                total_submit_errors_delta,
+                current_submit_rate,
+                current_avg_submit_duration,
+                total_submit_max
+            );
+            total_submit_sum          = 0;
+            total_submit_jobs_delta   = 0;
+            total_submit_errors_delta = 0;
+            total_submit_max          = 0;
+        }
+        gettimeofday(&total_submit_time,NULL);
+    }
+}
+
+
 /* create a task and send it */
 int add_job_to_queue(gearman_client_st **client, gm_server_t * server_list[GM_LISTSIZE], char * queue, char * uniq, char * data, int priority, int retries, int transport_mode, EVP_CIPHER_CTX * ctx, int async, int log_stats_interval) {
     gearman_job_handle_t job_handle;
@@ -182,7 +221,6 @@ int add_job_to_queue(gearman_client_st **client, gm_server_t * server_list[GM_LI
     int size;
     int ret = GM_OK;
     struct timeval t1, t2;
-    double elapsed;
 
     /* check too long queue names */
     if(strlen(queue) > GEARMAN_FUNCTION_MAX_SIZE - 1) {
@@ -208,18 +246,6 @@ int add_job_to_queue(gearman_client_st **client, gm_server_t * server_list[GM_LI
     gm_log( GM_LOG_TRACE, "%d +++>\n%s\n<+++\n", size, crypted_data );
 
     if(async) {
-        /*
-         * Reap whatever the previous calls left in flight. If that fails the
-         * connection is gone, and libgearman must not be called again on this
-         * client -- run_tasks() segfaults on a client that already errored.
-         * Fall through to the recreate path below instead.
-         */
-        if(gm_flush_submits(*client, FALSE) != GM_OK) {
-            free(crypted_data);
-            rc = GEARMAN_ERRNO;
-            goto submit_done;
-        }
-
         if( priority == GM_JOB_PRIO_LOW ) {
             gearman_client_add_task_low_background(*client, NULL, NULL, queue, uniq, ( void * )crypted_data, ( size_t )size, &rc);
         }
@@ -236,15 +262,23 @@ int add_job_to_queue(gearman_client_st **client, gm_server_t * server_list[GM_LI
         }
 
         if(rc == GEARMAN_SUCCESS || rc == GEARMAN_IO_WAIT) {
-            gm_pending_data[gm_pending_submits++] = crypted_data;
-            /* push it out now, but do not wait for the reply */
-            if(gm_flush_submits(*client, FALSE) != GM_OK) {
-                rc = GEARMAN_ERRNO;
-            }
-            else if(gm_pending_submits >= GM_MAX_PENDING_SUBMITS) {
-                /* too many in flight: fall back to waiting, as before */
-                if(gm_flush_submits(*client, TRUE) != GM_OK)
+            int enqueue = 1;
+            /*
+             * Backpressure: if the queue is full, drain it synchronously so
+             * we don't grow without limit when gearmand is slow or stalled.
+             * Normal operation is driven by the periodic move_results_to_core()
+             * event which batches the queue with a blocking run_tasks().
+             */
+            if(gm_pending_submits >= GM_MAX_PENDING_SUBMITS) {
+                if(gm_flush_submits(*client, TRUE) != GM_OK) {
+                    free(crypted_data);
                     rc = GEARMAN_ERRNO;
+                    enqueue = 0;
+                }
+            }
+            if(enqueue) {
+                gm_pending_data[gm_pending_submits++] = crypted_data;
+                gm_log( GM_LOG_TRACE, "async pending submits: %d\n", gm_pending_submits );
             }
         } else {
             free(crypted_data);
@@ -267,41 +301,10 @@ int add_job_to_queue(gearman_client_st **client, gm_server_t * server_list[GM_LI
         }
         free(crypted_data);
     }
-submit_done:
     gettimeofday(&t2,NULL);
 
     // log some statistics
-    if(log_stats_interval > 0) {
-        elapsed = elapsed_time(t1, t2);
-        total_submit_sum += elapsed;
-        total_submit_jobs_delta++;
-        total_submit_jobs++;
-        if(elapsed > total_submit_max)
-            total_submit_max = elapsed;
-        if(rc != GEARMAN_SUCCESS && rc != GEARMAN_IO_WAIT) {
-            total_submit_errors++;
-            total_submit_errors_delta++;
-        }
-        if(t2.tv_sec >= total_submit_time.tv_sec + log_stats_interval) {
-            if(total_submit_time.tv_sec > 0) {
-                current_submit_rate = (total_submit_jobs_delta-total_submit_errors_delta) / elapsed_time(total_submit_time, t2);
-                current_avg_submit_duration = total_submit_sum/total_submit_jobs_delta;
-                current_submit_max = total_submit_max;
-                gm_log(GM_LOG_INFO, "gearmand submission statistics: jobs:%7lu   errors: %7lu   submit_rate: %6.1f/s   avg_submit_duration: %.6fs   max_submit_duration: %.6fs\n",
-                    total_submit_jobs_delta,
-                    total_submit_errors_delta,
-                    current_submit_rate,
-                    current_avg_submit_duration,
-                    total_submit_max
-                );
-                total_submit_sum          = 0;
-                total_submit_jobs_delta   = 0;
-                total_submit_errors_delta = 0;
-                total_submit_max          = 0;
-            }
-            gettimeofday(&total_submit_time,NULL);
-        }
-    }
+    log_submit_statistic(log_stats_interval, rc, t1, t2);
 
     if(rc != GEARMAN_SUCCESS && rc != GEARMAN_IO_WAIT) {
         /* log the error */

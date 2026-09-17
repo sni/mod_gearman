@@ -351,9 +351,15 @@ static void move_results_to_core(struct nm_event_execution_properties *evprop) {
         return;
     }
 
+    gm_log( GM_LOG_TRACE, "move_results_to_core()\n" );
+
     process_check_result_list();
-    /* make sure nothing is left queued when checks stop coming */
-    gm_flush_submits(check_client, FALSE);
+    /* batch-send all pending check submissions to gearmand */
+    if(gm_flush_submits(check_client, TRUE) != GM_OK) {
+        gm_release_pending();
+        gm_free_client(&check_client);
+        check_client = create_client(mod_gm_opt->server_list);
+    }
     schedule_event(1, move_results_to_core, NULL);
 }
 
@@ -364,7 +370,6 @@ void process_check_result_list(void) {
     int count = 0;
 
     gettimeofday(&tval_before, NULL);
-    gm_log( GM_LOG_TRACE3, "move_results_to_core()\n" );
 
     /* safely move result list aside */
     pthread_mutex_lock(&mod_gm_result_list_mutex);
@@ -569,7 +574,7 @@ static int handle_eventhandler( int event_type, void *data ) {
 
     temp_buffer[0]='\x0';
     snprintf( temp_buffer,GM_MAX_OUTPUT-1,
-                "type=eventhandler\nstart_time=%Lf\ncore_time=%Lf\ncommand_line=%s\n\n\n",
+                "type=eventhandler\nstart_time=%Lf\ncore_time=%Lf\ncommand_line=%s\n\n",
                 timeval2double(&core_time),
                 timeval2double(&core_time),
                 ds->command_line
@@ -779,7 +784,7 @@ static int handle_notifications( int event_type, void *data ) {
 
     temp_buffer[0]='\x0';
     snprintf( temp_buffer,GM_MAX_OUTPUT-1,
-                "type=notification\nstart_time=%Lf\ncore_time=%Lf\ncontact=%s\ncommand_line=%s\nplugin_output=%s\nlong_plugin_output=%s\n\n\n",
+                "type=notification\nstart_time=%Lf\ncore_time=%Lf\ncontact=%s\ncommand_line=%s\nplugin_output=%s\nlong_plugin_output=%s\n\n",
                 timeval2double(&ds->start_time),
                 timeval2double(&core_time),
                 contact_name,
@@ -987,7 +992,7 @@ static int handle_host_check( int event_type, void *data ) {
     gm_log( GM_LOG_TRACE, "cmd_line: %s\n", processed_command );
 
     temp_buffer[0]='\x0';
-    snprintf( temp_buffer,GM_MAX_OUTPUT-1,"type=host\nresult_queue=%s\ntarget_queue=%s\nhost_name=%s\ncore_time=%Lf\ntimeout=%d\ncommand_line=%s\n\n\n",
+    snprintf( temp_buffer,GM_MAX_OUTPUT-1,"type=host\nresult_queue=%s\ntarget_queue=%s\nhost_name=%s\ncore_time=%Lf\ntimeout=%d\ncommand_line=%s\n\n",
               mod_gm_opt->result_queue,
               target_queue,
               hst->name,
@@ -1134,7 +1139,7 @@ static int handle_svc_check( int event_type, void *data ) {
     gm_log( GM_LOG_TRACE, "cmd_line: %s\n", processed_command );
 
     temp_buffer[0]='\x0';
-    snprintf( temp_buffer,GM_MAX_OUTPUT-1,"type=service\nresult_queue=%s\ntarget_queue=%s\nhost_name=%s\nservice_description=%s\ncore_time=%Lf\ntimeout=%d\ncommand_line=%s\n\n\n",
+    snprintf( temp_buffer,GM_MAX_OUTPUT-1,"type=service\nresult_queue=%s\ntarget_queue=%s\nhost_name=%s\nservice_description=%s\ncore_time=%Lf\ntimeout=%d\ncommand_line=%s\n\n",
               mod_gm_opt->result_queue,
               target_queue,
               svcdata->host_name,

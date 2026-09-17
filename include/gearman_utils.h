@@ -52,6 +52,8 @@ int gm_flush_submits(gearman_client_st *client, int blocking);
 /* free all payloads held for in-flight async submits */
 void gm_release_pending(void);
 
+void log_submit_statistic(int log_stats_interval, gearman_return_t rc, struct timeval t1, struct timeval t2);
+
 void gm_free_client(gearman_client_st **client);
 void gm_free_worker(gearman_worker_st **worker);
 

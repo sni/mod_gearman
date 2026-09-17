@@ -190,6 +190,8 @@ int mod_gm_aes_decrypt(EVP_CIPHER_CTX * ctx, unsigned char * plaintext, unsigned
         return -1;
     }
 
+    plaintext[len] = '\x0';
+
     return 1;
 }
 
