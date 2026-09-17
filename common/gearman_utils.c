@@ -168,7 +168,14 @@ int gm_flush_submits(gearman_client_st *client, int blocking) {
         gm_release_pending();
         return GM_OK;
     }
-    if(rc == GEARMAN_IO_WAIT)
+    /*
+     * Not finished, but not broken either, so keep the payloads alive for the
+     * next flush. GEARMAN_TIMEOUT turns up on a blocking run that has already
+     * handed everything over and then polls with nothing left to drive until
+     * the client timeout expires -- reporting that as a failure would abort a
+     * check that was in fact delivered.
+     */
+    if(rc == GEARMAN_IO_WAIT || rc == GEARMAN_TIMEOUT)
         return GM_OK;
 
     return GM_ERROR;
@@ -236,6 +243,20 @@ int add_job_to_queue(gearman_client_st **client, gm_server_t * server_list[GM_LI
             free(crypted_data);
             rc = GEARMAN_ERRNO;
             goto submit_done;
+        }
+
+        /*
+         * A slot is needed to hold the payload alive until the task is done.
+         * The flush above usually frees them all; if it did not, drain
+         * synchronously rather than run past the end of gm_pending_data.
+         */
+        if(gm_pending_submits >= GM_MAX_PENDING_SUBMITS) {
+            gm_flush_submits(*client, TRUE);
+            if(gm_pending_submits >= GM_MAX_PENDING_SUBMITS) {
+                free(crypted_data);
+                rc = GEARMAN_ERRNO;
+                goto submit_done;
+            }
         }
 
         if( priority == GM_JOB_PRIO_LOW ) {
