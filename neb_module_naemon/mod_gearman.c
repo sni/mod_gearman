@@ -305,6 +305,11 @@ int nebmodule_deinit( int flags, int reason ) {
         fclose(mod_gm_opt->logfile_fp);
     }
 
+    /* result_queue is heap-owned (config value or the gm_strdup'd default
+     * below). The shared mod_gm_free_opt() must not free it because the CLI
+     * tools also assign a string literal there; release it here instead. */
+    gm_free(mod_gm_opt->result_queue);
+
     mod_gm_free_opt(mod_gm_opt);
 
     mod_gm_crypt_deinit(mod_ctx);
@@ -1384,7 +1389,7 @@ static int verify_options(mod_gm_opt_t *opt) {
     }
 
     if ( opt->result_queue == NULL )
-        opt->result_queue = GM_DEFAULT_RESULT_QUEUE;
+        opt->result_queue = gm_strdup(GM_DEFAULT_RESULT_QUEUE);
 
     /* nothing set by hand -> defaults */
     if( opt->set_queues_by_hand == 0 ) {

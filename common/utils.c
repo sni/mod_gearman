@@ -1262,6 +1262,8 @@ void mod_gm_free_opt(mod_gm_opt_t *opt) {
         gm_free(opt->local_hostgroups_list[i]);
     for(i=0;i<opt->local_servicegroups_num;i++)
         gm_free(opt->local_servicegroups_list[i]);
+    for(i=0;i<opt->perfdata_queues_num;i++)
+        gm_free(opt->perfdata_queues_list[i]);
     for(i=0;i<GM_NEBTYPESSIZE;i++) {
         for(j=0;j<opt->exports[i]->elem_number;j++) {
           gm_free(opt->exports[i]->name[j]);
