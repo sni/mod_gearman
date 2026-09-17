@@ -187,10 +187,7 @@ void test_servicecheck_async(int transportmode, int count, char *label) {
 
     ok(errors == 0, "%s: async service submissions in mode %s", label, transportmode == GM_ENCODE_ONLY ? "base64" : "aes256");
     flush_rt = gm_flush_submits(client, TRUE);
-    ok(TRUE, "%s: blocking async flush executed", label);
-    if(flush_rt != GM_OK) {
-        diag("%s: blocking async flush returned %d", label, flush_rt);
-    }
+    ok(flush_rt == GM_OK, "%s: blocking async flush succeeded", label);
 }
 
 /* put back the result into the core */
