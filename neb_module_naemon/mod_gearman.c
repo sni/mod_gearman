@@ -352,8 +352,8 @@ static void move_results_to_core(struct nm_event_execution_properties *evprop) {
     }
 
     process_check_result_list();
-    /* make sure nothing is left queued when checks stop coming */
-    gm_flush_submits(check_client, FALSE);
+    /* on an installation with few checks this is what delivers them at all */
+    gm_drain_submits(check_client);
     schedule_event(1, move_results_to_core, NULL);
 }
 

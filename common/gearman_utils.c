@@ -174,6 +174,24 @@ int gm_flush_submits(gearman_client_st *client, int blocking) {
     return GM_ERROR;
 }
 
+/*
+ * Deliver everything the async submit path still has queued.
+ *
+ * This must be a blocking flush. gearman_client_run_tasks() on a client with
+ * GEARMAN_CLIENT_NON_BLOCKING returns GEARMAN_IO_WAIT and makes no progress
+ * unless the caller waits for the socket to become ready, so repeating it
+ * never gets the job out -- the pending count only grows and the jobs are
+ * never delivered.
+ *
+ * Where there are enough checks the next submit drives the pipeline and this
+ * finds nothing to do. Where there are few, there is no next submit for
+ * minutes and this is the only thing that delivers them. Bounded by
+ * gearman_connection_timeout, the same bound the per-job submit had before.
+ */
+int gm_drain_submits(gearman_client_st *client) {
+    return gm_flush_submits(client, TRUE);
+}
+
 /* create a task and send it */
 int add_job_to_queue(gearman_client_st **client, gm_server_t * server_list[GM_LISTSIZE], char * queue, char * uniq, char * data, int priority, int retries, int transport_mode, EVP_CIPHER_CTX * ctx, int async, int log_stats_interval) {
     gearman_job_handle_t job_handle;
