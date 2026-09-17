@@ -16,7 +16,7 @@
 #endif
 #include "gearman_utils.h"
 
-int num_tests = 168;
+int num_tests = 171;
 
 #define GEARMAND_TEST_PORT   54730
 #define GM_ASYNC_RESULT_QUEUE "check_results_async"
@@ -156,6 +156,39 @@ void send_big_jobs(int transportmode) {
 }
 
 /* test async service check submission path */
+void wait_for_empty_queue(char *queue, int timeout);
+
+/*
+ * The production drain path: submit one job and let nothing but
+ * gm_drain_submits() deliver it -- no further submits, no hand-rolled
+ * blocking flush. This is what the NEB module's one second timer does, and
+ * it is the only thing that delivers checks on an installation that submits
+ * too rarely for the next submit to drive the pipeline.
+ */
+void test_async_drain_only(int transportmode);
+void test_async_drain_only(int transportmode) {
+    struct timeval start_time;
+    char temp_buffer[GM_BUFFERSIZE];
+    int rt;
+
+    gettimeofday(&start_time, NULL);
+    temp_buffer[0]='\x0';
+    snprintf( temp_buffer, sizeof(temp_buffer)-1,
+              "type=service\nresult_queue=%s\nhost_name=%s\nservice_description=%s\nstart_time=%Lf\ntimeout=%d\ncheck_options=%i\nscheduled_check=%i\nlatency=%f\ncommand_line=%s\n\n\n",
+              GM_ASYNC_RESULT_QUEUE, "host1", "service-drain",
+              timeval2double(&start_time), 60, 0, 1, 0.0, "/bin/hostname" );
+    temp_buffer[sizeof(temp_buffer)-1]='\x0';
+
+    rt = add_job_to_queue(&client, mod_gm_opt->server_list, "service", NULL, temp_buffer, GM_JOB_PRIO_NORMAL, 1, transportmode, test_ctx, 1, 1);
+    ok(rt == GM_OK, "drain-only: async submit accepted");
+
+    rt = gm_drain_submits(client);
+    ok(rt == GM_OK, "drain-only: gm_drain_submits() returned GM_OK");
+
+    /* must arrive without any further submit driving the pipeline */
+    wait_for_empty_queue("service", 20);
+}
+
 void test_servicecheck_async(int transportmode, int count, char *label);
 void test_servicecheck_async(int transportmode, int count, char *label) {
     int i;
@@ -187,10 +220,7 @@ void test_servicecheck_async(int transportmode, int count, char *label) {
 
     ok(errors == 0, "%s: async service submissions in mode %s", label, transportmode == GM_ENCODE_ONLY ? "base64" : "aes256");
     flush_rt = gm_flush_submits(client, TRUE);
-    ok(TRUE, "%s: blocking async flush executed", label);
-    if(flush_rt != GM_OK) {
-        diag("%s: blocking async flush returned %d", label, flush_rt);
-    }
+    ok(flush_rt == GM_OK, "%s: blocking async flush succeeded", label);
 }
 
 /* put back the result into the core */
@@ -614,6 +644,7 @@ int main (__attribute__((unused)) int argc, __attribute__((unused)) char **argv,
     ok(gm_flush_submits(client, TRUE) == GM_OK, "pre-async flush succeeds");
     test_servicecheck_async(GM_ENCODE_ONLY, 1, "single async submit");
     wait_for_empty_queue("service", 20);
+    test_async_drain_only(GM_ENCODE_ONLY);
     test_servicecheck_async(GM_ENCODE_ONLY, 80, "burst async submit");
     wait_for_empty_queue("service", 30);
 
