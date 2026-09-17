@@ -33,7 +33,6 @@ AX_CHECK_COMPILE_FLAG([-std=gnu11], CFLAGS="${CFLAGS} -std=gnu11")
 ##############################################
 # gearman wants this
 AC_C_INLINE
-AC_FUNC_MALLOC
 AC_FUNC_FORK
 AC_HEADER_STDBOOL
 
