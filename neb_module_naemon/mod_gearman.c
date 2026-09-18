@@ -1517,7 +1517,7 @@ int handle_perfdata(int event_type, void *data) {
     host *hst        = NULL;
     service *svc     = NULL;
     int has_perfdata = FALSE;
-    nagios_macros mac;
+    nagios_macros mac = {0};
     char *raw_output = NULL;
     char *processed_output = NULL;
 
@@ -1553,6 +1553,7 @@ int handle_perfdata(int event_type, void *data) {
                 process_macros_r(&mac, raw_output, &processed_output, 0);
                 if(processed_output == NULL) {
                     gm_free(raw_output);
+                    clear_volatile_macros_r(&mac);
                     return ERROR;
                 }
 
@@ -1585,6 +1586,7 @@ int handle_perfdata(int event_type, void *data) {
                 process_macros_r(&mac, raw_output, &processed_output, 0);
                 if(processed_output == NULL) {
                     gm_free(raw_output);
+                    clear_volatile_macros_r(&mac);
                     return ERROR;
                 }
 
@@ -1637,6 +1639,8 @@ int handle_perfdata(int event_type, void *data) {
 
     gm_free(processed_output);
     gm_free(raw_output);
+
+    clear_volatile_macros_r(&mac);
 
     return 0;
 }
