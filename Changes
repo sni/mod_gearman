@@ -2,7 +2,7 @@
 
 This file documents the revision history for the mod_gearman NEB module.
 
-next:
+5.2.6 Fri Sep 18 12:17:20 CEST 2026
           - improve neb module performance (#191 and #192)
           - fix memory in notification handler
 
