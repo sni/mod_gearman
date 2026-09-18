@@ -137,6 +137,10 @@ int mod_gm_aes_encrypt(EVP_CIPHER_CTX * ctx, unsigned char * ciphertext, const u
         ERR_print_errors_fp(stderr);
         return -1;
     }
+    /* openssl 1.1.x (e.g. rhel8) clears the NO_PADDING flag in every
+     * EVP_*Init_ex() call ("preserve wrap enable flag, zero everything
+     * else"), which silently re-enables pkcs#7 padding - re-assert it */
+    EVP_CIPHER_CTX_set_padding(ctx, 0);
 
     if(1 != EVP_EncryptUpdate(ctx, ciphertext, &len, plaintext, plaintext_len)) {
         fprintf(stderr, "EVP_EncryptUpdate failed\n");
@@ -178,6 +182,9 @@ int mod_gm_aes_decrypt(EVP_CIPHER_CTX * ctx, unsigned char * plaintext, unsigned
         ERR_print_errors_fp(stderr);
         return -1;
     }
+    /* see note in mod_gm_aes_encrypt(): re-assert no padding, it is
+     * cleared by EVP_*Init_ex() on openssl 1.1.x */
+    EVP_CIPHER_CTX_set_padding(ctx, 0);
 
     if(1 != EVP_DecryptUpdate(ctx, plaintext, &len, ciphertext, ciphertext_len)) {
         fprintf(stderr, "EVP_DecryptUpdate failed\n");
