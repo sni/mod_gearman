@@ -54,7 +54,7 @@ static pthread_mutex_t mod_gm_result_list_mutex = PTHREAD_MUTEX_INITIALIZER;
 static pthread_mutex_t mod_gm_log_lock = PTHREAD_MUTEX_INITIALIZER;
 void *gearman_module_handle=NULL;
 
-int gm_should_terminate = FALSE;
+volatile int gm_should_terminate = FALSE;
 pthread_t * result_thr;
 char target_queue[GM_SMALLBUFSIZE];
 char temp_buffer[GM_MAX_OUTPUT];
@@ -101,6 +101,8 @@ static int start_threads(void);
 int nebmodule_init( int flags, char *args, nebmodule *handle ) {
     int broker_option_errors = 0;
     gm_should_terminate = FALSE;
+
+    gethostname(hostname, GM_SMALLBUFSIZE-1);
 
     /* save our handle */
     gearman_module_handle=handle;
@@ -337,11 +339,8 @@ void shutdown_threads(void) {
         return;
     }
 
-    /* stop result threads */
+    /* stop result threads, the workers terminate on gm_should_terminate */
     for(x = 0; x < mod_gm_opt->result_workers; x++) {
-        if(pthread_cancel(result_thr[x]) != OK) {
-            gm_log( GM_LOG_ERROR, "failed to join cancel thread: %s\n", strerror(errno) );
-        }
         if(pthread_join(result_thr[x], NULL) != OK) {
             gm_log( GM_LOG_ERROR, "failed to join result thread: %s\n", strerror(errno) );
         }
