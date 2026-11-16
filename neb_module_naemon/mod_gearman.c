@@ -36,7 +36,7 @@ gearman_client_st *current_client = NULL;
 gearman_client_st *current_client_dup = NULL;
 EVP_CIPHER_CTX * mod_ctx = NULL;
 
-/* specify event broker API version (required) */
+/* Naemon checks this against its own API version before calling nebmodule_init(). */
 NEB_API_VERSION( CURRENT_NEB_API_VERSION )
 
 /* import some global variables */
@@ -1036,20 +1036,16 @@ static int handle_host_check( int event_type, void *data ) {
             return NEBERROR_CALLBACKCANCEL;
         snprintf( temp_buffer,GM_MAX_OUTPUT-1,"(host check orphaned, is the mod-gearman worker on queue '%s' running?)\n", target_queue);
         init_check_result(chk_result);
+        chk_result->object_ptr          = hst;
         chk_result->host_name           = gm_strdup( hst->name );
         chk_result->scheduled_check     = TRUE;
         chk_result->engine              = &mod_gearman_check_engine;
-        chk_result->output_file         = 0;
-        chk_result->output_file_fp      = NULL;
         chk_result->output              = gm_strdup(temp_buffer);
         chk_result->return_code         = mod_gm_opt->orphan_return;
-        chk_result->check_options       = CHECK_OPTION_NONE;
         chk_result->object_check_type   = HOST_CHECK;
         chk_result->check_type          = HOST_CHECK_ACTIVE;
         chk_result->start_time.tv_sec   = (unsigned long)time(NULL);
         chk_result->finish_time.tv_sec  = (unsigned long)time(NULL);
-        chk_result->timeout             = 0;
-        chk_result->latency             = 0;
         mod_gm_add_result_to_list( chk_result );
         chk_result = NULL;
     }
@@ -1189,21 +1185,17 @@ static int handle_svc_check( int event_type, void *data ) {
             return NEBERROR_CALLBACKCANCEL;
         snprintf( temp_buffer,GM_MAX_OUTPUT-1,"(service check orphaned, is the mod-gearman worker on queue '%s' running?)\n", target_queue);
         init_check_result(chk_result);
+        chk_result->object_ptr          = svc;
         chk_result->host_name           = gm_strdup( svc->host_name );
         chk_result->service_description = gm_strdup( svc->description );
         chk_result->scheduled_check     = TRUE;
         chk_result->engine              = &mod_gearman_check_engine;
-        chk_result->output_file         = 0;
-        chk_result->output_file_fp      = NULL;
         chk_result->output              = gm_strdup(temp_buffer);
         chk_result->return_code         = mod_gm_opt->orphan_return;
-        chk_result->check_options       = CHECK_OPTION_NONE;
         chk_result->object_check_type   = SERVICE_CHECK;
         chk_result->check_type          = SERVICE_CHECK_ACTIVE;
         chk_result->start_time.tv_sec   = (unsigned long)time(NULL);
         chk_result->finish_time.tv_sec  = (unsigned long)time(NULL);
-        chk_result->latency             = 0;
-        chk_result->timeout             = 0;
         mod_gm_add_result_to_list( chk_result );
         chk_result = NULL;
     }
@@ -2125,15 +2117,13 @@ static int try_check_dummy(const char * command_line, host * hst, service * svc)
     }
 
     init_check_result(chk_result);
+    chk_result->object_ptr          = svc != NULL ? (void *)svc : (void *)hst;
     chk_result->host_name           = gm_strdup( hst->name );
     if(svc != NULL) {
         chk_result->service_description = gm_strdup( svc->description );
     }
     chk_result->scheduled_check     = TRUE;
     chk_result->engine              = &mod_gearman_check_engine;
-    chk_result->output_file         = 0;
-    chk_result->output_file_fp      = NULL;
-    chk_result->check_options       = CHECK_OPTION_NONE;
     if(svc == NULL) {
         chk_result->object_check_type   = HOST_CHECK;
         chk_result->check_type          = HOST_CHECK_ACTIVE;
@@ -2143,7 +2133,6 @@ static int try_check_dummy(const char * command_line, host * hst, service * svc)
     }
     chk_result->start_time.tv_sec   = (unsigned long)time(NULL);
     chk_result->finish_time.tv_sec  = (unsigned long)time(NULL);
-    chk_result->latency             = 0;
 
     if(!strcmp(arg1, "-V") || !strcmp(arg1, "--version")) {
         gm_asprintf(&chk_result->output, "internal mod-gearman check_dummy, v%s\n", GM_VERSION);

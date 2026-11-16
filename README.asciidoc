@@ -390,6 +390,7 @@ Pre Requirements:
  - autoconf / automake / autoheader
  - libtool
  - libgearman (>= 0.14)
+ - Naemon Core and development headers (>= 1.6.0)
 
 
 Download the tarball and perform the following steps:
@@ -1352,7 +1353,13 @@ libgearman.
 
 Naemon
 ~~~~~~
-Mod-Gearman works perfectly with all versions of the Naemon core.
+The NEB module requires Naemon Core 1.6.0 or newer (NEB API 9 or newer).
+Build it with the headers for the Naemon Core version that will load it.
+Naemon checks the module's API version at load time and rejects a mismatch.
+Rebuild the module when a Naemon update changes the NEB API or object structures.
+
+Older Naemon releases are no longer supported. Worker and result protocols
+have not changed.
 
  * http://naemon.io[Naemon]
 

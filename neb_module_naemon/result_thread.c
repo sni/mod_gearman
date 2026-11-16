@@ -197,12 +197,9 @@ void *get_results( gearman_job_st *job, __attribute__((__unused__)) void *contex
     }
     init_check_result(chk_result);
     chk_result->scheduled_check     = TRUE;
-    chk_result->output_file         = 0;
-    chk_result->output_file_fp      = NULL;
     chk_result->engine              = &mod_gearman_check_engine;
     core_start_time.tv_sec          = 0;
     core_start_time.tv_usec         = 0;
-    chk_result->latency             = 0;
 
     while ( (ptr = strsep(&decrypted_data, "\n" )) != NULL ) {
         char *key   = strsep( &ptr, "=" );

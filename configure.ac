@@ -95,13 +95,22 @@ AC_ARG_WITH(naemon,
     NAEMON_LIBS="-lnaemon -ldl -lm -lglib-2.0"
  ],
  [
-    PKG_CHECK_MODULES([naemon], [naemon >= 1.2])
+    PKG_CHECK_MODULES([naemon], [naemon >= 1.6.0])
     CFLAGS="${CFLAGS} `pkg-config --cflags naemon`"
     NAEMON_LIBS="`pkg-config --libs naemon`"
  ]
 )
 CPPFLAGS="${CPPFLAGS} ${CFLAGS}"
 AC_CHECK_HEADERS([naemon/naemon.h],,AC_MSG_ERROR([Compiling Mod-Gearman requires naemon.h (hint: install naemon-dev pkg or specify --with-naemon=...)]))
+AC_MSG_CHECKING([for Naemon NEB API version 9 or newer])
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+#include <naemon/naemon.h>
+#if CURRENT_NEB_API_VERSION < 9
+#error Mod-Gearman requires Naemon 1.6.0 or newer
+#endif
+]], [[]])],
+    [AC_MSG_RESULT([yes])],
+    [AC_MSG_ERROR([Mod-Gearman requires Naemon 1.6.0 or newer (NEB API >= 9)])])
 AC_SUBST(NAEMON_LIBS)
 
 ##############################################

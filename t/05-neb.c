@@ -56,6 +56,7 @@ void check_neb(char * nebargs) {
     module_version_ptr=(int *)dlsym(neb_handle,"__neb_api_version");
     ok(module_version_ptr != NULL, "got module pointer %p", module_version_ptr);
     ok((*module_version_ptr) == CURRENT_NEB_API_VERSION, "got module api version %i", CURRENT_NEB_API_VERSION);
+    ok((*module_version_ptr) >= 9, "module requires Naemon 1.6.0 or newer");
 
     /* init neb module */
     dlerror();
@@ -100,7 +101,7 @@ int neb_deregister_callback(__attribute__((__unused__)) enum NEBCallbackType cal
 int main(void) {
     int i;
 
-    plan(32);
+    plan(36);
 
     char * test_nebargs[] = {
         "encryption=no server=127.0.0.1",

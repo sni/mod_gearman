@@ -296,23 +296,11 @@ int init_check_result(check_result *info) {
     if (info == NULL)
         return ERROR;
 
-    /* reset vars */
+    memset(info, 0, sizeof(*info));
     info->object_check_type = HOST_CHECK;
-    info->host_name = NULL;
-    info->service_description = NULL;
     info->check_type = HOST_CHECK_ACTIVE;
     info->check_options = CHECK_OPTION_NONE;
-    info->scheduled_check = FALSE;
-    info->output_file_fp = NULL;
-    info->latency = 0.0;
-    info->start_time.tv_sec = 0;
-    info->start_time.tv_usec = 0;
-    info->finish_time.tv_sec = 0;
-    info->finish_time.tv_usec = 0;
-    info->early_timeout = FALSE;
     info->exited_ok = TRUE;
-    info->return_code = 0;
-    info->output = NULL;
 
     return OK;
 }

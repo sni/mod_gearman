@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
 <head>
 <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
-<meta name="generator" content="AsciiDoc 10.2.1" />
+<meta name="generator" content="AsciiDoc 9.1.0" />
 <title>Naemon Gearman Module</title>
 <style type="text/css">
 /* Shared CSS for AsciiDoc xhtml11 and html5 backends */
@@ -1165,6 +1165,11 @@ libtool
 <li>
 <p>
 libgearman (&gt;= 0.14)
+</p>
+</li>
+<li>
+<p>
+Naemon Core and development headers (&gt;= 1.6.0)
 </p>
 </li>
 </ul></div>
@@ -2675,7 +2680,12 @@ libgearman.</p></div>
 </div>
 <div class="sect2">
 <h3 id="_naemon">Naemon</h3>
-<div class="paragraph"><p>Mod-Gearman works perfectly with all versions of the Naemon core.</p></div>
+<div class="paragraph"><p>The NEB module requires Naemon Core 1.6.0 or newer (NEB API 9 or newer).
+Build it with the headers for the Naemon Core version that will load it.
+Naemon checks the module&#8217;s API version at load time and rejects a mismatch.
+Rebuild the module when a Naemon update changes the NEB API or object structures.</p></div>
+<div class="paragraph"><p>Older Naemon releases are no longer supported. Worker and result protocols
+have not changed.</p></div>
 <div class="ulist"><ul>
 <li>
 <p>
@@ -2751,7 +2761,7 @@ Make sure all your worker have the Monitoring-Plugins available under
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2026-03-04 09:19:47 CET
+ 2026-11-16 17:05:40 CET
 </div>
 </div>
 </body>

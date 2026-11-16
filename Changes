@@ -2,6 +2,11 @@
 
 This file documents the revision history for the mod_gearman NEB module.
 
+next:
+          - require Naemon 1.6.0 or newer (NEB API >= 9)
+          - avoid object lookups for internal dummy and orphan check results
+          - use Naemon's check result initialization
+
 5.2.6 Fri Sep 18 12:17:20 CEST 2026
           - improve neb module performance (#191 and #192)
           - fix memory in notification handler
