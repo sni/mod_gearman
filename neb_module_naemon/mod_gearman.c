@@ -619,7 +619,7 @@ static int handle_notifications( int event_type, void *data ) {
     char *log_buffer = NULL;
     char *processed_buffer = NULL;
     int macro_options = STRIP_ILLEGAL_MACRO_CHARS | ESCAPE_MACRO_CHARS;
-    nagios_macros mac;
+    nagios_macros mac = {0};
     char *tmp;
     char *contact_name = NULL;
     struct timeval core_time;
@@ -676,12 +676,11 @@ static int handle_notifications( int event_type, void *data ) {
     target_queue[0] = '\x0';
     snprintf( target_queue, GM_SMALLBUFSIZE-1, "notification" );
 
-    /* grab the host macro variables */
-    memset(&mac, 0, sizeof(mac));
-    clear_volatile_macros_r(&mac);
-    grab_host_macros_r(&mac, hst);
+    /* grab the host and service macro variables */
     if(svc != NULL)
         grab_service_macros_r(&mac, svc);
+    else
+        grab_host_macros_r(&mac, hst);
 
     /* get contact macros */
     grab_contact_macros_r(&mac, ds->contact_ptr);
@@ -692,6 +691,7 @@ static int handle_notifications( int event_type, void *data ) {
     if(raw_command==NULL){
         gm_log( GM_LOG_ERROR, "Raw notification command for host '%s' was NULL - aborting.\n",hst->name );
         gm_free(contact_name);
+        clear_volatile_macros_r(&mac);
         return NEBERROR_CALLBACKCANCEL;
     }
 
@@ -774,17 +774,17 @@ static int handle_notifications( int event_type, void *data ) {
 
     /* process any macros contained in the argument */
     process_macros_r(&mac, raw_command, &processed_command, macro_options);
+    /* Escape newlines to keep the command on one Gearman protocol line. */
+    tmp = escape_plugin_output(processed_command);
+    gm_free(processed_command);
+    processed_command = tmp;
     if(processed_command==NULL){
         gm_log( GM_LOG_ERROR, "Processed check command for host '%s' was NULL - aborting.\n",hst->name);
         gm_free(contact_name);
+        gm_free(raw_command);
+        clear_volatile_macros_r(&mac);
         return NEBERROR_CALLBACKCANCEL;
     }
-    /* naemon sends unescaped newlines from ex.: the LONGPLUGINOUTPUT macro, so we have to escape
-     * them ourselves: https://github.com/naemon/naemon-core/issues/153 */
-    tmp = replace_str(processed_command, "\n", "\\n");
-    gm_free(processed_command);
-    processed_command = replace_str(tmp, "\n", "\\n");
-    gm_free(tmp);
 
     temp_buffer[0]='\x0';
     snprintf( temp_buffer,GM_MAX_OUTPUT-1,
@@ -893,23 +893,6 @@ static int handle_notifications( int event_type, void *data ) {
     gm_free(contact_name);
 
     clear_volatile_macros_r(&mac);
-
-    /* clear out all macros we created */
-    gm_free(mac.x[MACRO_NOTIFICATIONNUMBER]);
-    gm_free(mac.x[MACRO_SERVICENOTIFICATIONNUMBER]);
-    gm_free(mac.x[MACRO_SERVICENOTIFICATIONID]);
-    gm_free(mac.x[MACRO_NOTIFICATIONCOMMENT]);
-    gm_free(mac.x[MACRO_NOTIFICATIONTYPE]);
-    gm_free(mac.x[MACRO_NOTIFICATIONAUTHOR]);
-    gm_free(mac.x[MACRO_NOTIFICATIONAUTHORNAME]);
-    gm_free(mac.x[MACRO_NOTIFICATIONAUTHORALIAS]);
-    gm_free(mac.x[MACRO_SERVICEACKAUTHORNAME]);
-    gm_free(mac.x[MACRO_SERVICEACKAUTHORALIAS]);
-    gm_free(mac.x[MACRO_SERVICEACKAUTHOR]);
-    gm_free(mac.x[MACRO_SERVICEACKCOMMENT]);
-
-    /* this gets set in add_notification() */
-    gm_free(mac.x[MACRO_NOTIFICATIONRECIPIENTS]);
 
     /* tell naemon to not execute */
     return NEBERROR_CALLBACKOVERRIDE;
@@ -1536,7 +1519,6 @@ int handle_perfdata(int event_type, void *data) {
                     break;
                 }
 
-                memset(&mac, 0, sizeof(mac));
                 grab_host_macros_r(&mac, hst);
 
                 gm_asprintf(&raw_output, "%s\n", mod_gm_opt->host_perfdata_template);
@@ -1569,7 +1551,6 @@ int handle_perfdata(int event_type, void *data) {
                     break;
                 }
 
-                memset(&mac, 0, sizeof(mac));
                 grab_service_macros_r(&mac, svc);
 
                 gm_asprintf(&raw_output, "%s\n", mod_gm_opt->service_perfdata_template);
