@@ -200,8 +200,7 @@ void print_usage(void) {
     printf("                 default:check_results   \n");
     printf("             [ --timeout=<seconds>      ]\n");
     printf("\n");
-    printf("For details see\n");
-    printf("http://my-plugin.de/wiki/projects/check_multi/feed_passive\n");
+    printf("Note: The feed_passive documentation on my-plugin.de is no longer available.\n");
     printf("\n");
 
     exit( STATE_UNKNOWN );

@@ -25,4 +25,4 @@ Building
  %> make test
  %> make install
 
-see the README for configuration examples.
+See README.md for configuration examples.

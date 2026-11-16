@@ -213,7 +213,7 @@ void print_usage(void) {
     printf("      Host Checks:\n");
     printf("      <host_name>[tab]<return_code>[tab]<plugin_output>[newline]\n");
     printf("\n");
-    printf("see README for a detailed explaination of all options.\n");
+    printf("See README.md for details on all options.\n");
     printf("\n");
 
     mod_gm_free_opt(mod_gm_opt);

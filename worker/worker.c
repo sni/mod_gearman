@@ -532,7 +532,7 @@ void print_usage(void) {
     printf("Miscellaneous:\n");
     printf("       --workaround_rc_25\n");
     printf("\n");
-    printf("see README for a detailed explaination of all options.\n");
+    printf("See README.md for details on all options.\n");
     printf("\n");
 
     exit( EXIT_SUCCESS );

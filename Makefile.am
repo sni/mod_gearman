@@ -8,9 +8,6 @@
 ###############################################################################
 
 RPM_TOPDIR=$$(pwd)/rpm.topdir
-DOS2UNIX=$(shell which dos2unix || which fromdos)
-
-.PHONY: docs
 
 AM_CPPFLAGS=-Iinclude $(CFLAGS)
 AM_CFLAGS =-DDATADIR='"$(datadir)"'
@@ -110,7 +107,7 @@ replace_vars = sed -e 's:%CONFIG_WORKER%:$(sysconfdir)/mod_gearman/worker.conf:g
                -e 's:%USER%:$(user):g'
 
 EXTRA_DIST = LICENSE etc/*.in include \
-             THANKS README docs/README.html Changes worker/initscript.in worker/daemon-systemd.in \
+             THANKS README.md Changes worker/initscript.in worker/daemon-systemd.in \
              support/mod_gearman.spec \
              t/data/* t/rc t/both t/killer t/sleep t/*.pl t/*.t \
              worker/mod_gearman_p1.pl t/test_all.pl t/valgrind_suppress.cfg contrib \
@@ -167,7 +164,7 @@ all-local: $(NEB_MODULES) initscript-local mod_gearman_neb.conf-local mod_gearma
 	@[ "$(P1FILE)"  = "" ] || echo "  $(P1FILE)"
 	@[ "$(EPN_BIN)" = "" ] || echo "  $(EPN_BIN)"
 	@echo ""
-	@echo "  read the README for configuration details"
+	@echo "  read README.md for configuration details"
 	@echo ""
 	@echo "  for a normal installation continue with"
 	@echo "  make install"
@@ -276,24 +273,6 @@ fulltest:
 	@echo "################################################################"
 	@rm -f *.trs *.log t/*.log t/*.trs
 
-docs:
-	@if [ -z "$(DOS2UNIX)" ]; then \
-	    printf "\n\n**** please install dos2unix or tofrodos package ****\n\n"; \
-	    exit 1; \
-	fi
-	@if [ `type doxygen > /dev/null 2>&1` ]; then \
-	    doxygen Doxyfile; \
-	else \
-	    printf "\n\n**** please install doxygen to generate doxygen docs ****\n\n"; \
-	fi;
-	$(RM) docs/images
-	cd docs && ln -s /usr/share/asciidoc/images .
-	cp -p README.asciidoc docs/README && cd docs && asciidoc --unsafe -a toc -a toclevels=2 -a max-width=800 README
-	chmod 644 docs/README.html
-	$(DOS2UNIX) docs/README.html
-	./replace_doc_toc.pl docs/README.html
-	$(RM) -f docs/README
-
 rpm: dist
 	mkdir -p $(RPM_TOPDIR)/{SOURCES,BUILD,RPMS,SRPMS,SPECS}
 	cp mod_gearman-$(VERSION).tar.gz $(RPM_TOPDIR)/SOURCES
@@ -329,7 +308,6 @@ version:
 	if [ -n "$$NEWVERSION" ] && [ "$$NEWVERSION" != "$(VERSION)" ]; then \
 		sed -ri "s/$(VERSION)/$$NEWVERSION/" include/common.h configure.ac support/mod_gearman.spec; \
 		sed -i Changes -e "s/next:/$$NEWVERSION $(shell LC_TIME=C date)/"; \
-		$(MAKE) docs; \
 		if [ "x$$DEBEMAIL" = "x" ]; then \
 			DEBEMAIL="Sven Nierlein <sven@consol.de>"; \
 		fi; \
