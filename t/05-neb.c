@@ -119,6 +119,24 @@ void write_core_log(char *data) {
 }
 
 /* fake some core functions */
+/* naemon's result initialization; the module calls it when building check results */
+int init_check_result(check_result *info) {
+    if (info == NULL)
+        return ERROR;
+    memset(info, 0, sizeof(*info));
+    return 0;
+}
+
+/* the module frees invalid results; do not free source, it points to a static string in the module */
+int free_check_result(check_result *info) {
+    if (info == NULL)
+        return OK;
+    free(info->host_name);
+    free(info->service_description);
+    free(info->output);
+    return OK;
+}
+
 int neb_set_module_info(__attribute__((unused)) void *handle, __attribute__((unused)) int type, __attribute__((unused)) char *data) { return 0; }
 int neb_register_callback(__attribute__((__unused__)) enum NEBCallbackType callback_type, __attribute__((__unused__)) void *mod_handle, __attribute__((__unused__)) int priority, __attribute__((__unused__)) int (*callback_func)(int, void *)) { return 0; }
 int neb_deregister_callback(__attribute__((__unused__)) enum NEBCallbackType callback_type, __attribute__((__unused__)) void *callback_func) { return 0; }

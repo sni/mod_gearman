@@ -1943,12 +1943,8 @@ void make_uniq(char *uniq, const char *format, ... ) {
     char *text;
 
     va_start(ap, format);
-    int size = vasprintf(&text, format, ap);
+    gm_vprintf_alloc(&text, format, ap);
     va_end(ap);
-    if(size < 0) {
-        gm_log(GM_LOG_ERROR, "failed to format unique job identifier\n");
-        exit(2);
-    }
     mod_gm_hexsum(uniq, text);
     gm_free(text);
 }

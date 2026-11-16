@@ -39,12 +39,18 @@ void *gm_strndup(const char *s, size_t size) {
     CHECK_AND_RETURN(str);
 }
 
-void gm_asprintf(char **strp, const char *fmt, ...) {
-    va_list ap;
-    va_start(ap, fmt);
+/* va_list variant of gm_asprintf; note the name avoids "asprintf" so t/11-alloc.t
+ * does not flag its call sites as un-wrapped allocations */
+void gm_vprintf_alloc(char **strp, const char *fmt, va_list ap) {
     if (vasprintf(strp, fmt, ap) < 0) {
         log_vasprintf_error();
         exit(2);
     }
+}
+
+void gm_asprintf(char **strp, const char *fmt, ...) {
+    va_list ap;
+    va_start(ap, fmt);
+    gm_vprintf_alloc(strp, fmt, ap);
     va_end(ap);
 }

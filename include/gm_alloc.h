@@ -10,6 +10,7 @@ void *gm_malloc(size_t size);
 void *gm_realloc(void *ptr, size_t size);
 void *gm_strdup(const char *s);
 void *gm_strndup(const char *s, size_t size);
+void gm_vprintf_alloc(char **strp, const char *fmt, va_list ap);
 void gm_asprintf(char **strp, const char *fmt, ...);
 #define gm_free(ptr) do { if(ptr) { free(ptr); ptr = NULL; } } while(0)
 #endif
