@@ -27,6 +27,7 @@
 #include "gearman_utils.h"
 
 #include <dirent.h>
+#include <limits.h>
 #include "popenRWE.h"
 
 #ifdef EMBEDDEDPERL
@@ -221,7 +222,7 @@ int file_exists (char * fileName) {
 char *ltrim(char *s) {
     if(s == NULL)
         return NULL;
-    while(isspace(*s))
+    while(isspace((unsigned char)*s))
         s++;
     return s;
 }
@@ -232,11 +233,10 @@ char *rtrim(char *s) {
     char *back;
     if(s == NULL)
         return NULL;
-    if(strlen(s) == 0)
-        return s;
     back = s + strlen(s);
-    while(isspace(*--back));
-    *(back+1) = '\0';
+    while(back > s && isspace((unsigned char)back[-1]))
+        back--;
+    *back = '\0';
     return s;
 }
 
@@ -398,6 +398,16 @@ int parse_yes_or_no(char*value, int dfl) {
 }
 
 
+static int add_list_entry(char **list, int *count, const char *value) {
+    if(*count >= GM_LISTSIZE - 1) {
+        gm_log(GM_LOG_ERROR, "configuration list is full (maximum %d entries)\n", GM_LISTSIZE - 1);
+        return GM_ERROR;
+    }
+    list[(*count)++] = gm_strdup(value);
+    list[*count] = NULL;
+    return GM_OK;
+}
+
 /* parse one line of args into the given struct */
 int parse_args_line(mod_gm_opt_t *opt, char * arg, int recursion_level) {
     int i, x, number, callback_num;
@@ -427,6 +437,8 @@ int parse_args_line(mod_gm_opt_t *opt, char * arg, int recursion_level) {
     /* skip leading hyphen */
     while(key[0] == '-')
         key++;
+    if(*key == '\0')
+        return GM_OK;
 
     /* daemon mode or delimiter */
     if ( !strcmp( key, "daemon" ) ||  !strcmp( key, "d" ) ) {
@@ -439,14 +451,17 @@ int parse_args_line(mod_gm_opt_t *opt, char * arg, int recursion_level) {
     }
 
     /* perfdata */
-    else if ( !strcmp(key, "perfdata") && strlen(value) ) {
+    else if ( !strcmp(key, "perfdata") ) {
+        if(value == NULL || *value == '\0') {
+            gm_log(GM_LOG_ERROR, "perfdata requires a value\n");
+            return GM_ERROR;
+        }
         opt->set_queues_by_hand++;
         opt->perfdata = parse_yes_or_no(value, -1);
 
         if (opt->perfdata == GM_ENABLED) {
             //bool, use default queue
-            opt->perfdata_queues_list[opt->perfdata_queues_num] = gm_strdup(GM_PERFDATA_QUEUE);
-            opt->perfdata_queues_num++;
+            return add_list_entry(opt->perfdata_queues_list, &opt->perfdata_queues_num, GM_PERFDATA_QUEUE);
         }
         else if (opt->perfdata == -1) {
             //not a bool, use value string as queue name(s)
@@ -456,8 +471,10 @@ int parse_args_line(mod_gm_opt_t *opt, char * arg, int recursion_level) {
             values_original = values = gm_strdup(value);
             char *name;
             while ((name = strsep(&values, ",")) != NULL) {
-                opt->perfdata_queues_list[opt->perfdata_queues_num] = gm_strdup(name);
-                opt->perfdata_queues_num++;
+                if(add_list_entry(opt->perfdata_queues_list, &opt->perfdata_queues_num, name) != GM_OK) {
+                    gm_free(values_original);
+                    return GM_ERROR;
+                }
             }
             gm_free(values_original);
         }
@@ -579,6 +596,8 @@ int parse_args_line(mod_gm_opt_t *opt, char * arg, int recursion_level) {
 
     /* latency_flatten_window */
     else if ( !strcmp( key, "latency_flatten_window" ) ) {
+        if(value == NULL)
+            return GM_ERROR;
         opt->latency_flatten_window = atoi(value);
         return(GM_OK);
     }
@@ -616,7 +635,7 @@ int parse_args_line(mod_gm_opt_t *opt, char * arg, int recursion_level) {
 
     else if ( value == NULL ) {
         gm_log( GM_LOG_ERROR, "unknown switch '%s'\n", key );
-        return(GM_OK);
+        return(GM_ERROR);
     }
 
     /* debug */
@@ -863,7 +882,8 @@ int parse_args_line(mod_gm_opt_t *opt, char * arg, int recursion_level) {
     else if ( !strcmp( key, "server" ) ) {
         char *servername;
         while ( (servername = strsep( &value, "," )) != NULL ) {
-            add_server(&opt->server_num, opt->server_list, servername);
+            if(add_server(&opt->server_num, opt->server_list, servername) != GM_OK)
+                return GM_ERROR;
         }
     }
 
@@ -871,7 +891,8 @@ int parse_args_line(mod_gm_opt_t *opt, char * arg, int recursion_level) {
     else if ( !strcmp( key, "dupserver" ) ) {
         char *servername;
         while ( (servername = strsep( &value, "," )) != NULL ) {
-            add_server(&opt->dupserver_num, opt->dupserver_list, servername);
+            if(add_server(&opt->dupserver_num, opt->dupserver_list, servername) != GM_OK)
+                return GM_ERROR;
         }
     }
 
@@ -886,8 +907,8 @@ int parse_args_line(mod_gm_opt_t *opt, char * arg, int recursion_level) {
                 if(strlen(groupname) > 50) {
                     gm_log( GM_LOG_ERROR, "servicegroup name '%s' is too long, please use a maximum of 50 characters\n", groupname );
                 } else {
-                    opt->servicegroups_list[opt->servicegroups_num] = gm_strdup(groupname);
-                    opt->servicegroups_num++;
+                    if(add_list_entry(opt->servicegroups_list, &opt->servicegroups_num, groupname) != GM_OK)
+                        return GM_ERROR;
                     opt->set_queues_by_hand++;
                 }
             }
@@ -904,8 +925,8 @@ int parse_args_line(mod_gm_opt_t *opt, char * arg, int recursion_level) {
                 if(strlen(groupname) > 50) {
                     gm_log( GM_LOG_ERROR, "hostgroup name '%s' is too long, please use a maximum of 50 characters\n", groupname );
                 } else {
-                    opt->hostgroups_list[opt->hostgroups_num] = gm_strdup(groupname);
-                    opt->hostgroups_num++;
+                    if(add_list_entry(opt->hostgroups_list, &opt->hostgroups_num, groupname) != GM_OK)
+                        return GM_ERROR;
                     opt->set_queues_by_hand++;
                 }
             }
@@ -920,8 +941,8 @@ int parse_args_line(mod_gm_opt_t *opt, char * arg, int recursion_level) {
         while ( (groupname = strsep( &value, "," )) != NULL ) {
             groupname = trim(groupname);
             if ( strcmp( groupname, "" ) ) {
-                opt->local_servicegroups_list[opt->local_servicegroups_num] = gm_strdup(groupname);
-                opt->local_servicegroups_num++;
+                if(add_list_entry(opt->local_servicegroups_list, &opt->local_servicegroups_num, groupname) != GM_OK)
+                    return GM_ERROR;
             }
         }
     }
@@ -933,8 +954,8 @@ int parse_args_line(mod_gm_opt_t *opt, char * arg, int recursion_level) {
         while ( (groupname = strsep( &value, "," )) != NULL ) {
             groupname = trim(groupname);
             if ( strcmp( groupname, "" ) ) {
-                opt->local_hostgroups_list[opt->local_hostgroups_num] = gm_strdup(groupname);
-                opt->local_hostgroups_num++;
+                if(add_list_entry(opt->local_hostgroups_list, &opt->local_hostgroups_num, groupname) != GM_OK)
+                    return GM_ERROR;
             }
         }
     }
@@ -950,17 +971,28 @@ int parse_args_line(mod_gm_opt_t *opt, char * arg, int recursion_level) {
 
     /* export queues */
     else if ( !strcmp( key, "export" ) ) {
+        char *end;
+        long parsed;
         export_queue        = strsep( &value, ":" );
         export_queue        = trim(export_queue);
         return_code         = strsep( &value, ":" );
-        return_code_num     = atoi(return_code);
         callbacks           = strsep( &value, ":" );
+        if(*export_queue == '\0' || return_code == NULL || *return_code == '\0' || callbacks == NULL || *callbacks == '\0') {
+            gm_log(GM_LOG_ERROR, "export requires queue:return_code:callbacks\n");
+            return GM_ERROR;
+        }
+        errno = 0;
+        parsed = strtol(return_code, &end, 10);
+        if(errno || *end || parsed < INT_MIN || parsed > INT_MAX)
+            return GM_ERROR;
+        return_code_num = (int)parsed;
         if(strlen(export_queue) > 50) {
             gm_log( GM_LOG_ERROR, "export queue name '%s' is too long, please use a maximum of 50 characters\n", export_queue );
+            return GM_ERROR;
         } else {
             while ( (callback = strsep( &callbacks, "," )) != NULL ) {
-                callback_num = atoi(trim(callback));
-                if(index(callback, 'N') != NULL) {
+                callback = trim(callback);
+                if(strncmp(callback, "NEBCALLBACK_", 12) == 0) {
                     callback_num = -1;
                     /* get neb callback number by name */
                     for(i=0;i<GM_NEBTYPESSIZE;i++) {
@@ -972,11 +1004,23 @@ int parse_args_line(mod_gm_opt_t *opt, char * arg, int recursion_level) {
                     }
                     if(callback_num == -1) {
                         gm_log( GM_LOG_ERROR, "unknown nebcallback : %s\n", callback);
-                        continue;
+                        return GM_ERROR;
                     }
+                } else {
+                    errno = 0;
+                    parsed = strtol(callback, &end, 10);
+                    if(errno || end == callback || *end || parsed < 0 || parsed >= GM_NEBTYPESSIZE) {
+                        gm_log(GM_LOG_ERROR, "invalid export callback: %s\n", callback);
+                        return GM_ERROR;
+                    }
+                    callback_num = (int)parsed;
                 }
 
                 number = opt->exports[callback_num]->elem_number;
+                if(number >= GM_LISTSIZE) {
+                    gm_log(GM_LOG_ERROR, "too many exports for callback %d\n", callback_num);
+                    return GM_ERROR;
+                }
                 opt->exports[callback_num]->name[number]        = gm_strdup(export_queue);
                 opt->exports[callback_num]->return_code[number] = return_code_num;
                 opt->exports[callback_num]->elem_number++;
@@ -996,8 +1040,7 @@ int parse_args_line(mod_gm_opt_t *opt, char * arg, int recursion_level) {
 
     /* restrict_path */
     else if ( !strcmp( key, "restrict_path" ) || !strcmp( key, "restrictpath" )) {
-        opt->restrict_path[opt->restrict_path_num] = gm_strdup(value);
-        opt->restrict_path_num++;
+        return add_list_entry(opt->restrict_path, &opt->restrict_path_num, value);
     }
 
     /* restrict_command_characters */
@@ -1805,7 +1848,11 @@ void send_result_back(gm_job_t * exec_job, EVP_CIPHER_CTX * ctx) {
 }
 
 /* add parsed server to list */
-void add_server(int * server_num, gm_server_t * server_list[GM_LISTSIZE], char * servername) {
+int add_server(int * server_num, gm_server_t * server_list[GM_LISTSIZE], char * servername) {
+    if(*server_num >= GM_LISTSIZE - 1) {
+        gm_log(GM_LOG_ERROR, "too many gearman servers (maximum %d)\n", GM_LISTSIZE - 1);
+        return GM_ERROR;
+    }
     gm_server_t *new_server;
     char * server   = gm_strdup( servername );
     char * server_c = server;
@@ -1825,12 +1872,13 @@ void add_server(int * server_num, gm_server_t * server_list[GM_LISTSIZE], char *
     if(check_param_server(new_server, server_list, *server_num) == GM_OK) {
         server_list[*server_num] = new_server;
         *server_num = *server_num + 1;
+        server_list[*server_num] = NULL;
     } else {
         gm_free(new_server->host);
         gm_free(new_server);
     }
     gm_free(server_c);
-    return;
+    return GM_OK;
 }
 
 /* check if string starts with another string */
@@ -1892,13 +1940,17 @@ int read_pipe(char **target, int input) {
 // create hash sum to avoid nasty characters and make string smaller than GEARMAN_MAX_UNIQUE_SIZE
 void make_uniq(char *uniq, const char *format, ... ) {
     va_list ap;
+    char *text;
 
-    uniq[0] = 0;
     va_start(ap, format);
-    vsnprintf(uniq, GM_SMALLBUFSIZE, format, ap);
+    int size = vasprintf(&text, format, ap);
     va_end(ap);
-
-    mod_gm_hexsum(uniq, uniq);
+    if(size < 0) {
+        gm_log(GM_LOG_ERROR, "failed to format unique job identifier\n");
+        exit(2);
+    }
+    mod_gm_hexsum(uniq, text);
+    gm_free(text);
 }
 
 double elapsed_time(struct timeval t1, struct timeval t2) {

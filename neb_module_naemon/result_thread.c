@@ -267,6 +267,7 @@ void *get_results( gearman_job_st *job, __attribute__((__unused__)) void *contex
         gm_log( GM_LOG_ERROR, "discarded invalid job (%s), check your encryption settings\n", gearman_job_handle( job ) );
         free_check_result(chk_result);
         gm_free(chk_result);
+        gm_free(decrypted_data_c);
         return NULL;
     }
 

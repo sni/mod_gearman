@@ -20,6 +20,11 @@
 
 #include <libgearman/gearman.h>
 
+static const char *test_workload;
+const void *gearman_job_workload(__attribute__((unused)) const gearman_job_st *job) { return test_workload; }
+size_t gearman_job_workload_size(__attribute__((unused)) const gearman_job_st *job) { return strlen(test_workload); }
+const char *gearman_job_handle(__attribute__((unused)) const gearman_job_st *job) { return "test-result"; }
+
 int service_check_timeout;
 int host_check_timeout;
 int currently_running_service_checks;
@@ -67,6 +72,26 @@ void check_neb(char * nebargs) {
     int result=init_func(NEBMODULE_NORMAL_LOAD, nebargs, neb_handle);
     ok(result == 0, "run nebmodule_init() -> %d", result);
 
+    if(strstr(nebargs, "encryption=no") != NULL) {
+        void *(*get_results_func)(gearman_job_st *, void *, size_t *, gearman_return_t *);
+        get_results_func = (void *(*)(gearman_job_st *, void *, size_t *, gearman_return_t *))dlsym(neb_handle, "get_results");
+        ok(get_results_func != NULL, "located get_results()");
+        if(get_results_func == NULL)
+            BAIL_OUT("cannot locate get_results()");
+        const char *invalid_results[] = {
+            "aG9zdF9uYW1lPXRlc3QK", /* host_name=test, no output */
+            "b3V0cHV0PXRlc3QK",     /* output=test, no host */
+            "IA=="                   /* whitespace only */
+        };
+        for(size_t i = 0; i < sizeof(invalid_results) / sizeof(invalid_results[0]); i++) {
+            size_t result_size = 123;
+            gearman_return_t ret;
+            test_workload = invalid_results[i];
+            void *response = get_results_func(NULL, NULL, &result_size, &ret);
+            ok(response == NULL && result_size == 0 && ret == GEARMAN_WORK_FAIL, "reject malformed result %zu", i);
+        }
+    }
+
     /* deinit neb module */
     dlerror();
     deinit_func = (int(*)(int,int))dlsym(neb_handle,"nebmodule_deinit");
@@ -101,7 +126,7 @@ int neb_deregister_callback(__attribute__((__unused__)) enum NEBCallbackType cal
 int main(void) {
     int i;
 
-    plan(36);
+    plan(48);
 
     char * test_nebargs[] = {
         "encryption=no server=127.0.0.1",

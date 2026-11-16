@@ -989,7 +989,7 @@ static int handle_host_check( int event_type, void *data ) {
             );
 
     if(mod_gm_opt->use_uniq_jobs == GM_ENABLED) {
-        make_uniq(uniq, "%s", hst->name);
+        make_uniq(uniq, "host:%zu:%s", strlen(hst->name), hst->name);
     }
     if(add_job_to_queue(&check_client,
                          mod_gm_opt->server_list,
@@ -1137,7 +1137,7 @@ static int handle_svc_check( int event_type, void *data ) {
         prio = GM_JOB_PRIO_HIGH;
 
     if(mod_gm_opt->use_uniq_jobs == GM_ENABLED) {
-        make_uniq(uniq, "%s-%s", svcdata->host_name, svcdata->service_description);
+        make_uniq(uniq, "service:%zu:%s:%zu:%s", strlen(svcdata->host_name), svcdata->host_name, strlen(svcdata->service_description), svcdata->service_description);
     }
     if(add_job_to_queue(&check_client,
                          mod_gm_opt->server_list,
@@ -1581,10 +1581,10 @@ int handle_perfdata(int event_type, void *data) {
             if(mod_gm_opt->perfdata_mode == GM_PERFDATA_OVERWRITE) {
                 switch (event_type) {
                     case NEBCALLBACK_HOST_CHECK_DATA:
-                        make_uniq(uniq, "%s-%s", perfdata_queue, hostchkdata->host_name);
+                        make_uniq(uniq, "perfdata:host:%zu:%s:%zu:%s", strlen(perfdata_queue), perfdata_queue, strlen(hostchkdata->host_name), hostchkdata->host_name);
                         break;
                     case NEBCALLBACK_SERVICE_CHECK_DATA:
-                        make_uniq(uniq, "%s-%s-%s", perfdata_queue, srvchkdata->host_name, srvchkdata->service_description);
+                        make_uniq(uniq, "perfdata:service:%zu:%s:%zu:%s:%zu:%s", strlen(perfdata_queue), perfdata_queue, strlen(srvchkdata->host_name), srvchkdata->host_name, strlen(srvchkdata->service_description), srvchkdata->service_description);
                         break;
                 }
             }

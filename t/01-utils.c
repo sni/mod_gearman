@@ -35,8 +35,15 @@ static inline long ns_now(void) {
     return ts.tv_sec * 1000000000L + ts.tv_nsec;
 }
 
+static int parse_option(const char *arg) {
+    char *copy = gm_strdup(arg);
+    int rc = parse_args_line(mod_gm_opt, copy, 0);
+    gm_free(copy);
+    return rc;
+}
+
 int main(void) {
-    plan(142);
+    plan(205);
 
     /* lowercase */
     char test[100];
@@ -53,6 +60,13 @@ int main(void) {
     char *test2;
     test2 = strdup("   text   ");  is(trim(test2),  "text", "trim()");
     free(test2);
+    test2 = strdup(" \t\r\n");
+    is(rtrim(test2), "", "rtrim whitespace-only allocation");
+    free(test2);
+    strcpy(test, ""); is(rtrim(test), "", "rtrim empty string");
+    ok(rtrim(NULL) == NULL, "rtrim NULL");
+    strcpy(test, "\xff "); is(rtrim(test), "\xff", "rtrim high byte");
+    strcpy(test, "\xff "); is(ltrim(test), "\xff ", "ltrim high byte");
 
     /* parse_yes_or_no */
     ok(parse_yes_or_no(NULL,    GM_ENABLED)  == GM_ENABLED, "parse_yes_or_no 1");
@@ -282,6 +296,44 @@ int main(void) {
     parse_args_line(mod_gm_opt, test, 0);
     ok(1, "parse_args_line with spaced argument without = does not crash (issue #190)");
 
+    const char *invalid_options[] = {
+        "perfdata", "perfdata=", "latency_flatten_window", "export",
+        "export=q", "export=q:0", "export=:0:1", "export=q::1",
+        "export=q:bad:1", "export=q:999999999999999999999:1",
+        "export=q:0:", "export=q:0:-1", "export=q:0:33",
+        "export=q:0:999999999999999999999", "export=q:0:1junk",
+        "export=q:0:1,", "export=q:0:NEBCALLBACK_NOT_REAL"
+    };
+    for(i = 0; i < (int)(sizeof(invalid_options) / sizeof(invalid_options[0])); i++)
+        ok(parse_option(invalid_options[i]) == GM_ERROR, "reject %s", invalid_options[i]);
+    ok(parse_option("export=q:0:0,32") == GM_OK, "accept export callback bounds");
+
+    const char *list_options[] = {
+        "server", "dupserver", "hostgroups", "servicegroups",
+        "localhostgroups", "localservicegroups", "perfdata", "restrict_path"
+    };
+    for(i = 0; i < (int)(sizeof(list_options) / sizeof(list_options[0])); i++) {
+        renew_opts();
+        int accepted = 0;
+        for(int j = 0; j < GM_LISTSIZE - 1; j++) {
+            snprintf(test, sizeof(test), "%s=entry%d", list_options[i], j);
+            if(parse_option(test) == GM_OK)
+                accepted++;
+        }
+        ok(accepted == GM_LISTSIZE - 1, "%s accepts last safe entry", list_options[i]);
+        snprintf(test, sizeof(test), "%s=overflow", list_options[i]);
+        ok(parse_option(test) == GM_ERROR, "%s rejects overflow", list_options[i]);
+        ok(parse_option(test) == GM_ERROR, "%s remains full after rejection", list_options[i]);
+    }
+    renew_opts();
+    int accepted_exports = 0;
+    for(i = 0; i < GM_LISTSIZE; i++)
+        if(parse_option("export=q:0:1") == GM_OK)
+            accepted_exports++;
+    ok(accepted_exports == GM_LISTSIZE, "accept last export slot");
+    ok(parse_option("export=q:0:1") == GM_ERROR, "reject export list overflow");
+    ok(mod_gm_opt->exports[1]->elem_number == GM_LISTSIZE, "export count stays in bounds");
+
     /* escape newlines */
     char * escaped = gm_escape_newlines(" test\n", GM_DISABLED);
     is(escaped, " test\\n", "untrimmed escape string");
@@ -319,6 +371,23 @@ int main(void) {
     is(uniq, "3A9E4A6A2E66AF990948D81E004B3AC0", "make_uniq()");
     ok(strlen(uniq) == 32, "length of uniq string is 32");
     ok(strlen(uniq) <= GEARMAN_MAX_UNIQUE_SIZE, "uniq string is smaller than GEARMAN_MAX_UNIQUE_SIZE");
+
+    char other_uniq[GM_SMALLBUFSIZE];
+    make_uniq(uniq, "service:%zu:%s:%zu:%s", strlen("a-b"), "a-b", strlen("c"), "c");
+    make_uniq(other_uniq, "service:%zu:%s:%zu:%s", strlen("a"), "a", strlen("b-c"), "b-c");
+    ok(strcmp(uniq, other_uniq) != 0, "service identities cannot collide at hyphens");
+    make_uniq(other_uniq, "host:%zu:%s", strlen("a-b-c"), "a-b-c");
+    ok(strcmp(uniq, other_uniq) != 0, "host and service identities are separate");
+    make_uniq(uniq, "perfdata:host:%zu:%s:%zu:%s", strlen("a-b"), "a-b", strlen("c"), "c");
+    make_uniq(other_uniq, "perfdata:host:%zu:%s:%zu:%s", strlen("a"), "a", strlen("b-c"), "b-c");
+    ok(strcmp(uniq, other_uniq) != 0, "perfdata queue and host identities are separate");
+    char long_name[GM_SMALLBUFSIZE + 16];
+    memset(long_name, 'x', sizeof(long_name) - 1);
+    long_name[sizeof(long_name) - 1] = '\0';
+    make_uniq(uniq, "%s", long_name);
+    long_name[sizeof(long_name) - 2] = 'y';
+    make_uniq(other_uniq, "%s", long_name);
+    ok(strcmp(uniq, other_uniq) != 0, "unique IDs hash the complete input");
 
     make_uniq(uniq, "%s", "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
     is(uniq, "06750ADDEC6E07D61B2EAF2D24FAE87E", "make_uniq()");

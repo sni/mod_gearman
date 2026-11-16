@@ -473,9 +473,9 @@ void send_result_back(gm_job_t * exec_job, EVP_CIPHER_CTX * ctx);
  * @param[in] server_list - add server to this list
  * @param[in] servername - parse and add this server
  *
- * @return nothing
+ * @return GM_OK, or GM_ERROR if the list is full
  */
-void add_server(int * server_num, gm_server_t * server_list[GM_LISTSIZE], char * servername);
+int add_server(int * server_num, gm_server_t * server_list[GM_LISTSIZE], char * servername);
 
 /**
  * starts_with

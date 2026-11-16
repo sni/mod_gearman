@@ -78,7 +78,8 @@ int main (int argc, char **argv) {
                         break;
             case 'C':   opt_worker_critical = atoi(optarg);
                         break;
-            case 'H':   add_server(&server_list_num, server_list, optarg);
+            case 'H':   if(add_server(&server_list_num, server_list, optarg) != GM_OK)
+                            return STATE_UNKNOWN;
                         break;
             case 's':   opt_send = optarg;
                         break;

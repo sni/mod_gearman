@@ -153,7 +153,8 @@ int verify_options(mod_gm_opt_t *opt) {
 
     /* no server specified? then default to localhost */
     if(opt->server_num == 0) {
-        add_server(&opt->server_num, opt->server_list, "localhost");
+        if(add_server(&opt->server_num, opt->server_list, "localhost") != GM_OK)
+            return GM_ERROR;
     }
 
     /* host is mandatory */
