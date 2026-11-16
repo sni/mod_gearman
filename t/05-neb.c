@@ -16,7 +16,12 @@
 #define BROKER_MODULE "mod_gearman_naemon.o"
 
 #include "common.h"
-#include <worker_dummy_functions.c>
+/* do not include worker_dummy_functions.c here: this test is linked with
+ * --export-dynamic, so the dummy's nebcallback2str()/nebtype2str()/
+ * eventtype2str() stubs would interpose the neb module's own functions
+ * (loaded via dlopen), breaking the module's callback-name lookups */
+void nm_log(__attribute__((unused)) int lvl, __attribute__((unused)) const char *data, ...) {
+}
 
 #include <libgearman/gearman.h>
 
