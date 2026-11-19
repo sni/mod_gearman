@@ -458,8 +458,10 @@ int main(__attribute__((unused)) int argc, __attribute__((unused)) char **argv, 
         char fd0_before[256];
         snprintf(fd0_before, sizeof(fd0_before), "%s", fd0_path);
         reopen_stdin_if_closed();
-        readlink("/proc/self/fd/0", fd0_path, sizeof(fd0_path));
-        is(fd0_path, fd0_before, "reopen_stdin_if_closed leaves an open fd 0 untouched");
+        if (readlink("/proc/self/fd/0", fd0_path, sizeof(fd0_path)) > 0)
+            is(fd0_path, fd0_before, "reopen_stdin_if_closed leaves an open fd 0 untouched");
+        else
+            ok(0, "second readlink /proc/self/fd/0 failed");
     } else {
         ok(0, "readlink /proc/self/fd/0 failed");
     }
