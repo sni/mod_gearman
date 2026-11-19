@@ -442,11 +442,13 @@ int main(__attribute__((unused)) int argc, __attribute__((unused)) char **argv, 
     /*****************************************
      * reopen_stdin_if_closed (2)
      */
-    char fd0_path[256];
+    char fd0_path[256], fd0_before[256];
+    int rlen;
     if (close(0) == 0) {
         reopen_stdin_if_closed();
-        if (readlink("/proc/self/fd/0", fd0_path, sizeof(fd0_path)) > 0) {
-            fd0_path[strcspn(fd0_path, "\n")] = '\0';
+        rlen = readlink("/proc/self/fd/0", fd0_path, sizeof(fd0_path));
+        if (rlen > 0) {
+            fd0_path[rlen] = '\0'; /* readlink does not null-terminate */
             like(fd0_path, "/dev/null", "reopen_stdin_if_closed reopens fd 0 on /dev/null");
         } else {
             ok(0, "readlink /proc/self/fd/0 failed");
@@ -454,14 +456,18 @@ int main(__attribute__((unused)) int argc, __attribute__((unused)) char **argv, 
     } else {
         ok(1, "skip: could not close fd 0");
     }
-    if (readlink("/proc/self/fd/0", fd0_path, sizeof(fd0_path)) > 0) {
-        char fd0_before[256];
+    rlen = readlink("/proc/self/fd/0", fd0_path, sizeof(fd0_path));
+    if (rlen > 0) {
+        fd0_path[rlen] = '\0';
         snprintf(fd0_before, sizeof(fd0_before), "%s", fd0_path);
         reopen_stdin_if_closed();
-        if (readlink("/proc/self/fd/0", fd0_path, sizeof(fd0_path)) > 0)
+        rlen = readlink("/proc/self/fd/0", fd0_path, sizeof(fd0_path));
+        if (rlen > 0) {
+            fd0_path[rlen] = '\0';
             is(fd0_path, fd0_before, "reopen_stdin_if_closed leaves an open fd 0 untouched");
-        else
+        } else {
             ok(0, "second readlink /proc/self/fd/0 failed");
+        }
     } else {
         ok(0, "readlink /proc/self/fd/0 failed");
     }
