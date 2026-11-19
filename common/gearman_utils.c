@@ -471,7 +471,9 @@ int send2gearmandadmin(char * cmd, char * hostnam, int port, char ** output, cha
     if(gm_net_connect(hostnam, port, &sockfd, error) != GM_OK) {
         return(STATE_CRITICAL);
     }
-    if(sockfd <= 0) {
+    /* fd 0 is a valid socket fd when stdin is closed (e.g. daemonized worker),
+     * so only negative fds are invalid */
+    if(sockfd < 0) {
         return(STATE_CRITICAL);
     }
 

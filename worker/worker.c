@@ -27,6 +27,8 @@
 #include "utils.h"
 #include "worker_client.h"
 
+#include <fcntl.h>
+
 int current_number_of_workers                = 0;
 volatile sig_atomic_t current_number_of_jobs = 0;  /* must be signal safe */
 char hostname[GM_SMALLBUFSIZE];
@@ -101,9 +103,16 @@ int main (int argc, char **argv) {
                 exit( EXIT_FAILURE );
             }
 
-            /* Close out the standard file descriptors */
+            /* Close out the standard file descriptors.
+             * Reopen stdin on /dev/null (do not leave fd 0 closed):
+             * otherwise a socket() in execed plugins can be assigned
+             * fd 0 and break programs validating fd numbers (see GH #185). */
             if(mod_gm_opt->debug_level <= 1) {
-                close(STDIN_FILENO);
+                int devnull = open("/dev/null", O_RDONLY);
+                if(devnull >= 0) {
+                    dup2(devnull, STDIN_FILENO);
+                    close(devnull);
+                }
                 close(STDOUT_FILENO);
                 close(STDERR_FILENO);
             }

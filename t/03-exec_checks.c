@@ -25,7 +25,7 @@ int main(__attribute__((unused)) int argc, __attribute__((unused)) char **argv, 
     char cmd[4096];
     char cwd[1024];
 
-    plan(82);
+    plan(84);
 
     /* set hostname and cwd */
     gethostname(hostname, GM_SMALLBUFSIZE-1);
@@ -438,6 +438,31 @@ int main(__attribute__((unused)) int argc, __attribute__((unused)) char **argv, 
     like(result, "test plugin OK", "returned result string");
     free(result);
     free(error);
+
+    /*****************************************
+     * reopen_stdin_if_closed (2)
+     */
+    char fd0_path[256];
+    if (close(0) == 0) {
+        reopen_stdin_if_closed();
+        if (readlink("/proc/self/fd/0", fd0_path, sizeof(fd0_path)) > 0) {
+            fd0_path[strcspn(fd0_path, "\n")] = '\0';
+            like(fd0_path, "/dev/null", "reopen_stdin_if_closed reopens fd 0 on /dev/null");
+        } else {
+            ok(0, "readlink /proc/self/fd/0 failed");
+        }
+    } else {
+        ok(1, "skip: could not close fd 0");
+    }
+    if (readlink("/proc/self/fd/0", fd0_path, sizeof(fd0_path)) > 0) {
+        char fd0_before[256];
+        snprintf(fd0_before, sizeof(fd0_before), "%s", fd0_path);
+        reopen_stdin_if_closed();
+        readlink("/proc/self/fd/0", fd0_path, sizeof(fd0_path));
+        is(fd0_path, fd0_before, "reopen_stdin_if_closed leaves an open fd 0 untouched");
+    } else {
+        ok(0, "readlink /proc/self/fd/0 failed");
+    }
 
     /*****************************************
      * clean up

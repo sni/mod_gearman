@@ -27,6 +27,7 @@
 #include "gearman_utils.h"
 
 #include <dirent.h>
+#include <fcntl.h>
 #include <limits.h>
 #include "popenRWE.h"
 
@@ -1912,6 +1913,20 @@ int read_filepointer(char **target, FILE* input) {
     }
     return(size);
 }
+
+/* reopen stdin on /dev/null if it is closed (e.g. inherited from a daemon),
+ * so that socket() in execed children does not get assigned fd 0 (see GH #185) */
+void reopen_stdin_if_closed(void) {
+    int devnull;
+    if(fcntl(STDIN_FILENO, F_GETFD) == -1) {
+        devnull = open("/dev/null", O_RDONLY);
+        if(devnull >= 0) {
+            if(dup2(devnull, STDIN_FILENO) == 0 && devnull != STDIN_FILENO)
+                close(devnull);
+        }
+    }
+}
+
 
 /* read from pipe as long as it has data and return size of string */
 int read_pipe(char **target, int input) {

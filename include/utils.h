@@ -513,6 +513,7 @@ int read_filepointer(char **, FILE*);
  *
  * @return number of bytes read
  */
+void reopen_stdin_if_closed(void);
 int read_pipe(char **, int);
 
 /**

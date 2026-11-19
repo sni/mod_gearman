@@ -48,6 +48,8 @@ int popenRWE(int *rwepipe, char *command) {
 		close(in[1]);
 		close(out[0]);
 		close(err[0]);
+		/* close(0) + dup(in[0]) already reassigns fd 0 to the stdin pipe,
+		 * so a closed fd 0 from the parent is not a problem here */
 		close(0);
 		if(!dup(in[0])) {
 			;

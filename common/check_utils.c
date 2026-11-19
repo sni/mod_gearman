@@ -171,6 +171,9 @@ int run_check(char *processed_command, char **ret, char **err) {
             sigprocmask(SIG_UNBLOCK, &mask, NULL);
 
             /* child process */
+            /* reopen stdin on /dev/null if closed, so socket() does not get fd 0 */
+            reopen_stdin_if_closed();
+
             if((dup2(pipe_stdout[1],STDOUT_FILENO)<0)){
                 gm_log( GM_LOG_ERROR, "dup2 error\n");
                 _exit(STATE_UNKNOWN);
